@@ -95,12 +95,12 @@
      <string>View</string>
     </property>
    </widget>
-   <widget class="QWidget" name="">
+   <widget class="QWidget" name="layoutWidget">
     <property name="geometry">
      <rect>
       <x>40</x>
       <y>350</y>
-      <width>181</width>
+      <width>311</width>
       <height>111</height>
      </rect>
     </property>

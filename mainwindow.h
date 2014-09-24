@@ -35,7 +35,7 @@ private:
     // Laser range finder =====
     lrf_controller lrf;
 
-    double data[361];
+    double data[length_data];
     // ========================
 
 };

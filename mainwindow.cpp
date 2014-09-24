@@ -14,7 +14,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
     // Baud rate
     QStringList list_baudrate;
-    list_baudrate << "1200" << "2400" << "4800" << "9600" << "19200" << "38400" << "76800" << "115200";
+    list_baudrate << "9600" << "19200" << "38400" << "76800" << "115200";
     ui->comboBox_baudRate->addItems(list_baudrate);
 
     // default settings
@@ -22,12 +22,13 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->comboBox_baudRate->setCurrentText("38400");
 
     // reset data
-    for (int i = 0; i < 361; i++)
+    for (int i = 0; i < length_data; i++)
         data[i] = -1.0; //**// lrf range?
 }
 
 MainWindow::~MainWindow()
 {
+    lrf.close();
     delete ui;
 }
 
@@ -35,8 +36,8 @@ void MainWindow::on_pushButton_clicked()
 {
     lrf.open(ui->comboBox_com->currentText(), ui->comboBox_baudRate->currentText().toInt());
     if (!lrf.isOpen()) {
-        ui->system_log->append("Error!\tPort is NOT opened.");
-        QMessageBox::information(0, "Error!", "Port is NOT opened.");
+        ui->system_log->append("Error!\tPort cannot be open or under using.");
+        QMessageBox::information(0, "Error!", "Port cannot be open or under using.");
     }
     else {
         ui->system_log->append("Port opened.");
@@ -46,5 +47,8 @@ void MainWindow::on_pushButton_clicked()
 void MainWindow::on_pushButton_2_clicked()
 {
     cv::Mat display_lrf = cv::Mat::zeros(800, 800, CV_8UC3);
-    lrf.acquireData(data);
+    if (lrf.acquireData(data))
+        ui->system_log->append("data: acquired");
+    else
+        ui->system_log->append("data: lost");
 }
