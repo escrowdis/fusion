@@ -134,7 +134,8 @@ void MainWindow::camOpen()
 
 void MainWindow::camCapture()
 {
-    fps_time->restart();
+    if (sv_timer->isActive())
+        fps_time->restart();
     if (sv->cam_L.isOpened()) {
         sv->cam_L >> img_cap_L;
         cv::cvtColor(img_cap_L, img_L, cv::COLOR_BGR2RGB);
@@ -145,9 +146,11 @@ void MainWindow::camCapture()
         cv::cvtColor(img_cap_R, img_R, cv::COLOR_BGR2RGB);
         ui->label_cam_img_R->setPixmap(QPixmap::fromImage(QImage::QImage(img_R.data, img_R.cols, img_R.rows, QImage::Format_RGB888)).scaled(IMG_W, IMG_H));
     }
-    int mSecPerFrame = fps_time->elapsed();
-    fps = 1000.0 / (double)(mSecPerFrame);
-    ui->statusBar->showMessage(QString::number(fps) + " fps");
+    if (sv_timer->isActive()) {
+        int mSecPerFrame = fps_time->elapsed();
+        fps = 1000.0 / (double)(mSecPerFrame);
+        ui->statusBar->showMessage(QString::number(fps) + " fps");
+    }
 }
 
 void MainWindow::on_pushButton_cam_open_clicked()
