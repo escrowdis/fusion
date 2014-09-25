@@ -21,14 +21,18 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->comboBox_com->setCurrentText("COM7");
     ui->comboBox_baudRate->setCurrentText("38400");
 
-    // reset data
-    for (int i = 0; i < length_data; i++)
-        data[i] = -1.0; //**// lrf range?
+    resetData();
+
+    timer = new QTimer;
+
+    connect(timer, SIGNAL(timeout()), this, SLOT(readData()));
 }
 
 MainWindow::~MainWindow()
 {
+    cv::destroyAllWindows();
     lrf.close();
+    timer->stop();
     delete ui;
 }
 
@@ -41,14 +45,48 @@ void MainWindow::on_pushButton_clicked()
     }
     else {
         ui->system_log->append("Port opened.");
+        timer->start(350);
     }
 }
 
-void MainWindow::on_pushButton_2_clicked()
+void MainWindow::resetData()
 {
-    cv::Mat display_lrf = cv::Mat::zeros(800, 800, CV_8UC3);
+    // reset data
+    for (int i = 0; i < length_data; i++)
+        data[i] = -1.0; //**// lrf range?
+}
+
+void MainWindow::readData()
+{
+    resetData();
+
     if (lrf.acquireData(data))
         ui->system_log->append("data: acquired");
     else
         ui->system_log->append("data: lost");
+
+    // display
+    cv::Mat display_lrf = cv::Mat::zeros(800, 800, CV_8UC3);
+    double angle = 0.0;
+
+    for (int i = 0; i < length_data; ++i) {
+        double r = data[i];
+        double x = r * cos(angle * CV_PI / 180.0);
+        double y = r * sin(angle * CV_PI / 180.0);
+
+        cv::circle(display_lrf, cv::Point(x / ui->spinBox_scale->value() + 400, y / ui->spinBox_scale->value() + 100), 1, cv::Scalar(0, 0, 255), -1);
+        if (length_data / 2 == i)
+            cv::circle(display_lrf, cv::Point(x / ui->spinBox_scale->value() + 400, y / ui->spinBox_scale->value() + 100), 5, cv::Scalar(0, 255, 0), -1);
+
+        angle += resolution;
+    }
+
+    cv::imshow("image", display_lrf);
+    cv::waitKey(1);
+
+}
+
+void MainWindow::on_pushButton_2_clicked()
+{
+    readData();
 }

@@ -47,7 +47,7 @@
      </rect>
     </property>
     <property name="text">
-     <string>Open COM</string>
+     <string>Open port</string>
     </property>
    </widget>
    <widget class="QWidget" name="layoutWidget">
@@ -116,6 +116,45 @@
       <widget class="QTextEdit" name="system_log"/>
      </item>
     </layout>
+   </widget>
+   <widget class="QWidget" name="layoutWidget">
+    <property name="geometry">
+     <rect>
+      <x>140</x>
+      <y>90</y>
+      <width>71</width>
+      <height>40</height>
+     </rect>
+    </property>
+    <layout class="QGridLayout" name="gridLayout_3">
+     <item row="0" column="0">
+      <widget class="QLabel" name="label_4">
+       <property name="text">
+        <string>Scale</string>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="0">
+      <widget class="QSpinBox" name="spinBox_scale">
+       <property name="value">
+        <number>2</number>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </widget>
+   <widget class="QPushButton" name="pushButton_3">
+    <property name="geometry">
+     <rect>
+      <x>30</x>
+      <y>150</y>
+      <width>75</width>
+      <height>23</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>tset</string>
+    </property>
    </widget>
   </widget>
   <widget class="QMenuBar" name="menuBar">
