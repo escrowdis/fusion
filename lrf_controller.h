@@ -13,8 +13,8 @@
 
 #define length_data 361
 #define length_raw_data 733
-#define length_header 10
-
+#define length_header 7
+#define resolution 0.5
 
 
 // Laser Range Finder Controller

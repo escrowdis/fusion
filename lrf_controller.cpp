@@ -69,13 +69,13 @@ bool lrf_controller::acquireData(double* data)
 
     request();
 
-    serial->waitForReadyRead(350); // wait for lrf response
+    serial->waitForReadyRead(500); // wait for lrf response
 
     int data_num = serial->bytesAvailable();
 
     if (data_num > 0 && data_num < 1024) {
         QByteArray data_temp = serial->read(data_num);
-//        qDebug()<<data_num;
+        qDebug()<<data_num;
         if (data_temp.size() == length_raw_data) {
             for (int i = length_header; i < length_raw_data; i++) {
                 unsigned char tp = data_temp[i];
@@ -83,9 +83,9 @@ bool lrf_controller::acquireData(double* data)
             }
             int j = 0;
             for (int i = 0; i < length_raw_data - length_header - 1; i+=2) {
-                double r = data_raw[i + 1] * 256.0 + data_raw[i];
+                double r = (double)(data_raw[i + 1]) * 256 + (double)(data_raw[i]);
                 data[j] = r;
-//                qDebug()<<r;
+                qDebug()<<r;
                 j++;
             }
 
@@ -93,7 +93,7 @@ bool lrf_controller::acquireData(double* data)
         }
     }
 
-//    qDebug()<<state;
+    qDebug()<<state;
     return state;
 }
 
