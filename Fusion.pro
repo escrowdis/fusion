@@ -13,10 +13,13 @@ TEMPLATE = app
 
 SOURCES += main.cpp\
         mainwindow.cpp \
-        lrf_controller.cpp
+        lrf_controller.cpp \
+    stereo_vision.cpp
 
 HEADERS  += mainwindow.h \
-            lrf_controller.h
+            lrf_controller.h \
+    stereo_vision.h \
+    debug_info.h
 
 FORMS    += mainwindow.ui
 

@@ -1,8 +1,9 @@
 #ifndef LRF_CONTROLLER_H
 #define LRF_CONTROLLER_H
 
+#include "debug_info.h"
+
 #include <QString>
-#include <QDebug>
 #include <QThread>
 
 // COM Port Communication
@@ -11,11 +12,10 @@
 
 #include <opencv2/opencv.hpp>
 
-#define length_data 361
-#define length_raw_data 733
-#define length_header 7
-#define resolution 0.5
-
+#define LENGTH_DATA 361
+#define LENGTH_RAW_DATA 733
+#define LENGTH_HEADER 7
+#define RESOLUTION 0.5
 
 // Laser Range Finder Controller
 class lrf_controller
@@ -38,7 +38,7 @@ private:
 
     QSerialPort::BaudRate baudRate;
 
-    unsigned char data_raw[length_raw_data - length_header];
+    unsigned char data_raw[LENGTH_RAW_DATA - LENGTH_HEADER];
 };
 
 #endif // LRF_CONTROLLER_H

@@ -6,12 +6,16 @@
 #include <QString>
 #include <QMessageBox>
 #include <QTimer>
+#include <QTime>
 
 #include <iostream>
 #include <opencv2/opencv.hpp>
 
 // Laser range finder controller
 #include "lrf_controller.h"
+
+// Stereo vision
+#include "stereo_vision.h"
 
 namespace Ui {
 class MainWindow;
@@ -26,27 +30,58 @@ public:
     ~MainWindow();
 
 private slots:
-    void on_pushButton_clicked();
+    void on_pushButton_lrf_open_clicked();
 
-    void on_pushButton_2_clicked();
+    void on_pushButton_lrf_display_clicked();
 
     // Laser range finder =====
-    void readData();
+    void lrfReadData();
     // ========================
+
+    // Stereo vision ==========
+    void on_pushButton_cam_open_clicked();
+
+    void camCapture();
+    // ========================
+
+    void on_pushButton_cam_stop_clicked();
+
+    void on_pushButton_cam_step_clicked();
+
+    void on_pushButton_cam_capture_clicked();
 
 private:
     Ui::MainWindow *ui;
 
-    QTimer *timer;
 
     // Laser range finder =====
-    lrf_controller lrf;
+    lrf_controller* lrf;
+
+    QTimer *lrf_timer;
 
     bool lrf_status;
 
-    double lrf_data[length_data];
+    double lrf_data[LENGTH_DATA];
 
-    void resetData();
+    void lrfResetData();
+    // ========================
+
+    // Stereo vision ==========
+    stereo_vision* sv;
+
+    QTimer* sv_timer;
+
+    QTime* fps_time;
+    int fps;
+
+    cv::Mat img_cap_L;
+    cv::Mat img_cap_R;
+    cv::Mat img_L;
+    cv::Mat img_R;
+
+    void camOpen();
+
+    void camStop() {sv_timer->stop();}
     // ========================
 };
 

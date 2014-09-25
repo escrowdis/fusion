@@ -75,25 +75,30 @@ bool lrf_controller::acquireData(double* data)
 
     if (data_num > 0 && data_num < 1024) {
         QByteArray data_temp = serial->read(data_num);
+#ifdef debug_info_lrf
         qDebug()<<data_num;
-        if (data_temp.size() == length_raw_data) {
-            for (int i = length_header; i < length_raw_data; i++) {
+#endif
+        if (data_temp.size() == LENGTH_RAW_DATA) {
+            for (int i = LENGTH_HEADER; i < LENGTH_RAW_DATA; i++) {
                 unsigned char tp = data_temp[i];
-                data_raw[i - length_header] = tp;
+                data_raw[i - LENGTH_HEADER] = tp;
             }
             int j = 0;
-            for (int i = 0; i < length_raw_data - length_header - 1; i+=2) {
+            for (int i = 0; i < LENGTH_RAW_DATA - LENGTH_HEADER - 1; i+=2) {
                 double r = (double)(data_raw[i + 1]) * 256 + (double)(data_raw[i]);
                 data[j] = r;
+#ifdef debug_info_lrf
                 qDebug()<<r;
+#endif
                 j++;
             }
 
             state = true;
         }
     }
-
+#ifdef debug_info_lrf
     qDebug()<<state;
+#endif
     return state;
 }
 

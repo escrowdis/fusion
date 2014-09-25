@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>872</width>
-    <height>555</height>
+    <width>1159</width>
+    <height>558</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -17,10 +17,10 @@
    <widget class="QTabWidget" name="tabWidget">
     <property name="geometry">
      <rect>
-      <x>680</x>
-      <y>230</y>
-      <width>171</width>
-      <height>191</height>
+      <x>60</x>
+      <y>270</y>
+      <width>101</width>
+      <height>51</height>
      </rect>
     </property>
     <property name="currentIndex">
@@ -37,7 +37,7 @@
      </attribute>
     </widget>
    </widget>
-   <widget class="QPushButton" name="pushButton">
+   <widget class="QPushButton" name="pushButton_lrf_open">
     <property name="geometry">
      <rect>
       <x>30</x>
@@ -75,14 +75,14 @@
       </widget>
      </item>
      <item row="1" column="0">
-      <widget class="QComboBox" name="comboBox_com"/>
+      <widget class="QComboBox" name="comboBox_lrf_com"/>
      </item>
      <item row="1" column="1">
-      <widget class="QComboBox" name="comboBox_baudRate"/>
+      <widget class="QComboBox" name="comboBox_lrf_baudRate"/>
      </item>
     </layout>
    </widget>
-   <widget class="QPushButton" name="pushButton_2">
+   <widget class="QPushButton" name="pushButton_lrf_display">
     <property name="geometry">
      <rect>
       <x>30</x>
@@ -135,7 +135,7 @@
       </widget>
      </item>
      <item row="1" column="0">
-      <widget class="QSpinBox" name="spinBox_scale">
+      <widget class="QSpinBox" name="spinBox_lrf_scale">
        <property name="value">
         <number>2</number>
        </property>
@@ -146,8 +146,8 @@
    <widget class="QPushButton" name="pushButton_3">
     <property name="geometry">
      <rect>
-      <x>30</x>
-      <y>150</y>
+      <x>290</x>
+      <y>180</y>
       <width>75</width>
       <height>23</height>
      </rect>
@@ -156,7 +156,7 @@
      <string>tset</string>
     </property>
    </widget>
-   <widget class="QWidget" name="">
+   <widget class="QWidget" name="layoutWidget">
     <property name="geometry">
      <rect>
       <x>310</x>
@@ -167,14 +167,14 @@
     </property>
     <layout class="QGridLayout" name="gridLayout_4">
      <item row="1" column="0">
-      <widget class="QRadioButton" name="radioButton">
+      <widget class="QRadioButton" name="radioButton_lrf_res_cm">
        <property name="text">
         <string>cm</string>
        </property>
       </widget>
      </item>
      <item row="2" column="0">
-      <widget class="QRadioButton" name="radioButton_2">
+      <widget class="QRadioButton" name="radioButton_lrf_res_mm">
        <property name="text">
         <string>mm</string>
        </property>
@@ -189,13 +189,130 @@
      </item>
     </layout>
    </widget>
+   <widget class="QWidget" name="layoutWidget_2">
+    <property name="geometry">
+     <rect>
+      <x>460</x>
+      <y>70</y>
+      <width>146</width>
+      <height>58</height>
+     </rect>
+    </property>
+    <layout class="QGridLayout" name="gridLayout_5">
+     <item row="1" column="0">
+      <widget class="QLabel" name="label_6">
+       <property name="text">
+        <string>Left</string>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="1">
+      <widget class="QLabel" name="label_7">
+       <property name="text">
+        <string>Right</string>
+       </property>
+      </widget>
+     </item>
+     <item row="2" column="1">
+      <widget class="QComboBox" name="comboBox_cam_com_R"/>
+     </item>
+     <item row="2" column="0">
+      <widget class="QComboBox" name="comboBox_cam_com_L"/>
+     </item>
+     <item row="0" column="0" colspan="2">
+      <widget class="QLabel" name="label_8">
+       <property name="text">
+        <string>Port</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </widget>
+   <widget class="QPushButton" name="pushButton_cam_open">
+    <property name="geometry">
+     <rect>
+      <x>620</x>
+      <y>70</y>
+      <width>75</width>
+      <height>23</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Open port</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_cam_img_L">
+    <property name="geometry">
+     <rect>
+      <x>390</x>
+      <y>200</y>
+      <width>320</width>
+      <height>240</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Left image</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_cam_img_R">
+    <property name="geometry">
+     <rect>
+      <x>750</x>
+      <y>210</y>
+      <width>320</width>
+      <height>240</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Right image</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="pushButton_cam_step">
+    <property name="geometry">
+     <rect>
+      <x>510</x>
+      <y>170</y>
+      <width>75</width>
+      <height>23</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Step</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="pushButton_cam_capture">
+    <property name="geometry">
+     <rect>
+      <x>600</x>
+      <y>170</y>
+      <width>75</width>
+      <height>23</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Capturing</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="pushButton_cam_stop">
+    <property name="geometry">
+     <rect>
+      <x>690</x>
+      <y>170</y>
+      <width>75</width>
+      <height>23</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Stop</string>
+    </property>
+   </widget>
   </widget>
   <widget class="QMenuBar" name="menuBar">
    <property name="geometry">
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>872</width>
+     <width>1159</width>
      <height>21</height>
     </rect>
    </property>
