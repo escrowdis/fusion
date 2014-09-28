@@ -244,8 +244,8 @@
    <widget class="QLabel" name="label_cam_img_L">
     <property name="geometry">
      <rect>
-      <x>390</x>
-      <y>200</y>
+      <x>410</x>
+      <y>220</y>
       <width>320</width>
       <height>240</height>
      </rect>
@@ -257,8 +257,8 @@
    <widget class="QLabel" name="label_cam_img_R">
     <property name="geometry">
      <rect>
-      <x>750</x>
-      <y>210</y>
+      <x>740</x>
+      <y>220</y>
       <width>320</width>
       <height>240</height>
      </rect>

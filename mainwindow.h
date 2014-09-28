@@ -42,6 +42,8 @@ private slots:
     void on_pushButton_cam_open_clicked();
 
     void camCapture();
+
+    void stereoVision();
     // ========================
 
     void on_pushButton_cam_stop_clicked();
@@ -82,6 +84,8 @@ private:
     void camOpen();
 
     void camStop() {sv_timer->stop();}
+
+    void stereoMatching();
     // ========================
 };
 

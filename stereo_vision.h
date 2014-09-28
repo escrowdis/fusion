@@ -17,10 +17,14 @@ public:
 
     void close();
 
+    void paramInitialize();
+
     cv::VideoCapture cam_L;
     cv::VideoCapture cam_R;
 
     bool fg_cam_L, fg_cam_R;
+
+    cv::Ptr<cv::StereoSGBM> sgbm;
 };
 
 #endif // STEREO_VISION_H

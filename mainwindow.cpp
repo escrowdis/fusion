@@ -40,7 +40,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
     sv_timer = new QTimer;
     fps_time = new QTime;
-    connect(sv_timer, SIGNAL(timeout()), this, SLOT(camCapture()));
+    connect(sv_timer, SIGNAL(timeout()), this, SLOT(stereoVision()));
 }
 
 MainWindow::~MainWindow()
@@ -156,12 +156,12 @@ void MainWindow::camCapture()
 void MainWindow::on_pushButton_cam_open_clicked()
 {
     camOpen();
-    camCapture();
+    stereoVision();
 }
 
 void MainWindow::on_pushButton_cam_step_clicked()
 {
-    camCapture();
+    stereoVision();
 }
 
 void MainWindow::on_pushButton_cam_capture_clicked()
@@ -172,4 +172,18 @@ void MainWindow::on_pushButton_cam_capture_clicked()
 void MainWindow::on_pushButton_cam_stop_clicked()
 {
     camStop();
+}
+
+void MainWindow::stereoMatching()
+{
+    cv::Mat disp, disp8;
+    sv->sgbm->compute(img_L, img_R, disp);
+    disp.convertTo(disp8, CV_8U);
+    cv::imshow("disp", disp8);
+}
+
+void MainWindow::stereoVision()
+{
+    camCapture();
+    stereoMatching();
 }

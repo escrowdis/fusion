@@ -4,6 +4,8 @@ stereo_vision::stereo_vision()
 {
     fg_cam_L = false;
     fg_cam_R = false;
+
+    paramInitialize();
 }
 
 bool stereo_vision::open(int com_L, int com_R)
@@ -52,4 +54,28 @@ void stereo_vision::close()
         cam_L.release();
     if (cam_R.isOpened())
         cam_R.release();
+}
+
+void stereo_vision::paramInitialize()
+{
+    sgbm = cv::createStereoSGBM(0, 16, 3);
+
+    int SAD_window_size = 0, number_disparity = 0;
+    number_disparity = number_disparity > 0 ? number_disparity : ((IMG_W / 8) + 15) & -16;
+    sgbm->setPreFilterCap(63);
+    int sgbm_win_size = SAD_window_size > 0 ? SAD_window_size : 3;
+    sgbm->setBlockSize(sgbm_win_size);
+
+    // channel
+    int cn = 3;
+
+    sgbm->setP1(8 * cn * sgbm_win_size * sgbm_win_size);
+    sgbm->setP2(32 * cn * sgbm_win_size * sgbm_win_size);
+    sgbm->setMinDisparity(0);
+    sgbm->setNumDisparities(number_disparity);
+    sgbm->setUniquenessRatio(10);
+    sgbm->setSpeckleWindowSize(100);
+    sgbm->setSpeckleRange(32);
+    sgbm->setDisp12MaxDiff(1);
+    sgbm->setMode(cv::StereoSGBM::MODE_SGBM);
 }
