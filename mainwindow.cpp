@@ -38,21 +38,20 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->comboBox_cam_com_L->setCurrentText("0");
     ui->comboBox_cam_com_R->setCurrentText("2");
 
-    sv_timer = new QTimer;
     fps_time = new QTime;
-    connect(sv_timer, SIGNAL(timeout()), this, SLOT(stereoVision()));
+    connect(sv, SIGNAL(run(img_L, img_R, disp)), this, SLOT(displaying()));
 }
 
 MainWindow::~MainWindow()
 {
     cv::destroyAllWindows();
     lrf->close();
-    sv->close();
+    delete lrf;
     delete fps_time;
     lrf_timer->stop();
-    sv_timer->stop();
     delete lrf_timer;
-    delete sv_timer;
+    sv->close();
+    delete sv;
     delete ui;
 }
 
@@ -132,25 +131,12 @@ void MainWindow::camOpen()
     }
 }
 
-void MainWindow::camCapture()
+void MainWindow::displaying()
 {
-    if (sv_timer->isActive())
-        fps_time->restart();
-    if (sv->cam_L.isOpened()) {
-        sv->cam_L >> img_cap_L;
-        cv::cvtColor(img_cap_L, img_L, cv::COLOR_BGR2RGB);
-        ui->label_cam_img_L->setPixmap(QPixmap::fromImage(QImage::QImage(img_L.data, img_L.cols, img_L.rows, QImage::Format_RGB888)).scaled(IMG_W, IMG_H));
-    }
-    if (sv->cam_R.isOpened()) {
-        sv->cam_R >> img_cap_R;
-        cv::cvtColor(img_cap_R, img_R, cv::COLOR_BGR2RGB);
-        ui->label_cam_img_R->setPixmap(QPixmap::fromImage(QImage::QImage(img_R.data, img_R.cols, img_R.rows, QImage::Format_RGB888)).scaled(IMG_W, IMG_H));
-    }
-    if (sv_timer->isActive()) {
-        int mSecPerFrame = fps_time->elapsed();
-        fps = 1000.0 / (double)(mSecPerFrame);
-        ui->statusBar->showMessage(QString::number(fps) + " fps");
-    }
+    ui->label_cam_img_L->setPixmap(QPixmap::fromImage(QImage::QImage(img_L.data, img_L.cols, img_L.rows, QImage::Format_RGB888)).scaled(IMG_W, IMG_H));
+    ui->label_cam_img_R->setPixmap(QPixmap::fromImage(QImage::QImage(img_R.data, img_R.cols, img_R.rows, QImage::Format_RGB888)).scaled(IMG_W, IMG_H));
+    cv::imshow("disp", disp);
+//    ui->label_disp->setPixmap(QPixmap::fromImage(QImage::QImage(disp.data, disp.cols, disp.rows, QImage::Format_RGB888)).scaled(IMG_W, IMG_H));
 }
 
 void MainWindow::on_pushButton_cam_open_clicked()
@@ -166,7 +152,8 @@ void MainWindow::on_pushButton_cam_step_clicked()
 
 void MainWindow::on_pushButton_cam_capture_clicked()
 {
-    sv_timer->start();
+    sv->start();
+    sv->run(img_L, img_R, disp);
 }
 
 void MainWindow::on_pushButton_cam_stop_clicked()
@@ -174,16 +161,29 @@ void MainWindow::on_pushButton_cam_stop_clicked()
     camStop();
 }
 
-void MainWindow::stereoMatching()
-{
-    cv::Mat disp, disp8;
-    sv->sgbm->compute(img_L, img_R, disp);
-    disp.convertTo(disp8, CV_8U);
-    cv::imshow("disp", disp8);
-}
-
 void MainWindow::stereoVision()
 {
-    camCapture();
-    stereoMatching();
+    // count fps
+    fps_time->restart();
+
+    sv->camCapture(img_L, img_R);
+
+    sv->stereoMatch(img_L, img_R, disp);
+
+    // count fps
+    int mSecPerFrame = fps_time->elapsed();
+    fps = 1000.0 / (double)(mSecPerFrame);
+    ui->statusBar->showMessage(QString::number(fps) + " fps");
+
+    displaying();
+}
+
+void MainWindow::on_pushButton_3_clicked()
+{
+
+}
+
+void MainWindow::on_pushButton_4_clicked()
+{
+
 }

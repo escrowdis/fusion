@@ -41,9 +41,9 @@ private slots:
     // Stereo vision ==========
     void on_pushButton_cam_open_clicked();
 
-    void camCapture();
-
     void stereoVision();
+
+    void displaying();
     // ========================
 
     void on_pushButton_cam_stop_clicked();
@@ -51,6 +51,10 @@ private slots:
     void on_pushButton_cam_step_clicked();
 
     void on_pushButton_cam_capture_clicked();
+
+    void on_pushButton_3_clicked();
+
+    void on_pushButton_4_clicked();
 
 private:
     Ui::MainWindow *ui;
@@ -71,21 +75,20 @@ private:
     // Stereo vision ==========
     stereo_vision* sv;
 
-    QTimer* sv_timer;
-
     QTime* fps_time;
     int fps;
 
-    cv::Mat img_cap_L;
-    cv::Mat img_cap_R;
+    cv::Mat cap_L;
+    cv::Mat cap_R;
+
     cv::Mat img_L;
     cv::Mat img_R;
 
+    cv::Mat disp;
+
     void camOpen();
 
-    void camStop() {sv_timer->stop();}
-
-    void stereoMatching();
+    void camStop() {sv->stop();}
     // ========================
 };
 

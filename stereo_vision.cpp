@@ -5,7 +5,16 @@ stereo_vision::stereo_vision()
     fg_cam_L = false;
     fg_cam_R = false;
 
+    fg_capture = false;
+    fg_end = false;
+
     paramInitialize();
+}
+
+stereo_vision::~stereo_vision()
+{
+    while (!fg_end) { }
+    sgbm.release();
 }
 
 bool stereo_vision::open(int com_L, int com_R)
@@ -79,3 +88,62 @@ void stereo_vision::paramInitialize()
     sgbm->setDisp12MaxDiff(1);
     sgbm->setMode(cv::StereoSGBM::MODE_SGBM);
 }
+
+void stereo_vision::start()
+{
+#ifdef debug_info_sv
+    qDebug()<<"start";
+#endif
+    fg_capture = true;
+}
+
+void stereo_vision::stop()
+{
+    fg_capture = false;
+}
+
+void stereo_vision::camCapture(cv::Mat& img_L, cv::Mat& img_R)
+{
+    if (cam_L.isOpened()) {
+        cam_L >> cap_L;
+        cv::cvtColor(cap_L, img_L, cv::COLOR_BGR2RGB);
+    }
+    if (cam_R.isOpened()) {
+        cam_R >> cap_R;
+        cv::cvtColor(cap_R, img_R, cv::COLOR_BGR2RGB);
+    }
+}
+
+void stereo_vision::stereoMatch(cv::Mat& img_L, cv::Mat& img_R, cv::Mat& disp8)
+{
+    sgbm->compute(img_L, img_R, disp);
+    disp.convertTo(disp8, CV_8U);
+}
+
+void stereo_vision::run(cv::Mat& img_L, cv::Mat& img_R, cv::Mat& disp)
+{
+    while (fg_capture) {
+#ifdef debug_info_sv
+        qDebug()<<"run";
+#endif
+        // camera capturing
+        if (cam_L.isOpened()) {
+            cam_L >> cap_L;
+            cv::cvtColor(cap_L, img_L, cv::COLOR_BGR2RGB);
+        }
+        if (cam_R.isOpened()) {
+            cam_R >> cap_R;
+            cv::cvtColor(cap_R, img_R, cv::COLOR_BGR2RGB);
+        }
+
+        cv::waitKey(1);
+
+        // stereo matching
+        sgbm->compute(img_L, img_R, disp_raw);
+        disp_raw.convertTo(disp, CV_8U);
+
+        cv::imshow("disp", disp);
+    }
+    fg_end = true;
+}
+

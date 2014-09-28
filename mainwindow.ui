@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1159</width>
-    <height>558</height>
+    <width>1149</width>
+    <height>750</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -146,8 +146,8 @@
    <widget class="QPushButton" name="pushButton_3">
     <property name="geometry">
      <rect>
-      <x>290</x>
-      <y>180</y>
+      <x>40</x>
+      <y>160</y>
       <width>75</width>
       <height>23</height>
      </rect>
@@ -270,8 +270,8 @@
    <widget class="QPushButton" name="pushButton_cam_step">
     <property name="geometry">
      <rect>
-      <x>510</x>
-      <y>170</y>
+      <x>470</x>
+      <y>150</y>
       <width>75</width>
       <height>23</height>
      </rect>
@@ -283,8 +283,8 @@
    <widget class="QPushButton" name="pushButton_cam_capture">
     <property name="geometry">
      <rect>
-      <x>600</x>
-      <y>170</y>
+      <x>560</x>
+      <y>150</y>
       <width>75</width>
       <height>23</height>
      </rect>
@@ -296,8 +296,8 @@
    <widget class="QPushButton" name="pushButton_cam_stop">
     <property name="geometry">
      <rect>
-      <x>690</x>
-      <y>170</y>
+      <x>650</x>
+      <y>150</y>
       <width>75</width>
       <height>23</height>
      </rect>
@@ -306,13 +306,39 @@
      <string>Stop</string>
     </property>
    </widget>
+   <widget class="QPushButton" name="pushButton_4">
+    <property name="geometry">
+     <rect>
+      <x>40</x>
+      <y>200</y>
+      <width>75</width>
+      <height>23</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>tset1</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_disp">
+    <property name="geometry">
+     <rect>
+      <x>400</x>
+      <y>480</y>
+      <width>320</width>
+      <height>240</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Disparity</string>
+    </property>
+   </widget>
   </widget>
   <widget class="QMenuBar" name="menuBar">
    <property name="geometry">
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1159</width>
+     <width>1149</width>
      <height>21</height>
     </rect>
    </property>
