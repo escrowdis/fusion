@@ -6,7 +6,7 @@ stereo_vision::stereo_vision()
     fg_cam_R = false;
 
     fg_capture = false;
-    fg_end = false;
+    fg_end = true;
 
     paramInitialize();
 }
@@ -14,6 +14,7 @@ stereo_vision::stereo_vision()
 stereo_vision::~stereo_vision()
 {
     while (!fg_end) { }
+    close();
     sgbm.release();
 }
 
@@ -94,6 +95,7 @@ void stereo_vision::start()
 #ifdef debug_info_sv
     qDebug()<<"start";
 #endif
+    fg_end = false;
     fg_capture = true;
 }
 

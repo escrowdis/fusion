@@ -50,7 +50,6 @@ MainWindow::~MainWindow()
     delete fps_time;
     lrf_timer->stop();
     delete lrf_timer;
-    sv->close();
     delete sv;
     delete ui;
 }
