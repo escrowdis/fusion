@@ -41,9 +41,7 @@ private slots:
     // Stereo vision ==========
     void on_pushButton_cam_open_clicked();
 
-    void stereoVision();
-
-    void displaying();
+    void displaying(const cv::Mat &img_L, const cv::Mat &img_R, const cv::Mat &disp);
     // ========================
 
     void on_pushButton_cam_stop_clicked();
@@ -75,20 +73,18 @@ private:
     // Stereo vision ==========
     stereo_vision* sv;
 
-    QTime* fps_time;
-    int fps;
+//    cv::Mat img_L;
+//    cv::Mat img_R;
 
-    cv::Mat cap_L;
-    cv::Mat cap_R;
-
-    cv::Mat img_L;
-    cv::Mat img_R;
-
-    cv::Mat disp;
+//    cv::Mat disp;
 
     void camOpen();
 
+    void camCapture() {sv->start();}
+
     void camStop() {sv->stop();}
+
+    void stereoVision();
     // ========================
 };
 

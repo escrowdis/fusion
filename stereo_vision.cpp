@@ -1,6 +1,6 @@
 #include "stereo_vision.h"
 
-stereo_vision::stereo_vision()
+stereo_vision::stereo_vision(QObject *parent) : QThread(parent)
 {
     fg_cam_L = false;
     fg_cam_R = false;
@@ -97,6 +97,8 @@ void stereo_vision::start()
 #endif
     fg_end = false;
     fg_capture = true;
+
+    run();
 }
 
 void stereo_vision::stop()
@@ -104,7 +106,7 @@ void stereo_vision::stop()
     fg_capture = false;
 }
 
-void stereo_vision::camCapture(cv::Mat& img_L, cv::Mat& img_R)
+void stereo_vision::camCapture()
 {
     if (cam_L.isOpened()) {
         cam_L >> cap_L;
@@ -116,13 +118,13 @@ void stereo_vision::camCapture(cv::Mat& img_L, cv::Mat& img_R)
     }
 }
 
-void stereo_vision::stereoMatch(cv::Mat& img_L, cv::Mat& img_R, cv::Mat& disp8)
+void stereo_vision::stereoMatch()
 {
-    sgbm->compute(img_L, img_R, disp);
-    disp.convertTo(disp8, CV_8U);
+    sgbm->compute(img_L, img_R, disp_raw);
+    disp_raw.convertTo(disp, CV_8U);
 }
 
-void stereo_vision::run(cv::Mat& img_L, cv::Mat& img_R, cv::Mat& disp)
+void stereo_vision::run()
 {
     while (fg_capture) {
 #ifdef debug_info_sv
@@ -142,9 +144,13 @@ void stereo_vision::run(cv::Mat& img_L, cv::Mat& img_R, cv::Mat& disp)
 
         // stereo matching
         sgbm->compute(img_L, img_R, disp_raw);
-        disp_raw.convertTo(disp, CV_8U);
+        disp_raw.convertTo(disp, CV_8UC1);
+#ifdef debug_info_sv
+        qDebug()<<"run"<<&img_L;
+#endif
 
-        cv::imshow("disp", disp);
+        emit this->sendImages(img_L, img_R, disp);
+//        cv::imshow("disp", disp);
     }
     fg_end = true;
 }

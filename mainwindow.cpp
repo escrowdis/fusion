@@ -9,7 +9,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
     // Initialization
     lrf = new lrf_controller();
-    sv = new stereo_vision();
+    sv = new stereo_vision(parent);
 
     // Basic parameters
     // COM port
@@ -38,8 +38,7 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->comboBox_cam_com_L->setCurrentText("0");
     ui->comboBox_cam_com_R->setCurrentText("2");
 
-    fps_time = new QTime;
-    connect(sv, SIGNAL(run(img_L, img_R, disp)), this, SLOT(displaying()));
+    QObject::connect(sv, SIGNAL(sendImages(cv::Mat, cv::Mat, cv::Mat)), this, SLOT(displaying(cv::Mat, cv::Mat, cv::Mat)));
 }
 
 MainWindow::~MainWindow()
@@ -47,7 +46,6 @@ MainWindow::~MainWindow()
     cv::destroyAllWindows();
     lrf->close();
     delete lrf;
-    delete fps_time;
     lrf_timer->stop();
     delete lrf_timer;
     delete sv;
@@ -130,12 +128,15 @@ void MainWindow::camOpen()
     }
 }
 
-void MainWindow::displaying()
+void MainWindow::displaying(const cv::Mat &img_L, const cv::Mat &img_R, const cv::Mat &disp)
 {
+#ifdef debug_info_sv
+    qDebug()<<"disp"<<&img_L;
+#endif
     ui->label_cam_img_L->setPixmap(QPixmap::fromImage(QImage::QImage(img_L.data, img_L.cols, img_L.rows, QImage::Format_RGB888)).scaled(IMG_W, IMG_H));
     ui->label_cam_img_R->setPixmap(QPixmap::fromImage(QImage::QImage(img_R.data, img_R.cols, img_R.rows, QImage::Format_RGB888)).scaled(IMG_W, IMG_H));
-    cv::imshow("disp", disp);
-//    ui->label_disp->setPixmap(QPixmap::fromImage(QImage::QImage(disp.data, disp.cols, disp.rows, QImage::Format_RGB888)).scaled(IMG_W, IMG_H));
+    ui->label_disp->setPixmap(QPixmap::fromImage(QImage::QImage(disp.data, disp.cols, disp.rows, QImage::Format_Indexed8)).scaled(IMG_W, IMG_H));
+//    cv::imshow("disp", disp);
 }
 
 void MainWindow::on_pushButton_cam_open_clicked()
@@ -151,8 +152,7 @@ void MainWindow::on_pushButton_cam_step_clicked()
 
 void MainWindow::on_pushButton_cam_capture_clicked()
 {
-    sv->start();
-    sv->run(img_L, img_R, disp);
+    camCapture();
 }
 
 void MainWindow::on_pushButton_cam_stop_clicked()
@@ -162,19 +162,11 @@ void MainWindow::on_pushButton_cam_stop_clicked()
 
 void MainWindow::stereoVision()
 {
-    // count fps
-    fps_time->restart();
+    sv->camCapture();
 
-    sv->camCapture(img_L, img_R);
+    sv->stereoMatch();
 
-    sv->stereoMatch(img_L, img_R, disp);
-
-    // count fps
-    int mSecPerFrame = fps_time->elapsed();
-    fps = 1000.0 / (double)(mSecPerFrame);
-    ui->statusBar->showMessage(QString::number(fps) + " fps");
-
-    displaying();
+    displaying(sv->img_L, sv->img_R, sv->disp);
 }
 
 void MainWindow::on_pushButton_3_clicked()

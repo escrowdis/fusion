@@ -4,7 +4,7 @@
 #include "debug_info.h"
 
 #include <QThread>
-#include <QDebug>
+#include <QImage>
 
 #include <opencv2/opencv.hpp>
 
@@ -13,14 +13,15 @@
 
 class stereo_vision : public QThread
 {
+    Q_OBJECT
 public:
+    explicit stereo_vision(QObject *parent = 0);
+
+    ~stereo_vision();
+
     void start();
 
     void stop();
-
-    stereo_vision();
-
-    ~stereo_vision();
 
     bool open(int com_L, int com_R);
 
@@ -28,17 +29,18 @@ public:
 
     void close();
 
-    void camCapture(cv::Mat &img_L, cv::Mat &img_R);
+    void camCapture();
 
-    void stereoMatch(cv::Mat &img_L, cv::Mat &img_R, cv::Mat &disp8);
-
-    void disparityCalc(cv::Mat &img_L, cv::Mat &img_R, cv::Mat &disp);
+    void stereoMatch();
 
     cv::VideoCapture cam_L;
     cv::VideoCapture cam_R;
 
     cv::Mat cap_L;
     cv::Mat cap_R;
+
+    cv::Mat img_L;
+    cv::Mat img_R;
 
     bool fg_cam_L, fg_cam_R;
     bool fg_capture;
@@ -49,8 +51,11 @@ public:
     cv::Mat disp;
     cv::Mat disp_raw;
 
-public slots:
-    void run(cv::Mat &img_L, cv::Mat &img_R, cv::Mat &disp);
+protected:
+    void run();
+
+signals:
+    void sendImages(const cv::Mat &img_l, const cv::Mat &img_r, const cv::Mat &disp);
 };
 
 #endif // STEREO_VISION_H
