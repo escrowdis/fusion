@@ -136,7 +136,7 @@ void MainWindow::displaying(const cv::Mat &img_L, const cv::Mat &img_R, const cv
     ui->label_cam_img_L->setPixmap(QPixmap::fromImage(QImage::QImage(img_L.data, img_L.cols, img_L.rows, QImage::Format_RGB888)).scaled(IMG_W, IMG_H));
     ui->label_cam_img_R->setPixmap(QPixmap::fromImage(QImage::QImage(img_R.data, img_R.cols, img_R.rows, QImage::Format_RGB888)).scaled(IMG_W, IMG_H));
     ui->label_disp->setPixmap(QPixmap::fromImage(QImage::QImage(disp.data, disp.cols, disp.rows, QImage::Format_Indexed8)).scaled(IMG_W, IMG_H));
-//    cv::imshow("disp", disp);
+    qApp->processEvents();
 }
 
 void MainWindow::on_pushButton_cam_open_clicked()
