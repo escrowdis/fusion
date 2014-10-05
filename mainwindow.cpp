@@ -7,18 +7,14 @@ MainWindow::MainWindow(QWidget *parent) :
 {
     ui->setupUi(this);
 
+    // Laser range finder ======================
+
     // Initialization
     lrf = new lrf_controller();
-    sv = new stereo_vision(parent);
 
-    // Basic parameters
     // COM port
     for (int i = 1; i <= 20; i++)
         ui->comboBox_lrf_com->addItem("COM" + QString::number(i));
-    for (int i = 0; i < 5; i++) {
-        ui->comboBox_cam_com_L->addItem(QString::number(i));
-        ui->comboBox_cam_com_R->addItem(QString::number(i));
-    }
 
     // Baud rate
     QStringList list_baudrate;
@@ -26,7 +22,6 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->comboBox_lrf_baudRate->addItems(list_baudrate);
 
     // default settings
-    // LRF
     ui->comboBox_lrf_com->setCurrentText("COM7");
     ui->comboBox_lrf_baudRate->setCurrentText("38400");
     lrf_status = false;
@@ -34,11 +29,35 @@ MainWindow::MainWindow(QWidget *parent) :
     lrf_timer = new QTimer;
     connect(lrf_timer, SIGNAL(timeout()), this, SLOT(lrfReadData()));
 
-    // SV
-    ui->comboBox_cam_com_L->setCurrentText("0");
-    ui->comboBox_cam_com_R->setCurrentText("2");
+    // Laser range finder ====================== End
+
+    // Stereo vision ===========================
+
+    // Initialization
+    sv = new stereo_vision(parent);
+
+    // COM port
+    for (int i = 0; i < 5; i++) {
+        ui->comboBox_cam_com_L->addItem(QString::number(i));
+        ui->comboBox_cam_com_R->addItem(QString::number(i));
+    }
+
+    // focal length
+    ui->comboBox_camera_focal_length->addItem("16");
+    ui->comboBox_camera_focal_length->addItem("12");
+    ui->comboBox_camera_focal_length->addItem("4");
+
+    // base line
+    ui->lineEdit_base_line->setText(QString::number(15.0));
+
+    // default settings
+    ui->comboBox_cam_com_L->setCurrentIndex(0);
+    ui->comboBox_cam_com_R->setCurrentIndex(2);
+    ui->comboBox_camera_focal_length->setCurrentIndex(0);
 
     QObject::connect(sv, SIGNAL(sendImages(cv::Mat, cv::Mat, cv::Mat)), this, SLOT(displaying(cv::Mat, cv::Mat, cv::Mat)));
+
+    // Stereo vision =========================== End
 }
 
 MainWindow::~MainWindow()
@@ -54,8 +73,7 @@ MainWindow::~MainWindow()
 
 void MainWindow::on_pushButton_lrf_open_clicked()
 {
-    lrf->open(ui->comboBox_lrf_com->currentText(), ui->comboBox_lrf_baudRate->currentText().toInt());
-    if (!lrf->isOpen()) {
+    if (!lrf->open(ui->comboBox_lrf_com->currentText(), ui->comboBox_lrf_baudRate->currentText().toInt())) {
         ui->system_log->append("Error!  Port can NOT be open or under using.");
         QMessageBox::information(0, "Error!", "Port cannot be open or under using.");
         return;
@@ -176,5 +194,9 @@ void MainWindow::on_pushButton_3_clicked()
 
 void MainWindow::on_pushButton_4_clicked()
 {
+    if (!sv->loadRemapFile(ui->comboBox_camera_focal_length->currentText().toInt(), ui->lineEdit_base_line->text().toDouble()))
+        QMessageBox::information(0, "Error!", "Calibration files can NOT be imported.");
+    else {
 
+    }
 }

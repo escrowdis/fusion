@@ -4,9 +4,9 @@ stereo_vision::stereo_vision(QObject *parent) : QThread(parent)
 {
     fg_cam_L = false;
     fg_cam_R = false;
-
     fg_capture = false;
     fg_end = true;
+    fg_calib_loaded = false;
 
     paramInitialize();
 }
@@ -116,6 +116,57 @@ void stereo_vision::camCapture()
         cam_R >> cap_R;
         cv::cvtColor(cap_R, img_R, cv::COLOR_BGR2RGB);
     }
+}
+
+bool stereo_vision::loadRemapFile(int cam_focal_length, double base_line)
+{
+    // the remap files are under the project folder
+    QString folder_remap_file;
+    QString last_folder = QDir::currentPath().section("/", -1, -1);
+    QDir path;
+    if (last_folder == "Fusion")
+        path.setPath("./calibrationImgs/My_Data_" + QString::number(cam_focal_length)
+                     + "_" + QString::number(base_line) + ".yml");
+    else if (last_folder == "Release" || last_folder == "Debug")
+        path.setPath("../calibrationImgs/My_Data_" + QString::number(cam_focal_length)
+                     + "_" + QString::number(base_line) + ".yml");
+
+    if (!path.exists())
+        return fg_calib_loaded;
+
+    folder_remap_file = path.path();
+    cv::FileStorage fs(folder_remap_file.toStdString().c_str(), cv::FileStorage::READ);
+
+    if (!fs.isOpened())
+        return fg_calib_loaded;
+
+    fs["reMapLx"] >> rmapLx;
+    fs["reMapLy"] >> rmapLy;
+    fs["reMapRx"] >> rmapRx;
+    fs["reMapRy"] >> rmapRy;
+    fs["ROI0x"] >> calibROI[0].x;
+    fs["ROI0y"] >> calibROI[0].y;
+    fs["ROI0w"] >> calibROI[0].width;
+    fs["ROI0h"] >> calibROI[0].height;
+    fs["ROI1x"] >> calibROI[1].x;
+    fs["ROI1y"] >> calibROI[1].y;
+    fs["ROI1w"] >> calibROI[1].width;
+    fs["ROI1h"] >> calibROI[1].height;
+    fs.release();
+    fg_calib_loaded = true;
+
+    return fg_calib_loaded;
+}
+
+bool stereo_vision::rectifyImage()
+{
+    if (fg_calib_loaded) {
+        cv::remap(img_L, img_r_L, rmapLx, rmapLy, cv::INTER_LINEAR);
+        cv::remap(img_R, img_r_R, rmapRx, rmapRy, cv::INTER_LINEAR);
+        return true;
+    }
+
+    return false;
 }
 
 void stereo_vision::stereoMatch()

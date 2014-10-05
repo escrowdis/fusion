@@ -5,6 +5,7 @@
 
 #include <QThread>
 #include <QImage>
+#include <QDir>
 
 #include <opencv2/opencv.hpp>
 
@@ -31,25 +32,43 @@ public:
 
     void camCapture();
 
+    bool loadRemapFile(int cam_focal_length, double base_line);
+
+    void rectifyImage();
+
     void stereoMatch();
 
+    // capture from camera
     cv::VideoCapture cam_L;
     cv::VideoCapture cam_R;
 
+    // cv::Mat type capture image
     cv::Mat cap_L;
     cv::Mat cap_R;
 
+    // RGB type for displaying
     cv::Mat img_L;
     cv::Mat img_R;
 
-    bool fg_cam_L, fg_cam_R;
-    bool fg_capture;
-    bool fg_end;
+    // status
+    bool fg_cam_L, fg_cam_R;            // open or not
+    bool fg_capture;                    // under capturing or not
+    bool fg_end;                        // interrupt or not
+    bool fg_calib_loaded;               // load the calibration files or not
+    bool fg_remap;                      // are images remapped or not
 
+    // stereo calibration stuffs
+    cv::Mat rmapLx, rmapLy, rmapRx, rmapRy;
+    cv::Rect calibROI[2];
+    cv::Mat img_r_L;
+    cv::Mat img_r_R;
+
+    // correspondence matching method
     cv::Ptr<cv::StereoSGBM> sgbm;
 
-    cv::Mat disp;
+    // disparity image
     cv::Mat disp_raw;
+    cv::Mat disp;
 
 protected:
     void run();
