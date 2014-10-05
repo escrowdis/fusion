@@ -34,7 +34,7 @@ public:
 
     bool loadRemapFile(int cam_focal_length, double base_line);
 
-    void rectifyImage();
+    bool rectifyImage();
 
     void stereoMatch();
 
@@ -55,9 +55,9 @@ public:
     bool fg_capture;                    // under capturing or not
     bool fg_end;                        // interrupt or not
     bool fg_calib_loaded;               // load the calibration files or not
-    bool fg_remap;                      // are images remapped or not
 
     // stereo calibration stuffs
+    QDir path_calib;
     cv::Mat rmapLx, rmapLy, rmapRx, rmapRy;
     cv::Rect calibROI[2];
     cv::Mat img_r_L;

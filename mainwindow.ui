@@ -332,6 +332,32 @@
      <string>Disparity</string>
     </property>
    </widget>
+   <widget class="QCheckBox" name="checkBox_do_calibration">
+    <property name="geometry">
+     <rect>
+      <x>790</x>
+      <y>150</y>
+      <width>91</width>
+      <height>16</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Do Calibration</string>
+    </property>
+   </widget>
+   <widget class="QCheckBox" name="checkBox_do_depth">
+    <property name="geometry">
+     <rect>
+      <x>790</x>
+      <y>180</y>
+      <width>71</width>
+      <height>16</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Do Depth</string>
+    </property>
+   </widget>
    <widget class="QWidget" name="">
     <property name="geometry">
      <rect>

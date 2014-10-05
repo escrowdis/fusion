@@ -8,6 +8,8 @@ stereo_vision::stereo_vision(QObject *parent) : QThread(parent)
     fg_end = true;
     fg_calib_loaded = false;
 
+    path_calib = QDir::currentPath();
+
     paramInitialize();
 }
 
@@ -122,19 +124,18 @@ bool stereo_vision::loadRemapFile(int cam_focal_length, double base_line)
 {
     // the remap files are under the project folder
     QString folder_remap_file;
-    QString last_folder = QDir::currentPath().section("/", -1, -1);
-    QDir path;
+    QString last_folder = path_calib.path().section("/", -1, -1);
     if (last_folder == "Fusion")
-        path.setPath("./calibrationImgs/My_Data_" + QString::number(cam_focal_length)
+        path_calib.setPath("./calibrationImgs/My_Data_" + QString::number(cam_focal_length)
                      + "_" + QString::number(base_line) + ".yml");
     else if (last_folder == "Release" || last_folder == "Debug")
-        path.setPath("../calibrationImgs/My_Data_" + QString::number(cam_focal_length)
+        path_calib.setPath("../calibrationImgs/My_Data_" + QString::number(cam_focal_length)
                      + "_" + QString::number(base_line) + ".yml");
 
-    if (!path.exists())
+    if (!path_calib.exists())
         return fg_calib_loaded;
 
-    folder_remap_file = path.path();
+    folder_remap_file = path_calib.path();
     cv::FileStorage fs(folder_remap_file.toStdString().c_str(), cv::FileStorage::READ);
 
     if (!fs.isOpened())
@@ -182,20 +183,11 @@ void stereo_vision::run()
         qDebug()<<"run";
 #endif
         // camera capturing
-        if (cam_L.isOpened()) {
-            cam_L >> cap_L;
-            cv::cvtColor(cap_L, img_L, cv::COLOR_BGR2RGB);
-        }
-        if (cam_R.isOpened()) {
-            cam_R >> cap_R;
-            cv::cvtColor(cap_R, img_R, cv::COLOR_BGR2RGB);
-        }
-
-        cv::waitKey(1);
+        camCapture();
 
         // stereo matching
-        sgbm->compute(img_L, img_R, disp_raw);
-        disp_raw.convertTo(disp, CV_8UC1);
+        stereoMatch();
+
 #ifdef debug_info_sv
         qDebug()<<"run"<<&img_L;
 #endif
