@@ -55,17 +55,6 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->comboBox_cam_com_R->setCurrentIndex(2);
     ui->comboBox_camera_focal_length->setCurrentIndex(0);
 
-    // load camera calibration files
-    if (!sv->loadRemapFile(ui->comboBox_camera_focal_length->currentText().toInt(), ui->lineEdit_base_line->text().toDouble())) {
-        QMessageBox::information(0, "Error!", "Calibration files can NOT be imported.");
-        sv->path_calib = QFileDialog::getExistingDirectory(0, "Please load the calibration files");
-    }
-    if (!sv->loadRemapFile(ui->comboBox_camera_focal_length->currentText().toInt(), ui->lineEdit_base_line->text().toDouble())) {
-        QMessageBox::information(0, "Error!", "Please restart the program again due to \"Calibration files\" problem.");
-        MainWindow::~MainWindow();
-        return;
-    }
-
     QObject::connect(sv, SIGNAL(sendImages(cv::Mat, cv::Mat, cv::Mat)), this, SLOT(displaying(cv::Mat, cv::Mat, cv::Mat)));
 
     // Stereo vision =========================== End
@@ -210,4 +199,15 @@ void MainWindow::on_pushButton_3_clicked()
 void MainWindow::on_pushButton_4_clicked()
 {
 
+}
+
+void MainWindow::on_checkBox_do_calibration_clicked(bool checked)
+{
+    if (checked) {
+        // load camera calibration files
+        if (!sv->loadRemapFile(ui->comboBox_camera_focal_length->currentText().toInt(), ui->lineEdit_base_line->text().toDouble())) {
+            QMessageBox::information(0, "Error!", "Calibration files can NOT be imported.");
+            ui->checkBox_do_calibration->setChecked(false);
+        }
+    }
 }

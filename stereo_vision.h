@@ -6,6 +6,7 @@
 #include <QThread>
 #include <QImage>
 #include <QDir>
+#include <QFile>
 
 #include <opencv2/opencv.hpp>
 
@@ -57,7 +58,7 @@ public:
     bool fg_calib_loaded;               // load the calibration files or not
 
     // stereo calibration stuffs
-    QDir path_calib;
+    QDir remap_path;
     cv::Mat rmapLx, rmapLy, rmapRx, rmapRy;
     cv::Rect calibROI[2];
     cv::Mat img_r_L;

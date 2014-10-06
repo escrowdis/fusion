@@ -55,6 +55,8 @@ private slots:
 
     void on_pushButton_4_clicked();
 
+    void on_checkBox_do_calibration_clicked(bool checked);
+
 private:
     Ui::MainWindow *ui;
 

@@ -8,7 +8,7 @@ stereo_vision::stereo_vision(QObject *parent) : QThread(parent)
     fg_end = true;
     fg_calib_loaded = false;
 
-    path_calib = QDir::currentPath();
+    remap_path = QDir::currentPath();
 
     paramInitialize();
 }
@@ -123,20 +123,26 @@ void stereo_vision::camCapture()
 bool stereo_vision::loadRemapFile(int cam_focal_length, double base_line)
 {
     // the remap files are under the project folder
-    QString folder_remap_file;
-    QString last_folder = path_calib.path().section("/", -1, -1);
-    if (last_folder == "Fusion")
-        path_calib.setPath("./calibrationImgs/My_Data_" + QString::number(cam_focal_length)
-                     + "_" + QString::number(base_line) + ".yml");
-    else if (last_folder == "Release" || last_folder == "Debug")
-        path_calib.setPath("../calibrationImgs/My_Data_" + QString::number(cam_focal_length)
-                     + "_" + QString::number(base_line) + ".yml");
+    QString remap_file = QString("My_Data_" + QString::number(cam_focal_length) + "_" + QString::number(base_line) + ".yml");
+    QString remap_last_folder = remap_path.path().section("/", -1, -1);
 
-    if (!path_calib.exists())
+    if  (remap_last_folder == "Release" || remap_last_folder == "Debug")
+        remap_path.cdUp();
+    else if (remap_last_folder != "Fusion")
+        return fg_calib_loaded;
+    remap_path.cd("./calibrationImgs");
+
+#ifdef debug_info_sv
+    qDebug()<<"path exist: "<<remap_path.exists()<<"path: "<<remap_path.path();
+#endif
+    if (!remap_path.exists())
         return fg_calib_loaded;
 
-    folder_remap_file = path_calib.path();
-    cv::FileStorage fs(folder_remap_file.toStdString().c_str(), cv::FileStorage::READ);
+#ifdef debug_info_sv
+    qDebug() << "remap folder: " << remap_last_folder << "\tfile: " << remap_file;
+#endif
+
+    cv::FileStorage fs(QString(remap_path.path() + "/" + remap_file).toStdString().c_str(), cv::FileStorage::READ);
 
     if (!fs.isOpened())
         return fg_calib_loaded;

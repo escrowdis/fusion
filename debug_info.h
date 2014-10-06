@@ -4,6 +4,6 @@
 #include <QDebug>
 
 //#define debug_info_lrf
-//#define debug_info_sv
+#define debug_info_sv
 
 #endif // DEBUG_INFO_H
