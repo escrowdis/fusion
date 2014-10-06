@@ -151,21 +151,22 @@ void MainWindow::displaying(const cv::Mat &img_L, const cv::Mat &img_R, const cv
 #ifdef debug_info_sv
     qDebug()<<"disp"<<&img_L;
 #endif
-    ui->label_cam_img_L->setPixmap(QPixmap::fromImage(QImage::QImage(img_L.data, img_L.cols, img_L.rows, QImage::Format_RGB888)).scaled(IMG_W, IMG_H));
-    ui->label_cam_img_R->setPixmap(QPixmap::fromImage(QImage::QImage(img_R.data, img_R.cols, img_R.rows, QImage::Format_RGB888)).scaled(IMG_W, IMG_H));
-    ui->label_disp->setPixmap(QPixmap::fromImage(QImage::QImage(disp.data, disp.cols, disp.rows, QImage::Format_Indexed8)).scaled(IMG_W, IMG_H));
+    ui->label_cam_img_L->setPixmap(QPixmap::fromImage(QImage::QImage(img_L.data, img_L.cols, img_L.rows, 3 * img_L.cols, QImage::Format_RGB888)).scaled(IMG_W, IMG_H));
+    ui->label_cam_img_R->setPixmap(QPixmap::fromImage(QImage::QImage(img_R.data, img_R.cols, img_R.rows, 3 * img_R.cols, QImage::Format_RGB888)).scaled(IMG_W, IMG_H));
+    ui->label_disp->setPixmap(QPixmap::fromImage(QImage::QImage(disp.data, disp.cols, disp.rows, disp.cols, QImage::Format_Indexed8)).scaled(IMG_W, IMG_H));
     qApp->processEvents();
 }
 
 void MainWindow::on_pushButton_cam_open_clicked()
 {
     camOpen();
-    stereoVision();
+    on_pushButton_cam_step_clicked();
 }
 
 void MainWindow::on_pushButton_cam_step_clicked()
 {
-    stereoVision();
+    sv->stereoVision();
+    displaying(sv->img_r_L, sv->img_r_R, sv->disp);
 }
 
 void MainWindow::on_pushButton_cam_capture_clicked()
@@ -176,19 +177,6 @@ void MainWindow::on_pushButton_cam_capture_clicked()
 void MainWindow::on_pushButton_cam_stop_clicked()
 {
     camStop();
-}
-
-void MainWindow::stereoVision()
-{
-    sv->camCapture();
-
-    if (ui->checkBox_do_calibration->isChecked()) {
-        sv->rectifyImage();
-    }
-
-    sv->stereoMatch();
-
-    displaying(sv->img_L, sv->img_R, sv->disp);
 }
 
 void MainWindow::on_pushButton_3_clicked()
@@ -209,5 +197,8 @@ void MainWindow::on_checkBox_do_calibration_clicked(bool checked)
             QMessageBox::information(0, "Error!", "Calibration files can NOT be imported.");
             ui->checkBox_do_calibration->setChecked(false);
         }
+        sv->fg_calib = true;
     }
+    else
+        sv->fg_calib = false;
 }

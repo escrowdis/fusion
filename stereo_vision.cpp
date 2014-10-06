@@ -7,8 +7,7 @@ stereo_vision::stereo_vision(QObject *parent) : QThread(parent)
     fg_capture = false;
     fg_end = true;
     fg_calib_loaded = false;
-
-    remap_path = QDir::currentPath();
+    fg_calib = false;
 
     paramInitialize();
 }
@@ -122,11 +121,17 @@ void stereo_vision::camCapture()
 
 bool stereo_vision::loadRemapFile(int cam_focal_length, double base_line)
 {
-    // the remap files are under the project folder
-    QString remap_file = QString("My_Data_" + QString::number(cam_focal_length) + "_" + QString::number(base_line) + ".yml");
+    // The folder of calibration files should be placed under project's folder
+    // check whether the file has been loaded
+    if (fg_calib_loaded && this->cam_focal_length == cam_focal_length && this->base_line == base_line)
+        return fg_calib_loaded;
+
+    // find files under which folder and find the folder with calibration files
+    remap_file = QString("My_Data_" + QString::number(cam_focal_length) + "_" + QString::number(base_line) + ".yml");
+    remap_path = QDir::currentPath();
     QString remap_last_folder = remap_path.path().section("/", -1, -1);
 
-    if  (remap_last_folder == "Release" || remap_last_folder == "Debug")
+    if  (remap_last_folder == "release" || remap_last_folder == "debug")
         remap_path.cdUp();
     else if (remap_last_folder != "Fusion")
         return fg_calib_loaded;
@@ -147,6 +152,7 @@ bool stereo_vision::loadRemapFile(int cam_focal_length, double base_line)
     if (!fs.isOpened())
         return fg_calib_loaded;
 
+    // rewrite params
     fs["reMapLx"] >> rmapLx;
     fs["reMapLy"] >> rmapLy;
     fs["reMapRx"] >> rmapRx;
@@ -160,6 +166,8 @@ bool stereo_vision::loadRemapFile(int cam_focal_length, double base_line)
     fs["ROI1w"] >> calibROI[1].width;
     fs["ROI1h"] >> calibROI[1].height;
     fs.release();
+    this->cam_focal_length = cam_focal_length;
+    this->base_line = base_line;
     fg_calib_loaded = true;
 
     return fg_calib_loaded;
@@ -172,14 +180,43 @@ bool stereo_vision::rectifyImage()
         cv::remap(img_R, img_r_R, rmapRx, rmapRy, cv::INTER_LINEAR);
         return true;
     }
+    img_r_L = img_L.clone();
+    img_r_R = img_R.clone();
 
     return false;
 }
 
 void stereo_vision::stereoMatch()
 {
-    sgbm->compute(img_L, img_R, disp_raw);
+    // pre-processing
+    cv::cvtColor(img_r_L, img_sgbm_L, cv::COLOR_BGR2GRAY);
+    cv::cvtColor(img_r_R, img_sgbm_R, cv::COLOR_BGR2GRAY);
+
+    cv::equalizeHist(img_sgbm_L, img_sgbm_L);
+    cv::equalizeHist(img_sgbm_R, img_sgbm_R);
+
+    cv::GaussianBlur(img_sgbm_L, img_sgbm_L, cv::Size(7, 7), 0, 0);
+    cv::GaussianBlur(img_sgbm_R, img_sgbm_R, cv::Size(7, 7), 0, 0);
+
+    sgbm->compute(img_sgbm_L, img_sgbm_R, disp_raw);
     disp_raw.convertTo(disp, CV_8U);
+}
+
+void stereo_vision::stereoVision()
+{
+    // camera capturing
+    camCapture();
+
+    // camera calibration
+    if (fg_calib)
+        rectifyImage();
+    else {
+        img_r_L = img_L.clone();
+        img_r_R = img_R.clone();
+    }
+
+    // stereo matching
+    stereoMatch();
 }
 
 void stereo_vision::run()
@@ -188,17 +225,14 @@ void stereo_vision::run()
 #ifdef debug_info_sv
         qDebug()<<"run";
 #endif
-        // camera capturing
-        camCapture();
 
-        // stereo matching
-        stereoMatch();
+        stereoVision();
 
 #ifdef debug_info_sv
         qDebug()<<"run"<<&img_L;
 #endif
 
-        emit this->sendImages(img_L, img_R, disp);
+        emit this->sendImages(img_r_L, img_r_R, disp);
 //        cv::imshow("disp", disp);
     }
     fg_end = true;

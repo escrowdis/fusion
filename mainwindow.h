@@ -86,8 +86,6 @@ private:
     void camCapture() {sv->start();}
 
     void camStop() {sv->stop();}
-
-    void stereoVision();
     // ========================
 };
 
