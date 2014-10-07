@@ -8,6 +8,12 @@ stereo_vision::stereo_vision(QObject *parent) : QThread(parent)
     fg_end = true;
     fg_calib_loaded = false;
     fg_calib = false;
+    fg_stereoMatch = false;
+
+    // Initialization images for displaying
+    img_r_L = cv::Mat::zeros(IMG_H, IMG_W, CV_8UC3);
+    img_r_R = cv::Mat::zeros(IMG_H, IMG_W, CV_8UC3);
+    disp = cv::Mat::zeros(IMG_H, IMG_W, CV_8UC1);
 
     paramInitialize();
 }
@@ -216,7 +222,11 @@ void stereo_vision::stereoVision()
     }
 
     // stereo matching
-    stereoMatch();
+    if (fg_stereoMatch)
+        stereoMatch();
+    else {
+        disp.setTo(0);
+    }
 }
 
 void stereo_vision::run()
@@ -233,7 +243,6 @@ void stereo_vision::run()
 #endif
 
         emit this->sendImages(img_r_L, img_r_R, disp);
-//        cv::imshow("disp", disp);
     }
     fg_end = true;
 }

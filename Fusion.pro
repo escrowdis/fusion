@@ -14,14 +14,19 @@ TEMPLATE = app
 SOURCES += main.cpp\
         mainwindow.cpp \
         lrf_controller.cpp \
-    stereo_vision.cpp
+    stereo_vision.cpp \
+    calibrationform.cpp \
+    camera_calibration.cpp
 
 HEADERS  += mainwindow.h \
             lrf_controller.h \
     stereo_vision.h \
-    debug_info.h
+    debug_info.h \
+    calibrationform.h \
+    camera_calibration.h
 
-FORMS    += mainwindow.ui
+FORMS    += mainwindow.ui \
+    calibrationform.ui
 
 OpenCV_Lib = D:/OpenCV/opencv3alpha/x86/vc12/lib
 

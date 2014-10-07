@@ -43,6 +43,7 @@ public:
 
     // status
     bool fg_calib;                      // check whether the calibration button is checked
+    bool fg_stereoMatch;     // check whether do the correspondence matching
 
     // disparity image
     cv::Mat disp;
