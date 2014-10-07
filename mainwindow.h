@@ -18,6 +18,9 @@
 // Stereo vision
 #include "stereo_vision.h"
 
+// camera calibration
+#include "calibrationform.h"
+
 namespace Ui {
 class MainWindow;
 }
@@ -57,9 +60,14 @@ private slots:
 
     void on_checkBox_do_calibration_clicked(bool checked);
 
+    void on_pushButton_camera_calibration_clicked();
+
+    void closeEvent(QCloseEvent *);
+
+    void on_checkBox_do_depth_clicked(bool checked);
+
 private:
     Ui::MainWindow *ui;
-
 
     // Laser range finder =====
     lrf_controller* lrf;

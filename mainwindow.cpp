@@ -179,6 +179,12 @@ void MainWindow::on_pushButton_cam_stop_clicked()
     camStop();
 }
 
+void MainWindow::closeEvent(QCloseEvent *)
+{
+    // If close mainwindow without clicking stop button since the camera has been opened.
+    camStop();
+}
+
 void MainWindow::on_pushButton_3_clicked()
 {
 
@@ -201,4 +207,19 @@ void MainWindow::on_checkBox_do_calibration_clicked(bool checked)
     }
     else
         sv->fg_calib = false;
+}
+
+void MainWindow::on_checkBox_do_depth_clicked(bool checked)
+{
+    if (checked) {
+        sv->fg_stereoMatch = true;
+    }
+    else
+        sv->fg_stereoMatch = false;
+}
+
+void MainWindow::on_pushButton_camera_calibration_clicked()
+{
+    calibrationForm *widget = new calibrationForm();
+    widget->show();
 }
