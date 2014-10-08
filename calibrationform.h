@@ -1,8 +1,9 @@
 #ifndef CALIBRATIONFORM_H
 #define CALIBRATIONFORM_H
 
-#include <QWidget>
 #include "debug_info.h"
+
+#include <QWidget>
 
 #include "camera_calibration.h"
 
@@ -22,6 +23,10 @@ public:
 
 private slots:
     void on_pushButton_3_clicked();
+
+    void on_pushButton_calibration_clicked();
+
+    void doSaveImage();
 
 private:
     Ui::calibrationForm *ui;
