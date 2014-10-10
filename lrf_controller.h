@@ -4,7 +4,6 @@
 #include "debug_info.h"
 
 #include <QString>
-#include <QThread>
 
 // COM Port Communication
 #include <QtSerialPort/QSerialPort>

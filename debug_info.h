@@ -3,6 +3,7 @@
 
 #include <QDebug>
 
+//#define debug_info_main
 //#define debug_info_lrf
 //#define debug_info_sv
 
