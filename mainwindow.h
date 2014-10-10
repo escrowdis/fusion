@@ -35,39 +35,43 @@ public:
     ~MainWindow();
 
 private slots:
+
+    // Laser range finder =====
     void on_pushButton_lrf_open_clicked();
 
     void on_pushButton_lrf_display_clicked();
 
-    // Laser range finder =====
     void lrfReadData();
-    // ========================
+    // ======================== End
 
     // Stereo vision ==========
     void on_pushButton_cam_open_clicked();
-
-    void displaying(const cv::Mat &img_L, const cv::Mat &img_R, const cv::Mat &disp);
-    // ========================
 
     void on_pushButton_cam_stop_clicked();
 
     void on_pushButton_cam_step_clicked();
 
     void on_pushButton_cam_capture_clicked();
-    void on_pushButton_4_clicked();
 
     void on_checkBox_do_calibration_clicked(bool checked);
+
+    void on_checkBox_do_depth_clicked(bool checked);
+
+    void displaying(const cv::Mat &img_L, const cv::Mat &img_R, const cv::Mat &disp);
+    // ======================== End
+
+    void on_pushButton_4_clicked();
 
     void on_pushButton_camera_calibration_clicked();
 
     void closeEvent(QCloseEvent *);
 
-    void on_checkBox_do_depth_clicked(bool checked);
-
 private:
     Ui::MainWindow *ui;
 
-    void threadProcessing();
+    void reportError(QString part, QString level, QString content);
+
+    void report(QString);
 
     // Laser range finder =====
     lrf_controller* lrf;
@@ -81,7 +85,7 @@ private:
     double lrf_data[LENGTH_DATA];
 
     void lrfResetData();
-    // ========================
+    // ======================== End
 
     // Stereo vision ==========
     stereo_vision* sv;
@@ -96,7 +100,7 @@ private:
     }
 
     void camStop() {}
-    // ========================
+    // ======================== End
 
     // Thread control =========
     bool fg_running;
@@ -104,7 +108,16 @@ private:
     QFutureSynchronizer<void> sync;
     QFuture<void> f_sv;
     QFuture<void> f_lrf;
-    // ========================
+
+    void threadProcessing();
+    // ======================== End
+
+    // camera calibration =====
+    calibrationForm *form_calib;
+    // ======================== End
+
+public slots:
+    void saveImage();
 };
 
 #endif // MAINWINDOW_H

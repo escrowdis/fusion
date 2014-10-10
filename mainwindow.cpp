@@ -7,6 +7,8 @@ MainWindow::MainWindow(QWidget *parent) :
 {
     ui->setupUi(this);
 
+    fg_running = false;
+
     // Laser range finder ======================
 
     // Initialization
@@ -65,6 +67,9 @@ MainWindow::MainWindow(QWidget *parent) :
     sync.addFuture(f_sv);
     sync.addFuture(f_lrf);
     // ========================================= End
+
+    // camera calibration ======================
+    // ========================================= End
 }
 
 MainWindow::~MainWindow()
@@ -81,15 +86,25 @@ MainWindow::~MainWindow()
     delete ui;
 }
 
+void MainWindow::reportError(QString part, QString level, QString content)
+{
+    ui->system_log->append("[" + part + "] " + level + "  " + content);
+    QMessageBox::information(0, level, content);
+}
+
+void MainWindow::report(QString content)
+{
+    ui->system_log->append(content);
+}
+
 void MainWindow::on_pushButton_lrf_open_clicked()
 {
     if (!lrf->open(ui->comboBox_lrf_com->currentText(), ui->comboBox_lrf_baudRate->currentText().toInt())) {
-        ui->system_log->append("Error!  Port can NOT be open or under using.");
-        QMessageBox::information(0, "Error!", "Port cannot be open or under using.");
+        reportError("lrf", "Error!", "Port cannot be open or under using.");
         return;
     }
     else {
-        ui->system_log->append("Port's opened.");
+        report("Port's opened.");
         lrf_timer->start(350);
     }
 }
@@ -106,11 +121,11 @@ void MainWindow::lrfReadData()
     lrfResetData();
 
     if (lrf->acquireData(lrf_data) && lrf_status == false) {
-        ui->system_log->append("data: acquired");
+        report("data: acquired");
         lrf_status = true;
     }
     else {
-        ui->system_log->append("data: lost");
+        report("data: lost");
         lrf_status = false;
     }
 
@@ -146,13 +161,12 @@ void MainWindow::camOpen()
     int R = ui->comboBox_cam_com_R->currentIndex();
 
     if (!sv->open(L, R)) {
-        ui->system_log->append("Error!  Camera can NOT be opened.");
-        QMessageBox::information(0, "Error!", "Camera can NOT be opened.");
+        reportError("sv", "Error!", "Camera can NOT be opened.");
         sv->close();
         return;
     }
     else {
-        ui->system_log->append("Port's opened.");
+        report("Port's opened.");
     }
 }
 
@@ -175,13 +189,24 @@ void MainWindow::on_pushButton_cam_open_clicked()
 
 void MainWindow::on_pushButton_cam_step_clicked()
 {
+    if (!sv->isOpened()) {
+        reportError("sv", "Error!", "Cameras haven't opened.");
+        return;
+    }
+
     camCapture();
 }
 
 void MainWindow::on_pushButton_cam_capture_clicked()
 {
+    if (!sv->isOpened()) {
+        reportError("sv", "Error!", "Cameras haven't opened.");
+        return;
+    }
+
     fg_capturing = true;
-    threadProcessing();
+    if (!fg_running)
+        threadProcessing();
 }
 
 void MainWindow::on_pushButton_cam_stop_clicked()
@@ -198,6 +223,7 @@ void MainWindow::closeEvent(QCloseEvent *)
 
 void MainWindow::threadProcessing()
 {
+    fg_running = true;
     while (fg_capturing | fg_acquiring) {
         // sv
         if (fg_capturing) {
@@ -219,6 +245,7 @@ void MainWindow::threadProcessing()
 
         }
     }
+    fg_running = false;
 }
 
 void MainWindow::on_pushButton_4_clicked()
@@ -231,7 +258,7 @@ void MainWindow::on_checkBox_do_calibration_clicked(bool checked)
     if (checked) {
         // load camera calibration files
         if (!sv->loadRemapFile(ui->comboBox_camera_focal_length->currentText().toInt(), ui->lineEdit_base_line->text().toDouble())) {
-            QMessageBox::information(0, "Error!", "Calibration files can NOT be imported.");
+            reportError("cc", "Error!", "Calibration files can NOT be imported.");
             ui->checkBox_do_calibration->setChecked(false);
         }
         sv->fg_calib = true;
@@ -251,6 +278,16 @@ void MainWindow::on_checkBox_do_depth_clicked(bool checked)
 
 void MainWindow::on_pushButton_camera_calibration_clicked()
 {
-    calibrationForm *widget = new calibrationForm();
-    widget->show();
+    form_calib = new calibrationForm();
+    form_calib->show();
+    QObject::connect(form_calib, SIGNAL(saveImage()), this, SLOT(saveImage()));
+}
+
+void MainWindow::saveImage()
+{
+    if (!sv->isOpened()) {
+        reportError("sv", "Error!", "Cameras haven't opened.");
+        return;
+    }
+
 }

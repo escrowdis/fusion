@@ -16,11 +16,13 @@
 class stereo_vision
 {
 public:
-    explicit stereo_vision();
+    stereo_vision();
 
     ~stereo_vision();
 
     bool open(int com_L, int com_R);
+
+    bool isOpened() {return fg_cam_opened;}
 
     void close();
 
@@ -38,7 +40,7 @@ public:
 
     // status
     bool fg_calib;                      // check whether the calibration button is checked
-    bool fg_stereoMatch;     // check whether do the correspondence matching
+    bool fg_stereoMatch;                // check whether do the correspondence matching
 
     // disparity image
     cv::Mat disp;
@@ -54,6 +56,7 @@ private:
 
     // status
     bool fg_cam_L, fg_cam_R;            // open or not
+    bool fg_cam_opened;
     bool fg_calib_loaded;               // load the calibration files or not
 
     // capture from camera

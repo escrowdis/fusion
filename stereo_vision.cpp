@@ -4,6 +4,7 @@ stereo_vision::stereo_vision()
 {
     fg_cam_L = false;
     fg_cam_R = false;
+    fg_cam_opened = false;
     fg_calib_loaded = false;
     fg_calib = false;
     fg_stereoMatch = false;
@@ -58,8 +59,10 @@ bool stereo_vision::open(int com_L, int com_R)
 #endif
         }
     }
+    if (fg_cam_L && fg_cam_R)
+        fg_cam_opened = true;
 
-    return fg_cam_L && fg_cam_R;
+    return fg_cam_opened;
 }
 
 void stereo_vision::close()
