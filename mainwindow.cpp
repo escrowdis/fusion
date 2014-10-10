@@ -12,6 +12,8 @@ MainWindow::MainWindow(QWidget *parent) :
     // Initialization
     lrf = new lrf_controller();
 
+    fg_acquiring = false;
+
     // COM port
     for (int i = 1; i <= 20; i++)
         ui->comboBox_lrf_com->addItem("COM" + QString::number(i));
@@ -34,7 +36,9 @@ MainWindow::MainWindow(QWidget *parent) :
     // Stereo vision ===========================
 
     // Initialization
-    sv = new stereo_vision(parent);
+    sv = new stereo_vision();
+
+    fg_capturing = false;
 
     // COM port
     for (int i = 0; i < 5; i++) {
@@ -55,13 +59,19 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->comboBox_cam_com_R->setCurrentIndex(2);
     ui->comboBox_camera_focal_length->setCurrentIndex(0);
 
-    QObject::connect(sv, SIGNAL(sendImages(cv::Mat, cv::Mat, cv::Mat)), this, SLOT(displaying(cv::Mat, cv::Mat, cv::Mat)));
-
     // Stereo vision =========================== End
+
+    // Thread control ==========================
+    sync.addFuture(f_sv);
+    sync.addFuture(f_lrf);
+    // ========================================= End
 }
 
 MainWindow::~MainWindow()
 {
+#ifdef debug_info_main
+    qDebug()<<"destructor";
+#endif
     cv::destroyAllWindows();
     lrf->close();
     delete lrf;
@@ -165,29 +175,50 @@ void MainWindow::on_pushButton_cam_open_clicked()
 
 void MainWindow::on_pushButton_cam_step_clicked()
 {
-    sv->stereoVision();
-    displaying(sv->img_r_L, sv->img_r_R, sv->disp);
+    camCapture();
 }
 
 void MainWindow::on_pushButton_cam_capture_clicked()
 {
-    camCapture();
+    fg_capturing = true;
+    threadProcessing();
 }
 
 void MainWindow::on_pushButton_cam_stop_clicked()
 {
-    camStop();
+    fg_capturing = false;
 }
 
 void MainWindow::closeEvent(QCloseEvent *)
 {
     // If close mainwindow without clicking stop button since the camera has been opened.
-    camStop();
+    fg_capturing = false;
+    fg_acquiring = false;
 }
 
-void MainWindow::on_pushButton_3_clicked()
+void MainWindow::threadProcessing()
 {
+    while (fg_capturing | fg_acquiring) {
+        // sv
+        if (fg_capturing) {
+            f_sv = QtConcurrent::run(sv, &stereo_vision::stereoVision);
+            sync.setFuture(f_sv);
+        }
 
+        // lrf
+        if (fg_acquiring) {
+
+        }
+
+        sync.waitForFinished();
+
+        if (fg_capturing)
+            displaying(sv->img_r_L, sv->img_r_R, sv->disp);
+
+        if (fg_acquiring) {
+
+        }
+    }
 }
 
 void MainWindow::on_pushButton_4_clicked()

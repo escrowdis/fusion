@@ -3,7 +3,7 @@
 
 #include "debug_info.h"
 
-#include <QThread>
+//#include <QThread>
 #include <QImage>
 #include <QDir>
 #include <QFile>
@@ -13,17 +13,12 @@
 #define IMG_W 320
 #define IMG_H 240
 
-class stereo_vision : public QThread
+class stereo_vision
 {
-    Q_OBJECT
 public:
-    explicit stereo_vision(QObject *parent = 0);
+    explicit stereo_vision();
 
     ~stereo_vision();
-
-    void start();
-
-    void stop();
 
     bool open(int com_L, int com_R);
 
@@ -48,12 +43,6 @@ public:
     // disparity image
     cv::Mat disp;
 
-protected:
-    void run();
-
-signals:
-    void sendImages(const cv::Mat &img_l, const cv::Mat &img_r, const cv::Mat &disp);
-
 private:
     void paramInitialize();
 
@@ -65,8 +54,6 @@ private:
 
     // status
     bool fg_cam_L, fg_cam_R;            // open or not
-    bool fg_capture;                    // under capturing or not
-    bool fg_end;                        // interrupt or not
     bool fg_calib_loaded;               // load the calibration files or not
 
     // capture from camera

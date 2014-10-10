@@ -8,6 +8,7 @@
 #include <QMessageBox>
 #include <QTimer>
 #include <QTime>
+#include <QtConcurrent/QtConcurrent>
 
 #include <iostream>
 #include <opencv2/opencv.hpp>
@@ -53,9 +54,6 @@ private slots:
     void on_pushButton_cam_step_clicked();
 
     void on_pushButton_cam_capture_clicked();
-
-    void on_pushButton_3_clicked();
-
     void on_pushButton_4_clicked();
 
     void on_checkBox_do_calibration_clicked(bool checked);
@@ -69,8 +67,12 @@ private slots:
 private:
     Ui::MainWindow *ui;
 
+    void threadProcessing();
+
     // Laser range finder =====
     lrf_controller* lrf;
+
+    bool fg_acquiring;
 
     QTimer *lrf_timer;
 
@@ -84,16 +86,24 @@ private:
     // Stereo vision ==========
     stereo_vision* sv;
 
-//    cv::Mat img_L;
-//    cv::Mat img_R;
-
-//    cv::Mat disp;
+    bool fg_capturing;
 
     void camOpen();
 
-    void camCapture() {sv->start();}
+    void camCapture() {
+        sv->stereoVision();
+        displaying(sv->img_r_L, sv->img_r_R, sv->disp);
+    }
 
-    void camStop() {sv->stop();}
+    void camStop() {}
+    // ========================
+
+    // Thread control =========
+    bool fg_running;
+
+    QFutureSynchronizer<void> sync;
+    QFuture<void> f_sv;
+    QFuture<void> f_lrf;
     // ========================
 };
 

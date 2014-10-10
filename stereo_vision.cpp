@@ -1,11 +1,9 @@
 #include "stereo_vision.h"
 
-stereo_vision::stereo_vision(QObject *parent) : QThread(parent)
+stereo_vision::stereo_vision()
 {
     fg_cam_L = false;
     fg_cam_R = false;
-    fg_capture = false;
-    fg_end = true;
     fg_calib_loaded = false;
     fg_calib = false;
     fg_stereoMatch = false;
@@ -20,7 +18,6 @@ stereo_vision::stereo_vision(QObject *parent) : QThread(parent)
 
 stereo_vision::~stereo_vision()
 {
-    while (!fg_end) { }
     close();
     sgbm.release();
 }
@@ -95,22 +92,6 @@ void stereo_vision::paramInitialize()
     sgbm->setSpeckleRange(32);
     sgbm->setDisp12MaxDiff(1);
     sgbm->setMode(cv::StereoSGBM::MODE_SGBM);
-}
-
-void stereo_vision::start()
-{
-#ifdef debug_info_sv
-    qDebug()<<"start";
-#endif
-    fg_end = false;
-    fg_capture = true;
-
-    run();
-}
-
-void stereo_vision::stop()
-{
-    fg_capture = false;
 }
 
 void stereo_vision::camCapture()
@@ -210,6 +191,10 @@ void stereo_vision::stereoMatch()
 
 void stereo_vision::stereoVision()
 {
+#ifdef debug_info_sv
+    qDebug()<<"run";
+#endif
+
     // camera capturing
     camCapture();
 
@@ -227,23 +212,10 @@ void stereo_vision::stereoVision()
     else {
         disp.setTo(0);
     }
-}
-
-void stereo_vision::run()
-{
-    while (fg_capture) {
-#ifdef debug_info_sv
-        qDebug()<<"run";
-#endif
-
-        stereoVision();
 
 #ifdef debug_info_sv
-        qDebug()<<"run"<<&img_L;
+    qDebug()<<"run"<<&img_L;
 #endif
-
-        emit this->sendImages(img_r_L, img_r_R, disp);
-    }
-    fg_end = true;
 }
+
 
