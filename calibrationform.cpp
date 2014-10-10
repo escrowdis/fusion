@@ -6,7 +6,9 @@ calibrationForm::calibrationForm(QWidget *parent) :
     ui(new Ui::calibrationForm)
 {
     ui->setupUi(this);
-    cc = new camera_calibration();
+    cc = new camera_calibration(parent);
+
+    QObject::connect(cc, SIGNAL(saveImage()), this, SLOT(doSaveImage()));
 }
 
 calibrationForm::~calibrationForm()
@@ -18,4 +20,14 @@ calibrationForm::~calibrationForm()
 void calibrationForm::on_pushButton_3_clicked()
 {
     close();
+}
+
+void calibrationForm::on_pushButton_calibration_clicked()
+{
+    cc->start();
+}
+
+void calibrationForm::doSaveImage()
+{
+    qDebug()<<"hi";
 }
