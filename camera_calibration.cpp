@@ -3,15 +3,8 @@
 #define CAP_WIDTH 480
 #define CAP_HEIGHT 640
 
-camera_calibration::camera_calibration(QObject *parent) : QThread(parent)
+camera_calibration::camera_calibration()
 {
-    fg_run = false;
-    fg_end = true;
-}
-
-camera_calibration::~camera_calibration()
-{
-    while (!fg_end) { }
 }
 
 void camera_calibration::CameraCalibration(bool ShowPts, cv::Size SizePattern, cv::Size2f SizeGrid, std::vector<std::string> files)
@@ -152,36 +145,7 @@ void camera_calibration::DisplayUndistortedImg(bool ShowPts)
         if (c == 27)
             break;
     }
+
     cv::destroyAllWindows();
-
 }
 
-void camera_calibration::start()
-{
-    fg_end = false;
-    fg_run = true;
-
-    run();
-}
-
-void camera_calibration::stop()
-{
-    fg_run = false;
-}
-
-void camera_calibration::run()
-{
-    cv::Mat temp = cv::imread("E:/lena.bmp");
-//    while (fg_run) {
-        cv::imshow("lena", temp);
-//        char c = cv::waitKey(10);
-
-//        // save image
-//        if (c == 's' || c == 'S')
-//            emit saveImage();
-//        else {
-//            QThread::msleep(1000);
-//        }
-//    }
-    fg_end = true;
-}

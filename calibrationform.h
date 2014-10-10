@@ -4,6 +4,7 @@
 #include "debug_info.h"
 
 #include <QWidget>
+#include <QKeyEvent>
 
 #include "camera_calibration.h"
 
@@ -26,10 +27,17 @@ private slots:
 
     void on_pushButton_calibration_clicked();
 
-    void doSaveImage();
+    void keyReleaseEvent(QKeyEvent *event);
+
+signals:
+    void saveImage();
 
 private:
     Ui::calibrationForm *ui;
+
+    bool fg_SaveBoth;           // check type of saving type -> true: Save both images false: Save single side
+    char CCD;                   // Which CCD is on processing -> R, L
+
 };
 
 #endif // CALIBRATIONFORM_H

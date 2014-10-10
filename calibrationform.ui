@@ -189,6 +189,33 @@
     <string>Exit</string>
    </property>
   </widget>
+  <widget class="QCheckBox" name="checkBox_SaveBoth">
+   <property name="geometry">
+    <rect>
+     <x>260</x>
+     <y>30</y>
+     <width>73</width>
+     <height>31</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Save both
+images</string>
+   </property>
+  </widget>
+  <widget class="QLabel" name="label_status">
+   <property name="geometry">
+    <rect>
+     <x>10</x>
+     <y>280</y>
+     <width>211</width>
+     <height>16</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string/>
+   </property>
+  </widget>
  </widget>
  <resources/>
  <connections/>

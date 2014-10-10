@@ -6,9 +6,11 @@ calibrationForm::calibrationForm(QWidget *parent) :
     ui(new Ui::calibrationForm)
 {
     ui->setupUi(this);
-    cc = new camera_calibration(parent);
+    cc = new camera_calibration;
 
-    QObject::connect(cc, SIGNAL(saveImage()), this, SLOT(doSaveImage()));
+    CCD = 'L';
+
+//    QObject::connect(cc, SIGNAL(saveImage()), this, SLOT(doSaveImage()));
 }
 
 calibrationForm::~calibrationForm()
@@ -24,10 +26,17 @@ void calibrationForm::on_pushButton_3_clicked()
 
 void calibrationForm::on_pushButton_calibration_clicked()
 {
-    cc->start();
+
 }
 
-void calibrationForm::doSaveImage()
+void calibrationForm::keyReleaseEvent(QKeyEvent *event)
 {
-    qDebug()<<"hi";
+    switch (event->key()) {
+    // s or S
+    case 83:
+        emit saveImage();
+        break;
+
+    }
 }
+
