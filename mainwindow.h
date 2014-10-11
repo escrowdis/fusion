@@ -66,6 +66,10 @@ private slots:
 
     void closeEvent(QCloseEvent *);
 
+    // Camera calibration =====
+    void requestImage(const char &CCD);
+    // ======================== End
+
 private:
     Ui::MainWindow *ui;
 
@@ -112,12 +116,17 @@ private:
     void threadProcessing();
     // ======================== End
 
-    // camera calibration =====
+    // Camera calibration =====
     calibrationForm *form_calib;
+    bool fg_form_created;                   // releas form since it's allocated
     // ======================== End
 
-public slots:
-    void saveImage();
+signals:
+    // Camera calibration =====
+    void sendImage(const cv::Mat &img);
+    void sendImages(const cv::Mat &img_L, const cv::Mat &img_R);
+    // ======================== End
+
 };
 
 #endif // MAINWINDOW_H

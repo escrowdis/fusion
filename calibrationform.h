@@ -4,7 +4,10 @@
 #include "debug_info.h"
 
 #include <QWidget>
+#include <QDir>
+#include <QDateTime>
 #include <QKeyEvent>
+#include <QFileDialog>
 
 #include "camera_calibration.h"
 
@@ -29,14 +32,44 @@ private slots:
 
     void keyReleaseEvent(QKeyEvent *event);
 
+    void saveImage(const cv::Mat &img);
+
+    void saveImages(const cv::Mat &img_L, const cv::Mat &img_R);
+
+    void on_checkBox_SaveBoth_clicked(bool checked);
+
 signals:
-    void saveImage();
+    void requestImage(const char &CCD);
 
 private:
     Ui::calibrationForm *ui;
 
-    bool fg_SaveBoth;           // check type of saving type -> true: Save both images false: Save single side
     char CCD;                   // Which CCD is on processing -> R, L
+    char CCD_temp;
+
+    // folder setting
+    QDir image_save_path;
+    QString image_save_folder;
+    // folder named by time
+    QDateTime t_now;
+    QString t_now_string;
+
+    // file name setting
+    QString file_save_L;
+    QString file_save_R;
+
+    // type for image saving & displaying
+    const std::string image_name_R = "Right image"; // window name for displaying
+    const std::string image_name_L = "Left image";
+    cv::Mat img_s_L;
+    cv::Mat img_s_R;
+
+    // camera calibration
+    QStringList images_L;
+    QStringList images_R;
+
+    void loadFiles(QString folder, std::vector <std::string> files[]);
+
 
 };
 

@@ -117,15 +117,16 @@ bool stereo_vision::loadRemapFile(int cam_focal_length, double base_line)
         return fg_calib_loaded;
 
     // find files under which folder and find the folder with calibration files
+    remap_folder = "calibrationImgs";
     remap_file = QString("My_Data_" + QString::number(cam_focal_length) + "_" + QString::number(base_line) + ".yml");
     remap_path = QDir::currentPath();
-    QString remap_last_folder = remap_path.path().section("/", -1, -1);
+    QString current_folder = remap_path.path().section("/", -1, -1);
 
-    if  (remap_last_folder == "release" || remap_last_folder == "debug")
+    if  (current_folder == "release" || current_folder == "debug")
         remap_path.cdUp();
-    else if (remap_last_folder != "Fusion")
+    else if (current_folder != "Fusion")
         return fg_calib_loaded;
-    remap_path.cd("./calibrationImgs");
+    remap_path.cd(remap_folder);
 
 #ifdef debug_info_sv
     qDebug()<<"path exist: "<<remap_path.exists()<<"path: "<<remap_path.path();
@@ -134,7 +135,7 @@ bool stereo_vision::loadRemapFile(int cam_focal_length, double base_line)
         return fg_calib_loaded;
 
 #ifdef debug_info_sv
-    qDebug() << "remap folder: " << remap_last_folder << "\tfile: " << remap_file;
+    qDebug() << "remap folder: " << current_folder << "\tfile: " << remap_file;
 #endif
 
     cv::FileStorage fs(QString(remap_path.path() + "/" + remap_file).toStdString().c_str(), cv::FileStorage::READ);

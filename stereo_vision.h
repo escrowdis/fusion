@@ -69,6 +69,7 @@ private:
 
     // stereo calibration stuffs
     QDir remap_path;
+    QString remap_folder;
     QString remap_file;
     int cam_focal_length;
     double base_line;

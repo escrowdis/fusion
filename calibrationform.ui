@@ -6,18 +6,21 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>400</width>
-    <height>300</height>
+    <width>357</width>
+    <height>201</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>Form</string>
   </property>
+  <property name="autoFillBackground">
+   <bool>false</bool>
+  </property>
   <widget class="QWidget" name="layoutWidget_3">
    <property name="geometry">
     <rect>
-     <x>120</x>
-     <y>150</y>
+     <x>100</x>
+     <y>100</y>
      <width>102</width>
      <height>50</height>
     </rect>
@@ -66,8 +69,8 @@
   <widget class="QWidget" name="layoutWidget">
    <property name="geometry">
     <rect>
-     <x>30</x>
-     <y>60</y>
+     <x>10</x>
+     <y>10</y>
      <width>191</width>
      <height>68</height>
     </rect>
@@ -112,7 +115,7 @@
       </item>
      </layout>
     </item>
-    <item row="0" column="1">
+    <item row="0" column="2">
      <layout class="QGridLayout" name="gridLayout_3">
       <item row="0" column="0" colspan="4">
        <widget class="QLabel" name="label_9">
@@ -144,14 +147,27 @@
       </item>
      </layout>
     </item>
+    <item row="0" column="1">
+     <spacer name="horizontalSpacer">
+      <property name="orientation">
+       <enum>Qt::Horizontal</enum>
+      </property>
+      <property name="sizeHint" stdset="0">
+       <size>
+        <width>40</width>
+        <height>20</height>
+       </size>
+      </property>
+     </spacer>
+    </item>
    </layout>
   </widget>
   <widget class="QLabel" name="label_11">
    <property name="geometry">
     <rect>
-     <x>30</x>
-     <y>140</y>
-     <width>91</width>
+     <x>10</x>
+     <y>90</y>
+     <width>71</width>
      <height>91</height>
     </rect>
    </property>
@@ -166,8 +182,8 @@
   <widget class="QPushButton" name="pushButton_calibration">
    <property name="geometry">
     <rect>
-     <x>240</x>
-     <y>80</y>
+     <x>220</x>
+     <y>30</y>
      <width>121</width>
      <height>51</height>
     </rect>
@@ -179,8 +195,8 @@
   <widget class="QPushButton" name="pushButton_3">
    <property name="geometry">
     <rect>
-     <x>240</x>
-     <y>170</y>
+     <x>220</x>
+     <y>120</y>
      <width>121</width>
      <height>31</height>
     </rect>
@@ -192,15 +208,14 @@
   <widget class="QCheckBox" name="checkBox_SaveBoth">
    <property name="geometry">
     <rect>
-     <x>260</x>
-     <y>30</y>
-     <width>73</width>
-     <height>31</height>
+     <x>90</x>
+     <y>160</y>
+     <width>111</width>
+     <height>21</height>
     </rect>
    </property>
    <property name="text">
-    <string>Save both
-images</string>
+    <string>Save both images</string>
    </property>
   </widget>
   <widget class="QLabel" name="label_status">

@@ -7,6 +7,8 @@ MainWindow::MainWindow(QWidget *parent) :
 {
     ui->setupUi(this);
 
+    fg_form_created = false;
+
     fg_running = false;
 
     // Laser range finder ======================
@@ -77,6 +79,8 @@ MainWindow::~MainWindow()
 #ifdef debug_info_main
     qDebug()<<"destructor";
 #endif
+
+    closeEvent(0);
     cv::destroyAllWindows();
     lrf->close();
     delete lrf;
@@ -216,6 +220,9 @@ void MainWindow::on_pushButton_cam_stop_clicked()
 
 void MainWindow::closeEvent(QCloseEvent *)
 {
+    // releas form since it's allocated
+    if (fg_form_created)
+        delete form_calib;
     // If close mainwindow without clicking stop button since the camera has been opened.
     fg_capturing = false;
     fg_acquiring = false;
@@ -238,8 +245,9 @@ void MainWindow::threadProcessing()
 
         sync.waitForFinished();
 
-        if (fg_capturing)
+        if (fg_capturing) {
             displaying(sv->img_r_L, sv->img_r_R, sv->disp);
+        }
 
         if (fg_acquiring) {
 
@@ -279,15 +287,41 @@ void MainWindow::on_checkBox_do_depth_clicked(bool checked)
 void MainWindow::on_pushButton_camera_calibration_clicked()
 {
     form_calib = new calibrationForm();
+    fg_form_created = true;
+    form_calib->move(1500, 400);
     form_calib->show();
-    QObject::connect(form_calib, SIGNAL(saveImage()), this, SLOT(saveImage()));
+
+    QObject::connect(form_calib, SIGNAL(requestImage(char)), this, SLOT(requestImage(char)));
+    QObject::connect(this, SIGNAL(sendImage(cv::Mat)), form_calib, SLOT(saveImage(cv::Mat)));
+    QObject::connect(this, SIGNAL(sendImages(cv::Mat, cv::Mat)), form_calib, SLOT(saveImages(cv::Mat, cv::Mat)));
 }
 
-void MainWindow::saveImage()
+void MainWindow::requestImage(const char &CCD)
 {
     if (!sv->isOpened()) {
         reportError("sv", "Error!", "Cameras haven't opened.");
         return;
+    }
+
+    switch (CCD) {
+    case 'L':
+#ifdef debug_info_cc
+        qDebug()<<"send left image";
+#endif
+        emit sendImage(sv->img_r_L);
+        break;
+    case 'R':
+#ifdef debug_info_cc
+        qDebug()<<"send right image";
+#endif
+        emit sendImage(sv->img_r_R);
+        break;
+    case 'B':
+#ifdef debug_info_cc
+        qDebug()<<"send both images";
+#endif
+        emit sendImages(sv->img_r_L, sv->img_r_R);
+        break;
     }
 
 }
