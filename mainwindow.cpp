@@ -80,13 +80,15 @@ MainWindow::~MainWindow()
     qDebug()<<"destructor";
 #endif
 
-    closeEvent(0);
     cv::destroyAllWindows();
     lrf->close();
     delete lrf;
     lrf_timer->stop();
     delete lrf_timer;
     delete sv;
+    // If close mainwindow without clicking stop button since the camera has been opened.
+    fg_capturing = false;
+    fg_acquiring = false;
     delete ui;
 }
 
@@ -291,6 +293,10 @@ void MainWindow::on_pushButton_camera_calibration_clicked()
     form_calib->move(1500, 400);
     form_calib->show();
 
+    // send focal length & base line to form
+    QObject::connect(this, SIGNAL(sendBasicInfo(int, double)), form_calib, SLOT(getBasicInfo(int, double)));
+    emit sendBasicInfo(ui->comboBox_camera_focal_length->currentText().toInt(), ui->lineEdit_base_line->text().toDouble());
+
     QObject::connect(form_calib, SIGNAL(requestImage(char)), this, SLOT(requestImage(char)));
     QObject::connect(this, SIGNAL(sendImage(cv::Mat)), form_calib, SLOT(saveImage(cv::Mat)));
     QObject::connect(this, SIGNAL(sendImages(cv::Mat, cv::Mat)), form_calib, SLOT(saveImages(cv::Mat, cv::Mat)));
@@ -325,3 +331,4 @@ void MainWindow::requestImage(const char &CCD)
     }
 
 }
+

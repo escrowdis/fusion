@@ -38,6 +38,9 @@ private slots:
 
     void on_checkBox_SaveBoth_clicked(bool checked);
 
+    // folder setting
+    void getBasicInfo(const int &focal_length, const double &base_line);
+
 signals:
     void requestImage(const char &CCD);
 
@@ -46,6 +49,8 @@ private:
 
     char CCD;                   // Which CCD is on processing -> R, L
     char CCD_temp;
+    int focal_length;
+    double base_line;
 
     // folder setting
     QDir image_save_path;

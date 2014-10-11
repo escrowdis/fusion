@@ -11,24 +11,6 @@ calibrationForm::calibrationForm(QWidget *parent) :
 
     CCD = 'L';
     ui->label_status->setText("Record left image");
-
-    // set folder named by time
-    image_save_folder = "calibrationUsedImgs";
-    image_save_path = QDir::currentPath();
-    QString current_folder = image_save_path.path().section("/", -1, -1);
-    if (current_folder == "release" || current_folder == "debug")
-        image_save_path.cdUp();
-    else if (current_folder != "Fusion")
-        return;
-    if (!image_save_path.exists(image_save_folder))
-        image_save_path.mkdir(image_save_folder);
-    image_save_path.cd(image_save_folder);
-    image_save_folder = image_save_path.path() + "/" +
-            t_now.currentDateTime().toString("yyyy-MM-dd-hh-mm-ss");
-
-#ifdef debug_info_cc
-    qDebug()<<image_save_folder;
-#endif
 }
 
 calibrationForm::~calibrationForm()
@@ -171,4 +153,34 @@ void calibrationForm::on_checkBox_SaveBoth_clicked(bool checked)
         else if (CCD == 'R')
             ui->label_status->setText("Record right image");
     }
+}
+
+void calibrationForm::getBasicInfo(const int &focal_length, const double &base_line)
+{
+#ifdef debug_info_cc
+    qDebug()<<"f: "<<focal_length<<"B:"<<base_line;
+#endif
+
+    this->focal_length = focal_length;
+    this->base_line = base_line;
+
+    // set folder named by time
+    image_save_folder = "calibrationUsedImgs";
+    image_save_path = QDir::currentPath();
+    QString current_folder = image_save_path.path().section("/", -1, -1);
+    if (current_folder == "release" || current_folder == "debug")
+        image_save_path.cdUp();
+    else if (current_folder != "Fusion")
+        return;
+    if (!image_save_path.exists(image_save_folder))
+        image_save_path.mkdir(image_save_folder);
+    image_save_path.cd(image_save_folder);
+    image_save_folder = image_save_path.path() + "/" +
+            t_now.currentDateTime().toString("yyyy-MM-dd-hh-mm-ss") +
+            "_F" + QString::number(focal_length) +
+            "_B" + QString::number(base_line);
+
+#ifdef debug_info_cc
+    qDebug()<<image_save_folder;
+#endif
 }

@@ -123,6 +123,7 @@ private:
 
 signals:
     // Camera calibration =====
+    void sendBasicInfo(const int &focal_length, const double &base_line);
     void sendImage(const cv::Mat &img);
     void sendImages(const cv::Mat &img_L, const cv::Mat &img_R);
     // ======================== End

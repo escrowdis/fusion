@@ -179,8 +179,8 @@
    <widget class="QWidget" name="layoutWidget_2">
     <property name="geometry">
      <rect>
-      <x>500</x>
-      <y>60</y>
+      <x>460</x>
+      <y>50</y>
       <width>146</width>
       <height>61</height>
      </rect>
@@ -389,7 +389,11 @@
       </widget>
      </item>
      <item row="1" column="0">
-      <widget class="QComboBox" name="comboBox_camera_focal_length"/>
+      <widget class="QComboBox" name="comboBox_camera_focal_length">
+       <property name="enabled">
+        <bool>true</bool>
+       </property>
+      </widget>
      </item>
     </layout>
    </widget>
