@@ -9,8 +9,20 @@ calibrationForm::calibrationForm(QWidget *parent) :
 
     cc = new camera_calibration;
 
+    reset();
+}
+
+void calibrationForm::reset()
+{
     CCD = 'L';
+
+    ui->label_recordedL->setText(QString::number(0));
+    ui->label_recordedR->setText(QString::number(0));
+
     ui->label_status->setText("Record left image");
+
+    // focus on ui w/o editing lineEdit or something
+    setFocus();
 }
 
 calibrationForm::~calibrationForm()
@@ -85,6 +97,9 @@ void calibrationForm::keyReleaseEvent(QKeyEvent *event)
     case 81:    // q
         cv::destroyAllWindows();
         break;
+    case Qt::Key_Escape:
+        cv::destroyAllWindows();
+        break;
     }
 }
 
@@ -93,26 +108,37 @@ void calibrationForm::saveImage(const cv::Mat &img)
     if (!image_save_path.exists(image_save_folder))
         image_save_path.mkdir(image_save_folder);
 
+    // image file name
     t_now_string = t_now.currentDateTime().toString("yyyy-MM-dd-hh-mm-ss");
     if (CCD == 'L') {
+        // save image
         file_save_L = image_save_folder + "/" + t_now_string + "_L.jpg";
         cv::cvtColor(img, img_s_L, cv::COLOR_BGR2RGB);
-
         cv::imwrite(file_save_L.toStdString(), img_s_L);
+        ui->label_recordedL->setText(QString::number(ui->label_recordedL->text().toInt() + 1));
 
+        // display
         cv::namedWindow(image_name_L, cv::WINDOW_AUTOSIZE);
         cv::moveWindow(image_name_L, 100, 600);
         cv::imshow(image_name_L, img_s_L);
+
+        // set focus on widget
+        activateWindow();
     }
     else if (CCD == 'R') {
+        // save image
         file_save_R = image_save_folder + "/" + t_now_string + "_R.jpg";
         cv::cvtColor(img, img_s_R, cv::COLOR_BGR2RGB);
-
         cv::imwrite(file_save_R.toStdString(), img_s_R);
+        ui->label_recordedR->setText(QString::number(ui->label_recordedR->text().toInt() + 1));
 
+        // display
         cv::namedWindow(image_name_R, cv::WINDOW_AUTOSIZE);
         cv::moveWindow(image_name_R, 500, 600);
         cv::imshow(image_name_R, img_s_R);
+
+        // set focus on widget
+        activateWindow();
     }
 }
 

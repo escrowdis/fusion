@@ -25,6 +25,8 @@ public:
 
     camera_calibration *cc;
 
+    void reset();
+
 private slots:
     void on_pushButton_3_clicked();
 

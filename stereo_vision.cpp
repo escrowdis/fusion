@@ -2,6 +2,8 @@
 
 stereo_vision::stereo_vision()
 {
+    com_L = -1;
+    com_R = -1;
     fg_cam_L = false;
     fg_cam_R = false;
     fg_cam_opened = false;
@@ -23,8 +25,22 @@ stereo_vision::~stereo_vision()
     sgbm.release();
 }
 
+void stereo_vision::resetOpen(int com_L, int com_R)
+{
+
+    if (this->com_L != com_L) {
+        cam_L.release();
+        fg_cam_L = false;
+    }
+    if (this->com_R != com_R) {
+        cam_R.release();
+        fg_cam_R = false;
+    }
+}
+
 bool stereo_vision::open(int com_L, int com_R)
 {
+    resetOpen(com_L, com_R);
     if (fg_cam_L && fg_cam_R)
         return true;
     if (com_L == com_R || com_L < 0 || com_R < 0)
@@ -34,6 +50,7 @@ bool stereo_vision::open(int com_L, int com_R)
             cam_L.set(cv::CAP_PROP_FRAME_WIDTH, IMG_W);
             cam_L.set(cv::CAP_PROP_FRAME_HEIGHT, IMG_H);
             fg_cam_L = true;
+            this->com_L = com_L;
 #ifdef debug_info_sv
             qDebug()<<"open L";
 #endif
@@ -49,6 +66,7 @@ bool stereo_vision::open(int com_L, int com_R)
             cam_R.set(cv::CAP_PROP_FRAME_WIDTH, IMG_W);
             cam_R.set(cv::CAP_PROP_FRAME_HEIGHT, IMG_H);
             fg_cam_R = true;
+            this->com_R = com_R;
 #ifdef debug_info_sv
             qDebug()<<"open R";
 #endif

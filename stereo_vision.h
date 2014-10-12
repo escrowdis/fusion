@@ -48,6 +48,8 @@ public:
 private:
     void paramInitialize();
 
+    void resetOpen(int com_L, int com_R);
+
     void camCapture();
 
     bool rectifyImage();
@@ -60,6 +62,8 @@ private:
     bool fg_calib_loaded;               // load the calibration files or not
 
     // capture from camera
+    int com_L;
+    int com_R;
     cv::VideoCapture cam_L;
     cv::VideoCapture cam_R;
 

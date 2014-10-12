@@ -9,6 +9,8 @@ MainWindow::MainWindow(QWidget *parent) :
 
     fg_form_created = false;
 
+    form_calib = 0;
+
     fg_running = false;
 
     // Laser range finder ======================
@@ -59,7 +61,7 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->lineEdit_base_line->setText(QString::number(15.0));
 
     // default settings
-    ui->comboBox_cam_com_L->setCurrentIndex(0);
+    ui->comboBox_cam_com_L->setCurrentIndex(1);
     ui->comboBox_cam_com_R->setCurrentIndex(2);
     ui->comboBox_camera_focal_length->setCurrentIndex(0);
 
@@ -288,18 +290,22 @@ void MainWindow::on_checkBox_do_depth_clicked(bool checked)
 
 void MainWindow::on_pushButton_camera_calibration_clicked()
 {
-    form_calib = new calibrationForm();
-    fg_form_created = true;
-    form_calib->move(1500, 400);
-    form_calib->show();
+    if (form_calib == 0) {
+        form_calib = new calibrationForm();
+        fg_form_created = true;
+        form_calib->move(1500, 400);
 
-    // send focal length & base line to form
-    QObject::connect(this, SIGNAL(sendBasicInfo(int, double)), form_calib, SLOT(getBasicInfo(int, double)));
+        // send focal length & base line to form
+        QObject::connect(this, SIGNAL(sendBasicInfo(int, double)), form_calib, SLOT(getBasicInfo(int, double)));
+        QObject::connect(form_calib, SIGNAL(requestImage(char)), this, SLOT(requestImage(char)));
+        QObject::connect(this, SIGNAL(sendImage(cv::Mat)), form_calib, SLOT(saveImage(cv::Mat)));
+        QObject::connect(this, SIGNAL(sendImages(cv::Mat, cv::Mat)), form_calib, SLOT(saveImages(cv::Mat, cv::Mat)));
+    }
+    else
+        form_calib->reset();
     emit sendBasicInfo(ui->comboBox_camera_focal_length->currentText().toInt(), ui->lineEdit_base_line->text().toDouble());
 
-    QObject::connect(form_calib, SIGNAL(requestImage(char)), this, SLOT(requestImage(char)));
-    QObject::connect(this, SIGNAL(sendImage(cv::Mat)), form_calib, SLOT(saveImage(cv::Mat)));
-    QObject::connect(this, SIGNAL(sendImages(cv::Mat, cv::Mat)), form_calib, SLOT(saveImages(cv::Mat, cv::Mat)));
+    form_calib->show();
 }
 
 void MainWindow::requestImage(const char &CCD)
@@ -331,4 +337,3 @@ void MainWindow::requestImage(const char &CCD)
     }
 
 }
-
