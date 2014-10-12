@@ -70,6 +70,46 @@ void calibrationForm::loadFiles(QString folder, std::vector <std::string> files[
         files[1].push_back(folder.toStdString() + images_R[i].toStdString());
 }
 
+void calibrationForm::nextCam()
+{
+    if (CCD == 'L') {
+        CCD = 'R';
+        ui->label_status->setText("Record right image");
+    }
+}
+
+void calibrationForm::prevCam()
+{
+    if (CCD == 'R') {
+        CCD = 'L';
+        ui->label_status->setText("Record left image");
+    }
+}
+
+void calibrationForm::mouseReleaseEvent(QMouseEvent *event)
+{
+#ifdef debug_info_cc
+    qDebug()<<event->button()<<event->buttons();
+#endif
+    switch (event->button()) {
+    case Qt::MouseButton::LeftButton:   // left button
+#ifdef debug_info_cc
+        qDebug()<<"left";
+#endif
+        emit requestImage(CCD);
+        break;
+    case Qt::MouseButton::RightButton:   // right button
+#ifdef debug_info_cc
+        qDebug()<<"right";
+#endif
+        nextCam();
+        break;
+    case Qt::MouseButton::MidButton:    // mid button
+        prevCam();
+        break;
+    }
+}
+
 void calibrationForm::keyReleaseEvent(QKeyEvent *event)
 {
 #ifdef debug_info_cc
@@ -83,16 +123,10 @@ void calibrationForm::keyReleaseEvent(QKeyEvent *event)
         emit requestImage(CCD);
         break;
     case 78:    // n
-        if (CCD == 'L') {
-            CCD = 'R';
-            ui->label_status->setText("Record right image");
-        }
+        nextCam();
         break;
     case 66:    // b
-        if (CCD == 'R') {
-            CCD = 'L';
-            ui->label_status->setText("Record left image");
-        }
+        prevCam();
         break;
     case 81:    // q
         cv::destroyAllWindows();

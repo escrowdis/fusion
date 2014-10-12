@@ -10,8 +10,10 @@
 
 #include <opencv2/opencv.hpp>
 
-#define IMG_W 320
-#define IMG_H 240
+#define IMG_W 640
+#define IMG_H 480
+#define IMG_DIS_W 320
+#define IMG_DIS_H 240
 
 class stereo_vision
 {

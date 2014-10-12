@@ -32,6 +32,8 @@ private slots:
 
     void on_pushButton_calibration_clicked();
 
+    void mouseReleaseEvent(QMouseEvent *);
+
     void keyReleaseEvent(QKeyEvent *event);
 
     void saveImage(const cv::Mat &img);
@@ -77,6 +79,9 @@ private:
 
     void loadFiles(QString folder, std::vector <std::string> files[]);
 
+    void nextCam();
+
+    void prevCam();
 
 };
 
