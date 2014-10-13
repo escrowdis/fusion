@@ -15,10 +15,12 @@
 #define IMG_DIS_W 320
 #define IMG_DIS_H 240
 
-class stereo_vision
+class stereo_vision : public QObject
 {
+    Q_OBJECT
+
 public:
-    stereo_vision();
+    explicit stereo_vision();
 
     ~stereo_vision();
 
@@ -47,9 +49,14 @@ public:
     // disparity image
     cv::Mat disp;
 
-private:
-    void paramInitialize();
+    void matchParamInitialize(int type);
 
+    enum {
+        MATCH_SGBM,
+        MATCH_BM
+    };
+
+private:
     void resetOpen(int com_L, int com_R);
 
     void camCapture();
@@ -83,12 +90,36 @@ private:
     cv::Rect calibROI[2];
 
     // correspondence matching method
+    int match_type;
     cv::Ptr<cv::StereoSGBM> sgbm;
-    cv::Mat img_sgbm_L;
-    cv::Mat img_sgbm_R;
+    cv::Ptr<cv::StereoBM> bm;
+    int cn;
+
+    cv::Mat img_match_L;
+    cv::Mat img_match_R;
 
     // disparity image
     cv::Mat disp_raw;
+
+private slots:
+    // stereo match
+    void change_pre_filter_size(const int &value);
+
+    void change_pre_filter_cap(const int &value);
+
+    void change_sad_window_size(const int &value);
+
+    void change_min_disp(const int &value);
+
+    void change_num_of_disp(const int &value);
+
+    void change_texture_thresh(const int &value);
+
+    void change_uniqueness_ratio(const int &value);
+
+    void change_speckle_window_size(const int &value);
+
+    void change_speckle_range(const int &value);
 };
 
 #endif // STEREO_VISION_H

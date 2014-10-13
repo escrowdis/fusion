@@ -37,7 +37,7 @@ void calibrationForm::on_pushButton_3_clicked()
     close();
 }
 
-void calibrationForm::on_pushButton_calibration_clicked()
+void calibrationForm::on_pushButton_corner_intrinsic_clicked()
 {
     // load images
     image_save_folder = QFileDialog::getExistingDirectory();
@@ -50,12 +50,21 @@ void calibrationForm::on_pushButton_calibration_clicked()
 
     cv::Size size_pattern = cv::Size(ui->spinBox_corners_cols->value(), ui->spinBox_corners_rows->value());
     cv::Size2f size_grid = cv::Size2f(ui->lineEdit_grid_w->text().toFloat(), ui->lineEdit_grid_h->text().toFloat());
+
     cc->CameraCalibration(true, size_pattern, size_grid, files[0]);
     cc->SaveIntrinsic(image_save_folder.toStdString(), std::string("camL_init.yml"));
     cc->DisplayUndistortedImg(false);
     cc->CameraCalibration(true, size_pattern, size_grid, files[1]);
     cc->SaveIntrinsic(image_save_folder.toStdString(), std::string("camR_init.yml"));
     cc->DisplayUndistortedImg(false);
+}
+
+void calibrationForm::on_pushButton_calibration_clicked()
+{
+    ui->progressBar->setValue(0);
+    ui->label_status->setText("Start calibration");
+
+    // stereo match
 }
 
 void calibrationForm::loadFiles(QString folder, std::vector <std::string> files[])

@@ -70,6 +70,14 @@ private slots:
     void requestImage(const char &CCD);
     // ======================== End
 
+    void on_radioButton_BM_clicked();
+
+    void on_radioButton_SGBM_clicked();
+
+    void on_comboBox_camera_focal_length_currentIndexChanged(int index);
+
+    void on_lineEdit_base_line_returnPressed();
+
 private:
     Ui::MainWindow *ui;
 
@@ -118,7 +126,6 @@ private:
 
     // Camera calibration =====
     calibrationForm *form_calib;
-    bool fg_form_created;                   // releas form since it's allocated
     // ======================== End
 
 signals:

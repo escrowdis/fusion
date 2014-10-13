@@ -45,6 +45,8 @@ private slots:
     // folder setting
     void getBasicInfo(const int &focal_length, const double &base_line);
 
+    void on_pushButton_corner_intrinsic_clicked();
+
 signals:
     void requestImage(const char &CCD);
 

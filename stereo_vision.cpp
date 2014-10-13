@@ -16,13 +16,14 @@ stereo_vision::stereo_vision()
     img_r_R = cv::Mat::zeros(IMG_H, IMG_W, CV_8UC3);
     disp = cv::Mat::zeros(IMG_H, IMG_W, CV_8UC1);
 
-    paramInitialize();
+    matchParamInitialize(MATCH_SGBM);
 }
 
 stereo_vision::~stereo_vision()
 {
     close();
     sgbm.release();
+    bm.release();
 }
 
 void stereo_vision::resetOpen(int com_L, int com_R)
@@ -91,28 +92,48 @@ void stereo_vision::close()
         cam_R.release();
 }
 
-void stereo_vision::paramInitialize()
+void stereo_vision::matchParamInitialize(int type)
 {
-    sgbm = cv::createStereoSGBM(0, 16, 3);
+    match_type = type;
+    int SAD_window_size = 0, number_disparity = 128;  // 0
+    switch (type) {
+    case MATCH_BM:
+        bm = cv::createStereoBM(16, 9);
+//        bm->setROI1(roi1);
+//        bm->setROI2(roi2);
+        bm->setPreFilterCap(31);
+        bm->setBlockSize(SAD_window_size > 0 ? SAD_window_size : 9);
+        bm->setMinDisparity(0);
+        bm->setNumDisparities(number_disparity);
+        bm->setTextureThreshold(10);
+        bm->setUniquenessRatio(15);
+        bm->setSpeckleWindowSize(100);
+        bm->setSpeckleRange(32);
+        bm->setDisp12MaxDiff(1);
+        break;
+    case MATCH_SGBM:
+        sgbm = cv::createStereoSGBM(0, 16, 3);
+        SAD_window_size = 0;
+        number_disparity = 0;
+        number_disparity = number_disparity > 0 ? number_disparity : ((IMG_W / 8) + 15) & -16;
+        sgbm->setPreFilterCap(63);
+        int sgbm_win_size = SAD_window_size > 0 ? SAD_window_size : 3;
+        sgbm->setBlockSize(sgbm_win_size);
 
-    int SAD_window_size = 0, number_disparity = 0;
-    number_disparity = number_disparity > 0 ? number_disparity : ((IMG_W / 8) + 15) & -16;
-    sgbm->setPreFilterCap(63);
-    int sgbm_win_size = SAD_window_size > 0 ? SAD_window_size : 3;
-    sgbm->setBlockSize(sgbm_win_size);
+        // channel
+        cn = 3;
 
-    // channel
-    int cn = 3;
-
-    sgbm->setP1(8 * cn * sgbm_win_size * sgbm_win_size);
-    sgbm->setP2(32 * cn * sgbm_win_size * sgbm_win_size);
-    sgbm->setMinDisparity(0);
-    sgbm->setNumDisparities(number_disparity);
-    sgbm->setUniquenessRatio(10);
-    sgbm->setSpeckleWindowSize(100);
-    sgbm->setSpeckleRange(32);
-    sgbm->setDisp12MaxDiff(1);
-    sgbm->setMode(cv::StereoSGBM::MODE_SGBM);
+        sgbm->setMinDisparity(0);
+        sgbm->setNumDisparities(number_disparity);
+        sgbm->setP1(8 * cn * sgbm_win_size * sgbm_win_size);
+        sgbm->setP2(32 * cn * sgbm_win_size * sgbm_win_size);
+        sgbm->setUniquenessRatio(10);
+        sgbm->setSpeckleWindowSize(100);
+        sgbm->setSpeckleRange(32);
+        sgbm->setDisp12MaxDiff(1);
+        sgbm->setMode(cv::StereoSGBM::MODE_SGBM);
+        break;
+    }
 }
 
 void stereo_vision::camCapture()
@@ -198,16 +219,21 @@ bool stereo_vision::rectifyImage()
 void stereo_vision::stereoMatch()
 {
     // pre-processing
-    cv::cvtColor(img_r_L, img_sgbm_L, cv::COLOR_BGR2GRAY);
-    cv::cvtColor(img_r_R, img_sgbm_R, cv::COLOR_BGR2GRAY);
+//    img_match_L = img_r_L.clone();
+//    img_match_R = img_r_R.clone();
+    cv::cvtColor(img_r_L, img_match_L, cv::COLOR_BGR2GRAY);
+    cv::cvtColor(img_r_R, img_match_R, cv::COLOR_BGR2GRAY);
 
-    cv::equalizeHist(img_sgbm_L, img_sgbm_L);
-    cv::equalizeHist(img_sgbm_R, img_sgbm_R);
+//    cv::equalizeHist(img_match_L, img_match_L);
+//    cv::equalizeHist(img_match_R, img_match_R);
 
-    cv::GaussianBlur(img_sgbm_L, img_sgbm_L, cv::Size(7, 7), 0, 0);
-    cv::GaussianBlur(img_sgbm_R, img_sgbm_R, cv::Size(7, 7), 0, 0);
+//    cv::GaussianBlur(img_match_L, img_match_L, cv::Size(7, 7), 0, 0);
+//    cv::GaussianBlur(img_match_R, img_match_R, cv::Size(7, 7), 0, 0);
 
-    sgbm->compute(img_sgbm_L, img_sgbm_R, disp_raw);
+    if (match_type == MATCH_BM)
+        bm->compute(img_match_L, img_match_R, disp_raw);
+    else if (match_type == MATCH_SGBM)
+        sgbm->compute(img_match_L, img_match_R, disp_raw);
     disp_raw.convertTo(disp, CV_8U);
 }
 
@@ -240,4 +266,76 @@ void stereo_vision::stereoVision()
 #endif
 }
 
+void stereo_vision::change_pre_filter_size(const int &value)
+{
+//    qDebug()<<value;
+    //
+}
 
+void stereo_vision::change_pre_filter_cap(const int &value)
+{
+//    qDebug()<<value;
+    sgbm->setPreFilterCap(value);
+    qDebug()<<sgbm->getPreFilterCap();
+}
+
+void stereo_vision::change_sad_window_size(const int &value)
+{
+//    qDebug()<<value;
+    sgbm->setP1(8 * cn * value * value);
+    sgbm->setP2(32 * cn * value * value);
+#ifdef debug_info_cc
+    qDebug()<<sgbm->getP1()<<sgbm->getP2();
+#endif
+}
+
+void stereo_vision::change_min_disp(const int &value)
+{
+//    qDebug()<<value;
+    sgbm->setMinDisparity(value);
+#ifdef debug_info_cc
+    qDebug()<<sgbm->getMinDisparity();
+#endif
+}
+
+void stereo_vision::change_num_of_disp(const int &value)
+{
+//    qDebug()<<value;
+    sgbm->setNumDisparities(value);
+#ifdef debug_info_cc
+    qDebug()<<sgbm->getNumDisparities();
+#endif
+}
+
+void stereo_vision::change_texture_thresh(const int &value)
+{
+//    qDebug()<<value;
+    //
+}
+
+void stereo_vision::change_uniqueness_ratio(const int &value)
+{
+//    qDebug()<<value;
+    sgbm->setUniquenessRatio(value);
+#ifdef debug_info_cc
+    qDebug()<<sgbm->getUniquenessRatio();
+#endif
+}
+
+void stereo_vision::change_speckle_window_size(const int &value)
+{
+//    qDebug()<<value;
+    sgbm->setSpeckleWindowSize(value);
+#ifdef debug_info_cc
+    qDebug()<<sgbm->getSpeckleWindowSize();
+#endif
+}
+
+void stereo_vision::change_speckle_range(const int &value)
+{
+//    qDebug()<<value;
+    sgbm->setSpeckleRange(value);
+#ifdef debug_info_cc
+    qDebug()<<sgbm->getSpeckleRange();
+#endif
+}

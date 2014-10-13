@@ -7,8 +7,6 @@ MainWindow::MainWindow(QWidget *parent) :
 {
     ui->setupUi(this);
 
-    fg_form_created = false;
-
     form_calib = 0;
 
     fg_running = false;
@@ -68,6 +66,7 @@ MainWindow::MainWindow(QWidget *parent) :
     // Stereo vision =========================== End
 
     // Thread control ==========================
+    sync.clearFutures();
     sync.addFuture(f_sv);
     sync.addFuture(f_lrf);
     // ========================================= End
@@ -225,7 +224,7 @@ void MainWindow::on_pushButton_cam_stop_clicked()
 void MainWindow::closeEvent(QCloseEvent *)
 {
     // releas form since it's allocated
-    if (fg_form_created)
+    if (form_calib != 0)
         delete form_calib;
     // If close mainwindow without clicking stop button since the camera has been opened.
     fg_capturing = false;
@@ -246,7 +245,6 @@ void MainWindow::threadProcessing()
         if (fg_acquiring) {
 
         }
-
         sync.waitForFinished();
 
         if (fg_capturing) {
@@ -292,8 +290,7 @@ void MainWindow::on_pushButton_camera_calibration_clicked()
 {
     if (form_calib == 0) {
         form_calib = new calibrationForm();
-        fg_form_created = true;
-        form_calib->move(1500, 400);
+        form_calib->move(1500, 500);
 
         // send focal length & base line to form
         QObject::connect(this, SIGNAL(sendBasicInfo(int, double)), form_calib, SLOT(getBasicInfo(int, double)));
@@ -336,4 +333,33 @@ void MainWindow::requestImage(const char &CCD)
         break;
     }
 
+}
+
+void MainWindow::on_radioButton_BM_clicked()
+{
+    report("Change to BM mathod.");
+    sv->matchParamInitialize(sv->MATCH_BM);
+}
+
+void MainWindow::on_radioButton_SGBM_clicked()
+{
+    report("Change to SGBM mathod.");
+    sv->matchParamInitialize(sv->MATCH_SGBM);
+}
+
+
+void MainWindow::on_comboBox_camera_focal_length_currentIndexChanged(int index)
+{
+    if (fg_capturing) {
+        on_checkBox_do_calibration_clicked(true);
+        report("focal length has been changed.");
+    }
+}
+
+void MainWindow::on_lineEdit_base_line_returnPressed()
+{
+    if (fg_capturing) {
+        on_checkBox_do_calibration_clicked(true);
+        report("base line has been changed.");
+    }
 }

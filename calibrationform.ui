@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>357</width>
-    <height>211</height>
+    <height>235</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -183,7 +183,7 @@
    <property name="geometry">
     <rect>
      <x>220</x>
-     <y>30</y>
+     <y>80</y>
      <width>121</width>
      <height>51</height>
     </rect>
@@ -196,7 +196,7 @@
    <property name="geometry">
     <rect>
      <x>220</x>
-     <y>120</y>
+     <y>160</y>
      <width>121</width>
      <height>31</height>
     </rect>
@@ -222,13 +222,40 @@
    <property name="geometry">
     <rect>
      <x>10</x>
-     <y>190</y>
-     <width>211</width>
+     <y>210</y>
+     <width>121</width>
      <height>16</height>
     </rect>
    </property>
    <property name="text">
     <string>status</string>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="pushButton_corner_intrinsic">
+   <property name="geometry">
+    <rect>
+     <x>220</x>
+     <y>10</y>
+     <width>121</width>
+     <height>51</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Corner and Intrinsic
+Acquisition</string>
+   </property>
+  </widget>
+  <widget class="QProgressBar" name="progressBar">
+   <property name="geometry">
+    <rect>
+     <x>140</x>
+     <y>200</y>
+     <width>211</width>
+     <height>23</height>
+    </rect>
+   </property>
+   <property name="value">
+    <number>0</number>
    </property>
   </widget>
  </widget>
