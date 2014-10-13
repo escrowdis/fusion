@@ -114,7 +114,6 @@ void MainWindow::on_pushButton_lrf_open_clicked()
     }
     else {
         report("Port's opened.");
-        lrf_timer->start(350);
     }
 }
 
@@ -161,7 +160,12 @@ void MainWindow::lrfReadData()
 
 void MainWindow::on_pushButton_lrf_display_clicked()
 {
-    lrfReadData();
+    lrf_timer->start(350);
+}
+
+void MainWindow::on_pushButton_lrf_stop_clicked()
+{
+    lrf_timer->stop();
 }
 
 void MainWindow::camOpen()
@@ -264,7 +268,8 @@ void MainWindow::threadProcessing()
 
 void MainWindow::on_pushButton_4_clicked()
 {
-
+//    change color
+//    ui->system_log->append("Press <FONT COLOR=red>'blank'</FONT> key to save board image, <FONT COLOR=red>'ESC' or 'q'</FONT> to leave");
 }
 
 void MainWindow::on_checkBox_do_calibration_clicked(bool checked)

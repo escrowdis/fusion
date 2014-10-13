@@ -467,6 +467,19 @@ calibration</string>
 parameters</string>
     </property>
    </widget>
+   <widget class="QPushButton" name="pushButton_lrf_stop">
+    <property name="geometry">
+     <rect>
+      <x>30</x>
+      <y>110</y>
+      <width>75</width>
+      <height>23</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Stop</string>
+    </property>
+   </widget>
   </widget>
   <widget class="QMenuBar" name="menuBar">
    <property name="geometry">

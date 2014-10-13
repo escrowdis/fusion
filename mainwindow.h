@@ -81,6 +81,8 @@ private slots:
 
     void on_lineEdit_base_line_returnPressed();
 
+    void on_pushButton_lrf_stop_clicked();
+
 private:
     Ui::MainWindow *ui;
 
