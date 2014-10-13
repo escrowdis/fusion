@@ -53,7 +53,7 @@ void camera_calibration::FindGetCornerPts(bool ShowPts, std::vector<std::string>
 
         img.copyTo(img_r);
         if (PatternFound) {
-            cv::cornerSubPix(img_g, corners, cv::Size(11, 11), cv::Size(-1, -1), cv::TermCriteria(cv::TermCriteria::EPS + cv::TermCriteria::MAX_ITER, 30, 0.1));
+            cv::cornerSubPix(img_g, corners, cv::Size(11, 11), cv::Size(-1, -1), cv::TermCriteria(cv::TermCriteria::EPS + cv::TermCriteria::COUNT, 30, 0.1));
             PatternPts.push_back(corners);
             cv::drawChessboardCorners(img_r, patternSize, cv::Mat(corners), PatternFound);
         }
@@ -132,7 +132,7 @@ void camera_calibration::DisplayUndistortedImg(bool ShowPts)
 
             img.copyTo(img_r);
             if (PatternFound) {
-                cv::cornerSubPix(img_g, corners, cv::Size(11, 11), cv::Size(-1, -1), cv::TermCriteria(cv::TermCriteria::EPS + cv::TermCriteria::MAX_ITER, 30, 0.1));
+                cv::cornerSubPix(img_g, corners, cv::Size(11, 11), cv::Size(-1, -1), cv::TermCriteria(cv::TermCriteria::EPS + cv::TermCriteria::COUNT, 30, 0.1));
                 cv::drawChessboardCorners(img, patternSize, cv::Mat(corners), PatternFound);
             }
             img.copyTo(imgDisplay(cv::Rect(imgW, 0, imgW, imgH)));
