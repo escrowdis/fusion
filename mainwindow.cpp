@@ -9,6 +9,8 @@ MainWindow::MainWindow(QWidget *parent) :
 
     form_calib = 0;
 
+    form_smp = 0;
+
     fg_running = false;
 
     // Laser range finder ======================
@@ -226,6 +228,8 @@ void MainWindow::closeEvent(QCloseEvent *)
     // releas form since it's allocated
     if (form_calib != 0)
         delete form_calib;
+    if (form_smp != 0)
+        delete form_smp;
     // If close mainwindow without clicking stop button since the camera has been opened.
     fg_capturing = false;
     fg_acquiring = false;
@@ -347,6 +351,28 @@ void MainWindow::on_radioButton_SGBM_clicked()
     sv->matchParamInitialize(sv->MATCH_SGBM);
 }
 
+void MainWindow::on_pushButton_stereo_match_param_clicked()
+{
+    if (form_smp == 0) {
+        form_smp = new stereoMatchParamForm();
+        form_smp->move(1500, 100);
+
+        QObject::connect(form_smp, SIGNAL(send_pre_filter_size(int)), sv, SLOT(change_pre_filter_size(int)));
+        QObject::connect(form_smp, SIGNAL(send_pre_filter_cap(int)), sv, SLOT(change_pre_filter_cap(int)));
+        QObject::connect(form_smp, SIGNAL(send_sad_window_size(int)), sv, SLOT(change_sad_window_size(int)));
+        QObject::connect(form_smp, SIGNAL(send_min_disp(int)), sv, SLOT(change_min_disp(int)));
+        QObject::connect(form_smp, SIGNAL(send_num_of_disp(int)), sv, SLOT(change_num_of_disp(int)));
+        QObject::connect(form_smp, SIGNAL(send_texture_thresh(int)), sv, SLOT(change_texture_thresh(int)));
+        QObject::connect(form_smp, SIGNAL(send_uniqueness_ratio(int)), sv, SLOT(change_uniqueness_ratio(int)));
+        QObject::connect(form_smp, SIGNAL(send_speckle_window_size(int)), sv, SLOT(change_speckle_window_size(int)));
+        QObject::connect(form_smp, SIGNAL(send_speckle_range(int)), sv, SLOT(change_speckle_range(int)));
+    }
+
+    // send cuurent stereo matching params to ui //**// undone
+//    emit sendCurrentParams();
+
+    form_smp->show();
+}
 
 void MainWindow::on_comboBox_camera_focal_length_currentIndexChanged(int index)
 {

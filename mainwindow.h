@@ -18,6 +18,7 @@
 
 // Stereo vision
 #include "stereo_vision.h"
+#include "stereomatchparamform.h"
 
 // camera calibration
 #include "calibrationform.h"
@@ -74,6 +75,8 @@ private slots:
 
     void on_radioButton_SGBM_clicked();
 
+    void on_pushButton_stereo_match_param_clicked();
+
     void on_comboBox_camera_focal_length_currentIndexChanged(int index);
 
     void on_lineEdit_base_line_returnPressed();
@@ -101,6 +104,9 @@ private:
 
     // Stereo vision ==========
     stereo_vision* sv;
+
+    // stereo match
+    stereoMatchParamForm *form_smp;
 
     bool fg_capturing;
 

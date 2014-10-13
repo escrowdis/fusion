@@ -453,6 +453,20 @@ calibration</string>
      </item>
     </layout>
    </widget>
+   <widget class="QPushButton" name="pushButton_stereo_match_param">
+    <property name="geometry">
+     <rect>
+      <x>780</x>
+      <y>50</y>
+      <width>75</width>
+      <height>51</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>stereo match
+parameters</string>
+    </property>
+   </widget>
   </widget>
   <widget class="QMenuBar" name="menuBar">
    <property name="geometry">

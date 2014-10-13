@@ -16,17 +16,20 @@ SOURCES += main.cpp\
         lrf_controller.cpp \
     stereo_vision.cpp \
     calibrationform.cpp \
-    camera_calibration.cpp
+    camera_calibration.cpp \
+    stereomatchparamform.cpp
 
 HEADERS  += mainwindow.h \
             lrf_controller.h \
     stereo_vision.h \
     debug_info.h \
     calibrationform.h \
-    camera_calibration.h
+    camera_calibration.h \
+    stereomatchparamform.h
 
 FORMS    += mainwindow.ui \
-    calibrationform.ui
+    calibrationform.ui \
+    stereomatchparamform.ui
 
 OpenCV_Lib = D:/OpenCV/opencv3alpha/x86/vc12/lib
 
