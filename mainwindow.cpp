@@ -97,7 +97,7 @@ MainWindow::~MainWindow()
 
 void MainWindow::reportError(QString part, QString level, QString content)
 {
-    ui->system_log->append("[" + part + "] " + level + "  " + content);
+    ui->system_log->append("<FONT COLOR = red>[" + part + "] " + level + "  " + content + "</FONT>");
     QMessageBox::information(0, level, content);
 }
 
@@ -347,13 +347,13 @@ void MainWindow::requestImage(const char &CCD)
 void MainWindow::on_radioButton_BM_clicked()
 {
     report("Change to BM mathod.");
-    sv->matchParamInitialize(sv->MATCH_BM);
+    sv->matchParamInitialize(sv->STEREO_MATCH::BM);
 }
 
 void MainWindow::on_radioButton_SGBM_clicked()
 {
     report("Change to SGBM mathod.");
-    sv->matchParamInitialize(sv->MATCH_SGBM);
+    sv->matchParamInitialize(sv->STEREO_MATCH::SGBM);
 }
 
 void MainWindow::on_pushButton_stereo_match_param_clicked()

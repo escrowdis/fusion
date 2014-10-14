@@ -16,7 +16,7 @@ stereo_vision::stereo_vision()
     img_r_R = cv::Mat::zeros(IMG_H, IMG_W, CV_8UC3);
     disp = cv::Mat::zeros(IMG_H, IMG_W, CV_8UC1);
 
-    matchParamInitialize(MATCH_SGBM);
+    matchParamInitialize(STEREO_MATCH::SGBM);
 }
 
 stereo_vision::~stereo_vision()
@@ -97,7 +97,7 @@ void stereo_vision::matchParamInitialize(int type)
     match_type = type;
     int SAD_window_size = 0, number_disparity = 128;  // 0
     switch (type) {
-    case MATCH_BM:
+    case STEREO_MATCH::BM:
         bm = cv::createStereoBM(16, 9);
 //        bm->setROI1(roi1);
 //        bm->setROI2(roi2);
@@ -111,7 +111,7 @@ void stereo_vision::matchParamInitialize(int type)
         bm->setSpeckleRange(32);
         bm->setDisp12MaxDiff(1);
         break;
-    case MATCH_SGBM:
+    case STEREO_MATCH::SGBM:
         sgbm = cv::createStereoSGBM(0, 16, 3);
         SAD_window_size = 0;
         number_disparity = 0;
@@ -230,9 +230,9 @@ void stereo_vision::stereoMatch()
 //    cv::GaussianBlur(img_match_L, img_match_L, cv::Size(7, 7), 0, 0);
 //    cv::GaussianBlur(img_match_R, img_match_R, cv::Size(7, 7), 0, 0);
 
-    if (match_type == MATCH_BM)
+    if (match_type == STEREO_MATCH::BM)
         bm->compute(img_match_L, img_match_R, disp_raw);
-    else if (match_type == MATCH_SGBM)
+    else if (match_type == STEREO_MATCH::SGBM)
         sgbm->compute(img_match_L, img_match_R, disp_raw);
     disp_raw.convertTo(disp, CV_8U);
 }
