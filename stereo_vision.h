@@ -51,9 +51,9 @@ public:
 
     void matchParamInitialize(int type);
 
-    enum {
-        MATCH_SGBM,
-        MATCH_BM
+    enum STEREO_MATCH{
+        SGBM,
+        BM
     };
 
 private:

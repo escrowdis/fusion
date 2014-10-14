@@ -1,9 +1,15 @@
 #include "lrf_controller.h"
 
+
 lrf_controller::lrf_controller()
 {
     serial = new QSerialPort();
     baudRate = QSerialPort::Baud9600;
+}
+
+lrf_controller::~lrf_controller()
+{
+    close();
 }
 
 bool lrf_controller::open(QString comPortIn, int baudRateIn)
@@ -17,35 +23,40 @@ bool lrf_controller::open(QString comPortIn, int baudRateIn)
     serial->setStopBits(QSerialPort::OneStop);
     serial->open(QIODevice::ReadWrite);
 
-    char LMS291_cmd[8] = {0x02, 0x00, 0x02, 0x00, 0x20, 0x42, 0x52, 0x08};
+    if (!serial->isOpen())
+        return serial->isOpen();
+
+    // command code set baudrate as 9600
+    char cmd_LMS291[8];
+    for (int i = 0 ; i < 8; i ++)
+        cmd_LMS291[i] = request_baud_rate_to_9600[i];
 
     QSerialPort::BaudRate baudRate;
     switch (baudRateIn) {
+    default:
     case 9600:
         baudRate = QSerialPort::Baud9600;
         break;
     case 19200:
         baudRate = QSerialPort::Baud19200;
-        LMS291_cmd[5] = 0x41;
-        LMS291_cmd[6] = 0x51;
+        cmd_LMS291[5] = 0x41;
+        cmd_LMS291[6] = 0x51;
         break;
     case 38400:
         baudRate = QSerialPort::Baud38400;
-        LMS291_cmd[5] = 0x40;
-        LMS291_cmd[6] = 0x50;
+        cmd_LMS291[5] = 0x40;
+        cmd_LMS291[6] = 0x50;
         break;
-    case 57600:
-        baudRate = QSerialPort::Baud57600;
+    case 500000:
+        baudRate = QSerialPort::Baud500000;     // need to revise qserialport.h
+        cmd_LMS291[5] = 0x48;
+        cmd_LMS291[6] = 0x58;
         break;
-    case 115200:
-        baudRate = QSerialPort::Baud115200;
-        break;
-
-    default:
-        baudRate = QSerialPort::Baud9600;
     }
 
-    serial->write(LMS291_cmd, 8);
+    serial->write(cmd_LMS291, 8);
+    while(!serial->waitForBytesWritten(10)) {}
+
     serial->waitForReadyRead(300); // wait for lrf response
 
     serial->setBaudRate(baudRate);
@@ -57,28 +68,54 @@ bool lrf_controller::open(QString comPortIn, int baudRateIn)
     return serial->isOpen();
 }
 
-void lrf_controller::request()
+void lrf_controller::requestData(int mode)
 {
-    char alpha[8] = {0x02, 0x00, 0x02, 0x00, 0x30, 0x01, 0x31, 0x18};
-    serial->write(alpha, 8);
+    switch (mode) {
+    default:
+    case CAPTURE_MODE::ONCE:
+        serial->write(request_data_once, 8);
+        break;
+    case CAPTURE_MODE::CONTINUOUS:
+        serial->write(request_data_continuous, 8);
+        break;
+    }
+
+    while(!serial->waitForBytesWritten(1)) {qDebug()<<"test";}
 }
 
-bool lrf_controller::acquireData(double* data)
+bool lrf_controller::acquireData(uchar* data)
 {
     bool state = false;
 
-    request();
+    requestData();
 
-    serial->waitForReadyRead(500); // wait for lrf response
+    QByteArray data_temp;
+    bool fg_header_found = false;
+    while (!fg_header_found) {
+        serial->waitForReadyRead(10);
+        data_temp += serial->readAll();
+        fg_header_found = checkHeader(data_temp, HEADER_TYPE::DATA);
+    }
+    while (data_temp.size() < LENGTH_RAW_DATA) {
+        serial->waitForReadyRead(50);
+        int data_num = serial->bytesAvailable();
+        int data_lack = LENGTH_RAW_DATA - data_temp.size();
+        data_temp += serial->read(data_lack > data_num ? data_num : data_lack);
+        qDebug()<<data_temp.size()<<data_num;
+    }
 
-    int data_num = serial->bytesAvailable();
+//    QString demo(data_temp);
+//    qDebug()<<demo;
 
-    if (data_num > 0 && data_num < 1024) {
-        QByteArray data_temp = serial->read(data_num);
+//    int data_num = serial->bytesAvailable();
+
+//    if (data_num > 0 && data_num < 1024) {
+//        QByteArray data_temp = serial->read(data_num);
 #ifdef debug_info_lrf
         qDebug()<<data_num;
 #endif
-        if (data_temp.size() == LENGTH_RAW_DATA) {
+
+//        if (data_temp.size() == LENGTH_RAW_DATA) {
             for (int i = LENGTH_HEADER; i < LENGTH_RAW_DATA; i++) {
                 unsigned char tp = data_temp[i];
                 data_raw[i - LENGTH_HEADER] = tp;
@@ -94,8 +131,8 @@ bool lrf_controller::acquireData(double* data)
             }
 
             state = true;
-        }
-    }
+//        }
+//    }
 #ifdef debug_info_lrf
     qDebug()<<state;
 #endif
@@ -106,4 +143,68 @@ bool lrf_controller::close()
 {
     serial->close();
     return serial->isOpen();
+}
+
+ushort lrf_controller::doCRC(const QByteArray &data)
+{
+    // Cyclic redundancy check
+    uint data_length = data.size();
+    uchar xyz[2] = {0};
+    ushort uCrc16 = 0;
+
+    for (int i = 0; i < data_length; i--) {
+        xyz[1] = xyz[0];
+        xyz[0] = data[i];
+
+        if (uCrc16 & 0x8000) {
+            uCrc16 = (uCrc16 & 0x7fff) << 1;
+            uCrc16 = uCrc16 ^ 0x8005;   // ^: XOR
+        }
+        else {
+            uCrc16 = uCrc16 << 1;
+        }
+        uCrc16 = uCrc16 ^ (xyz[0] | (xyz[1] << 8));
+    }
+
+    return uCrc16;
+}
+
+bool lrf_controller::checkHeader(QByteArray &data, int header_type)
+{
+    qDebug()<<"check header";
+    switch (header_type) {
+    case HEADER_TYPE::BAUDRATE:
+        break;
+    case HEADER_TYPE::DATA:
+        char header[LENGTH_HEADER];
+        bool fg_probably_header = false;
+        for (int i = 0; i < data.size() - 1; i++) {
+            if (data.at(i) == header_data[0]) {
+                fg_probably_header = true;
+                if (data.at(i + 1) == header_data[1]) {
+                    if (data.size() - i >= LENGTH_HEADER) {
+                        for (int j = 0; j < LENGTH_HEADER; j++)
+                            header[j] = data.at(i + j);
+                        if (strcmp(header_data, header) == 0) {
+                            data = data.right(data.size() - i);
+                            return true;
+                        }
+                    }
+                }
+            }
+        }
+        if (!fg_probably_header)
+            data.clear();
+
+        break;
+    }
+
+    return false;
+}
+
+uchar lrf_controller::checkACK(const uchar *msg_ack)
+{
+
+
+    return -1;
 }

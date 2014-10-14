@@ -99,9 +99,9 @@ private:
 
     bool lrf_status;
 
-    double lrf_data[LENGTH_DATA];
+    uchar lrf_data[LENGTH_DATA];
 
-    void lrfResetData();
+    void lrfClearData();
     // ======================== End
 
     // Stereo vision ==========

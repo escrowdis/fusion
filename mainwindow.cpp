@@ -26,14 +26,14 @@ MainWindow::MainWindow(QWidget *parent) :
 
     // Baud rate
     QStringList list_baudrate;
-    list_baudrate << "9600" << "19200" << "38400" << "76800" << "115200";
+    list_baudrate << "9600" << "19200" << "38400" << "500000";
     ui->comboBox_lrf_baudRate->addItems(list_baudrate);
 
     // default settings
     ui->comboBox_lrf_com->setCurrentText("COM7");
     ui->comboBox_lrf_baudRate->setCurrentText("38400");
     lrf_status = false;
-    lrfResetData();
+    lrfClearData();
     lrf_timer = new QTimer;
     connect(lrf_timer, SIGNAL(timeout()), this, SLOT(lrfReadData()));
 
@@ -117,7 +117,7 @@ void MainWindow::on_pushButton_lrf_open_clicked()
     }
 }
 
-void MainWindow::lrfResetData()
+void MainWindow::lrfClearData()
 {
     // reset data
     for (int i = 0; i < LENGTH_DATA; i++)
@@ -126,7 +126,7 @@ void MainWindow::lrfResetData()
 
 void MainWindow::lrfReadData()
 {
-    lrfResetData();
+    lrfClearData();
 
     if (lrf->acquireData(lrf_data) && lrf_status == false) {
         report("data: acquired");
