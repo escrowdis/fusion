@@ -83,7 +83,7 @@ void lrf_controller::requestData(int mode)
     while(!serial->waitForBytesWritten(1)) {qDebug()<<"test";}
 }
 
-bool lrf_controller::acquireData(uchar* data)
+bool lrf_controller::acquireData(double* data)
 {
     bool state = false;
 
@@ -94,28 +94,21 @@ bool lrf_controller::acquireData(uchar* data)
     while (!fg_header_found) {
         serial->waitForReadyRead(10);
         data_temp += serial->readAll();
+#ifdef debug_info_lrf
+        qDebug()<<data_temp.size();
+#endif
         fg_header_found = checkHeader(data_temp, HEADER_TYPE::DATA);
     }
     while (data_temp.size() < LENGTH_RAW_DATA) {
-        serial->waitForReadyRead(50);
+        serial->waitForReadyRead(20);
         int data_num = serial->bytesAvailable();
         int data_lack = LENGTH_RAW_DATA - data_temp.size();
         data_temp += serial->read(data_lack > data_num ? data_num : data_lack);
+#ifdef debug_info_lrf
         qDebug()<<data_temp.size()<<data_num;
+#endif
     }
 
-//    QString demo(data_temp);
-//    qDebug()<<demo;
-
-//    int data_num = serial->bytesAvailable();
-
-//    if (data_num > 0 && data_num < 1024) {
-//        QByteArray data_temp = serial->read(data_num);
-#ifdef debug_info_lrf
-        qDebug()<<data_num;
-#endif
-
-//        if (data_temp.size() == LENGTH_RAW_DATA) {
             for (int i = LENGTH_HEADER; i < LENGTH_RAW_DATA; i++) {
                 unsigned char tp = data_temp[i];
                 data_raw[i - LENGTH_HEADER] = tp;
@@ -131,8 +124,7 @@ bool lrf_controller::acquireData(uchar* data)
             }
 
             state = true;
-//        }
-//    }
+
 #ifdef debug_info_lrf
     qDebug()<<state;
 #endif
@@ -171,12 +163,13 @@ ushort lrf_controller::doCRC(const QByteArray &data)
 
 bool lrf_controller::checkHeader(QByteArray &data, int header_type)
 {
-    qDebug()<<"check header";
+
+//    qDebug()<<"check header"<<data.size();
     switch (header_type) {
     case HEADER_TYPE::BAUDRATE:
         break;
     case HEADER_TYPE::DATA:
-        char header[LENGTH_HEADER];
+        uchar header[LENGTH_HEADER];
         bool fg_probably_header = false;
         for (int i = 0; i < data.size() - 1; i++) {
             if (data.at(i) == header_data[0]) {
@@ -185,16 +178,22 @@ bool lrf_controller::checkHeader(QByteArray &data, int header_type)
                     if (data.size() - i >= LENGTH_HEADER) {
                         for (int j = 0; j < LENGTH_HEADER; j++)
                             header[j] = data.at(i + j);
-                        if (strcmp(header_data, header) == 0) {
-                            data = data.right(data.size() - i);
+                        if ( header_data[2] == header[2] &&
+                             header_data[3] == header[3] &&
+                             header_data[4] == header[4] &&
+                             header_data[5] == header[5] &&
+                             header_data[6] == header[6] &&
+                             header_data[7] == header[7]) {
+                            int data_size = data.size();
+                            data = data.right(data_size - i);
                             return true;
                         }
                     }
                 }
             }
         }
-        if (!fg_probably_header)
-            data.clear();
+//        if (!fg_probably_header)
+//            data.clear();
 
         break;
     }

@@ -99,7 +99,7 @@ private:
 
     bool lrf_status;
 
-    uchar lrf_data[LENGTH_DATA];
+    double lrf_data[LENGTH_DATA];
 
     void lrfClearData();
     // ======================== End
