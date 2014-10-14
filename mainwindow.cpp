@@ -233,7 +233,7 @@ void MainWindow::closeEvent(QCloseEvent *)
     if (form_calib != 0)
         delete form_calib;
     if (form_smp != 0)
-        delete form_smp;
+        delete form_smp;    //**// memory location changed itself
     // If close mainwindow without clicking stop button since the camera has been opened.
     fg_capturing = false;
     fg_acquiring = false;
