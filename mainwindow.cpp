@@ -32,10 +32,7 @@ MainWindow::MainWindow(QWidget *parent) :
     // default settings
     ui->comboBox_lrf_com->setCurrentText("COM7");
     ui->comboBox_lrf_baudRate->setCurrentText("38400");
-    lrf_status = false;
     lrfClearData();
-    lrf_timer = new QTimer;
-    connect(lrf_timer, SIGNAL(timeout()), this, SLOT(lrfReadData()));
 
     // Laser range finder ====================== End
 
@@ -68,7 +65,6 @@ MainWindow::MainWindow(QWidget *parent) :
     // Stereo vision =========================== End
 
     // Thread control ==========================
-    sync.clearFutures();
     sync.addFuture(f_sv);
     sync.addFuture(f_lrf);
     // ========================================= End
@@ -86,8 +82,6 @@ MainWindow::~MainWindow()
     cv::destroyAllWindows();
     lrf->close();
     delete lrf;
-    lrf_timer->stop();
-    delete lrf_timer;
     delete sv;
     // If close mainwindow without clicking stop button since the camera has been opened.
     fg_capturing = false;
@@ -124,21 +118,21 @@ void MainWindow::lrfClearData()
         lrf_data[i] = -1.0; //**// lrf range?
 }
 
-void MainWindow::lrfReadData()
+void MainWindow::lrfReadData(int mode)
 {
     lrfClearData();
+#ifdef debug_info_lrf
+    qDebug()<<"reading" << lrf->retrieveData(lrf_data, mode);
+#endif
+//    if (!lrf->retrieveData(lrf_data))
+//        reportError("lrf", "Error!", "No data.");
+}
 
-    if (lrf->acquireData(lrf_data) && lrf_status == false) {
-        report("data: acquired");
-        lrf_status = true;
-    }
-    else {
-        report("data: lost");
-        lrf_status = false;
-    }
-
+void MainWindow::lrfDisplay()
+{
     // display
     cv::Mat display_lrf = cv::Mat::zeros(800, 800, CV_8UC3);
+//    display_lrf.setTo(0);
     double angle = 0.0;
 
     for (int i = 0; i < LENGTH_DATA; ++i) {
@@ -153,20 +147,19 @@ void MainWindow::lrfReadData()
         angle += RESOLUTION;
     }
 
+//    ui->label_lrf_data->setPixmap(QPixmap::fromImage(QImage::QImage(display_lrf.data, display_lrf.cols, display_lrf.rows, 3 * display_lrf.cols, QImage::Format_RGB888)).scaled(IMG_DIS_W, IMG_DIS_H));
     cv::imshow("image", display_lrf);
-    qApp->processEvents();
-    cv::waitKey(1);
-
+    cv::waitKey(10);
 }
 
 void MainWindow::on_pushButton_lrf_display_clicked()
 {
-    lrf_timer->start(350);
+
 }
 
 void MainWindow::on_pushButton_lrf_stop_clicked()
 {
-    lrf_timer->stop();
+
 }
 
 void MainWindow::camOpen()
@@ -192,7 +185,6 @@ void MainWindow::displaying(const cv::Mat &img_L, const cv::Mat &img_R, const cv
     ui->label_cam_img_L->setPixmap(QPixmap::fromImage(QImage::QImage(img_L.data, img_L.cols, img_L.rows, 3 * img_L.cols, QImage::Format_RGB888)).scaled(IMG_DIS_W, IMG_DIS_H));
     ui->label_cam_img_R->setPixmap(QPixmap::fromImage(QImage::QImage(img_R.data, img_R.cols, img_R.rows, 3 * img_R.cols, QImage::Format_RGB888)).scaled(IMG_DIS_W, IMG_DIS_H));
     ui->label_disp->setPixmap(QPixmap::fromImage(QImage::QImage(disp.data, disp.cols, disp.rows, disp.cols, QImage::Format_Indexed8)).scaled(IMG_DIS_W, IMG_DIS_H));
-    qApp->processEvents();
 }
 
 void MainWindow::on_pushButton_cam_open_clicked()
@@ -236,6 +228,7 @@ void MainWindow::closeEvent(QCloseEvent *)
     if (form_smp != 0)
         delete form_smp;    //**// memory location changed itself
     // If close mainwindow without clicking stop button since the camera has been opened.
+    fg_buffering = false;
     fg_capturing = false;
     fg_acquiring = false;
 }
@@ -243,7 +236,7 @@ void MainWindow::closeEvent(QCloseEvent *)
 void MainWindow::threadProcessing()
 {
     fg_running = true;
-    while (fg_capturing | fg_acquiring) {
+    while (fg_capturing | fg_acquiring | fg_buffering) {
         // sv
         if (fg_capturing) {
             f_sv = QtConcurrent::run(sv, &stereo_vision::stereoVision);
@@ -252,8 +245,17 @@ void MainWindow::threadProcessing()
 
         // lrf
         if (fg_acquiring) {
-
+            f_lrf = QtConcurrent::run(this, &MainWindow::lrfReadData, 1);
+            sync.setFuture(f_lrf);
         }
+
+        // lrf buffer
+        //**// Need to moce to another thread and maybe run twice round capturing & acquisition then run once buffering
+        if (fg_buffering) {
+            f_lrf_buf = QtConcurrent::run(lrf, &lrf_controller::pushToBuf);
+            sync.setFuture(f_lrf_buf);
+        }
+
         sync.waitForFinished();
 
         if (fg_capturing) {
@@ -261,8 +263,10 @@ void MainWindow::threadProcessing()
         }
 
         if (fg_acquiring) {
-
+            lrfDisplay();
         }
+
+        qApp->processEvents();
     }
     fg_running = false;
 }
@@ -394,4 +398,38 @@ void MainWindow::on_lineEdit_base_line_returnPressed()
         on_checkBox_do_calibration_clicked(true);
         report("base line has been changed.");
     }
+}
+
+void MainWindow::on_pushButton_8_clicked()
+{
+    lrf->requestData(lrf->CAPTURE_MODE::ONCE);
+    while (!lrf->bufEnoughSet()) {
+        lrf->pushToBuf();
+    }
+    lrfReadData(0);
+    lrfDisplay();
+}
+
+void MainWindow::on_pushButton_5_clicked()
+{
+    lrf->requestData(lrf->CAPTURE_MODE::CONTINUOUS);
+    fg_buffering = true;
+    if (!fg_running)
+        threadProcessing();
+//    threadBuffering();
+}
+
+void MainWindow::on_pushButton_6_clicked()
+{
+    fg_acquiring = true;
+    if (!fg_running)
+        threadProcessing();
+}
+
+void MainWindow::on_pushButton_7_clicked()
+{
+    qDebug()<<"stop";
+    fg_buffering = false;
+    fg_acquiring = false;
+    lrf->stopRetrieve();
 }

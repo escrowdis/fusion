@@ -5,6 +5,7 @@
 
 #include <QString>
 #include <QTime>
+#include <QBuffer>
 
 // COM Port Communication
 #include <QtSerialPort/QSerialPort>
@@ -15,6 +16,7 @@
 #define LENGTH_DATA 361
 #define LENGTH_RAW_DATA 733
 #define LENGTH_HEADER 8
+#define LENGTH_ACK 10
 #define RESOLUTION 0.5
 
 const uchar header_data[] =                 {0x06, 0x02, 0x80, 0xD6, 0x02, 0xB0, 0x69, 0x01};
@@ -28,6 +30,7 @@ const char request_data_continuous[] =      {0x02, 0x00, 0x02, 0x00, 0x20, 0x24,
 const char request_data_stop[] =            {0x02, 0x00, 0x02, 0x00, 0x20, 0x25, 0x35, 0x08};
 
 const uchar ACK_baudrate[] =                {0x06, 0x02, 0x80, 0x03, 0x00, 0xA0, 0x00, 0x10, 0x16, 0x0A};
+const uchar ACK_data_continuous[] =         {0x06, 0x02, 0x80, 0x03, 0x00, 0xA0, 0x00, 0x10, 0x16, 0x0A};
 
 // Laser Range Finder Controller
 class lrf_controller
@@ -39,40 +42,55 @@ public:
 
     enum CAPTURE_MODE {
         ONCE,
-        CONTINUOUS
+        CONTINUOUS,
+        STOP
     };
 
     bool open(QString comPortIn, int baudRateIn);
 
     bool isOpen() { return serial->isOpen(); }
 
-    bool acquireData(double *data, int mode = CAPTURE_MODE::ONCE);
+    void pushToBuf();
+
+    void requestData(int mode);
+
+    void stopRetrieve();
+
+    bool retrieveData(double *data, int mode);
 
     bool close();
 
+    bool bufEnoughSet() {return buf.size() >= LENGTH_RAW_DATA;}
+
 private:
     QSerialPort *serial;
+
+    unsigned char data_raw[LENGTH_RAW_DATA - LENGTH_HEADER];
+
+    QSerialPort::BaudRate baudRate;
+
+    int mode;
 
     enum HEADER_TYPE{
         BAUDRATE,
         DATA
     };
 
-    void requestData(int mode);
+    QByteArray buf;
 
-    QSerialPort::BaudRate baudRate;
+    int count_while = 0;
 
-    unsigned char data_raw[LENGTH_RAW_DATA - LENGTH_HEADER];
+    int break_count = 1000;
 
-    ushort doCRC(const QByteArray &data);
+    QByteArray dataSet;
 
-    bool state;
-    QByteArray data_temp;
-    bool fg_header_found;
+    bool sendMsg(int mode);
 
-    uchar checkACK(const uchar *msg_ack);
+    bool checkACK(QByteArray &data, const uchar *msg_ack);
 
     bool checkHeader(QByteArray &data, int header_type, int mode);
+
+    ushort doCRC(const QByteArray &data);
 };
 
 #endif // LRF_CONTROLLER_H

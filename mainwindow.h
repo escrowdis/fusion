@@ -42,7 +42,6 @@ private slots:
 
     void on_pushButton_lrf_display_clicked();
 
-    void lrfReadData();
     // ======================== End
 
     // Stereo vision ==========
@@ -83,6 +82,14 @@ private slots:
 
     void on_pushButton_lrf_stop_clicked();
 
+    void on_pushButton_5_clicked();
+
+    void on_pushButton_6_clicked();
+
+    void on_pushButton_7_clicked();
+
+    void on_pushButton_8_clicked();
+
 private:
     Ui::MainWindow *ui;
 
@@ -95,13 +102,15 @@ private:
 
     bool fg_acquiring;
 
-    QTimer *lrf_timer;
-
-    bool lrf_status;
+    bool fg_buffering;
 
     double lrf_data[LENGTH_DATA];
 
     void lrfClearData();
+
+    void lrfReadData(int mode);
+
+    void lrfDisplay();
     // ======================== End
 
     // Stereo vision ==========
@@ -128,6 +137,8 @@ private:
     QFutureSynchronizer<void> sync;
     QFuture<void> f_sv;
     QFuture<void> f_lrf;
+    QFuture<void> f_lrf_buf;
+    QFutureWatcher<void> fw_lrf_buf;
 
     void threadProcessing();
     // ======================== End

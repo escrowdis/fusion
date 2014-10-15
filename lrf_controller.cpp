@@ -68,7 +68,7 @@ bool lrf_controller::open(QString comPortIn, int baudRateIn)
     return serial->isOpen();
 }
 
-void lrf_controller::requestData(int mode)
+bool lrf_controller::sendMsg(int mode)
 {
     switch (mode) {
     default:
@@ -78,57 +78,101 @@ void lrf_controller::requestData(int mode)
     case CAPTURE_MODE::CONTINUOUS:
         serial->write(request_data_continuous, 8);
         break;
+
+    case CAPTURE_MODE::STOP:
+        serial->write(request_data_stop, 8);
+        break;
     }
 
-    while(!serial->waitForBytesWritten(1)) {qDebug()<<"test";}
+    count_while = 0;
+    while(!serial->waitForBytesWritten(1)) {
+        count_while++;
+        if (count_while > break_count)
+            return false;
+    }
+    this->mode = mode;
+
+    return true;
 }
 
-bool lrf_controller::acquireData(double* data, int mode)
+void lrf_controller::requestData(int mode)
 {
-    state = false;
-    data_temp.clear();
-    fg_header_found = false;
+    buf.clear();
+    qDebug()<<sendMsg(mode);
+}
 
-    requestData(mode);
+void lrf_controller::stopRetrieve()
+{
+    sendMsg(CAPTURE_MODE::STOP);
+}
 
-    while (!fg_header_found) {
-        serial->waitForReadyRead(10);
-        data_temp += serial->readAll();
-#ifdef debug_info_lrf
-        qDebug()<<data_temp.size();
+void lrf_controller::pushToBuf()
+{
+    serial->waitForReadyRead(20);
+    if (serial->bytesAvailable() > 0) {
+        buf.append(serial->readAll());
+#ifdef debug_info_lrf_data
+        qDebug()<<"buf size: "<<buf.size();
 #endif
-        fg_header_found = checkHeader(data_temp, HEADER_TYPE::DATA, mode);
+        //    for (int i = 0; i < buf.size(); i++) {
+        //        std::cout<<std::hex << (int)(buf[i] & 0xff)<<std::dec<<" ";
+        //    }
+        //    std::cout<<std::endl;
     }
-    while (data_temp.size() < LENGTH_RAW_DATA) {
-        serial->waitForReadyRead(20);
-        int data_num = serial->bytesAvailable();
-        int data_lack = LENGTH_RAW_DATA - data_temp.size();
-        data_temp += serial->read(data_lack > data_num ? data_num : data_lack);
-#ifdef debug_info_lrf
-        qDebug()<<data_temp.size()<<data_num;
+#ifdef debug_info_lrf_data
+    else
+        qDebug()<<"serial: no data";
 #endif
+}
+
+bool lrf_controller::retrieveData(double* data, int mode)
+{
+//    buf.clear();
+    dataSet.clear();
+
+    count_while = 0;
+    while (!checkHeader(buf, HEADER_TYPE::DATA, mode)) {
+        count_while++;
+        if (count_while > break_count)
+            return false;
+    }
+#ifdef debug_info_lrf
+    qDebug()<<"DONE check header";
+#endif
+
+    count_while = 0;
+    while (dataSet.size() < LENGTH_RAW_DATA) {
+        int data_lack = LENGTH_RAW_DATA - dataSet.size();
+        dataSet.append(buf.left(data_lack));
+#ifdef debug_info_lrf
+        qDebug()<<dataSet.size();
+#endif
+        count_while++;
+        if (count_while > break_count)
+            return false;
+    }
+#ifdef debug_info_lrf
+    qDebug()<<"DONE add data";
+#endif
+
+    for (int i = LENGTH_HEADER; i < LENGTH_RAW_DATA; i++) {
+        unsigned char tp = dataSet[i];
+        data_raw[i - LENGTH_HEADER] = tp;
+    }
+    int j = 0;
+#ifdef debug_info_lrf_data
+        qDebug()<<"proc data r";
+#endif
+    for (int i = 0; i < LENGTH_RAW_DATA - LENGTH_HEADER - 1; i+=2) {
+        double r = (double)(data_raw[i + 1]) * 256 + (double)(data_raw[i]);
+        data[j] = r;
+#ifdef debug_info_lrf_data
+        qDebug()<<r;
+#endif
+        j++;
     }
 
-            for (int i = LENGTH_HEADER; i < LENGTH_RAW_DATA; i++) {
-                unsigned char tp = data_temp[i];
-                data_raw[i - LENGTH_HEADER] = tp;
-            }
-            int j = 0;
-            for (int i = 0; i < LENGTH_RAW_DATA - LENGTH_HEADER - 1; i+=2) {
-                double r = (double)(data_raw[i + 1]) * 256 + (double)(data_raw[i]);
-                data[j] = r;
-#ifdef debug_info_lrf
-                qDebug()<<r;
-#endif
-                j++;
-            }
-
-            state = true;
-
-#ifdef debug_info_lrf
-    qDebug()<<state;
-#endif
-    return state;
+    return true;
 }
 
 bool lrf_controller::close()
@@ -169,22 +213,32 @@ bool lrf_controller::checkHeader(QByteArray &data, int header_type, int mode)
     case HEADER_TYPE::BAUDRATE:
         break;
     case HEADER_TYPE::DATA:
+        int shiftContiMode = 0;
+        if (mode == CAPTURE_MODE::CONTINUOUS)
+            shiftContiMode = 1;
+
         uchar header[LENGTH_HEADER];
         bool fg_probably_header = false;
-        for (int i = 0; i < data.size() - 1; i++) {
-            if (data.at(i) == header_data[0]) {
-                fg_probably_header = true;
-                if (data.at(i + 1) == header_data[1]) {
-                    if (data.size() - i >= LENGTH_HEADER) {
+        int data_size = data.size();
+        for (int i = 0; i < data_size - 1; i++) {
+            if (data.at(i) == header_data[0 + shiftContiMode]) {
+                // if the last char equals first header char
+                if (i == data_size - 1)
+                    fg_probably_header = true;
+                if (data.at(i + 1) == header_data[1 + shiftContiMode]) {
+                    // found probably char, so don't flush the data
+                    fg_probably_header = true;
+                    if (data_size - i >= LENGTH_HEADER) {
                         for (int j = 0; j < LENGTH_HEADER; j++)
                             header[j] = data.at(i + j);
-                        if ( header_data[2] == header[2] &&
-                             header_data[3] == header[3] &&
-                             header_data[4] == header[4] &&
-                             header_data[5] == header[5] &&
-                             header_data[6] == header[6] &&
-                             header_data[7] == header[7]) {
-                            int data_size = data.size();
+                        bool fg_cmp = true;
+                        for (int k = 2 + shiftContiMode; k < LENGTH_HEADER; k++) {
+                            if (header_data[k] != header[k]) {
+                                fg_cmp = false;
+                                break;
+                            }
+                        }
+                        if (fg_cmp) {
                             data = data.right(data_size - i);
                             return true;
                         }
@@ -192,8 +246,9 @@ bool lrf_controller::checkHeader(QByteArray &data, int header_type, int mode)
                 }
             }
         }
-//        if (!fg_probably_header)
-//            data.clear();
+
+        if (!fg_probably_header)
+            data.clear();
 
         break;
     }
@@ -201,9 +256,25 @@ bool lrf_controller::checkHeader(QByteArray &data, int header_type, int mode)
     return false;
 }
 
-uchar lrf_controller::checkACK(const uchar *msg_ack)
+bool lrf_controller::checkACK(QByteArray &data, const uchar *msg_ack)
 {
+    bool fg_ack_check = false;
+    int data_size = data.size();
 
+    for (int i = 0; i < data_size; i++) {
+        fg_ack_check = true;
+        for (int j = 0; j < LENGTH_ACK; j++) {
+            if (data.at(i + j) != msg_ack[i + j]) {
+                fg_ack_check = false;
+                break;
+            }
+        }
 
-    return -1;
+        if (fg_ack_check) {
+            data = data.right(data_size - i);
+            return fg_ack_check;
+        }
+    }
+
+    return fg_ack_check;
 }
