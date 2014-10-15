@@ -154,6 +154,7 @@ void MainWindow::lrfReadData()
     }
 
     cv::imshow("image", display_lrf);
+    qApp->processEvents();
     cv::waitKey(1);
 
 }

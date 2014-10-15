@@ -83,21 +83,21 @@ void lrf_controller::requestData(int mode)
     while(!serial->waitForBytesWritten(1)) {qDebug()<<"test";}
 }
 
-bool lrf_controller::acquireData(double* data)
+bool lrf_controller::acquireData(double* data, int mode)
 {
-    bool state = false;
+    state = false;
+    data_temp.clear();
+    fg_header_found = false;
 
-    requestData();
+    requestData(mode);
 
-    QByteArray data_temp;
-    bool fg_header_found = false;
     while (!fg_header_found) {
         serial->waitForReadyRead(10);
         data_temp += serial->readAll();
 #ifdef debug_info_lrf
         qDebug()<<data_temp.size();
 #endif
-        fg_header_found = checkHeader(data_temp, HEADER_TYPE::DATA);
+        fg_header_found = checkHeader(data_temp, HEADER_TYPE::DATA, mode);
     }
     while (data_temp.size() < LENGTH_RAW_DATA) {
         serial->waitForReadyRead(20);
@@ -161,7 +161,7 @@ ushort lrf_controller::doCRC(const QByteArray &data)
     return uCrc16;
 }
 
-bool lrf_controller::checkHeader(QByteArray &data, int header_type)
+bool lrf_controller::checkHeader(QByteArray &data, int header_type, int mode)
 {
 
 //    qDebug()<<"check header"<<data.size();
