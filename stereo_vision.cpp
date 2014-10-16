@@ -48,13 +48,15 @@ bool stereo_vision::open(int com_L, int com_R)
         return false;
     if (!cam_L.isOpened()) {
         if (cam_L.open(com_L)) {
-            cam_L.set(cv::CAP_PROP_FRAME_WIDTH, IMG_W);
-            cam_L.set(cv::CAP_PROP_FRAME_HEIGHT, IMG_H);
-            fg_cam_L = true;
-            this->com_L = com_L;
+            if (cam_L.isOpened()) {
+                cam_L.set(cv::CAP_PROP_FRAME_WIDTH, IMG_W);
+                cam_L.set(cv::CAP_PROP_FRAME_HEIGHT, IMG_H);
+                fg_cam_L = true;
+                this->com_L = com_L;
 #ifdef debug_info_sv
-            qDebug()<<"open L";
+                qDebug()<<"open L";
 #endif
+            }
         }
         else {
 #ifdef debug_info_sv
@@ -64,13 +66,15 @@ bool stereo_vision::open(int com_L, int com_R)
     }
     if (!cam_R.isOpened()) {
         if (cam_R.open(com_R)) {
-            cam_R.set(cv::CAP_PROP_FRAME_WIDTH, IMG_W);
-            cam_R.set(cv::CAP_PROP_FRAME_HEIGHT, IMG_H);
-            fg_cam_R = true;
-            this->com_R = com_R;
+            if (cam_R.isOpened()) {
+                cam_R.set(cv::CAP_PROP_FRAME_WIDTH, IMG_W);
+                cam_R.set(cv::CAP_PROP_FRAME_HEIGHT, IMG_H);
+                fg_cam_R = true;
+                this->com_R = com_R;
 #ifdef debug_info_sv
-            qDebug()<<"open R";
+                qDebug()<<"open R";
 #endif
+            }
         }
         else {
 #ifdef debug_info_sv
