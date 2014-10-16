@@ -18,8 +18,9 @@
 #define LENGTH_HEADER 8
 #define LENGTH_ACK 10
 #define RESOLUTION 0.5
+#define MAX_BUF_SIZE 7330
 
-const uchar header_data[] =                 {0x06, 0x02, 0x80, 0xD6, 0x02, 0xB0, 0x69, 0x01};
+const char header_data[] =                 {0x06, 0x02, 0x80, 0xD6, 0x02, 0xB0, 0x69, 0x01};
 // once mode: header_data pop up
 // continuous mode: ACK first and come up w/ header data w/o first uchar 0x06
 // SO, header in ONCE and CONTI is 7 and 8 respectively.
@@ -80,7 +81,7 @@ private:
 
     int count_while = 0;
 
-    int break_count = 1000;
+    int break_count = 2;
 
     QByteArray dataSet;
 
@@ -88,9 +89,18 @@ private:
 
     bool checkACK(QByteArray &data, const uchar *msg_ack);
 
+    // check header =========
+    bool fg_header;
+
+    int data_size;
+
+    int shiftContiMode;
+
     bool checkHeader(QByteArray &data, int header_type, int mode);
+    // ======================
 
     ushort doCRC(const QByteArray &data);
+
 };
 
 #endif // LRF_CONTROLLER_H

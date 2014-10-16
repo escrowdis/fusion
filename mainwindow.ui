@@ -490,7 +490,7 @@ parameters</string>
      </rect>
     </property>
     <property name="text">
-     <string>request</string>
+     <string>Request</string>
     </property>
    </widget>
    <widget class="QPushButton" name="pushButton_6">
@@ -503,7 +503,7 @@ parameters</string>
      </rect>
     </property>
     <property name="text">
-     <string>retrieve</string>
+     <string>Retrieve</string>
     </property>
    </widget>
    <widget class="QPushButton" name="pushButton_7">
@@ -516,7 +516,7 @@ parameters</string>
      </rect>
     </property>
     <property name="text">
-     <string>stop</string>
+     <string>Stop</string>
     </property>
    </widget>
    <widget class="QPushButton" name="pushButton_8">
@@ -529,7 +529,7 @@ parameters</string>
      </rect>
     </property>
     <property name="text">
-     <string>request ONCE</string>
+     <string>Request once</string>
     </property>
    </widget>
    <widget class="QLabel" name="label_lrf_data">

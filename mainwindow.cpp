@@ -19,6 +19,7 @@ MainWindow::MainWindow(QWidget *parent) :
     lrf = new lrf_controller();
 
     fg_acquiring = false;
+    fg_buffering = false;
 
     // COM port
     for (int i = 1; i <= 20; i++)
@@ -67,6 +68,7 @@ MainWindow::MainWindow(QWidget *parent) :
     // Thread control ==========================
     sync.addFuture(f_sv);
     sync.addFuture(f_lrf);
+    sync.addFuture(f_lrf_buf);
     // ========================================= End
 
     // camera calibration ======================
@@ -86,6 +88,7 @@ MainWindow::~MainWindow()
     // If close mainwindow without clicking stop button since the camera has been opened.
     fg_capturing = false;
     fg_acquiring = false;
+    fg_buffering = false;
     delete ui;
 }
 
@@ -108,6 +111,11 @@ void MainWindow::on_pushButton_lrf_open_clicked()
     }
     else {
         report("Port's opened.");
+        // push data to buffer //**// shouldn't be here
+        fg_buffering = true;
+        if (!fg_running)
+            threadProcessing();
+//        threadBuffering();
     }
 }
 
@@ -118,12 +126,12 @@ void MainWindow::lrfClearData()
         lrf_data[i] = -1.0; //**// lrf range?
 }
 
-void MainWindow::lrfReadData(int mode)
+bool MainWindow::lrfReadData(int mode)
 {
     lrfClearData();
-#ifdef debug_info_lrf
-    qDebug()<<"reading" << lrf->retrieveData(lrf_data, mode);
-#endif
+
+    return lrf->retrieveData(lrf_data, mode);
+
 //    if (!lrf->retrieveData(lrf_data))
 //        reportError("lrf", "Error!", "No data.");
 }
@@ -233,28 +241,44 @@ void MainWindow::closeEvent(QCloseEvent *)
     fg_acquiring = false;
 }
 
+void MainWindow::threadbuffering()
+{
+    // unimplement
+    while (fg_buffering) {
+        f_lrf_buf = QtConcurrent::run(lrf, &lrf_controller::pushToBuf);
+        fw_lrf_buf.setFuture(f_lrf_buf);
+        fw_lrf_buf.waitForFinished();
+        qApp->processEvents();
+    }
+}
+
 void MainWindow::threadProcessing()
 {
     fg_running = true;
+    qDebug()<<"process time";
+    t_proc.restart();
     while (fg_capturing | fg_acquiring | fg_buffering) {
         // sv
         if (fg_capturing) {
             f_sv = QtConcurrent::run(sv, &stereo_vision::stereoVision);
             sync.setFuture(f_sv);
         }
+        qDebug()<<"sv"<<t_proc.restart();
 
         // lrf
-        if (fg_acquiring) {
+        if (fg_acquiring && lrf->bufEnoughSet()) {
             f_lrf = QtConcurrent::run(this, &MainWindow::lrfReadData, 1);
             sync.setFuture(f_lrf);
         }
+        qDebug()<<"lrf"<<t_proc.restart();
 
         // lrf buffer
-        //**// Need to moce to another thread and maybe run twice round capturing & acquisition then run once buffering
+        //**// Need to move to another thread and maybe run twice round capturing & acquisition then run once buffering
         if (fg_buffering) {
             f_lrf_buf = QtConcurrent::run(lrf, &lrf_controller::pushToBuf);
             sync.setFuture(f_lrf_buf);
         }
+        qDebug()<<"buffering"<<t_proc.restart();
 
         sync.waitForFinished();
 
@@ -265,6 +289,7 @@ void MainWindow::threadProcessing()
         if (fg_acquiring) {
             lrfDisplay();
         }
+        qDebug()<<"gui"<<t_proc.restart();
 
         qApp->processEvents();
     }
@@ -273,6 +298,7 @@ void MainWindow::threadProcessing()
 
 void MainWindow::on_pushButton_4_clicked()
 {
+
 //    change color
 //    ui->system_log->append("Press <FONT COLOR=red>'blank'</FONT> key to save board image, <FONT COLOR=red>'ESC' or 'q'</FONT> to leave");
 }
@@ -412,11 +438,9 @@ void MainWindow::on_pushButton_8_clicked()
 
 void MainWindow::on_pushButton_5_clicked()
 {
+//    fg_buffering = true;
+//    threadbuffering();
     lrf->requestData(lrf->CAPTURE_MODE::CONTINUOUS);
-    fg_buffering = true;
-    if (!fg_running)
-        threadProcessing();
-//    threadBuffering();
 }
 
 void MainWindow::on_pushButton_6_clicked()
@@ -429,7 +453,7 @@ void MainWindow::on_pushButton_6_clicked()
 void MainWindow::on_pushButton_7_clicked()
 {
     qDebug()<<"stop";
-    fg_buffering = false;
+//    fg_buffering = false;
     fg_acquiring = false;
     lrf->stopRetrieve();
 }

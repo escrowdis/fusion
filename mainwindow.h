@@ -6,7 +6,6 @@
 #include <QFileDialog>
 #include <QString>
 #include <QMessageBox>
-#include <QTimer>
 #include <QTime>
 #include <QtConcurrent/QtConcurrent>
 
@@ -41,7 +40,6 @@ private slots:
     void on_pushButton_lrf_open_clicked();
 
     void on_pushButton_lrf_display_clicked();
-
     // ======================== End
 
     // Stereo vision ==========
@@ -93,6 +91,8 @@ private slots:
 private:
     Ui::MainWindow *ui;
 
+    QTime t_proc;
+
     void reportError(QString part, QString level, QString content);
 
     void report(QString);
@@ -108,7 +108,7 @@ private:
 
     void lrfClearData();
 
-    void lrfReadData(int mode);
+    bool lrfReadData(int mode);
 
     void lrfDisplay();
     // ======================== End
@@ -136,9 +136,13 @@ private:
 
     QFutureSynchronizer<void> sync;
     QFuture<void> f_sv;
-    QFuture<void> f_lrf;
+    QFuture<bool> f_lrf;
     QFuture<void> f_lrf_buf;
+    QFutureWatcher<void> fw_sv;
+    QFutureWatcher<bool> fw_lrf;
     QFutureWatcher<void> fw_lrf_buf;
+
+    void threadbuffering();
 
     void threadProcessing();
     // ======================== End
