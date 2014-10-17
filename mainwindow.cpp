@@ -83,9 +83,7 @@ MainWindow::~MainWindow()
     delete lrf;
     delete sv;
     // If close mainwindow without clicking stop button since the camera has been opened.
-    fg_capturing = false;
-    fg_acquiring = false;
-    fg_buffering = false;
+    fg_running = false;
     delete ui;
 }
 
@@ -127,10 +125,10 @@ bool MainWindow::lrfReadData(int mode)
 {
     lrfClearData();
 
-    return lrf->retrieveData(lrf_data, mode);
-
 //    if (!lrf->retrieveData(lrf_data))
 //        reportError("lrf", "Error!", "No data.");
+
+    return lrf->retrieveData(lrf_data, mode);
 }
 
 void MainWindow::lrfDisplay()
@@ -233,9 +231,7 @@ void MainWindow::closeEvent(QCloseEvent *)
     if (form_smp != 0)
         delete form_smp;    //**// memory location changed itself
     // If close mainwindow without clicking stop button since the camera has been opened.
-    fg_buffering = false;
-    fg_capturing = false;
-    fg_acquiring = false;
+    fg_running = false;
 }
 
 void MainWindow::threadbuffering()
@@ -252,15 +248,13 @@ void MainWindow::threadbuffering()
 void MainWindow::threadProcessing()
 {
     fg_running = true;
-//    qDebug()<<"process time";
     t_proc.restart();
-    while (fg_capturing | fg_acquiring | fg_buffering) {
+    while (fg_running) {
         // sv
         if (fg_capturing) {
             f_sv = QtConcurrent::run(sv, &stereo_vision::stereoVision);
             sync.setFuture(f_sv);
         }
-//        qDebug()<<"sv"<<t_proc.restart();
         ui->label_sv_proc->setText(QString::number(t_proc.restart()));
 
         // lrf
@@ -268,7 +262,6 @@ void MainWindow::threadProcessing()
             f_lrf = QtConcurrent::run(this, &MainWindow::lrfReadData, 1);
             sync.setFuture(f_lrf);
         }
-//        qDebug()<<"lrf"<<t_proc.restart();
         ui->label_lrf_proc->setText(QString::number(t_proc.restart()));
 
         // lrf buffer
@@ -277,7 +270,6 @@ void MainWindow::threadProcessing()
             f_lrf_buf = QtConcurrent::run(lrf, &lrf_controller::pushToBuf);
             sync.setFuture(f_lrf_buf);
         }
-//        qDebug()<<"buffering"<<t_proc.restart();
         ui->label_lrf_buf_proc->setText(QString::number(t_proc.restart()));
 
         sync.waitForFinished();
@@ -289,12 +281,16 @@ void MainWindow::threadProcessing()
         if (fg_acquiring) {
             lrfDisplay();
         }
-//        qDebug()<<"gui"<<t_proc.restart();
         ui->label_gui_proc->setText(QString::number(t_proc.restart()));
 
         qApp->processEvents();
+
     }
-    fg_running = false;
+
+    sync.setCancelOnWait(true);
+    while (!sync.cancelOnWait()) {}
+
+    qDebug()<<"quit";
 }
 
 void MainWindow::on_pushButton_4_clicked()
