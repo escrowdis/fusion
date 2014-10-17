@@ -3,13 +3,10 @@
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
-    ui(new Ui::MainWindow)
+    ui(new Ui::MainWindow),
+    form_calib(0), form_smp(0)
 {
     ui->setupUi(this);
-
-    form_calib = 0;
-
-    form_smp = 0;
 
     fg_running = false;
 
@@ -255,7 +252,7 @@ void MainWindow::threadbuffering()
 void MainWindow::threadProcessing()
 {
     fg_running = true;
-    qDebug()<<"process time";
+//    qDebug()<<"process time";
     t_proc.restart();
     while (fg_capturing | fg_acquiring | fg_buffering) {
         // sv
@@ -263,14 +260,16 @@ void MainWindow::threadProcessing()
             f_sv = QtConcurrent::run(sv, &stereo_vision::stereoVision);
             sync.setFuture(f_sv);
         }
-        qDebug()<<"sv"<<t_proc.restart();
+//        qDebug()<<"sv"<<t_proc.restart();
+        ui->label_sv_proc->setText(QString::number(t_proc.restart()));
 
         // lrf
         if (fg_acquiring && lrf->bufEnoughSet()) {
             f_lrf = QtConcurrent::run(this, &MainWindow::lrfReadData, 1);
             sync.setFuture(f_lrf);
         }
-        qDebug()<<"lrf"<<t_proc.restart();
+//        qDebug()<<"lrf"<<t_proc.restart();
+        ui->label_lrf_proc->setText(QString::number(t_proc.restart()));
 
         // lrf buffer
         //**// Need to move to another thread and maybe run twice round capturing & acquisition then run once buffering
@@ -278,7 +277,8 @@ void MainWindow::threadProcessing()
             f_lrf_buf = QtConcurrent::run(lrf, &lrf_controller::pushToBuf);
             sync.setFuture(f_lrf_buf);
         }
-        qDebug()<<"buffering"<<t_proc.restart();
+//        qDebug()<<"buffering"<<t_proc.restart();
+        ui->label_lrf_buf_proc->setText(QString::number(t_proc.restart()));
 
         sync.waitForFinished();
 
@@ -289,7 +289,8 @@ void MainWindow::threadProcessing()
         if (fg_acquiring) {
             lrfDisplay();
         }
-        qDebug()<<"gui"<<t_proc.restart();
+//        qDebug()<<"gui"<<t_proc.restart();
+        ui->label_gui_proc->setText(QString::number(t_proc.restart()));
 
         qApp->processEvents();
     }
