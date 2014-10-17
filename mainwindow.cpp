@@ -46,8 +46,8 @@ MainWindow::MainWindow(QWidget *parent) :
 
     // COM port
     for (int i = 0; i < 5; i++) {
-        ui->comboBox_cam_com_L->addItem(QString::number(i));
-        ui->comboBox_cam_com_R->addItem(QString::number(i));
+        ui->comboBox_cam_device_index_L->addItem(QString::number(i));
+        ui->comboBox_cam_device_index_R->addItem(QString::number(i));
     }
 
     // focal length
@@ -59,8 +59,8 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->lineEdit_base_line->setText(QString::number(15.0));
 
     // default settings
-    ui->comboBox_cam_com_L->setCurrentIndex(1);
-    ui->comboBox_cam_com_R->setCurrentIndex(2);
+    ui->comboBox_cam_device_index_L->setCurrentIndex(1);
+    ui->comboBox_cam_device_index_R->setCurrentIndex(2);
     ui->comboBox_camera_focal_length->setCurrentIndex(0);
 
     // Stereo vision =========================== End
@@ -172,8 +172,8 @@ void MainWindow::on_pushButton_lrf_stop_clicked()
 
 void MainWindow::camOpen()
 {
-    int L = ui->comboBox_cam_com_L->currentIndex();
-    int R = ui->comboBox_cam_com_R->currentIndex();
+    int L = ui->comboBox_cam_device_index_L->currentIndex();
+    int R = ui->comboBox_cam_device_index_R->currentIndex();
 
     if (!sv->open(L, R)) {
         reportError("sv", "Error!", "Camera can NOT be opened.");

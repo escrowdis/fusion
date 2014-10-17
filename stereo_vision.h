@@ -24,7 +24,7 @@ public:
 
     ~stereo_vision();
 
-    bool open(int com_L, int com_R);
+    bool open(int device_index_L, int device_index_R);
 
     bool isOpened() {return fg_cam_opened;}
 
@@ -57,7 +57,7 @@ public:
     };
 
 private:
-    void resetOpen(int com_L, int com_R);
+    void resetOpen(int device_index_L, int device_index_R);
 
     void camCapture();
 
@@ -71,8 +71,8 @@ private:
     bool fg_calib_loaded;               // load the calibration files or not
 
     // capture from camera
-    int com_L;
-    int com_R;
+    int device_index_L;
+    int device_index_R;
     cv::VideoCapture cam_L;
     cv::VideoCapture cam_R;
 

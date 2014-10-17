@@ -2,8 +2,8 @@
 
 stereo_vision::stereo_vision()
 {
-    com_L = -1;
-    com_R = -1;
+    device_index_L = -1;
+    device_index_R = -1;
     fg_cam_L = false;
     fg_cam_R = false;
     fg_cam_opened = false;
@@ -26,33 +26,33 @@ stereo_vision::~stereo_vision()
     bm.release();
 }
 
-void stereo_vision::resetOpen(int com_L, int com_R)
+void stereo_vision::resetOpen(int device_index_L, int device_index_R)
 {
 
-    if (this->com_L != com_L) {
+    if (this->device_index_L != device_index_L) {
         cam_L.release();
         fg_cam_L = false;
     }
-    if (this->com_R != com_R) {
+    if (this->device_index_R != device_index_R) {
         cam_R.release();
         fg_cam_R = false;
     }
 }
 
-bool stereo_vision::open(int com_L, int com_R)
+bool stereo_vision::open(int device_index_L, int device_index_R)
 {
-    resetOpen(com_L, com_R);
+    resetOpen(device_index_L, device_index_R);
     if (fg_cam_L && fg_cam_R)
         return true;
-    if (com_L == com_R || com_L < 0 || com_R < 0)
+    if (device_index_L == device_index_R || device_index_L < 0 || device_index_R < 0)
         return false;
     if (!cam_L.isOpened()) {
-        if (cam_L.open(com_L)) {
+        if (cam_L.open(device_index_L)) {
             if (cam_L.isOpened()) {
                 cam_L.set(cv::CAP_PROP_FRAME_WIDTH, IMG_W);
                 cam_L.set(cv::CAP_PROP_FRAME_HEIGHT, IMG_H);
                 fg_cam_L = true;
-                this->com_L = com_L;
+                this->device_index_L = device_index_L;
 #ifdef debug_info_sv
                 qDebug()<<"open L";
 #endif
@@ -65,12 +65,12 @@ bool stereo_vision::open(int com_L, int com_R)
         }
     }
     if (!cam_R.isOpened()) {
-        if (cam_R.open(com_R)) {
+        if (cam_R.open(device_index_R)) {
             if (cam_R.isOpened()) {
                 cam_R.set(cv::CAP_PROP_FRAME_WIDTH, IMG_W);
                 cam_R.set(cv::CAP_PROP_FRAME_HEIGHT, IMG_H);
                 fg_cam_R = true;
-                this->com_R = com_R;
+                this->device_index_R = device_index_R;
 #ifdef debug_info_sv
                 qDebug()<<"open R";
 #endif
