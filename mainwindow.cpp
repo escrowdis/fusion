@@ -108,9 +108,9 @@ void MainWindow::on_pushButton_lrf_open_clicked()
         report("Port's opened.");
         // push data to buffer //**// shouldn't be here
         fg_buffering = true;
+//        lrf->bufRunning();
         if (!fg_running)
             threadProcessing();
-//        threadBuffering();
     }
 }
 
@@ -121,14 +121,15 @@ void MainWindow::lrfClearData()
         lrf_data[i] = -1.0; //**// lrf range?
 }
 
-bool MainWindow::lrfReadData(int mode)
+bool MainWindow::lrfReadData()
 {
     lrfClearData();
 
-//    if (!lrf->retrieveData(lrf_data))
-//        reportError("lrf", "Error!", "No data.");
+    if (!lrf->bufEnoughSet()) {
+        return false;
+    }
 
-    return lrf->retrieveData(lrf_data, mode);
+    return lrf->retrieveData(lrf_data);
 }
 
 void MainWindow::lrfDisplay()
@@ -137,6 +138,10 @@ void MainWindow::lrfDisplay()
     cv::Mat display_lrf = cv::Mat::zeros(800, 800, CV_8UC3);
 //    display_lrf.setTo(0);
     double angle = 0.0;
+
+    for (int i = 0 ; i < LENGTH_DATA; ++i)
+        if (lrf_data[i] == -1)
+            return;
 
     for (int i = 0; i < LENGTH_DATA; ++i) {
         double r = lrf_data[i];
@@ -252,27 +257,30 @@ void MainWindow::threadProcessing()
     while (fg_running) {
         // sv
         if (fg_capturing) {
-            f_sv = QtConcurrent::run(sv, &stereo_vision::stereoVision);
-            sync.setFuture(f_sv);
+            sv->stereoVision();
+//            f_sv = QtConcurrent::run(sv, &stereo_vision::stereoVision);
+//            sync.setFuture(f_sv);
         }
         ui->label_sv_proc->setText(QString::number(t_proc.restart()));
 
         // lrf
-        if (fg_acquiring && lrf->bufEnoughSet()) {
-            f_lrf = QtConcurrent::run(this, &MainWindow::lrfReadData, 1);
-            sync.setFuture(f_lrf);
+        if (fg_acquiring) {
+            lrfReadData();
+//            f_lrf = QtConcurrent::run(this, &MainWindow::lrfReadData, 1);
+//            sync.setFuture(f_lrf);
         }
         ui->label_lrf_proc->setText(QString::number(t_proc.restart()));
 
         // lrf buffer
         //**// Need to move to another thread and maybe run twice round capturing & acquisition then run once buffering
         if (fg_buffering) {
-            f_lrf_buf = QtConcurrent::run(lrf, &lrf_controller::pushToBuf);
-            sync.setFuture(f_lrf_buf);
+            lrf->pushToBuf();
+//            f_lrf_buf = QtConcurrent::run(lrf, &lrf_controller::pushToBuf);
+//            sync.setFuture(f_lrf_buf);
         }
         ui->label_lrf_buf_proc->setText(QString::number(t_proc.restart()));
 
-        sync.waitForFinished();
+//        sync.waitForFinished();
 
         if (fg_capturing) {
             displaying(sv->img_r_L, sv->img_r_R, sv->disp);
@@ -285,10 +293,11 @@ void MainWindow::threadProcessing()
 
         qApp->processEvents();
 
+//        qDebug()<<"sv"<<&sv<<"lrf"<<&lrf;
     }
 
-    sync.setCancelOnWait(true);
-    while (!sync.cancelOnWait()) {}
+//    sync.setCancelOnWait(true);
+//    while (!sync.cancelOnWait()) {}
 
     qDebug()<<"quit";
 }
@@ -429,7 +438,7 @@ void MainWindow::on_pushButton_8_clicked()
     while (!lrf->bufEnoughSet()) {
         lrf->pushToBuf();
     }
-    lrfReadData(0);
+    lrfReadData();
     lrfDisplay();
 }
 

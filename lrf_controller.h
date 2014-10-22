@@ -14,8 +14,10 @@
 #include <opencv2/opencv.hpp>
 
 #define LENGTH_DATA 361
-#define LENGTH_RAW_DATA 733
-#define LENGTH_HEADER 8
+#define LENGTH_RAW_DATA_ONCE 733
+#define LENGTH_HEADER_ONCE 8
+#define LENGTH_RAW_DATA_CONTI 732
+#define LENGTH_HEADER_CONTI 7
 #define LENGTH_ACK 10
 #define RESOLUTION 0.5
 #define MAX_BUF_SIZE 7330
@@ -34,8 +36,10 @@ const uchar ACK_baudrate[] =                {0x06, 0x02, 0x80, 0x03, 0x00, 0xA0,
 const uchar ACK_data_continuous[] =         {0x06, 0x02, 0x80, 0x03, 0x00, 0xA0, 0x00, 0x10, 0x16, 0x0A};
 
 // Laser Range Finder Controller
-class lrf_controller
+class lrf_controller : public QObject
 {
+    Q_OBJECT
+
 public:
     lrf_controller();
 
@@ -57,16 +61,20 @@ public:
 
     void stopRetrieve();
 
-    bool retrieveData(double *data, int mode);
+    bool retrieveData(double *data);
 
     bool close();
 
-    bool bufEnoughSet() {return buf.size() >= LENGTH_RAW_DATA;}
+    bool bufEnoughSet() {return buf.size() >= dataset_size;}
+
+    void bufRunning() {QObject::connect(serial, SIGNAL(readyRead()), this, SLOT(pushing()));}
+
+    void bufStopping() {QObject::disconnect(serial, SIGNAL(readyRead()), this, SLOT(pushing()));}
 
 private:
     QSerialPort *serial;
 
-    unsigned char data_raw[LENGTH_RAW_DATA - LENGTH_HEADER];
+    unsigned char data_raw[LENGTH_RAW_DATA_ONCE - LENGTH_HEADER_ONCE];
 
     QSerialPort::BaudRate baudRate;
 
@@ -79,6 +87,12 @@ private:
 
     QByteArray buf;
 
+    // data size ============
+    int dataset_size;
+
+    int header_size;
+    // ======================
+
     int count_while = 0;
 
     int break_count = 2;
@@ -87,20 +101,20 @@ private:
 
     bool sendMsg(int mode);
 
+    void setMode();
+
     bool checkACK(QByteArray &data, const uchar *msg_ack);
 
     // check header =========
     bool fg_header;
 
-    int data_size;
-
-    int shiftContiMode;
-
-    bool checkHeader(QByteArray &data, int header_type, int mode);
+    bool checkHeader(QByteArray &data, int header_type);
     // ======================
 
     ushort doCRC(const QByteArray &data);
 
+private slots:
+    void pushing() {while (true) {qDebug()<<"buff"; pushToBuf();}}
 };
 
 #endif // LRF_CONTROLLER_H

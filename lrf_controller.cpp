@@ -89,15 +89,15 @@ bool lrf_controller::sendMsg(int mode)
         break;
     }
 
-    count_while = 0;
 //    checkACK();
+
     while(!serial->waitForBytesWritten(1)) {
-        count_while++;
-        if (count_while > break_count)
-            return false;
+
     }
 
     this->mode = mode;
+
+    setMode();
 
     return true;
 }
@@ -117,9 +117,11 @@ void lrf_controller::pushToBuf()
     if (buf.size() > MAX_BUF_SIZE)
         buf.clear();
 
-    serial->waitForReadyRead(10);
+    if (!serial->waitForReadyRead(10))
+        return;
+
     if (serial->bytesAvailable() > 0) {
-        buf.append(serial->readAll());
+        buf.append(serial->read(MAX_BUF_SIZE - buf.size()));
 #ifdef debug_info_lrf
         qDebug()<<"buf size: "<<buf.size();
 #endif
@@ -130,43 +132,44 @@ void lrf_controller::pushToBuf()
         std::cout<<std::endl;
 #endif
     }
+
 #ifdef debug_info_lrf
     else
         qDebug()<<"serial: no data";
 #endif
-
 }
 
-bool lrf_controller::retrieveData(double* data, int mode)
+void lrf_controller::setMode()
+{
+    if (mode == CAPTURE_MODE::ONCE) {
+        header_size = LENGTH_HEADER_ONCE;
+        dataset_size = LENGTH_RAW_DATA_ONCE;
+    }
+    else if (mode == CAPTURE_MODE::CONTINUOUS) {
+        header_size = LENGTH_HEADER_CONTI;
+        dataset_size = LENGTH_RAW_DATA_CONTI;
+    }
+}
+
+bool lrf_controller::retrieveData(double* data)
 {
 #ifdef debug_info_lrf
     qDebug()<<"retrieveData ====";
 #endif
+    if (!bufEnoughSet())
+        return false;
 
-    shiftContiMode = 0;
-    if (mode == CAPTURE_MODE::CONTINUOUS)
-        shiftContiMode = 1;
-
-//    while (buf.size() < LENGTH_RAW_DATA - shiftContiMode) {
-//    }
-//    count_while = 0;
-    while (!checkHeader(buf, HEADER_TYPE::DATA, mode)) {
-//        if (count_while > break_count) {
-//#ifdef debug_info_lrf
-//            qDebug()<<"header GG"<<buf.size();
-//#endif
-//            return false;
-//        }
-//        count_while++;
+    while (!checkHeader(buf, HEADER_TYPE::DATA)) {
     }
+
 #ifdef debug_info_lrf
     qDebug()<<"DONE check header";
 #endif
 
     dataSet.clear();
-    dataSet = buf.left(LENGTH_RAW_DATA - shiftContiMode);
-    buf = buf.right(buf.size() - LENGTH_RAW_DATA + shiftContiMode);
-//    count_while = 0;
+    dataSet = buf.left (dataset_size);
+    buf = buf.right(buf.size() - dataset_size);
+
 //    while (dataSet.size() < LENGTH_RAW_DATA) {
 //        int data_lack = LENGTH_RAW_DATA - dataSet.size();
 //        dataSet.append(buf.left(data_lack));
@@ -174,23 +177,20 @@ bool lrf_controller::retrieveData(double* data, int mode)
 //        qDebug()<<dataSet.size();
 //#endif
 //        pushToBuf();
-//        if (count_while > break_count)
-//            return false;
-//        count_while++;
 //    }
 //#ifdef debug_info_lrf
 //    qDebug()<<"DONE add data";
 //#endif
 
-    for (int i = LENGTH_HEADER - shiftContiMode; i < LENGTH_RAW_DATA - shiftContiMode; i++) {
+    for (int i = header_size; i < dataset_size; i++) {
         unsigned char tp = dataSet[i];
-        data_raw[i - LENGTH_HEADER + shiftContiMode] = tp;
+        data_raw[i - header_size] = tp;
     }
-    int j = 0;
 #ifdef debug_info_lrf_data
-        qDebug()<<"proc data r";
+    qDebug()<<"proc data r";
 #endif
-    for (int i = 0; i < LENGTH_RAW_DATA - LENGTH_HEADER - 1; i+=2) {
+    int j = 0;
+    for (int i = 0; i < dataset_size - header_size - 1; i+=2) {
         double r = (double)(data_raw[i + 1]) * 256 + (double)(data_raw[i]);
         data[j] = r;
 #ifdef debug_info_lrf_data
@@ -232,16 +232,16 @@ ushort lrf_controller::doCRC(const QByteArray &data)
     return uCrc16;
 }
 
-bool lrf_controller::checkHeader(QByteArray &data, int header_type, int mode)
+bool lrf_controller::checkHeader(QByteArray &data, int header_type)
 {
 #ifdef debug_info_lrf
     qDebug()<<"check header "<<data.size();
 #endif
     switch (header_type) {
     case HEADER_TYPE::BAUDRATE:
+
         break;
     case HEADER_TYPE::DATA:
-
 #ifdef debug_info_lrf_data
         qDebug()<<"header";
         for (int i = 0 ; i < LENGTH_HEADER; i++)
@@ -251,12 +251,11 @@ bool lrf_controller::checkHeader(QByteArray &data, int header_type, int mode)
             qDebug()<< i<<"\t"<< std::hex<<(int)data.at(i);
 #endif
 
-        data_size = data.size();
-
-        for (int i = 0; i < data_size - LENGTH_HEADER + shiftContiMode; i++) {
+        int first_header = LENGTH_HEADER_ONCE - header_size;
+        for (int i = 0; i < dataset_size - header_size; i++) {
             fg_header = true;
-            for (int j = shiftContiMode; j < LENGTH_HEADER; j++) {
-                if (data.at(i + j - shiftContiMode) != header_data[j]) {
+            for (int j = first_header; j < header_size; j++) {
+                if (data.at(i + j - first_header) != header_data[j]) {
                     fg_header = false;
                     break;
                 }
@@ -275,7 +274,7 @@ bool lrf_controller::checkHeader(QByteArray &data, int header_type, int mode)
                 for (int i = 0 ; i < data.size(); i++)
                     qDebug()<< std::hex<<(int)data.at(i);
 #endif
-                return fg_header;
+                return true;
             }
         }
 

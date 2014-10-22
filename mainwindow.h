@@ -108,7 +108,7 @@ private:
 
     void lrfClearData();
 
-    bool lrfReadData(int mode);
+    bool lrfReadData();
 
     void lrfDisplay();
     // ======================== End
