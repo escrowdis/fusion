@@ -8,12 +8,25 @@
 #include <QDir>
 #include <QFile>
 
+// thread control
+#include <QReadWriteLock>
+extern QReadWriteLock lock;
+
 #include <opencv2/opencv.hpp>
 
 #define IMG_W 640
 #define IMG_H 480
 #define IMG_DIS_W 320
 #define IMG_DIS_H 240
+
+namespace SV {
+
+enum STEREO_MATCH{
+    SGBM,
+    BM
+};
+
+}
 
 class stereo_vision : public QObject
 {
@@ -32,7 +45,7 @@ public:
 
     bool loadRemapFile(int cam_focal_length, double base_line);
 
-    void stereoVision();
+    bool stereoVision();
 
     // RGB images for displaying
     cv::Mat img_L;
@@ -50,11 +63,6 @@ public:
     cv::Mat disp;
 
     void matchParamInitialize(int type);
-
-    enum STEREO_MATCH{
-        SGBM,
-        BM
-    };
 
 private:
     void resetOpen(int device_index_L, int device_index_R);
@@ -103,23 +111,26 @@ private:
 
 private slots:
     // stereo match
-    void change_pre_filter_size(const int &value);
+    void change_pre_filter_size(int value);
 
-    void change_pre_filter_cap(const int &value);
+    void change_pre_filter_cap(int value);
 
-    void change_sad_window_size(const int &value);
+    void change_sad_window_size(int value);
 
-    void change_min_disp(const int &value);
+    void change_min_disp(int value);
 
-    void change_num_of_disp(const int &value);
+    void change_num_of_disp(int value);
 
-    void change_texture_thresh(const int &value);
+    void change_texture_thresh(int value);
 
-    void change_uniqueness_ratio(const int &value);
+    void change_uniqueness_ratio(int value);
 
-    void change_speckle_window_size(const int &value);
+    void change_speckle_window_size(int value);
 
-    void change_speckle_range(const int &value);
+    void change_speckle_range(int value);
+
+signals:
+    void updateGUI(cv::Mat *img_L, cv::Mat *img_R, cv::Mat *disp);
 };
 
 #endif // STEREO_VISION_H

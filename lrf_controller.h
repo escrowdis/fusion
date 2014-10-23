@@ -3,9 +3,14 @@
 
 #include "debug_info.h"
 
+#include <iostream>
 #include <QString>
 #include <QTime>
 #include <QBuffer>
+
+// thread control
+#include <QReadWriteLock>
+extern QReadWriteLock lock;
 
 // COM Port Communication
 #include <QtSerialPort/QSerialPort>
@@ -35,6 +40,21 @@ const char request_data_stop[] =            {0x02, 0x00, 0x02, 0x00, 0x20, 0x25,
 const uchar ACK_baudrate[] =                {0x06, 0x02, 0x80, 0x03, 0x00, 0xA0, 0x00, 0x10, 0x16, 0x0A};
 const uchar ACK_data_continuous[] =         {0x06, 0x02, 0x80, 0x03, 0x00, 0xA0, 0x00, 0x10, 0x16, 0x0A};
 
+namespace LRF {
+
+enum CAPTURE_MODE {
+    ONCE,
+    CONTINUOUS,
+    STOP
+};
+
+enum HEADER_TYPE{
+    BAUDRATE,
+    DATA
+};
+
+}
+
 // Laser Range Finder Controller
 class lrf_controller : public QObject
 {
@@ -45,11 +65,6 @@ public:
 
     ~lrf_controller();
 
-    enum CAPTURE_MODE {
-        ONCE,
-        CONTINUOUS,
-        STOP
-    };
 
     bool open(QString comPortIn, int baudRateIn);
 
@@ -65,11 +80,18 @@ public:
 
     bool close();
 
-    bool bufEnoughSet() {return buf.size() >= dataset_size;}
+    bool bufEnoughSet() {
+        if (buf->size() >= dataset_size)
+            return true;
+        return false;
+    }
 
-    void bufRunning() {QObject::connect(serial, SIGNAL(readyRead()), this, SLOT(pushing()));}
-
-    void bufStopping() {QObject::disconnect(serial, SIGNAL(readyRead()), this, SLOT(pushing()));}
+    bool bufNotFull() {
+#ifdef debug_info_lrf
+        qDebug()<<"buf size: "<<buf->size();
+#endif
+        return buf->size() < MAX_BUF_SIZE;
+    }
 
 private:
     QSerialPort *serial;
@@ -80,12 +102,7 @@ private:
 
     int mode;
 
-    enum HEADER_TYPE{
-        BAUDRATE,
-        DATA
-    };
-
-    QByteArray buf;
+    QByteArray *buf;
 
     // data size ============
     int dataset_size;
@@ -93,9 +110,13 @@ private:
     int header_size;
     // ======================
 
-    int count_while = 0;
+    // buffer size params ===
+    qint64 num_serial;
 
-    int break_count = 2;
+    qint64 num_lack;
+
+    qint64 num_input;
+    // ======================
 
     QByteArray dataSet;
 
@@ -112,9 +133,6 @@ private:
     // ======================
 
     ushort doCRC(const QByteArray &data);
-
-private slots:
-    void pushing() {while (true) {qDebug()<<"buff"; pushToBuf();}}
 };
 
 #endif // LRF_CONTROLLER_H

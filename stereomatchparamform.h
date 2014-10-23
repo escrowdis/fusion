@@ -40,23 +40,23 @@ private:
     Ui::stereoMatchParamForm *ui;
 
 signals:
-    void send_pre_filter_size(const int &value);
+    void send_pre_filter_size(int value);
 
-    void send_pre_filter_cap(const int &value);
+    void send_pre_filter_cap(int value);
 
-    void send_sad_window_size(const int &value);
+    void send_sad_window_size(int value);
 
-    void send_min_disp(const int &value);
+    void send_min_disp(int value);
 
-    void send_num_of_disp(const int &value);
+    void send_num_of_disp(int value);
 
-    void send_texture_thresh(const int &value);
+    void send_texture_thresh(int value);
 
-    void send_uniqueness_ratio(const int &value);
+    void send_uniqueness_ratio(int value);
 
-    void send_speckle_window_size(const int &value);
+    void send_speckle_window_size(int value);
 
-    void send_speckle_range(const int &value);
+    void send_speckle_range(int value);
 };
 
 #endif // STEREOMATCHPARAMFORM_H

@@ -146,8 +146,12 @@ void calibrationForm::keyReleaseEvent(QKeyEvent *event)
     }
 }
 
-void calibrationForm::saveImage(const cv::Mat &img)
+void calibrationForm::saveImage(cv::Mat *img)
 {
+#ifdef debug_info_cc
+    qDebug()<<"save Image";
+#endif
+
     if (!image_save_path.exists(image_save_folder))
         image_save_path.mkdir(image_save_folder);
 
@@ -156,7 +160,7 @@ void calibrationForm::saveImage(const cv::Mat &img)
     if (CCD == 'L') {
         // save image
         file_save_L = image_save_folder + "/" + t_now_string + "_L.jpg";
-        cv::cvtColor(img, img_s_L, cv::COLOR_BGR2RGB);
+        cv::cvtColor(*img, img_s_L, cv::COLOR_BGR2RGB);
         cv::imwrite(file_save_L.toStdString(), img_s_L);
         ui->label_recordedL->setText(QString::number(ui->label_recordedL->text().toInt() + 1));
 
@@ -171,7 +175,7 @@ void calibrationForm::saveImage(const cv::Mat &img)
     else if (CCD == 'R') {
         // save image
         file_save_R = image_save_folder + "/" + t_now_string + "_R.jpg";
-        cv::cvtColor(img, img_s_R, cv::COLOR_BGR2RGB);
+        cv::cvtColor(*img, img_s_R, cv::COLOR_BGR2RGB);
         cv::imwrite(file_save_R.toStdString(), img_s_R);
         ui->label_recordedR->setText(QString::number(ui->label_recordedR->text().toInt() + 1));
 
@@ -185,7 +189,7 @@ void calibrationForm::saveImage(const cv::Mat &img)
     }
 }
 
-void calibrationForm::saveImages(const cv::Mat &img_L, const cv::Mat &img_R)
+void calibrationForm::saveImages(cv::Mat *img_L, cv::Mat *img_R)
 {
     if (!image_save_path.exists(image_save_folder + "_both"))
         image_save_path.mkdir(image_save_folder + "_both");
@@ -193,8 +197,8 @@ void calibrationForm::saveImages(const cv::Mat &img_L, const cv::Mat &img_R)
     t_now_string = t_now.currentDateTime().toString("yyyy-MM-dd-hh-mm-ss");
     file_save_L = image_save_folder + "/" + t_now_string + "_L.jpg";
     file_save_R = image_save_folder + "/" + t_now_string + "_R.jpg";
-    cv::cvtColor(img_L, img_s_L, cv::COLOR_BGR2RGB);
-    cv::cvtColor(img_R, img_s_R, cv::COLOR_BGR2RGB);
+    cv::cvtColor(*img_L, img_s_L, cv::COLOR_BGR2RGB);
+    cv::cvtColor(*img_R, img_s_R, cv::COLOR_BGR2RGB);
 
     cv::imwrite(file_save_L.toStdString(), img_s_L);
     cv::imwrite(file_save_R.toStdString(), img_s_R);
@@ -224,7 +228,7 @@ void calibrationForm::on_checkBox_SaveBoth_clicked(bool checked)
     }
 }
 
-void calibrationForm::getBasicInfo(const int &focal_length, const double &base_line)
+void calibrationForm::getBasicInfo(int focal_length, double base_line)
 {
 #ifdef debug_info_cc
     qDebug()<<"f: "<<focal_length<<"B:"<<base_line;

@@ -22,6 +22,8 @@
 // camera calibration
 #include "calibrationform.h"
 
+static bool fg_running;
+
 namespace Ui {
 class MainWindow;
 }
@@ -40,6 +42,8 @@ private slots:
     void on_pushButton_lrf_open_clicked();
 
     void on_pushButton_lrf_display_clicked();
+
+    void lrfDisplay();
     // ======================== End
 
     // Stereo vision ==========
@@ -55,7 +59,7 @@ private slots:
 
     void on_checkBox_do_depth_clicked(bool checked);
 
-    void displaying(const cv::Mat &img_L, const cv::Mat &img_R, const cv::Mat &disp);
+    void svDisplay(cv::Mat *img_L, cv::Mat *img_R, cv::Mat *disp);
     // ======================== End
 
     void on_pushButton_4_clicked();
@@ -65,7 +69,7 @@ private slots:
     void closeEvent(QCloseEvent *);
 
     // Camera calibration =====
-    void requestImage(const char &CCD);
+    void requestImage(char CCD);
     // ======================== End
 
     void on_radioButton_BM_clicked();
@@ -96,6 +100,18 @@ private:
     void reportError(QString part, QString level, QString content);
 
     void report(QString);
+    // Stereo vision ==========
+    stereo_vision* sv;
+
+    // stereo match
+    stereoMatchParamForm *form_smp;
+
+    bool fg_capturing;
+
+    void camOpen();
+
+    void camStop() {}
+    // ======================== End
 
     // Laser range finder =====
     lrf_controller* lrf;
@@ -110,37 +126,19 @@ private:
 
     bool lrfReadData();
 
-    void lrfDisplay();
-    // ======================== End
-
-    // Stereo vision ==========
-    stereo_vision* sv;
-
-    // stereo match
-    stereoMatchParamForm *form_smp;
-
-    bool fg_capturing;
-
-    void camOpen();
-
-    void camCapture() {
-        sv->stereoVision();
-        displaying(sv->img_r_L, sv->img_r_R, sv->disp);
-    }
-
-    void camStop() {}
+    cv::Mat display_lrf;
     // ======================== End
 
     // Thread control =========
-    bool fg_running;
+//    bool fg_running;
 
     QFutureSynchronizer<void> sync;
-    QFuture<void> f_sv;
+    QFuture<bool> f_sv;
     QFuture<bool> f_lrf;
     QFuture<void> f_lrf_buf;
-    QFutureWatcher<void> fw_sv;
-    QFutureWatcher<bool> fw_lrf;
-    QFutureWatcher<void> fw_lrf_buf;
+//    QFutureWatcher<void> fw_sv;
+//    QFutureWatcher<void> fw_lrf;
+//    QFutureWatcher<void> fw_lrf_buf;
 
     void threadbuffering();
 
@@ -153,11 +151,14 @@ private:
 
 signals:
     // Camera calibration =====
-    void sendBasicInfo(const int &focal_length, const double &base_line);
-    void sendImage(const cv::Mat &img);
-    void sendImages(const cv::Mat &img_L, const cv::Mat &img_R);
+    void sendBasicInfo(int focal_length, double base_line);
+    void sendImage(cv::Mat *img);
+    void sendImages(cv::Mat *img_L, cv::Mat *img_R);
     // ======================== End
 
+    // Laser range finder =====
+    void updateGUI();
+    // ======================== End
 };
 
 #endif // MAINWINDOW_H

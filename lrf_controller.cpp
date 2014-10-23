@@ -1,13 +1,14 @@
 #include "lrf_controller.h"
 
-
 lrf_controller::lrf_controller()
 {
     serial = new QSerialPort();
     baudRate = QSerialPort::Baud9600;
+    mode = LRF::CAPTURE_MODE::STOP;
 
     // allocate size
-    buf.reserve(MAX_BUF_SIZE);
+    buf = new QByteArray(MAX_BUF_SIZE, '0x0');
+//    buf->reserve(MAX_BUF_SIZE);
 }
 
 lrf_controller::~lrf_controller()
@@ -27,7 +28,7 @@ bool lrf_controller::open(QString comPortIn, int baudRateIn)
     serial->open(QIODevice::ReadWrite);
 
     if (!serial->isOpen())
-        return serial->isOpen();
+        return false;
 
     // command code set baudrate as 9600
     char cmd_LMS291[8];
@@ -73,18 +74,18 @@ bool lrf_controller::open(QString comPortIn, int baudRateIn)
 
 bool lrf_controller::sendMsg(int mode)
 {
-    buf.clear();
+    buf->clear();
 
     switch (mode) {
     default:
-    case CAPTURE_MODE::ONCE:
+    case LRF::CAPTURE_MODE::ONCE:
         serial->write(request_data_once, 8);
         break;
-    case CAPTURE_MODE::CONTINUOUS:
+    case LRF::CAPTURE_MODE::CONTINUOUS:
         serial->write(request_data_continuous, 8);
         break;
 
-    case CAPTURE_MODE::STOP:
+    case LRF::CAPTURE_MODE::STOP:
         serial->write(request_data_stop, 8);
         break;
     }
@@ -105,29 +106,30 @@ bool lrf_controller::sendMsg(int mode)
 void lrf_controller::requestData(int mode)
 {
     qDebug()<<"sendMsg:"<<sendMsg(mode);
+//    qDebug()<<" mode"<<mode<<this->mode;
 }
 
 void lrf_controller::stopRetrieve()
 {
-    sendMsg(CAPTURE_MODE::STOP);
+    sendMsg(LRF::CAPTURE_MODE::STOP);
 }
 
 void lrf_controller::pushToBuf()
 {
-    if (buf.size() > MAX_BUF_SIZE)
-        buf.clear();
-
-    if (!serial->waitForReadyRead(10))
+    if (!serial->waitForReadyRead(10)) {
         return;
+    }
 
-    if (serial->bytesAvailable() > 0) {
-        buf.append(serial->read(MAX_BUF_SIZE - buf.size()));
-#ifdef debug_info_lrf
-        qDebug()<<"buf size: "<<buf.size();
-#endif
+    num_serial = serial->bytesAvailable();
+    if (num_serial > 0) {
+        lock.lockForWrite();
+        num_lack = MAX_BUF_SIZE - buf->size();
+        num_input = num_lack > num_serial ? num_serial : num_lack;
+        buf->append(serial->read(num_input));
+        lock.unlock();
 #ifdef debug_info_lrf_data
-        for (int i = 0; i < buf.size(); i++) {
-            std::cout<<std::hex << (int)(buf[i] & 0xff)<<std::dec<<" ";
+        for (int i = 0; i < buf->size(); i++) {
+            std::cout<<std::hex << (int)(buf->at(i) & 0xff)<<std::dec<<" ";
         }
         std::cout<<std::endl;
 #endif
@@ -141,51 +143,43 @@ void lrf_controller::pushToBuf()
 
 void lrf_controller::setMode()
 {
-    if (mode == CAPTURE_MODE::ONCE) {
+    if (mode == LRF::CAPTURE_MODE::ONCE) {
         header_size = LENGTH_HEADER_ONCE;
         dataset_size = LENGTH_RAW_DATA_ONCE;
     }
-    else if (mode == CAPTURE_MODE::CONTINUOUS) {
+    else if (mode == LRF::CAPTURE_MODE::CONTINUOUS) {
         header_size = LENGTH_HEADER_CONTI;
         dataset_size = LENGTH_RAW_DATA_CONTI;
     }
 }
 
-bool lrf_controller::retrieveData(double* data)
+bool lrf_controller::retrieveData(double *data)
 {
 #ifdef debug_info_lrf
     qDebug()<<"retrieveData ====";
 #endif
     if (!bufEnoughSet())
         return false;
-
-    while (!checkHeader(buf, HEADER_TYPE::DATA)) {
+    lock.lockForRead();
+    if (!checkHeader(*buf, LRF::HEADER_TYPE::DATA)) {
+        lock.unlock();
+        return false;
     }
-
+    lock.unlock();
 #ifdef debug_info_lrf
     qDebug()<<"DONE check header";
 #endif
 
+    lock.lockForWrite();
     dataSet.clear();
-    dataSet = buf.left (dataset_size);
-    buf = buf.right(buf.size() - dataset_size);
-
-//    while (dataSet.size() < LENGTH_RAW_DATA) {
-//        int data_lack = LENGTH_RAW_DATA - dataSet.size();
-//        dataSet.append(buf.left(data_lack));
-//#ifdef debug_info_lrf
-//        qDebug()<<dataSet.size();
-//#endif
-//        pushToBuf();
-//    }
-//#ifdef debug_info_lrf
-//    qDebug()<<"DONE add data";
-//#endif
+    dataSet = buf->left (dataset_size);
+    *buf = buf->right(buf->size() - dataset_size);
 
     for (int i = header_size; i < dataset_size; i++) {
         unsigned char tp = dataSet[i];
         data_raw[i - header_size] = tp;
     }
+    lock.unlock();
 #ifdef debug_info_lrf_data
     qDebug()<<"proc data r";
 #endif
@@ -238,24 +232,30 @@ bool lrf_controller::checkHeader(QByteArray &data, int header_type)
     qDebug()<<"check header "<<data.size();
 #endif
     switch (header_type) {
-    case HEADER_TYPE::BAUDRATE:
+    case LRF::HEADER_TYPE::BAUDRATE:
 
         break;
-    case HEADER_TYPE::DATA:
+    case LRF::HEADER_TYPE::DATA:
 #ifdef debug_info_lrf_data
-        qDebug()<<"header";
-        for (int i = 0 ; i < LENGTH_HEADER; i++)
-            qDebug()<< i<<"\t"<< std::hex<<(int)header_data[i];
-        qDebug()<<"data";
+        std::cout<<"header\n";
+        for (int i = 0 ; i < header_size; i++)
+            std::cout<< i<<" "<< std::hex<<(int)(header_data[i] & 0xff)<<std::dec<<"\t";
+        std::cout<<std::endl;
+        std::cout<<"data"<<data.size()<<"\n";
         for (int i = 0 ; i < data.size(); i++)
-            qDebug()<< i<<"\t"<< std::hex<<(int)data.at(i);
+            std::cout<< i<<" "<< std::hex<<(int)(data.at(i) & 0xff)<<std::dec<<"\t";
+        std::cout<<std::endl;
 #endif
-
         int first_header = LENGTH_HEADER_ONCE - header_size;
+        char temp;
         for (int i = 0; i < dataset_size - header_size; i++) {
             fg_header = true;
             for (int j = first_header; j < header_size; j++) {
-                if (data.at(i + j - first_header) != header_data[j]) {
+#ifdef debug_info_lrf_data
+                qDebug()<<data.size()<<i + j - first_header<<dataset_size;
+#endif
+                temp = data.at(i + j - first_header);
+                if (temp != header_data[j]) {
                     fg_header = false;
                     break;
                 }
@@ -265,7 +265,9 @@ bool lrf_controller::checkHeader(QByteArray &data, int header_type)
 #ifdef debug_info_lrf
                 qDebug()<<"header before cut "<<data.size();
 #endif
+//                lock.lockForWrite();
                 data = data.mid(i);
+//                lock.unlock();
 #ifdef debug_info_lrf
                 qDebug()<<"header after cut "<<data.size();
 #endif

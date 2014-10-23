@@ -36,19 +36,19 @@ private slots:
 
     void keyReleaseEvent(QKeyEvent *event);
 
-    void saveImage(const cv::Mat &img);
+    void saveImage(cv::Mat *img);
 
-    void saveImages(const cv::Mat &img_L, const cv::Mat &img_R);
+    void saveImages(cv::Mat *img_L, cv::Mat *img_R);
 
     void on_checkBox_SaveBoth_clicked(bool checked);
 
     // folder setting
-    void getBasicInfo(const int &focal_length, const double &base_line);
+    void getBasicInfo(int focal_length, double base_line);
 
     void on_pushButton_corner_intrinsic_clicked();
 
 signals:
-    void requestImage(const char &CCD);
+    void requestImage(char CCD);
 
 private:
     Ui::calibrationForm *ui;

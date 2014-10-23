@@ -10,6 +10,8 @@ MainWindow::MainWindow(QWidget *parent) :
 
     fg_running = false;
 
+    qRegisterMetaType<cv::Mat>("cv::Mat");
+
     // Laser range finder ======================
 
     // Initialization
@@ -17,6 +19,8 @@ MainWindow::MainWindow(QWidget *parent) :
 
     fg_acquiring = false;
     fg_buffering = false;
+
+    QObject::connect(this, SIGNAL(updateGUI()), this, SLOT(lrfDisplay()));
 
     // COM port
     for (int i = 1; i <= 20; i++)
@@ -32,6 +36,9 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->comboBox_lrf_baudRate->setCurrentText("38400");
     lrfClearData();
 
+    // display
+    display_lrf = cv::Mat::zeros(800, 800, CV_8UC3);
+
     // Laser range finder ====================== End
 
     // Stereo vision ===========================
@@ -40,6 +47,8 @@ MainWindow::MainWindow(QWidget *parent) :
     sv = new stereo_vision();
 
     fg_capturing = false;
+
+    QObject::connect(sv, SIGNAL(updateGUI(cv::Mat *, cv::Mat *, cv::Mat *)), this, SLOT(svDisplay(cv::Mat *, cv::Mat *, cv::Mat *)));
 
     // COM port
     for (int i = 0; i < 5; i++) {
@@ -106,11 +115,6 @@ void MainWindow::on_pushButton_lrf_open_clicked()
     }
     else {
         report("Port's opened.");
-        // push data to buffer //**// shouldn't be here
-        fg_buffering = true;
-//        lrf->bufRunning();
-        if (!fg_running)
-            threadProcessing();
     }
 }
 
@@ -124,12 +128,12 @@ void MainWindow::lrfClearData()
 bool MainWindow::lrfReadData()
 {
     lrfClearData();
-
-    if (!lrf->bufEnoughSet()) {
-        return false;
+    if (lrf->retrieveData(lrf_data)) {
+        emit updateGUI();
+        return true;
     }
-
-    return lrf->retrieveData(lrf_data);
+    else
+        return false;
 }
 
 void MainWindow::lrfDisplay()
@@ -139,18 +143,19 @@ void MainWindow::lrfDisplay()
 //    display_lrf.setTo(0);
     double angle = 0.0;
 
-    for (int i = 0 ; i < LENGTH_DATA; ++i)
-        if (lrf_data[i] == -1)
-            return;
+//    for (int i = 0 ; i < LENGTH_DATA; ++i)
+//        if (lrf_data[i] == -1)
+//            return;
 
+    lock.lockForRead();
     for (int i = 0; i < LENGTH_DATA; ++i) {
         double r = lrf_data[i];
         double x = r * cos(angle * CV_PI / 180.0);
         double y = r * sin(angle * CV_PI / 180.0);
 
-        cv::circle(display_lrf, cv::Point(x / ui->spinBox_lrf_scale->value() + 400, y / ui->spinBox_lrf_scale->value() + 100), 1, cv::Scalar(0, 0, 255), -1);
+        cv::circle(display_lrf, cv::Point(x / ui->spinBox_lrf_scale->value() + 400, 800 - (y / ui->spinBox_lrf_scale->value() + 100)), 1, cv::Scalar(0, 0, 255), -1);
         if (LENGTH_DATA / 2 == i)
-            cv::circle(display_lrf, cv::Point(x / ui->spinBox_lrf_scale->value() + 400, y / ui->spinBox_lrf_scale->value() + 100), 5, cv::Scalar(0, 255, 0), -1);
+            cv::circle(display_lrf, cv::Point(x / ui->spinBox_lrf_scale->value() + 400, 800 - (y / ui->spinBox_lrf_scale->value() + 100)), 5, cv::Scalar(0, 255, 0), -1);
 
         angle += RESOLUTION;
     }
@@ -158,6 +163,7 @@ void MainWindow::lrfDisplay()
 //    ui->label_lrf_data->setPixmap(QPixmap::fromImage(QImage::QImage(display_lrf.data, display_lrf.cols, display_lrf.rows, 3 * display_lrf.cols, QImage::Format_RGB888)).scaled(IMG_DIS_W, IMG_DIS_H));
     cv::imshow("image", display_lrf);
     cv::waitKey(10);
+    lock.unlock();
 }
 
 void MainWindow::on_pushButton_lrf_display_clicked()
@@ -185,14 +191,19 @@ void MainWindow::camOpen()
     }
 }
 
-void MainWindow::displaying(const cv::Mat &img_L, const cv::Mat &img_R, const cv::Mat &disp)
+void MainWindow::svDisplay(cv::Mat *img_L, cv::Mat *img_R, cv::Mat *disp)
 {
 #ifdef debug_info_sv
     qDebug()<<"disp"<<&img_L;
 #endif
-    ui->label_cam_img_L->setPixmap(QPixmap::fromImage(QImage::QImage(img_L.data, img_L.cols, img_L.rows, 3 * img_L.cols, QImage::Format_RGB888)).scaled(IMG_DIS_W, IMG_DIS_H));
-    ui->label_cam_img_R->setPixmap(QPixmap::fromImage(QImage::QImage(img_R.data, img_R.cols, img_R.rows, 3 * img_R.cols, QImage::Format_RGB888)).scaled(IMG_DIS_W, IMG_DIS_H));
-    ui->label_disp->setPixmap(QPixmap::fromImage(QImage::QImage(disp.data, disp.cols, disp.rows, disp.cols, QImage::Format_Indexed8)).scaled(IMG_DIS_W, IMG_DIS_H));
+    lock.lockForRead();
+    ui->label_cam_img_L->setPixmap(QPixmap::fromImage(QImage::QImage(img_L->data, img_L->cols, img_L->rows, 3 * img_L->cols, QImage::Format_RGB888)).scaled(IMG_DIS_W, IMG_DIS_H));
+    ui->label_cam_img_R->setPixmap(QPixmap::fromImage(QImage::QImage(img_R->data, img_R->cols, img_R->rows, 3 * img_R->cols, QImage::Format_RGB888)).scaled(IMG_DIS_W, IMG_DIS_H));
+    ui->label_disp->setPixmap(QPixmap::fromImage(QImage::QImage(disp->data, disp->cols, disp->rows, disp->cols, QImage::Format_Indexed8)).scaled(IMG_DIS_W, IMG_DIS_H));
+    lock.unlock();
+#ifdef debug_info_sv
+    qDebug()<<"disp - End"<<&img_L;
+#endif
 }
 
 void MainWindow::on_pushButton_cam_open_clicked()
@@ -208,7 +219,7 @@ void MainWindow::on_pushButton_cam_step_clicked()
         return;
     }
 
-    camCapture();
+    sv->stereoVision();
 }
 
 void MainWindow::on_pushButton_cam_capture_clicked()
@@ -217,7 +228,9 @@ void MainWindow::on_pushButton_cam_capture_clicked()
         reportError("sv", "Error!", "Cameras haven't opened.");
         return;
     }
-
+//    if (!fg_capturing) {
+//        sync.addFuture(f_sv);
+//    }
     fg_capturing = true;
     if (!fg_running)
         threadProcessing();
@@ -243,9 +256,9 @@ void MainWindow::threadbuffering()
 {
     // unimplement
     while (fg_buffering) {
-        f_lrf_buf = QtConcurrent::run(lrf, &lrf_controller::pushToBuf);
-        fw_lrf_buf.setFuture(f_lrf_buf);
-        fw_lrf_buf.waitForFinished();
+//        f_lrf_buf = QtConcurrent::run(lrf, &lrf_controller::pushToBuf);
+//        fw_lrf_buf.setFuture(f_lrf_buf);
+//        fw_lrf_buf.waitForFinished();
         qApp->processEvents();
     }
 }
@@ -256,57 +269,44 @@ void MainWindow::threadProcessing()
     t_proc.restart();
     while (fg_running) {
         // sv
-        if (fg_capturing) {
+        if (fg_capturing && !f_sv.isRunning()) {
             sv->stereoVision();
 //            f_sv = QtConcurrent::run(sv, &stereo_vision::stereoVision);
-//            sync.setFuture(f_sv);
         }
         ui->label_sv_proc->setText(QString::number(t_proc.restart()));
 
         // lrf
-        if (fg_acquiring) {
+        if (fg_acquiring && !f_lrf.isRunning()) {
             lrfReadData();
-//            f_lrf = QtConcurrent::run(this, &MainWindow::lrfReadData, 1);
-//            sync.setFuture(f_lrf);
+//            f_lrf = QtConcurrent::run(this, &MainWindow::lrfReadData);
         }
         ui->label_lrf_proc->setText(QString::number(t_proc.restart()));
 
         // lrf buffer
-        //**// Need to move to another thread and maybe run twice round capturing & acquisition then run once buffering
-        if (fg_buffering) {
+        if (fg_buffering && lrf->bufNotFull() && !f_lrf_buf.isRunning()) {
             lrf->pushToBuf();
 //            f_lrf_buf = QtConcurrent::run(lrf, &lrf_controller::pushToBuf);
-//            sync.setFuture(f_lrf_buf);
         }
         ui->label_lrf_buf_proc->setText(QString::number(t_proc.restart()));
 
 //        sync.waitForFinished();
 
-        if (fg_capturing) {
-            displaying(sv->img_r_L, sv->img_r_R, sv->disp);
-        }
+//        if (f_sv.result() && f_sv.isFinished())
+//            svDisplay(&sv->img_r_L, &sv->img_r_R, &sv->disp);
 
-        if (fg_acquiring) {
-            lrfDisplay();
-        }
-        ui->label_gui_proc->setText(QString::number(t_proc.restart()));
+//        if (f_lrf.result() && f_lrf.isFinished()){}
+//            lrfDisplay();
 
         qApp->processEvents();
-
-//        qDebug()<<"sv"<<&sv<<"lrf"<<&lrf;
     }
 
 //    sync.setCancelOnWait(true);
 //    while (!sync.cancelOnWait()) {}
-
-    qDebug()<<"quit";
 }
 
 void MainWindow::on_pushButton_4_clicked()
 {
 
-//    change color
-//    ui->system_log->append("Press <FONT COLOR=red>'blank'</FONT> key to save board image, <FONT COLOR=red>'ESC' or 'q'</FONT> to leave");
 }
 
 void MainWindow::on_checkBox_do_calibration_clicked(bool checked)
@@ -341,8 +341,8 @@ void MainWindow::on_pushButton_camera_calibration_clicked()
         // send focal length & base line to form
         QObject::connect(this, SIGNAL(sendBasicInfo(int, double)), form_calib, SLOT(getBasicInfo(int, double)));
         QObject::connect(form_calib, SIGNAL(requestImage(char)), this, SLOT(requestImage(char)));
-        QObject::connect(this, SIGNAL(sendImage(cv::Mat)), form_calib, SLOT(saveImage(cv::Mat)));
-        QObject::connect(this, SIGNAL(sendImages(cv::Mat, cv::Mat)), form_calib, SLOT(saveImages(cv::Mat, cv::Mat)));
+        QObject::connect(this, SIGNAL(sendImage(cv::Mat *)), form_calib, SLOT(saveImage(cv::Mat *)));
+        QObject::connect(this, SIGNAL(sendImages(cv::Mat *, cv::Mat *)), form_calib, SLOT(saveImages(cv::Mat *, cv::Mat *)));
     }
     else
         form_calib->reset();
@@ -351,7 +351,7 @@ void MainWindow::on_pushButton_camera_calibration_clicked()
     form_calib->show();
 }
 
-void MainWindow::requestImage(const char &CCD)
+void MainWindow::requestImage(char CCD)
 {
     if (!sv->isOpened()) {
         reportError("sv", "Error!", "Cameras haven't opened.");
@@ -363,19 +363,19 @@ void MainWindow::requestImage(const char &CCD)
 #ifdef debug_info_cc
         qDebug()<<"send left image";
 #endif
-        emit sendImage(sv->img_r_L);
+        emit sendImage(&sv->img_r_L);
         break;
     case 'R':
 #ifdef debug_info_cc
         qDebug()<<"send right image";
 #endif
-        emit sendImage(sv->img_r_R);
+        emit sendImage(&sv->img_r_R);
         break;
     case 'B':
 #ifdef debug_info_cc
         qDebug()<<"send both images";
 #endif
-        emit sendImages(sv->img_r_L, sv->img_r_R);
+        emit sendImages(&sv->img_r_L, &sv->img_r_R);
         break;
     }
 
@@ -384,13 +384,13 @@ void MainWindow::requestImage(const char &CCD)
 void MainWindow::on_radioButton_BM_clicked()
 {
     report("Change to BM mathod.");
-    sv->matchParamInitialize(sv->STEREO_MATCH::BM);
+    sv->matchParamInitialize(SV::STEREO_MATCH::BM);
 }
 
 void MainWindow::on_radioButton_SGBM_clicked()
 {
     report("Change to SGBM mathod.");
-    sv->matchParamInitialize(sv->STEREO_MATCH::SGBM);
+    sv->matchParamInitialize(SV::STEREO_MATCH::SGBM);
 }
 
 void MainWindow::on_pushButton_stereo_match_param_clicked()
@@ -399,15 +399,15 @@ void MainWindow::on_pushButton_stereo_match_param_clicked()
         form_smp = new stereoMatchParamForm();
         form_smp->move(1500, 100);
 
-        QObject::connect(form_smp, SIGNAL(send_pre_filter_size(int)), sv, SLOT(change_pre_filter_size(int)));
-        QObject::connect(form_smp, SIGNAL(send_pre_filter_cap(int)), sv, SLOT(change_pre_filter_cap(int)));
-        QObject::connect(form_smp, SIGNAL(send_sad_window_size(int)), sv, SLOT(change_sad_window_size(int)));
-        QObject::connect(form_smp, SIGNAL(send_min_disp(int)), sv, SLOT(change_min_disp(int)));
-        QObject::connect(form_smp, SIGNAL(send_num_of_disp(int)), sv, SLOT(change_num_of_disp(int)));
-        QObject::connect(form_smp, SIGNAL(send_texture_thresh(int)), sv, SLOT(change_texture_thresh(int)));
-        QObject::connect(form_smp, SIGNAL(send_uniqueness_ratio(int)), sv, SLOT(change_uniqueness_ratio(int)));
-        QObject::connect(form_smp, SIGNAL(send_speckle_window_size(int)), sv, SLOT(change_speckle_window_size(int)));
-        QObject::connect(form_smp, SIGNAL(send_speckle_range(int)), sv, SLOT(change_speckle_range(int)));
+//        QObject::connect(form_smp, SIGNAL(send_pre_filter_size(int)), sv, SLOT(change_pre_filter_size(int)));
+//        QObject::connect(form_smp, SIGNAL(send_pre_filter_cap(int)), sv, SLOT(change_pre_filter_cap(int)));
+//        QObject::connect(form_smp, SIGNAL(send_sad_window_size(int)), sv, SLOT(change_sad_window_size(int)));
+//        QObject::connect(form_smp, SIGNAL(send_min_disp(int)), sv, SLOT(change_min_disp(int)));
+//        QObject::connect(form_smp, SIGNAL(send_num_of_disp(int)), sv, SLOT(change_num_of_disp(int)));
+//        QObject::connect(form_smp, SIGNAL(send_texture_thresh(int)), sv, SLOT(change_texture_thresh(int)));
+//        QObject::connect(form_smp, SIGNAL(send_uniqueness_ratio(int)), sv, SLOT(change_uniqueness_ratio(int)));
+//        QObject::connect(form_smp, SIGNAL(send_speckle_window_size(int)), sv, SLOT(change_speckle_window_size(int)));
+//        QObject::connect(form_smp, SIGNAL(send_speckle_range(int)), sv, SLOT(change_speckle_range(int)));
     }
 
     // send cuurent stereo matching params to ui //**// undone
@@ -434,23 +434,30 @@ void MainWindow::on_lineEdit_base_line_returnPressed()
 
 void MainWindow::on_pushButton_8_clicked()
 {
-    lrf->requestData(lrf->CAPTURE_MODE::ONCE);
+    lrf->requestData(LRF::CAPTURE_MODE::ONCE);
     while (!lrf->bufEnoughSet()) {
         lrf->pushToBuf();
     }
     lrfReadData();
-    lrfDisplay();
 }
 
 void MainWindow::on_pushButton_5_clicked()
 {
-//    fg_buffering = true;
-//    threadbuffering();
-    lrf->requestData(lrf->CAPTURE_MODE::CONTINUOUS);
+    lrf->requestData(LRF::CAPTURE_MODE::CONTINUOUS);
+
+    // push data to buffer //**// shouldn't be here
+//    if (!fg_buffering)
+//        sync.addFuture(f_lrf_buf);
+    fg_buffering = true;
+//        lrf->bufRunning();
+    if (!fg_running)
+        threadProcessing();
 }
 
 void MainWindow::on_pushButton_6_clicked()
 {
+//    if (!fg_acquiring)
+//        sync.addFuture(f_lrf);
     fg_acquiring = true;
     if (!fg_running)
         threadProcessing();
