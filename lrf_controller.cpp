@@ -74,6 +74,8 @@ bool lrf_controller::open(QString comPortIn, int baudRateIn)
 
 bool lrf_controller::sendMsg(int mode)
 {
+    lock.lockForWrite();
+
     buf->clear();
 
     switch (mode) {
@@ -89,6 +91,7 @@ bool lrf_controller::sendMsg(int mode)
         serial->write(request_data_stop, 8);
         break;
     }
+    lock.unlock();
 
 //    checkACK();
 

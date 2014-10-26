@@ -75,6 +75,9 @@ MainWindow::MainWindow(QWidget *parent) :
     sync.addFuture(f_sv);
     sync.addFuture(f_lrf);
     sync.addFuture(f_lrf_buf);
+    f_sv.setPaused(true);
+    f_lrf.setPaused(true);
+    f_lrf_buf.setPaused(true);
     // ========================================= End
 
     // camera calibration ======================
@@ -127,7 +130,7 @@ void MainWindow::lrfClearData()
 
 bool MainWindow::lrfReadData()
 {
-    lrfClearData();
+//    lrfClearData();
     if (lrf->retrieveData(lrf_data)) {
         emit updateGUI();
         return true;
@@ -232,6 +235,7 @@ void MainWindow::on_pushButton_cam_capture_clicked()
 //        sync.addFuture(f_sv);
 //    }
     fg_capturing = true;
+    f_sv.setPaused(false);
     if (!fg_running)
         threadProcessing();
 }
@@ -239,6 +243,7 @@ void MainWindow::on_pushButton_cam_capture_clicked()
 void MainWindow::on_pushButton_cam_stop_clicked()
 {
     fg_capturing = false;
+    f_sv.setPaused(true);
 }
 
 void MainWindow::closeEvent(QCloseEvent *)
@@ -270,38 +275,32 @@ void MainWindow::threadProcessing()
     while (fg_running) {
         // sv
         if (fg_capturing && !f_sv.isRunning()) {
-            sv->stereoVision();
-//            f_sv = QtConcurrent::run(sv, &stereo_vision::stereoVision);
+//            sv->stereoVision();
+            f_sv = QtConcurrent::run(sv, &stereo_vision::stereoVision);
         }
         ui->label_sv_proc->setText(QString::number(t_proc.restart()));
 
         // lrf
         if (fg_acquiring && !f_lrf.isRunning()) {
-            lrfReadData();
-//            f_lrf = QtConcurrent::run(this, &MainWindow::lrfReadData);
+//            lrfReadData();
+            f_lrf = QtConcurrent::run(this, &MainWindow::lrfReadData);
         }
         ui->label_lrf_proc->setText(QString::number(t_proc.restart()));
 
         // lrf buffer
         if (fg_buffering && lrf->bufNotFull() && !f_lrf_buf.isRunning()) {
-            lrf->pushToBuf();
-//            f_lrf_buf = QtConcurrent::run(lrf, &lrf_controller::pushToBuf);
+//            lrf->pushToBuf();
+            f_lrf_buf = QtConcurrent::run(lrf, &lrf_controller::pushToBuf);
         }
         ui->label_lrf_buf_proc->setText(QString::number(t_proc.restart()));
 
-//        sync.waitForFinished();
-
-//        if (f_sv.result() && f_sv.isFinished())
-//            svDisplay(&sv->img_r_L, &sv->img_r_R, &sv->disp);
-
-//        if (f_lrf.result() && f_lrf.isFinished()){}
-//            lrfDisplay();
+        sync.waitForFinished();
 
         qApp->processEvents();
     }
 
-//    sync.setCancelOnWait(true);
-//    while (!sync.cancelOnWait()) {}
+    sync.setCancelOnWait(true);
+    while (!sync.cancelOnWait()) {qDebug()<<"wait";}
 }
 
 void MainWindow::on_pushButton_4_clicked()
@@ -449,6 +448,7 @@ void MainWindow::on_pushButton_5_clicked()
 //    if (!fg_buffering)
 //        sync.addFuture(f_lrf_buf);
     fg_buffering = true;
+    f_lrf_buf.setPaused(false);
 //        lrf->bufRunning();
     if (!fg_running)
         threadProcessing();
@@ -459,14 +459,20 @@ void MainWindow::on_pushButton_6_clicked()
 //    if (!fg_acquiring)
 //        sync.addFuture(f_lrf);
     fg_acquiring = true;
+    f_lrf.setPaused(false);
     if (!fg_running)
         threadProcessing();
 }
 
 void MainWindow::on_pushButton_7_clicked()
 {
-    qDebug()<<"stop";
-//    fg_buffering = false;
+    fg_buffering = false;
     fg_acquiring = false;
+    f_lrf.setPaused(true);
+    f_lrf_buf.setPaused(true);
+
+    while (!(f_lrf.isPaused() && f_lrf_buf.isPaused())) {}
     lrf->stopRetrieve();
+
+    qDebug()<<"stop done";
 }
