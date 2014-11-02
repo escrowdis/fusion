@@ -62,12 +62,12 @@ MainWindow::MainWindow(QWidget *parent) :
     // Stereo vision =========================== End
 
     // Thread control ==========================
-    sync.addFuture(f_sv);
-    sync.addFuture(f_lrf);
-    sync.addFuture(f_lrf_buf);
     f_sv.setPaused(true);
     f_lrf.setPaused(true);
     f_lrf_buf.setPaused(true);
+    sync.addFuture(f_sv);
+    sync.addFuture(f_lrf);
+    sync.addFuture(f_lrf_buf);
     // ========================================= End
 
     // camera calibration ======================
@@ -274,9 +274,7 @@ void MainWindow::on_pushButton_cam_capture_clicked()
         reportError("sv", "Error!", "Cameras haven't opened.");
         return;
     }
-//    if (!fg_capturing) {
-//        sync.addFuture(f_sv);
-//    }
+
     fg_capturing = true;
     f_sv.setPaused(false);
     if (!fg_running)
@@ -488,8 +486,6 @@ void MainWindow::on_pushButton_5_clicked()
     lrf->requestData(LRF::CAPTURE_MODE::CONTINUOUS);
 
     // push data to buffer //**// shouldn't be here
-//    if (!fg_buffering)
-//        sync.addFuture(f_lrf_buf);
     fg_buffering = true;
     f_lrf_buf.setPaused(false);
 //        lrf->bufRunning();
@@ -499,8 +495,6 @@ void MainWindow::on_pushButton_5_clicked()
 
 void MainWindow::on_pushButton_6_clicked()
 {
-//    if (!fg_acquiring)
-//        sync.addFuture(f_lrf);
     fg_acquiring = true;
     f_lrf.setPaused(false);
     if (!fg_running)
