@@ -100,6 +100,11 @@ private:
     void reportError(QString part, QString level, QString content);
 
     void report(QString);
+
+    void paramRead();
+
+    void paramWrite();
+
     // Stereo vision ==========
     stereo_vision* sv;
 

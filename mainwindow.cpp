@@ -32,8 +32,6 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->comboBox_lrf_baudRate->addItems(list_baudrate);
 
     // default settings
-    ui->comboBox_lrf_com->setCurrentText("COM7");
-    ui->comboBox_lrf_baudRate->setCurrentText("38400");
     lrfClearData();
 
     // display
@@ -61,14 +59,6 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->comboBox_camera_focal_length->addItem("12");
     ui->comboBox_camera_focal_length->addItem("4");
 
-    // base line
-    ui->lineEdit_base_line->setText(QString::number(15.0));
-
-    // default settings
-    ui->comboBox_cam_device_index_L->setCurrentIndex(1);
-    ui->comboBox_cam_device_index_R->setCurrentIndex(2);
-    ui->comboBox_camera_focal_length->setCurrentIndex(0);
-
     // Stereo vision =========================== End
 
     // Thread control ==========================
@@ -82,6 +72,10 @@ MainWindow::MainWindow(QWidget *parent) :
 
     // camera calibration ======================
     // ========================================= End
+
+    // default setting =========================
+    paramRead();
+    // ========================================= End
 }
 
 MainWindow::~MainWindow()
@@ -89,6 +83,7 @@ MainWindow::~MainWindow()
 #ifdef debug_info_main
     qDebug()<<"destructor";
 #endif
+    paramWrite();
 
     cv::destroyAllWindows();
     lrf->close();
@@ -108,6 +103,54 @@ void MainWindow::reportError(QString part, QString level, QString content)
 void MainWindow::report(QString content)
 {
     ui->system_log->append(content);
+}
+
+void MainWindow::paramRead()
+{
+    cv::FileStorage fs("basic_param.yml", cv::FileStorage::READ);
+
+    cv::FileNode n;
+    n = fs["stereoVision"];
+    ui->comboBox_cam_device_index_L->setCurrentIndex((int) n["port_L"]);
+    ui->comboBox_cam_device_index_R->setCurrentIndex((int) n["port_R"]);
+    ui->comboBox_camera_focal_length->setCurrentIndex((int) n["focal_length"]);
+    ui->lineEdit_base_line->setText(QString::number((int) n["base_line"]));
+
+    n = fs["laserRangeFinder"];
+    ui->comboBox_lrf_com->setCurrentIndex((int) n["port"]);
+    ui->comboBox_lrf_baudRate->setCurrentIndex((int) n["baudRate"]);
+    ui->spinBox_lrf_scale->setValue((int) n["mapScale"]);
+    std::string res = (std::string) n["resolution"];
+    if (res == "cm")
+        ui->radioButton_lrf_res_cm->setChecked(true);
+    else if (res == "mm")
+        ui->radioButton_lrf_res_mm->setChecked(true);
+
+    fs.release();
+}
+
+void MainWindow::paramWrite()
+{
+    cv::FileStorage fs("basic_param.yml", cv::FileStorage::WRITE);
+
+    fs << "stereoVision" << "{";
+    fs << "port_L" << ui->comboBox_cam_device_index_L->currentIndex();
+    fs << "port_R" << ui->comboBox_cam_device_index_R->currentIndex();
+    fs << "focal_length" << ui->comboBox_camera_focal_length->currentIndex();
+    fs << "base_line" << ui->lineEdit_base_line->text().toInt();
+    fs << "}";
+
+    fs << "laserRangeFinder" << "{";
+    fs << "port" << ui->comboBox_lrf_com->currentIndex();
+    fs << "baudRate" << ui->comboBox_lrf_baudRate->currentIndex();
+    fs << "mapScale" << ui->spinBox_lrf_scale->value();
+    if (ui->radioButton_lrf_res_cm->isChecked())
+        fs << "resolution" << "cm";
+    else if (ui->radioButton_lrf_res_mm->isChecked())
+        fs << "resolution" << "mm";
+    fs << "}";
+
+    fs.release();
 }
 
 void MainWindow::on_pushButton_lrf_open_clicked()
