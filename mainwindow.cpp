@@ -459,7 +459,8 @@ void MainWindow::on_pushButton_stereo_match_param_clicked()
 void MainWindow::on_comboBox_camera_focal_length_currentIndexChanged(int index)
 {
     if (fg_capturing) {
-        on_checkBox_do_calibration_clicked(true);
+        if (ui->checkBox_do_calibration->isChecked())
+            on_checkBox_do_calibration_clicked(true);
         report("focal length has been changed.");
     }
 }
