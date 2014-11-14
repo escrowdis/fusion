@@ -51,12 +51,16 @@ void calibrationForm::on_pushButton_corner_intrinsic_clicked()
     cv::Size size_pattern = cv::Size(ui->spinBox_corners_cols->value(), ui->spinBox_corners_rows->value());
     cv::Size2f size_grid = cv::Size2f(ui->lineEdit_grid_w->text().toFloat(), ui->lineEdit_grid_h->text().toFloat());
 
-    cc->CameraCalibration(true, size_pattern, size_grid, files[0]);
-    cc->SaveIntrinsic(image_save_folder.toStdString(), std::string("camL_init.yml"));
-    cc->DisplayUndistortedImg(false);
-    cc->CameraCalibration(true, size_pattern, size_grid, files[1]);
-    cc->SaveIntrinsic(image_save_folder.toStdString(), std::string("camR_init.yml"));
-    cc->DisplayUndistortedImg(false);
+    if (!files[0].empty()) {
+        cc->CameraCalibration(true, size_pattern, size_grid, files[0]);
+        cc->SaveIntrinsic(image_save_folder.toStdString(), std::string("camL_init.yml"));
+        cc->DisplayUndistortedImg(false);
+    }
+    if (!files[1].empty()) {
+        cc->CameraCalibration(true, size_pattern, size_grid, files[1]);
+        cc->SaveIntrinsic(image_save_folder.toStdString(), std::string("camR_init.yml"));
+        cc->DisplayUndistortedImg(false);
+    }
 }
 
 void calibrationForm::on_pushButton_calibration_clicked()
@@ -195,8 +199,8 @@ void calibrationForm::saveImages(cv::Mat *img_L, cv::Mat *img_R)
         image_save_path.mkdir(image_save_folder + "_both");
 
     t_now_string = t_now.currentDateTime().toString("yyyy-MM-dd-hh-mm-ss");
-    file_save_L = image_save_folder + "/" + t_now_string + "_L.jpg";
-    file_save_R = image_save_folder + "/" + t_now_string + "_R.jpg";
+    file_save_L = image_save_folder + "_both/" + t_now_string + "_L.jpg";
+    file_save_R = image_save_folder + "_both/" + t_now_string + "_R.jpg";
     cv::cvtColor(*img_L, img_s_L, cv::COLOR_BGR2RGB);
     cv::cvtColor(*img_R, img_s_R, cv::COLOR_BGR2RGB);
 
@@ -257,3 +261,4 @@ void calibrationForm::getBasicInfo(int focal_length, double base_line)
     qDebug()<<image_save_folder;
 #endif
 }
+

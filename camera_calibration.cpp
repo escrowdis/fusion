@@ -26,7 +26,6 @@ void camera_calibration::CameraCalibration(bool ShowPts, cv::Size SizePattern, c
     cv::calibrateCamera(supposePts, PatternPts, imageSize, intrinsicMat, distortionMat,
                         rVec, tVec, cv::CALIB_RATIONAL_MODEL | cv::CALIB_FIX_K4 | cv::CALIB_FIX_K5);
     cv::initUndistortRectifyMap(intrinsicMat, distortionMat, cv::Mat(), cv::getOptimalNewCameraMatrix(intrinsicMat, distortionMat, imageSize, 1, imageSize, 0), imageSize, CV_16SC2, map1, map2);
-
 }
 
 void camera_calibration::LoadFile(std::vector<std::string> files)
@@ -141,6 +140,7 @@ void camera_calibration::DisplayUndistortedImg(bool ShowPts)
             imgUndistortion.copyTo(imgDisplay(cv::Rect(imgW, 0, imgW, imgH)));
 
         cv::imshow("Distortion -> Undistortion image", imgDisplay);
+
         char c = cv::waitKey(0);
         if (c == 27)
             break;
