@@ -4,10 +4,11 @@
 #include "debug_info.h"
 
 #include <QWidget>
-#include <QDir>
 #include <QDateTime>
 #include <QKeyEvent>
 #include <QFileDialog>
+#include <QDir>
+extern QDir project_path;
 
 #include "camera_calibration.h"
 

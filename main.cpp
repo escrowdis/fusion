@@ -4,6 +4,8 @@
 // thread control
 #include <QReadWriteLock>
 QReadWriteLock lock;
+#include <QDir>
+QDir project_path;
 
 int main(int argc, char *argv[])
 {

@@ -163,12 +163,8 @@ bool stereo_vision::loadRemapFile(int cam_focal_length, double base_line)
     // find files under which folder and find the folder with calibration files
     remap_folder = "calibrationImgs";
     remap_file = QString("My_Data_" + QString::number(cam_focal_length) + "_" + QString::number(base_line) + ".yml");
-    remap_path = QDir::currentPath();
-    QString current_folder = remap_path.path().section("/", -1, -1);
-
-    if  (current_folder == "release" || current_folder == "debug")
-        remap_path.cdUp();
-    else if (current_folder != "Fusion")
+    remap_path = project_path;
+    if (!remap_path.exists(remap_folder))
         return fg_calib_loaded;
     remap_path.cd(remap_folder);
 

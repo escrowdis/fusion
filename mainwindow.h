@@ -8,6 +8,8 @@
 #include <QMessageBox>
 #include <QTime>
 #include <QtConcurrent/QtConcurrent>
+#include <QDir>
+extern QDir project_path;
 
 #include <iostream>
 #include <opencv2/opencv.hpp>
@@ -100,6 +102,8 @@ private:
     void reportError(QString part, QString level, QString content);
 
     void report(QString);
+
+    bool projectFolder();
 
     void paramRead();
 

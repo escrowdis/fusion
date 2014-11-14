@@ -5,8 +5,9 @@
 
 //#include <QThread>
 #include <QImage>
-#include <QDir>
 #include <QFile>
+#include <QDir>
+extern QDir project_path;
 
 // thread control
 #include <QReadWriteLock>

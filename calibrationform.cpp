@@ -243,12 +243,7 @@ void calibrationForm::getBasicInfo(int focal_length, double base_line)
 
     // set folder named by time
     image_save_folder = "calibrationUsedImgs";
-    image_save_path = QDir::currentPath();
-    QString current_folder = image_save_path.path().section("/", -1, -1);
-    if (current_folder == "release" || current_folder == "debug")
-        image_save_path.cdUp();
-    else if (current_folder != "Fusion")
-        return;
+    image_save_path = project_path;
     if (!image_save_path.exists(image_save_folder))
         image_save_path.mkdir(image_save_folder);
     image_save_path.cd(image_save_folder);

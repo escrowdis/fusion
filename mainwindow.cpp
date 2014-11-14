@@ -74,6 +74,11 @@ MainWindow::MainWindow(QWidget *parent) :
     // ========================================= End
 
     // default setting =========================
+    if (!projectFolder()) {
+        reportError("path", "Error!", "Path cannot be found.");
+        return;
+    }
+
     paramRead();
     // ========================================= End
 }
@@ -105,9 +110,23 @@ void MainWindow::report(QString content)
     ui->system_log->append(content);
 }
 
+bool MainWindow::projectFolder()
+{
+    project_path = QDir::currentPath();
+    QString current_folder = project_path.currentPath().section("/", -1, -1);
+    if (current_folder == "release" || current_folder == "debug")  {
+        project_path.cdUp();
+    }
+    if (project_path.path().section("/", -1, -1) == "Fusion") {
+        return true;
+    }
+
+    return false;
+}
+
 void MainWindow::paramRead()
 {
-    cv::FileStorage fs("basic_param.yml", cv::FileStorage::READ);
+    cv::FileStorage fs(project_path.path().toStdString() + "/basic_param.yml", cv::FileStorage::READ);
 
     cv::FileNode n;
     n = fs["stereoVision"];
@@ -131,7 +150,7 @@ void MainWindow::paramRead()
 
 void MainWindow::paramWrite()
 {
-    cv::FileStorage fs("basic_param.yml", cv::FileStorage::WRITE);
+    cv::FileStorage fs(project_path.path().toStdString() + "/basic_param.yml", cv::FileStorage::WRITE);
 
     fs << "stereoVision" << "{";
     fs << "port_L" << ui->comboBox_cam_device_index_L->currentIndex();
