@@ -648,6 +648,19 @@ parameters</string>
      </item>
     </layout>
    </widget>
+   <widget class="QLabel" name="label_color_table">
+    <property name="geometry">
+     <rect>
+      <x>504</x>
+      <y>720</y>
+      <width>256</width>
+      <height>12</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>ColorTable</string>
+    </property>
+   </widget>
    <widget class="QWidget" name="">
     <property name="geometry">
      <rect>

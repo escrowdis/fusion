@@ -120,6 +120,16 @@ private:
     void camOpen();
 
     void camStop() {}
+
+    // psuedo-color table
+    QImage *color_table;
+
+    int min_distance = 200 ;
+    int max_distance = 3000 ;
+
+    cv::Mat disp_pseudo;
+
+    void pseudoColorTable();
     // ======================== End
 
     // Laser range finder =====
