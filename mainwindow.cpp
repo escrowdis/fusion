@@ -132,13 +132,17 @@ void MainWindow::paramRead()
     n = fs["stereoVision"];
     ui->comboBox_cam_device_index_L->setCurrentIndex((int) n["port_L"]);
     ui->comboBox_cam_device_index_R->setCurrentIndex((int) n["port_R"]);
-    ui->comboBox_camera_focal_length->setCurrentIndex((int) n["focal_length"]);
-    ui->lineEdit_base_line->setText(QString::number((int) n["base_line"]));
+    ui->comboBox_camera_focal_length->setCurrentIndex((int) n["cam_focal_length"]);
+    sv->cam_focal_length = ui->comboBox_camera_focal_length->currentText().toInt();
+    sv->base_line = (double) n["base_line"];
+    sv->focal_length = (double) n["focal_length"];
+    ui->lineEdit_base_line->setText(QString::number(sv->base_line));
+    ui->label_sv_focal_length->setText(QString::number(sv->focal_length));
 
     n = fs["laserRangeFinder"];
     ui->comboBox_lrf_com->setCurrentIndex((int) n["port"]);
     ui->comboBox_lrf_baudRate->setCurrentIndex((int) n["baudRate"]);
-    ui->spinBox_lrf_scale->setValue((int) n["mapScale"]);
+    ui->spinBox_lrf_scale->setValue((double) n["mapScale"]);
     std::string res = (std::string) n["resolution"];
     if (res == "cm")
         ui->radioButton_lrf_res_cm->setChecked(true);
@@ -155,8 +159,9 @@ void MainWindow::paramWrite()
     fs << "stereoVision" << "{";
     fs << "port_L" << ui->comboBox_cam_device_index_L->currentIndex();
     fs << "port_R" << ui->comboBox_cam_device_index_R->currentIndex();
-    fs << "focal_length" << ui->comboBox_camera_focal_length->currentIndex();
-    fs << "base_line" << ui->lineEdit_base_line->text().toInt();
+    fs << "cam_focal_length" << ui->comboBox_camera_focal_length->currentIndex();
+    fs << "focal_length" << sv->focal_length;
+    fs << "base_line" << ui->lineEdit_base_line->text().toDouble();
     fs << "}";
 
     fs << "laserRangeFinder" << "{";

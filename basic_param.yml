@@ -1,9 +1,10 @@
 %YAML:1.0
 stereoVision:
-   port_L: 0
-   port_R: 1
-   focal_length: 0
-   base_line: 15
+   port_L: 1
+   port_R: 2
+   cam_focal_length: 0
+   focal_length: 2943.
+   base_line: 15.
 laserRangeFinder:
    port: 6
    baudRate: 2

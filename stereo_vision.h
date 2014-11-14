@@ -65,6 +65,12 @@ public:
 
     void matchParamInitialize(int type);
 
+    // depth estimatiom
+    double param_r;
+    double focal_length;
+    int cam_focal_length;
+    double base_line;
+
 private:
     void resetOpen(int device_index_L, int device_index_R);
 
@@ -93,8 +99,6 @@ private:
     QDir remap_path;
     QString remap_folder;
     QString remap_file;
-    int cam_focal_length;
-    double base_line;
     cv::Mat rmapLx, rmapLy, rmapRx, rmapRy;
     cv::Rect calibROI[2];
 
