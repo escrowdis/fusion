@@ -3,8 +3,7 @@
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
-    ui(new Ui::MainWindow),
-    form_calib(0), form_smp(0)
+    ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
 
@@ -110,6 +109,18 @@ MainWindow::~MainWindow()
     delete sv;
     delete color_table;
     delete ui;
+}
+
+void MainWindow::closeEvent(QCloseEvent *)
+{
+    // If close mainwindow without clicking stop button since the camera has been opened.
+    fg_running = false;
+    if (fg_form_calib_alloc)
+        if (form_calib->isVisible())
+            form_calib->close();
+    if (fg_form_smp_alloc)
+        if (form_smp->isVisible())
+            form_smp->close();
 }
 
 MouseLabel::MouseLabel(QWidget * parent): QLabel(parent)
@@ -274,7 +285,7 @@ bool MainWindow::lrfReadData()
 {
 //    lrfClearData();
     if (lrf->retrieveData(lrf_data)) {
-        emit updateGUI();
+        emit lrfUpdateGUI();
         return true;
     }
     else
@@ -308,16 +319,6 @@ void MainWindow::lrfDisplay()
 //    ui->label_lrf_data->setPixmap(QPixmap::fromImage(QImage::QImage(display_lrf.data, display_lrf.cols, display_lrf.rows, 3 * display_lrf.cols, QImage::Format_RGB888)).scaled(IMG_DIS_W, IMG_DIS_H));
     cv::imshow("image", display_lrf);
     cv::waitKey(10);
-    lock.unlock();
-}
-
-void MainWindow::on_pushButton_lrf_display_clicked()
-{
-
-}
-
-void MainWindow::on_pushButton_lrf_stop_clicked()
-{
 
 }
 
@@ -421,17 +422,6 @@ void MainWindow::on_pushButton_cam_stop_clicked()
     f_sv.setPaused(true);
 }
 
-void MainWindow::closeEvent(QCloseEvent *)
-{
-    // releas form since it's allocated
-    if (form_calib != 0)
-        delete form_calib;
-    if (form_smp != 0)
-        delete form_smp;    //**// memory location changed itself
-    // If close mainwindow without clicking stop button since the camera has been opened.
-    fg_running = false;
-}
-
 void MainWindow::threadbuffering()
 {
     // unimplement
@@ -475,7 +465,7 @@ void MainWindow::threadProcessing()
     }
 
     sync.setCancelOnWait(true);
-    while (!sync.cancelOnWait()) {qDebug()<<"wait";}
+    while (!sync.cancelOnWait()) {}
 }
 
 void MainWindow::on_pushButton_4_clicked()
@@ -678,7 +668,7 @@ void MainWindow::on_lineEdit_base_line_returnPressed()
     }
 }
 
-void MainWindow::on_pushButton_8_clicked()
+void MainWindow::on_pushButton_lrf_request_ONCE_clicked()
 {
     lrf->requestData(LRF::CAPTURE_MODE::ONCE);
     while (!lrf->bufEnoughSet()) {
@@ -687,7 +677,7 @@ void MainWindow::on_pushButton_8_clicked()
     lrfReadData();
 }
 
-void MainWindow::on_pushButton_5_clicked()
+void MainWindow::on_pushButton_lrf_request_clicked()
 {
     lrf->requestData(LRF::CAPTURE_MODE::CONTINUOUS);
 
@@ -699,7 +689,7 @@ void MainWindow::on_pushButton_5_clicked()
         threadProcessing();
 }
 
-void MainWindow::on_pushButton_6_clicked()
+void MainWindow::on_pushButton_lrf_retrieve_clicked()
 {
     fg_acquiring = true;
     f_lrf.setPaused(false);
@@ -707,7 +697,7 @@ void MainWindow::on_pushButton_6_clicked()
         threadProcessing();
 }
 
-void MainWindow::on_pushButton_7_clicked()
+void MainWindow::on_pushButton_lrf_stop_clicked()
 {
     fg_buffering = false;
     fg_acquiring = false;
@@ -717,5 +707,15 @@ void MainWindow::on_pushButton_7_clicked()
     while (!(f_lrf.isPaused() && f_lrf_buf.isPaused())) {}
     lrf->stopRetrieve();
 
+#ifdef debug_info_main
     qDebug()<<"stop done";
+#endif
+}
+
+void MainWindow::on_lineEdit_returnPressed()
+{
+    sv->cam_param.focal_length = ui->lineEdit->text().toDouble();
+    on_checkBox_do_depth_clicked(true);
+}
+
 }
