@@ -1076,4 +1076,28 @@ void MainWindow::on_horizontalSlider_sliderReleased()
     on_pushButton_lrf_read_range_2_clicked();
 }
 
+void MainWindow::on_pushButton_lrf_request_2_clicked()
+{
+    lrf->requestData(LRF::CAPTURE_MODE::CONTINUOUS);
+
+    fg_buffering = true;
+    fg_acquiring = true;
+}
+
+void MainWindow::on_pushButton_lrf_retrieve_2_clicked()
+{
+    while (fg_acquiring) {
+        lrfReadData();
+        lrf->pushToBuf();
+
+        qApp->processEvents();
+    }
+}
+
+void MainWindow::on_pushButton_lrf_stop_2_clicked()
+{
+    fg_buffering = false;
+    fg_acquiring = false;
+
+    lrf->stopRetrieve();
 }

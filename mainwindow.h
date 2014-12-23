@@ -228,6 +228,13 @@ private slots:
 
     void on_horizontalSlider_sliderReleased();
 
+    void on_pushButton_lrf_request_2_clicked();
+
+    void on_pushButton_lrf_retrieve_2_clicked();
+
+    void on_pushButton_lrf_stop_2_clicked();
+};
+
     // Mouse control ==========
 class MouseLabel : public QLabel
 {
