@@ -109,8 +109,10 @@ MainWindow::~MainWindow()
 
     // If close mainwindow without clicking stop button since the camera has been opened.
     fg_running = false;
+//    QMessageBox::StandardButton reply = QMessageBox::question(0, "New change", "Parameters were changed, save the new ones?", QMessageBox::Yes | QMessageBox::No);
+//    if (reply == QMessageBox::Yes)
+        paramWrite();
     cv::destroyAllWindows();
-    paramWrite();
     lrf->close();
     delete lrf;
     delete sv;
@@ -184,11 +186,11 @@ void MainWindow::paramRead()
     ui->comboBox_cam_device_index_L->setCurrentIndex((int) n["port_L"]);
     ui->comboBox_cam_device_index_R->setCurrentIndex((int) n["port_R"]);
     ui->comboBox_camera_focal_length->setCurrentIndex((int) n["cam_focal_length"]);
-    sv->cam_focal_length = ui->comboBox_camera_focal_length->currentText().toInt();
-    sv->base_line = (double) n["base_line"];
-    sv->focal_length = (double) n["focal_length"];
-    ui->lineEdit_base_line->setText(QString::number(sv->base_line));
-    ui->label_sv_focal_length->setText(QString::number(sv->focal_length));
+    sv->cam_param.cam_focal_length = ui->comboBox_camera_focal_length->currentText().toInt();
+    sv->cam_param.base_line = (double) n["base_line"];
+    sv->cam_param.focal_length = (double) n["focal_length"];
+    ui->lineEdit_base_line->setText(QString::number(sv->cam_param.base_line));
+    ui->label_sv_focal_length->setText(QString::number(sv->cam_param.focal_length));
 
     n = fs["laserRangeFinder"];
     ui->comboBox_lrf_com->setCurrentIndex((int) n["port"]);
@@ -199,6 +201,26 @@ void MainWindow::paramRead()
         ui->radioButton_lrf_res_cm->setChecked(true);
     else if (res == "mm")
         ui->radioButton_lrf_res_mm->setChecked(true);
+
+    n = fs["stereoParamSGBM"];
+    sv->param_sgbm.pre_filter_cap = (int)(n["pre_filter_cap"]);
+    sv->param_sgbm.SAD_window_size = (int)(n["SAD_window_size"]);
+    sv->param_sgbm.min_disp = (int)(n["min_disp"]);
+    sv->param_sgbm.num_of_disp = (int)(n["num_of_disp"]);
+    sv->param_sgbm.uniquenese_ratio = (int)(n["uniquenese_ratio"]);
+    sv->param_sgbm.speckle_window_size = (int)(n["speckle_window_size"]);
+    sv->param_sgbm.speckle_range = (int)(n["speckle_range"]);
+
+    n = fs["stereoParamBM"];
+    sv->param_bm.pre_filter_size = (int)(n["pre_filter_size"]);
+    sv->param_bm.pre_filter_cap = (int)(n["pre_filter_cap"]);
+    sv->param_bm.SAD_window_size = (int)(n["SAD_window_size"]);
+    sv->param_bm.min_disp = (int)(n["min_disp"]);
+    sv->param_bm.num_of_disp = (int)(n["num_of_disp"]);
+    sv->param_bm.texture_thresh = (int)(n["texture_thresh"]);
+    sv->param_bm.uniquenese_ratio = (int)(n["uniquenese_ratio"]);
+    sv->param_bm.speckle_window_size = (int)(n["speckle_window_size"]);
+    sv->param_bm.speckle_range = (int)(n["speckle_range"]);
 
     fs.release();
 }
@@ -211,7 +233,7 @@ void MainWindow::paramWrite()
     fs << "port_L" << ui->comboBox_cam_device_index_L->currentIndex();
     fs << "port_R" << ui->comboBox_cam_device_index_R->currentIndex();
     fs << "cam_focal_length" << ui->comboBox_camera_focal_length->currentIndex();
-    fs << "focal_length" << sv->focal_length;
+    fs << "focal_length" << sv->cam_param.focal_length;
     fs << "base_line" << ui->lineEdit_base_line->text().toDouble();
     fs << "}";
 
@@ -223,6 +245,28 @@ void MainWindow::paramWrite()
         fs << "resolution" << "cm";
     else if (ui->radioButton_lrf_res_mm->isChecked())
         fs << "resolution" << "mm";
+    fs << "}";
+
+    fs << "stereoParamSGBM" << "{";
+    fs << "pre_filter_cap" << sv->param_sgbm.pre_filter_cap;
+    fs << "SAD_window_size" << sv->param_sgbm.SAD_window_size;
+    fs << "min_disp" << sv->param_sgbm.min_disp;
+    fs << "num_of_disp" << sv->param_sgbm.num_of_disp;
+    fs << "uniquenese_ratio" << sv->param_sgbm.uniquenese_ratio;
+    fs << "speckle_window_size" << sv->param_sgbm.speckle_window_size;
+    fs << "speckle_range" << sv->param_sgbm.speckle_range;
+    fs << "}";
+
+    fs << "stereoParamBM" << "{";
+    fs << "pre_filter_size" << sv->param_bm.pre_filter_cap;
+    fs << "pre_filter_cap" << sv->param_bm.pre_filter_cap;
+    fs << "SAD_window_size" << sv->param_bm.SAD_window_size;
+    fs << "min_disp" << sv->param_bm.min_disp;
+    fs << "num_of_disp" << sv->param_bm.num_of_disp;
+    fs << "texture_thresh" << sv->param_bm.texture_thresh;
+    fs << "uniquenese_ratio" << sv->param_bm.uniquenese_ratio;
+    fs << "speckle_window_size" << sv->param_bm.speckle_window_size;
+    fs << "speckle_range" << sv->param_bm.speckle_range;
     fs << "}";
 
     fs.release();
