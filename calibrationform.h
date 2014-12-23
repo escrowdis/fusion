@@ -48,7 +48,11 @@ private slots:
 
     void on_pushButton_corner_intrinsic_clicked();
 
+    void closeEvent(QCloseEvent *);
+
 signals:
+    void closed(void);
+
     void requestImage(char CCD);
 
 private:

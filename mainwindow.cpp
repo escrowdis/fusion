@@ -46,7 +46,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
     fg_capturing = false;
 
-    QObject::connect(sv, SIGNAL(updateGUI(cv::Mat *, cv::Mat *, cv::Mat *)), this, SLOT(svDisplay(cv::Mat *, cv::Mat *, cv::Mat *)));
+    QObject::connect(sv, SIGNAL(svUpdateGUI(cv::Mat *, cv::Mat *, cv::Mat *)), this, SLOT(svDisplay(cv::Mat *, cv::Mat *, cv::Mat *)));
 
     // COM port
     for (int i = 0; i < 5; i++) {
@@ -71,6 +71,16 @@ MainWindow::MainWindow(QWidget *parent) :
     // ========================================= End
 
     // camera calibration ======================
+    fg_form_calib_alloc = false;
+    // ========================================= End
+
+    // Stereo vision param =====================
+    fg_form_smp_alloc = false;
+    // ========================================= End
+
+    // mouse control ===========================
+    QObject::connect(ui->label_cam_img_L, SIGNAL(mXY(int, int)), this, SLOT(mouseXY(int, int)));
+    QObject::connect(ui->label_disp, SIGNAL(mXY(int, int)), this, SLOT(mouseXY(int, int)));
     // ========================================= End
 
     // default setting =========================
@@ -357,6 +367,7 @@ void MainWindow::svDisplay(cv::Mat *img_L, cv::Mat *img_R, cv::Mat *disp)
 void MainWindow::on_pushButton_cam_open_clicked()
 {
     camOpen();
+    sv->matchParamInitialize(SV::STEREO_MATCH::SGBM);
     on_pushButton_cam_step_clicked();
 }
 
@@ -477,21 +488,27 @@ void MainWindow::on_checkBox_do_depth_clicked(bool checked)
 
 void MainWindow::on_pushButton_camera_calibration_clicked()
 {
-    if (form_calib == 0) {
-        form_calib = new calibrationForm();
-        form_calib->move(1500, 500);
+    form_calib = new calibrationForm();
+    form_calib->move(1500, 500);
+    fg_form_calib_alloc = true;
+    QObject::connect(form_calib, SIGNAL(closed(void)), this, SLOT(closeFormCalib(void)));
 
-        // send focal length & base line to form
-        QObject::connect(this, SIGNAL(sendBasicInfo(int, double)), form_calib, SLOT(getBasicInfo(int, double)));
-        QObject::connect(form_calib, SIGNAL(requestImage(char)), this, SLOT(requestImage(char)));
-        QObject::connect(this, SIGNAL(sendImage(cv::Mat *)), form_calib, SLOT(saveImage(cv::Mat *)));
-        QObject::connect(this, SIGNAL(sendImages(cv::Mat *, cv::Mat *)), form_calib, SLOT(saveImages(cv::Mat *, cv::Mat *)));
-    }
-    else
-        form_calib->reset();
+    // send focal length & base line to form
+    QObject::connect(this, SIGNAL(sendBasicInfo(int, double)), form_calib, SLOT(getBasicInfo(int, double)));
+    QObject::connect(form_calib, SIGNAL(requestImage(char)), this, SLOT(requestImage(char)));
+    QObject::connect(this, SIGNAL(sendImage(cv::Mat *)), form_calib, SLOT(saveImage(cv::Mat *)));
+    QObject::connect(this, SIGNAL(sendImages(cv::Mat *, cv::Mat *)), form_calib, SLOT(saveImages(cv::Mat *, cv::Mat *)));
+
     emit sendBasicInfo(ui->comboBox_camera_focal_length->currentText().toInt(), ui->lineEdit_base_line->text().toDouble());
 
     form_calib->show();
+}
+
+void MainWindow::closeFormCalib(void)
+{
+    fg_form_calib_alloc = false;
+    QObject::disconnect(form_calib, SIGNAL(closed(void)), this, SLOT(closeFormCalib(void)));
+    delete form_calib;
 }
 
 void MainWindow::requestImage(char CCD)
@@ -526,37 +543,101 @@ void MainWindow::requestImage(char CCD)
 
 void MainWindow::on_radioButton_BM_clicked()
 {
+    if (sv->match_mode == SV::STEREO_MATCH::BM)
+        return;
     report("Change to BM mathod.");
     sv->matchParamInitialize(SV::STEREO_MATCH::BM);
+    if (fg_form_smp_alloc) {
+        sv->updateParamsSmp();
+        form_smp->repaint();
+    }
 }
 
 void MainWindow::on_radioButton_SGBM_clicked()
 {
+    if (sv->match_mode == SV::STEREO_MATCH::SGBM)
+        return;
     report("Change to SGBM mathod.");
     sv->matchParamInitialize(SV::STEREO_MATCH::SGBM);
+    if (fg_form_smp_alloc) {
+        sv->updateParamsSmp();
+        form_smp->repaint();
+    }
+}
+
+void MainWindow::connectSmp(int old_mode, int new_mode)
+{
+    switch (old_mode) {
+    case SV::STEREO_MATCH::BM:
+        QObject::disconnect(form_smp, SIGNAL(send_bm_pre_filter_size(int)), sv, SLOT(change_bm_pre_filter_size(int)));
+        QObject::disconnect(form_smp, SIGNAL(send_bm_pre_filter_cap(int)), sv, SLOT(change_bm_pre_filter_cap(int)));
+        QObject::disconnect(form_smp, SIGNAL(send_bm_sad_window_size(int)), sv, SLOT(change_bm_sad_window_size(int)));
+        QObject::disconnect(form_smp, SIGNAL(send_bm_min_disp(int)), sv, SLOT(change_bm_min_disp(int)));
+        QObject::disconnect(form_smp, SIGNAL(send_bm_num_of_disp(int)), sv, SLOT(change_bm_num_of_disp(int)));
+        QObject::disconnect(form_smp, SIGNAL(send_bm_texture_thresh(int)), sv, SLOT(change_bm_texture_thresh(int)));
+        QObject::disconnect(form_smp, SIGNAL(send_bm_uniqueness_ratio(int)), sv, SLOT(change_bm_uniqueness_ratio(int)));
+        QObject::disconnect(form_smp, SIGNAL(send_bm_speckle_window_size(int)), sv, SLOT(change_bm_speckle_window_size(int)));
+        QObject::disconnect(form_smp, SIGNAL(send_bm_speckle_range(int)), sv, SLOT(change_bm_speckle_range(int)));
+        break;
+    case SV::STEREO_MATCH::SGBM:
+        QObject::disconnect(form_smp, SIGNAL(send_sgbm_pre_filter_cap(int)), sv, SLOT(change_sgbm_pre_filter_cap(int)));
+        QObject::disconnect(form_smp, SIGNAL(send_sgbm_sad_window_size(int)), sv, SLOT(change_sgbm_sad_window_size(int)));
+        QObject::disconnect(form_smp, SIGNAL(send_sgbm_min_disp(int)), sv, SLOT(change_sgbm_min_disp(int)));
+        QObject::disconnect(form_smp, SIGNAL(send_sgbm_num_of_disp(int)), sv, SLOT(change_sgbm_num_of_disp(int)));
+        QObject::disconnect(form_smp, SIGNAL(send_sgbm_uniqueness_ratio(int)), sv, SLOT(change_sgbm_uniqueness_ratio(int)));
+        QObject::disconnect(form_smp, SIGNAL(send_sgbm_speckle_window_size(int)), sv, SLOT(change_sgbm_speckle_window_size(int)));
+        QObject::disconnect(form_smp, SIGNAL(send_sgbm_speckle_range(int)), sv, SLOT(change_sgbm_speckle_range(int)));
+        break;
+    }
+
+    switch (new_mode) {
+    case SV::STEREO_MATCH::BM:
+        QObject::connect(form_smp, SIGNAL(send_bm_pre_filter_size(int)), sv, SLOT(change_bm_pre_filter_size(int)));
+        QObject::connect(form_smp, SIGNAL(send_bm_pre_filter_cap(int)), sv, SLOT(change_bm_pre_filter_cap(int)));
+        QObject::connect(form_smp, SIGNAL(send_bm_sad_window_size(int)), sv, SLOT(change_bm_sad_window_size(int)));
+        QObject::connect(form_smp, SIGNAL(send_bm_min_disp(int)), sv, SLOT(change_bm_min_disp(int)));
+        QObject::connect(form_smp, SIGNAL(send_bm_num_of_disp(int)), sv, SLOT(change_bm_num_of_disp(int)));
+        QObject::connect(form_smp, SIGNAL(send_bm_texture_thresh(int)), sv, SLOT(change_bm_texture_thresh(int)));
+        QObject::connect(form_smp, SIGNAL(send_bm_uniqueness_ratio(int)), sv, SLOT(change_bm_uniqueness_ratio(int)));
+        QObject::connect(form_smp, SIGNAL(send_bm_speckle_window_size(int)), sv, SLOT(change_bm_speckle_window_size(int)));
+        QObject::connect(form_smp, SIGNAL(send_bm_speckle_range(int)), sv, SLOT(change_bm_speckle_range(int)));
+        break;
+    case SV::STEREO_MATCH::SGBM:
+        QObject::connect(form_smp, SIGNAL(send_sgbm_pre_filter_cap(int)), sv, SLOT(change_sgbm_pre_filter_cap(int)));
+        QObject::connect(form_smp, SIGNAL(send_sgbm_sad_window_size(int)), sv, SLOT(change_sgbm_sad_window_size(int)));
+        QObject::connect(form_smp, SIGNAL(send_sgbm_min_disp(int)), sv, SLOT(change_sgbm_min_disp(int)));
+        QObject::connect(form_smp, SIGNAL(send_sgbm_num_of_disp(int)), sv, SLOT(change_sgbm_num_of_disp(int)));
+        QObject::connect(form_smp, SIGNAL(send_sgbm_uniqueness_ratio(int)), sv, SLOT(change_sgbm_uniqueness_ratio(int)));
+        QObject::connect(form_smp, SIGNAL(send_sgbm_speckle_window_size(int)), sv, SLOT(change_sgbm_speckle_window_size(int)));
+        QObject::connect(form_smp, SIGNAL(send_sgbm_speckle_range(int)), sv, SLOT(change_sgbm_speckle_range(int)));
+        break;
+    }
+
+    form_smp->changeMode(new_mode);
 }
 
 void MainWindow::on_pushButton_stereo_match_param_clicked()
 {
-    if (form_smp == 0) {
-        form_smp = new stereoMatchParamForm();
-        form_smp->move(1500, 100);
+    form_smp = new stereoMatchParamForm(0, sv->match_mode);
+    form_smp->move(1500, 100);
+    fg_form_smp_alloc = true;
+    QObject::connect(form_smp, SIGNAL(closed(void)), this, SLOT(closeFormSmp(void)));
 
-//        QObject::connect(form_smp, SIGNAL(send_pre_filter_size(int)), sv, SLOT(change_pre_filter_size(int)));
-//        QObject::connect(form_smp, SIGNAL(send_pre_filter_cap(int)), sv, SLOT(change_pre_filter_cap(int)));
-//        QObject::connect(form_smp, SIGNAL(send_sad_window_size(int)), sv, SLOT(change_sad_window_size(int)));
-//        QObject::connect(form_smp, SIGNAL(send_min_disp(int)), sv, SLOT(change_min_disp(int)));
-//        QObject::connect(form_smp, SIGNAL(send_num_of_disp(int)), sv, SLOT(change_num_of_disp(int)));
-//        QObject::connect(form_smp, SIGNAL(send_texture_thresh(int)), sv, SLOT(change_texture_thresh(int)));
-//        QObject::connect(form_smp, SIGNAL(send_uniqueness_ratio(int)), sv, SLOT(change_uniqueness_ratio(int)));
-//        QObject::connect(form_smp, SIGNAL(send_speckle_window_size(int)), sv, SLOT(change_speckle_window_size(int)));
-//        QObject::connect(form_smp, SIGNAL(send_speckle_range(int)), sv, SLOT(change_speckle_range(int)));
-    }
-
-    // send cuurent stereo matching params to ui //**// undone
-//    emit sendCurrentParams();
+    // send cuurent stereo matching params to ui
+    QObject::connect(sv, SIGNAL(setConnect(int,int)), this, SLOT(connectSmp(int,int)));
+    QObject::connect(sv, SIGNAL(sendCurrentParams(std::vector<int>)), form_smp, SLOT(updateParams(std::vector<int>)));
+    sv->updateParamsSmp();
 
     form_smp->show();
+}
+
+void MainWindow::closeFormSmp(void)
+{
+    fg_form_smp_alloc = false;
+    QObject::disconnect(form_smp, SIGNAL(closed(void)), this, SLOT(closeFormSmp(void)));
+    QObject::disconnect(sv, SIGNAL(setConnect(int,int)), this, SLOT(connectSmp(int,int)));
+    QObject::disconnect(sv, SIGNAL(sendCurrentParams(std::vector<int>)), form_smp, SLOT(updateParams(std::vector<int>)));
+    delete form_smp;
 }
 
 void MainWindow::on_comboBox_camera_focal_length_currentIndexChanged(int index)

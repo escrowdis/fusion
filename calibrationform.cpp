@@ -32,6 +32,11 @@ calibrationForm::~calibrationForm()
     delete ui;
 }
 
+void calibrationForm::closeEvent(QCloseEvent *)
+{
+    emit closed();
+}
+
 void calibrationForm::on_pushButton_3_clicked()
 {
     close();

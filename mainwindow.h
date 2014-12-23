@@ -112,9 +112,6 @@ private:
     // Stereo vision ==========
     stereo_vision* sv;
 
-    // stereo match
-    stereoMatchParamForm *form_smp;
-
     bool fg_capturing;
 
     void camOpen();
@@ -130,6 +127,12 @@ private:
     cv::Mat disp_pseudo;
 
     void pseudoColorTable();
+    // ======================== End
+
+    // Stereo vision param ====
+    stereoMatchParamForm *form_smp;
+
+    bool fg_form_smp_alloc;
     // ======================== End
 
     // Laser range finder =====
@@ -166,6 +169,9 @@ private:
 
     // Camera calibration =====
     calibrationForm *form_calib;
+    bool fg_form_calib_alloc;
+    // ======================== End
+
     // ======================== End
 
 signals:

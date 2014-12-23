@@ -38,6 +38,8 @@ public:
 
     ~stereo_vision();
 
+    int match_mode;
+
     bool open(int device_index_L, int device_index_R);
 
     bool isOpened() {return fg_cam_opened;}
@@ -63,6 +65,7 @@ public:
     // disparity image
     cv::Mat disp;
 
+    // Stereo vision params ========
     void matchParamInitialize(int type);
 
     // depth estimatiom
@@ -70,6 +73,33 @@ public:
     double focal_length;
     int cam_focal_length;
     double base_line;
+    void updateParamsSmp();
+
+    struct matchParamSGBM
+    {
+        int pre_filter_cap;
+        int SAD_window_size;
+        int min_disp;
+        int num_of_disp;
+        int uniquenese_ratio;
+        int speckle_window_size;
+        int speckle_range;
+    }param_sgbm;
+
+    struct matchParamBM
+    {
+        int pre_filter_size;
+        int pre_filter_cap;
+        int SAD_window_size;
+        int min_disp;
+        int num_of_disp;
+        int texture_thresh;
+        int uniquenese_ratio;
+        int speckle_window_size;
+        int speckle_range;
+    }param_bm;
+
+    // ============================= End
 
 private:
     void resetOpen(int device_index_L, int device_index_R);
@@ -103,7 +133,6 @@ private:
     cv::Rect calibROI[2];
 
     // correspondence matching method
-    int match_type;
     cv::Ptr<cv::StereoSGBM> sgbm;
     cv::Ptr<cv::StereoBM> bm;
     int cn;
@@ -115,27 +144,48 @@ private:
     cv::Mat disp_raw;
 
 private slots:
-    // stereo match
-    void change_pre_filter_size(int value);
+    // BM ===========================
+    void change_bm_pre_filter_size(int value);
 
-    void change_pre_filter_cap(int value);
+    void change_bm_pre_filter_cap(int value);
 
-    void change_sad_window_size(int value);
+    void change_bm_sad_window_size(int value);
 
-    void change_min_disp(int value);
+    void change_bm_min_disp(int value);
 
-    void change_num_of_disp(int value);
+    void change_bm_num_of_disp(int value);
 
-    void change_texture_thresh(int value);
+    void change_bm_texture_thresh(int value);
 
-    void change_uniqueness_ratio(int value);
+    void change_bm_uniqueness_ratio(int value);
 
-    void change_speckle_window_size(int value);
+    void change_bm_speckle_window_size(int value);
 
-    void change_speckle_range(int value);
+    void change_bm_speckle_range(int value);
+    // ============================== End
+
+    // SGBM =========================
+    void change_sgbm_pre_filter_cap(int value);
+
+    void change_sgbm_sad_window_size(int value);
+
+    void change_sgbm_min_disp(int value);
+
+    void change_sgbm_num_of_disp(int value);
+
+    void change_sgbm_uniqueness_ratio(int value);
+
+    void change_sgbm_speckle_window_size(int value);
+
+    void change_sgbm_speckle_range(int value);
+    // ============================== End
 
 signals:
-    void updateGUI(cv::Mat *img_L, cv::Mat *img_R, cv::Mat *disp);
+    void sendCurrentParams(std::vector<int> param);
+
+    void svUpdateGUI(cv::Mat *img_L, cv::Mat *img_R, cv::Mat *disp);
+
+    void setConnect(int old_mode, int new_mode);
 };
 
 #endif // STEREO_VISION_H
