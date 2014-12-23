@@ -54,6 +54,8 @@ private:
 
     void paramWrite();
 
+    void readFromTxt(QString file_name, cv::Mat *output);
+
     // Stereo vision ==========
     stereo_vision* sv;
 
@@ -66,7 +68,7 @@ private:
     // psuedo-color table
     QImage *color_table;
 
-    int min_distance = 200 ;
+    int min_distance = 200 ;    // cm
     int max_distance = 3000 ;
 
     cv::Mat disp_pseudo;
@@ -89,11 +91,18 @@ private:
 
     double lrf_data[LENGTH_DATA];
 
+    bool fg_lrf_record;
+    bool fg_lrf_record_quit;
+    FILE* fp1;
+
     void lrfClearData();
 
     bool lrfReadData();
 
     cv::Mat display_lrf;
+
+    std::vector<double> lrf_temp;
+    std::vector<std::vector<double> > display_lrf_3D;
     // ======================== End
 
     // Thread control =========
@@ -200,6 +209,25 @@ private slots:
     void on_pushButton_lrf_request_ONCE_clicked();
 
     void on_lineEdit_returnPressed();
+
+    void on_pushButton_lrf_record_data_clicked();
+
+    void on_pushButton_sv_record_data_clicked();
+
+    void on_pushButton_lrf_record_stop_clicked();
+
+    void on_pushButton_sv_read_images_clicked();
+
+    void on_pushButton_sv_read_disp_clicked();
+
+    void on_pushButton_lrf_read_range_clicked();
+
+    void on_pushButton_lrf_read_range_2_clicked();
+
+    void on_horizontalSlider_2_sliderReleased();
+
+    void on_horizontalSlider_sliderReleased();
+
     // Mouse control ==========
 class MouseLabel : public QLabel
 {

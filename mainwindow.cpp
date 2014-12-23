@@ -16,10 +16,13 @@ MainWindow::MainWindow(QWidget *parent) :
     // Initialization
     lrf = new lrf_controller();
 
+    fg_lrf_record = false;
+    fg_lrf_record_quit = false;
+
     fg_acquiring = false;
     fg_buffering = false;
 
-    QObject::connect(this, SIGNAL(updateGUI()), this, SLOT(lrfDisplay()));
+    QObject::connect(this, SIGNAL(lrfUpdateGUI()), this, SLOT(lrfDisplay()));
 
     // COM port
     for (int i = 1; i <= 20; i++)
@@ -35,6 +38,10 @@ MainWindow::MainWindow(QWidget *parent) :
 
     // display
     display_lrf = cv::Mat::zeros(800, 800, CV_8UC3);
+
+    // 3D display
+    display_lrf_3D.clear();
+    lrf_temp.clear();
 
     // Laser range finder ====================== End
 
@@ -320,6 +327,19 @@ void MainWindow::lrfDisplay()
     cv::imshow("image", display_lrf);
     cv::waitKey(10);
 
+    lock.unlock();
+    if (fg_lrf_record) {
+        lock.lockForWrite();
+        for (int i = 0; i < LENGTH_DATA; i++) {
+            fprintf(fp1, "%d ", lrf_data[i]); //**// %f? %d?
+        }
+        fprintf(fp1, "\n");
+        lock.unlock();
+        if (fg_lrf_record_quit) {
+            fclose(fp1);
+            fg_lrf_record = false;
+        }
+    }
 }
 
 void MainWindow::camOpen()
@@ -374,7 +394,10 @@ void MainWindow::svDisplay(cv::Mat *img_L, cv::Mat *img_R, cv::Mat *disp)
                         ptr[3 * c + 2] = 0;
                     }
                 }
+//                else
+//                    std::cout<<"0 ";
             }
+//            std::cout<<std::endl;
         }
 
         ui->label_lrf_data->setPixmap(QPixmap::fromImage(QImage::QImage(disp_pseudo.data, disp_pseudo.cols, disp_pseudo.rows, QImage::Format_RGB888)).scaled(IMG_DIS_W, IMG_DIS_H));
@@ -716,6 +739,297 @@ void MainWindow::on_lineEdit_returnPressed()
 {
     sv->cam_param.focal_length = ui->lineEdit->text().toDouble();
     on_checkBox_do_depth_clicked(true);
+}
+
+void MainWindow::on_pushButton_lrf_record_data_clicked()
+{
+//    lrf_temp.clear();
+//    for (int i = 0; i < LENGTH_DATA; i++) {
+//        lrf_temp.push_back(lrf_data[i]);
+//    }
+//    display_lrf_3D.push_back(lrf_temp);
+
+    fp1 = fopen("D_lrf.txt", "a");
+    fg_lrf_record = true;
+//    FILE* fp1;
+//    fp1 = fopen("D_lrf.txt", "a");
+//    for (int i = 0; i < LENGTH_DATA; i++) {
+//        fprintf(fp1, "%f ", lrf_data[i]);
+//    }
+//    fprintf(fp1, "\n");
+//    fclose(fp1);
+}
+
+void MainWindow::on_pushButton_sv_record_data_clicked()
+{
+    FILE* fp;
+    fp = fopen("D_sv.txt", "w");
+
+    for (int r = 0; r < IMG_H; r++) {
+        for (int c = 0; c < IMG_W; c++) {
+            fprintf(fp, "%d ", sv->data[r][c].disp);
+        }
+        fprintf(fp, "\n");
+    }
+
+    fclose(fp);
+
+    cv::Mat temp_L, temp_R;
+    cv::cvtColor(sv->img_r_L, temp_L, cv::COLOR_RGB2BGR);
+    cv::cvtColor(sv->img_r_R, temp_R, cv::COLOR_RGB2BGR);
+    cv::imwrite("D_sv_L.jpg", temp_L);
+    cv::imwrite("D_sv_R.jpg", temp_R);
+}
+
+void MainWindow::on_pushButton_lrf_record_stop_clicked()
+{
+    fg_lrf_record_quit = true;
+}
+
+void MainWindow::on_pushButton_sv_read_images_clicked()
+{
+    QStringList imgs_path = QFileDialog::getOpenFileNames(0, "Load images", ".", tr("Image files (*.jpg)"));
+    if (imgs_path.empty())
+        return;
+    sv->input_mode = SV::INPUT_SOURCE::IMG;
+
+    sv->img_L = cv::imread(imgs_path[0].toStdString());
+    sv->img_R = cv::imread(imgs_path[1].toStdString());
+    sv->stereoVision();
+}
+
+void MainWindow::readFromTxt(QString file_name, cv::Mat *output)
+{
+    QFile file(file_name);
+    file.open(QIODevice::ReadOnly);
+    if(!file.isOpen())
+        return;
+    QTextStream in(&file);
+
+    std::vector <std::vector <short int> > img_d;
+    std::vector <short int> temp;
+    QString content, value;
+    while (!in.atEnd()) {
+        temp.clear();
+        content.clear();
+        content = file.readLine();
+        for (int i = 0; i < content.size(); i++) {
+            QChar va = content.at(i);
+            if (va != ' ' && va != '\t')
+                value.append(va);
+            else {
+                temp.push_back(value.toInt());
+                value.clear();
+            }
+        }
+        img_d.push_back(temp);
+    }
+    file.close();
+
+    int row = img_d.size();
+    int col = img_d[0].size();
+    output->create(row, col, CV_16S);
+    for (int r = 0; r < row; r++) {
+        short int* ptr = output->ptr<short int>(r);
+        for (int c = 0; c < col; c++) {
+            ptr[c] = img_d[r][c];
+//            std::cout<<ptr[c]<<" ";
+        }
+//        std::cout<<std::endl;
+    }
+}
+
+void MainWindow::on_pushButton_sv_read_disp_clicked()
+{
+    cv::Mat img_sv;
+    cv::Mat img_sv_r;
+    cv::Mat hist = cv::Mat::zeros(1, 3000, CV_32S);
+    cv::Mat hist_id = cv::Mat(1, 3000, CV_16S);
+    for (short int i = 0; i < 3000; i++)
+        hist_id.ptr<short int>(0)[i] = i;
+    QString file_name = "D_sv.txt";
+    readFromTxt(file_name, &img_sv);
+
+    QTime countt;
+    countt.start();
+    // display
+    img_sv_r.create(img_sv.rows, img_sv.cols, CV_8UC1);
+    for (int r = 0; r < img_sv.rows; r++) {
+        uchar* ptr_1 = img_sv_r.ptr<uchar>(r);
+        short int* ptr = img_sv.ptr<short int>(r);
+        for (int c = 0; c < img_sv.cols; c++) {
+            int va = ptr[c];
+            int va_1 = 1.0 * va / 8.0;
+            if (va_1 >= 256)
+                ptr_1[c] == 255;
+            else if (va_1 <= 0)
+                ptr_1[c] == 0;
+            else
+                ptr_1[c] = va_1;
+            if (va == -16) {
+                hist.ptr<long int>(0)[0]++;
+            }
+            else {
+                hist.ptr<long int>(0)[va]++;
+            }
+//            std::cout<<ptr[c]<<" ";
+        }
+//        std::cout<<std::endl;
+    }
+    cv::imshow("[sv] new", img_sv_r);
+    cv::imwrite("D_sv_disp.jpg", img_sv_r);
+
+    // sorting
+    cv::Mat hist_sort = hist.clone();
+    for (int i = 0; i < hist_sort.cols - 2; i++) {
+        for (int j = i + 1; j < hist_sort.cols - 1; j++) {
+            if (hist_sort.ptr<long int>(0)[i] < hist_sort.ptr<long int>(0)[j]) {
+                long int tempp = hist_sort.ptr<long int>(0)[j];
+                hist_sort.ptr<long int>(0)[j] = hist_sort.ptr<long int>(0)[i];
+                hist_sort.ptr<long int>(0)[i] = tempp;
+
+                int tempp1 = hist_id.ptr<short int>(0)[j];
+                hist_id.ptr<short int>(0)[j] = hist_id.ptr<short int>(0)[i];
+                hist_id.ptr<short int>(0)[i] = tempp1;
+            }
+            continue;
+        }
+    }
+
+//    int img_total = 0;
+//    for (int i = 0; i < 3000; i++) {
+//        img_total += hist_sort.ptr<long int>(0)[i];
+//    }
+
+    cv::Mat img_sv_separate;
+    img_sv_separate.create(img_sv.rows, img_sv.cols, CV_8UC1);
+    for (int k = 0; k < 3000; k++) {
+        img_sv_separate.setTo(0);
+        for (int r = 0; r < img_sv.rows; r++) {
+            uchar* ptr_1 = img_sv_separate.ptr<uchar>(r);
+            short int* ptr = img_sv.ptr<short int>(r);
+            for (int c = 0; c < img_sv.cols; c++) {
+                int dev = 20;
+                if ((int)(ptr[c]) >= (int)(hist_id.ptr<short int>(0)[k]) - dev &&
+                        (int)(ptr[c]) <= (int)(hist_id.ptr<short int>(0)[k]) + dev &&
+                        hist_id.ptr<short int>(0)[k] >= 20 && hist_id.ptr<short int>(0)[k] < 1800 &&
+                        hist_sort.ptr<long int>(0)[k] > 300) {
+                    ptr_1[c] = 255;//1.0 * ptr[c] / 8.0;
+                }
+            }
+        }
+        QString name = "D_sv_disp_" + QString::number(k) + ".jpg";
+        cv::imshow(name.toStdString(), img_sv_separate);
+        static char c;
+        c = cv::waitKey(0);
+        if (c == 'q') {
+            cv::destroyAllWindows();
+            break;
+        }
+        else if (c == 's')
+            cv::imwrite(name.toStdString(), img_sv_separate);
+    }
+}
+
+void MainWindow::on_pushButton_lrf_read_range_clicked()
+{
+    cv::Mat img_lrf;
+    cv::Mat img_lrf_r;
+    QString file_name = "D_lrf.txt";
+    readFromTxt(file_name, &img_lrf);
+    cv::transpose(img_lrf, img_lrf);
+    cv::resize(img_lrf, img_lrf, cv::Size(img_lrf.cols, (int)(2.2 * img_lrf.rows)));
+    img_lrf_r.create(img_lrf.rows, img_lrf.cols, CV_8UC1);
+    for (int r = 0; r < img_lrf.rows; r++) {
+        uchar* ptr_1 = img_lrf_r.ptr<uchar>(r);
+        short int* ptr = img_lrf.ptr<short int>(r);
+        for (int c = 0; c < img_lrf.cols; c++) {
+            ptr_1[c] = 1.0 * ptr[c] / 35.0;
+        }
+    }
+    cv::imshow("[lrf] new", img_lrf_r);
+    cv::imwrite("D_lrf.jpg", img_lrf_r);
+
+    cv::Mat img_lrf_proc = cv::Mat::zeros(img_lrf.rows, img_lrf.cols, CV_8UC1);
+    int pxl_dev = 1;
+    for (int r = 0; r < img_lrf.rows - pxl_dev; r++) {
+        short int* ptr = img_lrf.ptr<short int>(r);
+        uchar* ptr_p = img_lrf_proc.ptr<uchar>(r);
+        for (int c = 0; c < img_lrf.cols - pxl_dev; c++) {
+            int neighbor = ptr[c + pxl_dev];
+            int small = ptr[c] > neighbor ? neighbor : ptr[c];
+            int big = ptr[c] > neighbor ? ptr[c] : neighbor;
+            double ratio = 1.0 * (big - small) / small;
+            neighbor = img_lrf.ptr<short int>(r + pxl_dev)[c];
+            small = ptr[c] > neighbor ? neighbor : ptr[c];
+            big = ptr[c] > neighbor ? ptr[c] : neighbor;
+            double ratio_1 = 1.0 * (big - small) / small;
+            if (ratio > 0.5 || ratio_1 > 0.5) {
+                ptr_p[c] = 255;
+            }
+//            std::cout<<ratio<<" ";
+        }
+//        std::cout<<std::endl;
+    }
+
+    cv::imshow("proc lrf", img_lrf_proc);
+    cv::imwrite("D_lrf_edge.jpg", img_lrf_proc);
+}
+
+void MainWindow::on_pushButton_lrf_read_range_2_clicked()
+{
+    cv::Mat img_lrf;
+    cv::Mat img_lrf_r;
+    QString file_name = "D_lrf.txt";
+    readFromTxt(file_name, &img_lrf);
+    cv::transpose(img_lrf, img_lrf);
+    cv::resize(img_lrf, img_lrf, cv::Size(img_lrf.cols * 2, img_lrf.rows * 2));
+    img_lrf_r.create(img_lrf.rows, img_lrf.cols, CV_8UC1);
+    double minn = 10000.0;
+    double maxx = 0.0;
+    for (int r = 0; r < img_lrf.rows; r++) {
+        short int* ptr = img_lrf.ptr<short int>(r);
+        for (int c = 0; c < img_lrf.cols; c++) {
+            if (ptr[c] < minn)
+                minn = ptr[c];
+            if (ptr[c] > maxx)
+                maxx = ptr[c];
+        }
+    }
+    for (int r = 0; r < img_lrf.rows; r++) {
+        uchar* ptr_1 = img_lrf_r.ptr<uchar>(r);
+        short int* ptr = img_lrf.ptr<short int>(r);
+        for (int c = 0; c < img_lrf.cols; c++) {
+            int p = ptr[c];
+            double va = ((255.0 * (p - minn)) / (1.0 * (maxx - minn)));
+            if (va > 255.0)
+                va = 255;
+            else if (va < 0.0)
+                va = 0;
+            ptr_1[c] = (int)(va);
+//            std::cout<<va<<"/"<<p<<" ";
+
+        }
+//        std::cout<<std::endl;
+    }
+//    std::cout<<std::endl<<minn<<", "<<maxx<<std::endl;
+
+    cv::imshow("[lrf] new", img_lrf_r);
+    cv::imwrite("D_lrf.jpg", img_lrf_r);
+    cv::Mat img_lrf_edge;
+    cv::Canny(img_lrf_r, img_lrf_edge, ui->horizontalSlider->value(), ui->horizontalSlider_2->value());
+    cv::imshow("edge", img_lrf_edge);
+    cv::imwrite("D_lrf_edge.jpg", img_lrf_edge);
+}
+
+void MainWindow::on_horizontalSlider_2_sliderReleased()
+{
+    on_pushButton_lrf_read_range_2_clicked();
+}
+
+void MainWindow::on_horizontalSlider_sliderReleased()
+{
+    on_pushButton_lrf_read_range_2_clicked();
 }
 
 }

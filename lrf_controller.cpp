@@ -109,7 +109,6 @@ bool lrf_controller::sendMsg(int mode)
 void lrf_controller::requestData(int mode)
 {
     qDebug()<<"sendMsg:"<<sendMsg(mode);
-//    qDebug()<<" mode"<<mode<<this->mode;
 }
 
 void lrf_controller::stopRetrieve()
@@ -131,10 +130,10 @@ void lrf_controller::pushToBuf()
         buf->append(serial->read(num_input));
         lock.unlock();
 #ifdef debug_info_lrf_data
-        for (int i = 0; i < buf->size(); i++) {
-            std::cout<<std::hex << (int)(buf->at(i) & 0xff)<<std::dec<<" ";
-        }
-        std::cout<<std::endl;
+//        for (int i = 0; i < buf->size(); i++) {
+//            std::cout<<std::hex << (int)(buf->at(i) & 0xff)<<std::dec<<" ";
+//        }
+//        std::cout<<std::endl;
 #endif
     }
 
@@ -184,17 +183,20 @@ bool lrf_controller::retrieveData(double *data)
     }
     lock.unlock();
 #ifdef debug_info_lrf_data
-    qDebug()<<"proc data r";
+    std::cout<<"proc data r"<<std::endl;
 #endif
     int j = 0;
     for (int i = 0; i < dataset_size - header_size - 1; i+=2) {
         double r = (double)(data_raw[i + 1]) * 256 + (double)(data_raw[i]);
         data[j] = r;
 #ifdef debug_info_lrf_data
-        qDebug()<<r;
+        std::cout<<r<<" ";
 #endif
         j++;
     }
+#ifdef debug_info_lrf_data
+    std::cout<<std::endl;
+#endif
 
     return true;
 }
@@ -275,9 +277,10 @@ bool lrf_controller::checkHeader(QByteArray &data, int header_type)
                 qDebug()<<"header after cut "<<data.size();
 #endif
 #ifdef debug_info_lrf_data
-                qDebug()<<"data";
+                std::cout<<"data"<<std::endl;
                 for (int i = 0 ; i < data.size(); i++)
-                    qDebug()<< std::hex<<(int)data.at(i);
+                    std::cout<<std::hex<<(int)data.at(i)<<" ";
+                std::cout<<std::endl;
 #endif
                 return true;
             }
