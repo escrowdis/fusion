@@ -11,6 +11,13 @@ stereo_vision::stereo_vision()
     fg_calib = false;
     fg_stereoMatch = false;
 
+    input_mode = SV::INPUT_SOURCE::CAM;
+
+    data = new StereoData * [IMG_H];
+    for (int r = 0; r < IMG_H; r++) {
+        data[r] = new StereoData[IMG_W];
+    }
+
     // Initialization images for displaying
     img_r_L = cv::Mat::zeros(IMG_H, IMG_W, CV_8UC3);
     img_r_R = cv::Mat::zeros(IMG_H, IMG_W, CV_8UC3);
@@ -25,6 +32,10 @@ stereo_vision::stereo_vision()
 
 stereo_vision::~stereo_vision()
 {
+    for (int i = 0; i < IMG_H; i++)
+        delete [] data[i];
+    delete[] data;
+
     close();
     sgbm.release();
     bm.release();
@@ -161,7 +172,7 @@ bool stereo_vision::loadRemapFile(int cam_focal_length, double base_line)
 {
     // The folder of calibration files should be placed under project's folder
     // check whether the file has been loaded
-    if (fg_calib_loaded && this->cam_focal_length == cam_focal_length && this->base_line == base_line)
+    if (fg_calib_loaded && this->cam_param.cam_focal_length == cam_focal_length && this->cam_param.base_line == base_line)
         return fg_calib_loaded;
 
     // find files under which folder and find the folder with calibration files
@@ -201,8 +212,8 @@ bool stereo_vision::loadRemapFile(int cam_focal_length, double base_line)
     fs["ROI1w"] >> calibROI[1].width;
     fs["ROI1h"] >> calibROI[1].height;
     fs.release();
-    this->cam_focal_length = cam_focal_length;
-    this->base_line = base_line;
+    this->cam_param.cam_focal_length = cam_focal_length;
+    this->cam_param.base_line = base_line;
     fg_calib_loaded = true;
 
     return fg_calib_loaded;
@@ -240,6 +251,37 @@ void stereo_vision::stereoMatch()
 
     disp_raw.convertTo(disp, CV_8U);
 
+    // data
+    for (int r = 0; r < IMG_H; r++) {
+        short int* ptr = (short int*) (disp_raw.data + r * disp_raw.step);
+        for (int c = 0 ; c< IMG_W; c++) {
+            data[r][c].disp = ptr[c];
+            if (data[r][c].disp > 0)
+                data[r][c].Z = cam_param.param_r / ptr[c];
+            else
+                data[r][c].Z = -1;
+        }
+    }
+
+    // data - disp_raw
+//    for (int r = 0; r < disp_raw.rows; r++) {
+//        short int* ptr = disp_raw.ptr<short int>(r);
+//        for (int c = 0; c < disp_raw.cols; c++) {
+//            std::cout<<ptr[c]<<" ";
+//        }
+//        std::cout<<std::endl;
+//    }
+//    std::cout<<std::endl;
+
+    // data - disp
+//    for (int r = 0; r < disp.rows; r++) {
+//        uchar* ptr = disp.ptr<uchar>(r);
+//        for (int c = 0; c < disp.cols; c++) {
+//            std::cout<<(int)(ptr[c])<<" ";
+//        }
+//        std::cout<<std::endl;
+//    }
+//    std::cout<<std::endl;
 }
 
 bool stereo_vision::stereoVision()
@@ -249,7 +291,15 @@ bool stereo_vision::stereoVision()
 #endif
 
     // camera capturing
-    camCapture();
+    switch (input_mode) {
+    case SV::INPUT_SOURCE::CAM:
+        camCapture();
+        break;
+    case SV::INPUT_SOURCE::IMG:
+//        img_L = ;
+//        img_R = ;
+        break;
+    }
 
     // camera calibration
     if (fg_calib)

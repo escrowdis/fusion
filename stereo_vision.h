@@ -27,6 +27,11 @@ enum STEREO_MATCH{
     BM
 };
 
+enum INPUT_SOURCE {
+    CAM,
+    IMG
+};
+
 }
 
 class stereo_vision : public QObject
@@ -59,20 +64,41 @@ public:
     cv::Mat img_r_R;
 
     // status
+    int input_mode;
     bool fg_calib;                      // check whether the calibration button is checked
     bool fg_stereoMatch;                // check whether do the correspondence matching
 
-    // disparity image
-    cv::Mat disp;
+    // depth estimatiom
+    struct camParam
+    {
+        double param_r;
+        double focal_length;
+        int cam_focal_length;
+        double base_line;
+    }cam_param;
+
+    // data - stereo vision ========
+    struct StereoData
+    {
+        short int disp;
+        int X;
+        int Y;
+        int Z;
+
+        StereoData() {
+            disp = -1;
+            X = -1;
+            Y = -1;
+            Z = -1;
+        }
+    };
+
+    StereoData** data;
+    // ============================= End
 
     // Stereo vision params ========
     void matchParamInitialize(int type);
 
-    // depth estimatiom
-    double param_r;
-    double focal_length;
-    int cam_focal_length;
-    double base_line;
     void updateParamsSmp();
 
     struct matchParamSGBM
@@ -142,6 +168,8 @@ private:
 
     // disparity image
     cv::Mat disp_raw;
+    cv::Mat disp;
+
 
 private slots:
     // BM ===========================

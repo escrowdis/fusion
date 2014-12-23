@@ -330,12 +330,12 @@ void MainWindow::svDisplay(cv::Mat *img_L, cv::Mat *img_R, cv::Mat *disp)
         disp_pseudo = cv::Mat::zeros(IMG_H, IMG_W, CV_8UC3);
         uchar *ptr_color = color_table->scanLine(0);
         for (int r = 0; r < IMG_H; r++) {
-            short int* ptr_raw = (short int*) (sv->disp_raw.data + r * sv->disp_raw.step);
             uchar* ptr = (uchar*) (disp_pseudo.data + r * disp_pseudo.step);
             for (int c = 0; c < IMG_W; c++) {
                 int z_est = 0;
-                if (ptr_raw[c] > 0) {
-                    z_est = sv->param_r / ptr_raw[c];
+                if (sv->data[r][c].disp > 0) {
+                    z_est = sv->data[r][c].Z;
+//                    std::cout<<z_est<<" ";
                     if (z_est >= min_distance && z_est <= max_distance) {
                         int jj = z_est - min_distance;
                         ptr[3 * c + 0] = ptr_color[3 * jj + 0];
@@ -367,6 +367,7 @@ void MainWindow::svDisplay(cv::Mat *img_L, cv::Mat *img_R, cv::Mat *disp)
 void MainWindow::on_pushButton_cam_open_clicked()
 {
     camOpen();
+    sv->input_mode = SV::INPUT_SOURCE::CAM;
     sv->matchParamInitialize(SV::STEREO_MATCH::SGBM);
     on_pushButton_cam_step_clicked();
 }
@@ -479,7 +480,7 @@ void MainWindow::on_checkBox_do_calibration_clicked(bool checked)
 void MainWindow::on_checkBox_do_depth_clicked(bool checked)
 {
     if (checked) {
-        sv->param_r = sv->focal_length * sv->base_line;
+        sv->cam_param.param_r = sv->cam_param.focal_length * sv->cam_param.base_line;
         sv->fg_stereoMatch = true;
     }
     else
