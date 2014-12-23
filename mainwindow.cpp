@@ -112,6 +112,26 @@ MainWindow::~MainWindow()
     delete ui;
 }
 
+MouseLabel::MouseLabel(QWidget * parent): QLabel(parent)
+{
+    this->setMouseTracking(true);
+}
+
+void MouseLabel::mouseMoveEvent(QMouseEvent *e)
+{
+    int x = e->x();
+    int y = e->y();
+    emit mXY(x, y);
+}
+
+void MainWindow::mouseXY(int x, int y)
+{
+    mouse_info.sprintf("(x,y) = (%d,%d), Disp. = %d, (X,Y,Z) = (%d,%d,%d)",
+                       2 * x, 2 * y, sv->data[y][x].disp,
+                       -1, -1, sv->data[y][x].Z); //**// real X, Y, Z
+    ui->label_depth_info->setText(mouse_info);
+}
+
 void MainWindow::reportError(QString part, QString level, QString content)
 {
     ui->system_log->append("<FONT COLOR = red>[" + part + "] " + level + "  " + content + "</FONT>");

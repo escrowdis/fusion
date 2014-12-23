@@ -172,6 +172,8 @@ private:
     bool fg_form_calib_alloc;
     // ======================== End
 
+    // Mouse control ==========
+    QString mouse_info;
     // ======================== End
 
 signals:
@@ -184,6 +186,22 @@ signals:
     // Laser range finder =====
     void updateGUI();
     // ======================== End
+    // Mouse control ==========
+    void mouseXY(int x, int y);
+    // ======================== End
+
+    // Mouse control ==========
+class MouseLabel : public QLabel
+{
+    Q_OBJECT
+public:
+    MouseLabel(QWidget* parent = 0);
+
+signals:
+    void mXY(int x, int y);
+
+protected:
+    virtual void mouseMoveEvent(QMouseEvent *e);
 };
 
 #endif // MAINWINDOW_H
