@@ -828,7 +828,7 @@ parameters</string>
      <enum>Qt::Horizontal</enum>
     </property>
    </widget>
-   <widget class="QWidget" name="">
+   <widget class="QWidget" name="layoutWidget">
     <property name="geometry">
      <rect>
       <x>30</x>
@@ -867,6 +867,22 @@ parameters</string>
       </widget>
      </item>
     </layout>
+   </widget>
+   <widget class="QCheckBox" name="checkBox_pseudo_color">
+    <property name="geometry">
+     <rect>
+      <x>400</x>
+      <y>720</y>
+      <width>91</width>
+      <height>16</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Pseudo-color</string>
+    </property>
+    <property name="checked">
+     <bool>true</bool>
+    </property>
    </widget>
   </widget>
   <widget class="QMenuBar" name="menuBar">

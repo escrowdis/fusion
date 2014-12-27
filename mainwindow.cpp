@@ -275,41 +275,64 @@ void MainWindow::paramWrite()
 void MainWindow::pseudoColorTable()
 {
     // ==== Produce pseudo-color table
-    color_table = new QImage(max_distance - min_distance, 12, QImage::Format_RGB888) ;
+    color_table = new QImage(MAX_DISTANCE - MIN_DISTANCE, 12, QImage::Format_RGB888) ;
 
-    int x = 256/3 ;
-    for (int i = 0; i < color_table->height(); i++) {
-        uchar* ptr = color_table->scanLine(i) ;
-        for (int j =0; j < color_table->width(); j++) {
-            int p = 1.0 * j * 256 / (max_distance - min_distance) ;
-            int pt = 0 ;
-            if (p <= x) {
-                pt = 255 * (1.0 * p / x) ;
-                if (pt > 255) pt = 255 ;
+    float hue_start_angle = 0.0;
+    float hue_end_angle = 240.0;
 
-                ptr[j*3] = pt ;
-                ptr[j*3+1] = 0 ;
-                ptr[j*3+2] = 0 ;
-            }
-            else if (p > x && p <= 2 * x) {
-                pt = 255 * (1.0 * (p - x) / x) + 1 ;
-                if (pt > 255)
-                    pt = 255 ;
-                ptr[j*3] = 255 - pt ;
-                ptr[j*3+1] = pt ;
-                ptr[j*3+2] = 0 ;
-            }
-            else {
-                pt = 255 * (1.0 * (p - 2 * x) / x) + 1 ;
-                if(pt > 255)
-                    pt = 255 ;
-                ptr[j*3] = 0 ;
-                ptr[j*3+1] = 255 - pt ;
-                ptr[j*3+2] = pt ;
+    float h = 0.0;
+    float s = 1.0;
+    float v = 255.0;
+    float step = (hue_end_angle - hue_start_angle) / (MAX_DISTANCE - MIN_DISTANCE);
+
+    float f;
+    int hi, p, q, t;
+
+    for (int r = 0; r < color_table->height(); r++) {
+        uchar* ptr = color_table->scanLine(r);
+        for (int c =0; c < color_table->width(); c++) {
+            h = c * step;
+            hi = (int)(h / 60.0) % 6;
+            f = h / 60.0 - hi;
+            p = v * (1 - s);
+            q = v * (1 - f * s);
+            t = v * (1 - (1 - f) * s);
+
+            switch (hi) {
+            case 0:
+                ptr[3 * c + 0] = v;
+                ptr[3 * c + 1] = t;
+                ptr[3 * c + 2] = p;
+                break;
+            case 1:
+                ptr[3 * c + 0] = q;
+                ptr[3 * c + 1] = v;
+                ptr[3 * c + 2] = p;
+                break;
+            case 2:
+                ptr[3 * c + 0] = p;
+                ptr[3 * c + 1] = v;
+                ptr[3 * c + 2] = t;
+                break;
+            case 3:
+                ptr[3 * c + 0] = p;
+                ptr[3 * c + 1] = q;
+                ptr[3 * c + 2] = v;
+                break;
+            case 4:
+                ptr[3 * c + 0] = t;
+                ptr[3 * c + 1] = p;
+                ptr[3 * c + 2] = v;
+                break;
+            case 5:
+                ptr[3 * c + 0] = v;
+                ptr[3 * c + 1] = p;
+                ptr[3 * c + 2] = q;
+                break;
             }
         }
-
     }
+
     ui->label_color_table->setScaledContents(true) ;
     ui->label_color_table->setPixmap(QPixmap::fromImage(*color_table));
 }
@@ -421,13 +444,13 @@ void MainWindow::svDisplay(cv::Mat *img_L, cv::Mat *img_R, cv::Mat *disp)
                 if (sv->data[r][c].disp > 0) {
                     z_est = sv->data[r][c].Z;
 //                    std::cout<<z_est<<" ";
-                    if (z_est >= min_distance && z_est <= max_distance) {
-                        int jj = z_est - min_distance;
+                    if (z_est >= MIN_DISTANCE && z_est <= MAX_DISTANCE) {
+                        int jj = z_est - MIN_DISTANCE;
                         ptr[3 * c + 0] = ptr_color[3 * jj + 0];
                         ptr[3 * c + 1] = ptr_color[3 * jj + 1];
                         ptr[3 * c + 2] = ptr_color[3 * jj + 2];
                     }
-                    else if (z_est > max_distance) {
+                    else if (z_est > MAX_DISTANCE) {
                         ptr[3 * c + 0] = 0;
                         ptr[3 * c + 1] = 0;
                         ptr[3 * c + 2] = 255;

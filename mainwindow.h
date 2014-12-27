@@ -25,6 +25,9 @@ extern QDir project_path;
 // camera calibration
 #include "calibrationform.h"
 
+#define MIN_DISTANCE 200 // cm
+#define MAX_DISTANCE 3000
+
 static bool fg_running;
 
 namespace Ui {
@@ -67,9 +70,6 @@ private:
 
     // psuedo-color table
     QImage *color_table;
-
-    int min_distance = 200 ;    // cm
-    int max_distance = 3000 ;
 
     cv::Mat disp_pseudo;
 
