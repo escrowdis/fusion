@@ -168,8 +168,6 @@ private slots:
     void svDisplay(cv::Mat *img_L, cv::Mat *img_R, cv::Mat *disp);
     // ======================== End
 
-    void on_pushButton_4_clicked();
-
     // Stereo vision param ====
     void closeFormSmp(void);
 
@@ -208,7 +206,7 @@ private slots:
 
     void on_pushButton_lrf_request_ONCE_clicked();
 
-    void on_lineEdit_returnPressed();
+    void on_lineEdit_sv_focal_length_returnPressed();
 
     void on_pushButton_lrf_record_data_clicked();
 
