@@ -618,6 +618,8 @@ void MainWindow::on_checkBox_do_depth_clicked(bool checked)
 
 void MainWindow::on_pushButton_camera_calibration_clicked()
 {
+    if (fg_form_calib_alloc)
+        return;
     form_calib = new calibrationForm();
     form_calib->move(1500, 500);
     fg_form_calib_alloc = true;
@@ -636,9 +638,9 @@ void MainWindow::on_pushButton_camera_calibration_clicked()
 
 void MainWindow::closeFormCalib(void)
 {
-    fg_form_calib_alloc = false;
     QObject::disconnect(form_calib, SIGNAL(closed(void)), this, SLOT(closeFormCalib(void)));
     delete form_calib;
+    fg_form_calib_alloc = false;
 }
 
 void MainWindow::requestImage(char CCD)
@@ -748,6 +750,8 @@ void MainWindow::connectSmp(int old_mode, int new_mode)
 
 void MainWindow::on_pushButton_stereo_match_param_clicked()
 {
+    if (fg_form_smp_alloc)
+        return;
     form_smp = new stereoMatchParamForm(0, sv->match_mode);
     form_smp->move(1500, 100);
     fg_form_smp_alloc = true;
@@ -763,11 +767,11 @@ void MainWindow::on_pushButton_stereo_match_param_clicked()
 
 void MainWindow::closeFormSmp(void)
 {
-    fg_form_smp_alloc = false;
     QObject::disconnect(form_smp, SIGNAL(closed(void)), this, SLOT(closeFormSmp(void)));
     QObject::disconnect(sv, SIGNAL(setConnect(int,int)), this, SLOT(connectSmp(int,int)));
     QObject::disconnect(sv, SIGNAL(sendCurrentParams(std::vector<int>)), form_smp, SLOT(updateParams(std::vector<int>)));
     delete form_smp;
+    fg_form_smp_alloc = false;
 }
 
 void MainWindow::on_comboBox_camera_focal_length_currentIndexChanged(int index)
