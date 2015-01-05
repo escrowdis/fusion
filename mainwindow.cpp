@@ -49,6 +49,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
     // Initialization
     sv = new stereo_vision();
+    tv = new top_view();
 
     fg_capturing = false;
 
@@ -64,6 +65,10 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->comboBox_camera_focal_length->addItem("16");
     ui->comboBox_camera_focal_length->addItem("12");
     ui->comboBox_camera_focal_length->addItem("4");
+
+    // top view
+    tv->initialTopView();
+    display_topview();
 
     // Stereo vision =========================== End
 
@@ -192,6 +197,10 @@ void MainWindow::paramRead()
     ui->lineEdit_base_line->setText(QString::number(sv->cam_param.base_line));
     ui->label_sv_focal_length->setText(QString::number(sv->cam_param.focal_length));
 
+    n = fs["topView"];
+    ui->spinBox_topview_r->setValue((int) n["row_interval"]);
+    ui->spinBox_topview_c->setValue((int) n["col_interval"]);
+
     n = fs["laserRangeFinder"];
     ui->comboBox_lrf_com->setCurrentIndex((int) n["port"]);
     ui->comboBox_lrf_baudRate->setCurrentIndex((int) n["baudRate"]);
@@ -237,6 +246,11 @@ void MainWindow::paramWrite()
     fs << "base_line" << ui->lineEdit_base_line->text().toDouble();
     fs << "}";
 
+    fs << "topView" << "{";
+    fs << "row_interval" << ui->spinBox_topview_r->value();
+    fs << "col_interval" << ui->spinBox_topview_c->value();
+    fs << "}";
+
     fs << "laserRangeFinder" << "{";
     fs << "port" << ui->comboBox_lrf_com->currentIndex();
     fs << "baudRate" << ui->comboBox_lrf_baudRate->currentIndex();
@@ -270,6 +284,24 @@ void MainWindow::paramWrite()
     fs << "}";
 
     fs.release();
+}
+
+void MainWindow::display_topview()
+{
+    if (tv->isInitialized()) {
+        tv->updateTopView(ui->spinBox_topview_r->value(), ui->spinBox_topview_c->value());
+        ui->label_top_view->setPixmap(QPixmap::fromImage(QImage::QImage(tv->topview.data, tv->topview.cols, tv->topview.rows, QImage::Format_RGBA8888)).scaled(270, 750));
+    }
+}
+
+void MainWindow::on_spinBox_topview_r_valueChanged(int arg1)
+{
+    display_topview();
+}
+
+void MainWindow::on_spinBox_topview_c_valueChanged(int arg1)
+{
+    display_topview();
 }
 
 void MainWindow::pseudoColorTable()
@@ -925,9 +957,9 @@ void MainWindow::on_pushButton_sv_read_disp_clicked()
             int va = ptr[c];
             int va_1 = 1.0 * va / 8.0;
             if (va_1 >= 256)
-                ptr_1[c] == 255;
+                ptr_1[c] = 255;
             else if (va_1 <= 0)
-                ptr_1[c] == 0;
+                ptr_1[c] = 0;
             else
                 ptr_1[c] = va_1;
             if (va == -16) {
@@ -1120,4 +1152,9 @@ void MainWindow::on_pushButton_lrf_stop_2_clicked()
     fg_acquiring = false;
 
     lrf->stopRetrieve();
+}
+
+void MainWindow::on_pushButton_clicked()
+{
+
 }

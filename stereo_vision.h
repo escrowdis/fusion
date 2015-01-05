@@ -20,6 +20,9 @@ extern QReadWriteLock lock;
 #define IMG_DIS_W 320
 #define IMG_DIS_H 240
 
+#define MIN_DISTANCE 200 // cm
+#define MAX_DISTANCE 3000
+
 namespace SV {
 
 enum STEREO_MATCH{
@@ -214,6 +217,48 @@ signals:
     void svUpdateGUI(cv::Mat *img_L, cv::Mat *img_R, cv::Mat *disp);
 
     void setConnect(int old_mode, int new_mode);
+};
+
+class top_view
+{
+
+public:
+    top_view();
+
+    ~top_view();
+
+    // malloc and set the grid coordinates
+    void initialTopView();
+
+    void updateTopView(int rows_interval, int cols_interval);
+
+    bool isInitialized() {return fg_topview;}
+
+    cv::Point** img_grid;
+
+    cv::Mat topview;
+
+private:
+    void releaseTopView();
+
+    bool fg_topview;
+
+    int img_col;
+
+    int img_col_half;
+
+    int img_row;
+
+    int z_min;  // minimum detection depth
+
+    int c;      // the number of adjacent image columns grouped into a polar slice
+
+    float k;    // length of interval
+
+    float view_angle;
+
+    int chord_length;
+
 };
 
 #endif // STEREO_VISION_H

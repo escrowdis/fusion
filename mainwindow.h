@@ -25,9 +25,6 @@ extern QDir project_path;
 // camera calibration
 #include "calibrationform.h"
 
-#define MIN_DISTANCE 200 // cm
-#define MAX_DISTANCE 3000
-
 static bool fg_running;
 
 namespace Ui {
@@ -74,6 +71,10 @@ private:
     cv::Mat disp_pseudo;
 
     void pseudoColorTable();
+
+    top_view* tv;
+
+    void display_topview();
     // ======================== End
 
     // Stereo vision param ====
@@ -231,6 +232,9 @@ private slots:
     void on_pushButton_lrf_retrieve_2_clicked();
 
     void on_pushButton_lrf_stop_2_clicked();
+    void on_pushButton_clicked();
+    void on_spinBox_topview_r_valueChanged(int arg1);
+    void on_spinBox_topview_c_valueChanged(int arg1);
 };
 
     // Mouse control ==========
