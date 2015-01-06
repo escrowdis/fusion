@@ -251,17 +251,18 @@ void stereo_vision::stereoMatch()
 
     disp_raw.convertTo(disp, CV_8U);
 
-    // data
-    for (int r = 0; r < IMG_H; r++) {
-        short int* ptr = (short int*) (disp_raw.data + r * disp_raw.step);
-        for (int c = 0 ; c< IMG_W; c++) {
-            data[r][c].disp = ptr[c];
-            if (data[r][c].disp > 0)
-                data[r][c].Z = cam_param.param_r / ptr[c];
-            else
-                data[r][c].Z = -1;
-        }
-    }
+    // merge into MainWindow::svDisplay
+//    // data
+//    for (int r = 0; r < IMG_H; r++) {
+//        short int* ptr = (short int*) (disp_raw.data + r * disp_raw.step);
+//        for (int c = 0 ; c< IMG_W; c++) {
+//            data[r][c].disp = ptr[c];
+//            if (data[r][c].disp > 0)
+//                data[r][c].Z = cam_param.param_r / ptr[c];
+//            else
+//                data[r][c].Z = -1;
+//        }
+//    }
 
     // data - disp_raw
 //    for (int r = 0; r < disp_raw.rows; r++) {

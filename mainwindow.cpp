@@ -66,6 +66,9 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->comboBox_camera_focal_length->addItem("12");
     ui->comboBox_camera_focal_length->addItem("4");
 
+    // pseudo color
+    disp_pseudo = cv::Mat::zeros(IMG_H, IMG_W, CV_8UC3);
+
     // top view
     tv->initialTopView();
     display_topview();
@@ -465,16 +468,20 @@ void MainWindow::svDisplay(cv::Mat *img_L, cv::Mat *img_R, cv::Mat *disp)
     ui->label_cam_img_L->setPixmap(QPixmap::fromImage(QImage::QImage(img_L->data, img_L->cols, img_L->rows, 3 * img_L->cols, QImage::Format_RGB888)).scaled(IMG_DIS_W, IMG_DIS_H));
     ui->label_cam_img_R->setPixmap(QPixmap::fromImage(QImage::QImage(img_R->data, img_R->cols, img_R->rows, 3 * img_R->cols, QImage::Format_RGB888)).scaled(IMG_DIS_W, IMG_DIS_H));
     if (ui->checkBox_do_depth->isChecked()) {
-        if (ui->checkBox_pseudo_color->isChecked()) {
-            disp_pseudo = cv::Mat::zeros(IMG_H, IMG_W, CV_8UC3);
-            uchar *ptr_color = color_table->scanLine(0);
-            for (int r = 0; r < IMG_H; r++) {
-                uchar* ptr = (uchar*) (disp_pseudo.data + r * disp_pseudo.step);
-                for (int c = 0; c < IMG_W; c++) {
-                    int z_est = 0;
-                    if (sv->data[r][c].disp > 0) {
+        if (ui->checkBox_pseudo_color->isChecked())
+            disp_pseudo.setTo(0);
+        uchar *ptr_color = color_table->scanLine(0);
+        for (int r = 0; r < IMG_H; r++) {
+            short int* ptr_raw = (short int*) (sv->disp_raw.data + r * sv->disp_raw.step);
+            uchar* ptr = (uchar*) (disp_pseudo.data + r * disp_pseudo.step);
+            for (int c = 0; c < IMG_W; c++) {
+                sv->data[r][c].disp = ptr_raw[c];
+                if (sv->data[r][c].disp > 0) {
+                    sv->data[r][c].Z = sv->cam_param.param_r / ptr_raw[c];
+                    if (ui->checkBox_pseudo_color->isChecked()) {
+                        int z_est;
                         z_est = sv->data[r][c].Z;
-                        //                    std::cout<<z_est<<" ";
+//                        std::cout<<z_est<<" ";
                         if (z_est >= MIN_DISTANCE && z_est <= MAX_DISTANCE) {
                             int jj = z_est - MIN_DISTANCE;
                             ptr[3 * c + 0] = ptr_color[3 * jj + 0];
@@ -492,14 +499,18 @@ void MainWindow::svDisplay(cv::Mat *img_L, cv::Mat *img_R, cv::Mat *disp)
                             ptr[3 * c + 2] = 0;
                         }
                     }
-                    //                else
+                }
+                else {
+                    sv->data[r][c].Z = -1;
                     //                    std::cout<<"0 ";
                 }
-                //            std::cout<<std::endl;
             }
-
-            ui->label_disp->setPixmap(QPixmap::fromImage(QImage::QImage(disp_pseudo.data, disp_pseudo.cols, disp_pseudo.rows, QImage::Format_RGB888)).scaled(IMG_DIS_W, IMG_DIS_H));
+            //            std::cout<<std::endl;
         }
+
+
+        if (ui->checkBox_pseudo_color->isChecked())
+            ui->label_disp->setPixmap(QPixmap::fromImage(QImage::QImage(disp_pseudo.data, disp_pseudo.cols, disp_pseudo.rows, QImage::Format_RGB888)).scaled(IMG_DIS_W, IMG_DIS_H));
         else
             ui->label_disp->setPixmap(QPixmap::fromImage(QImage::QImage(disp->data, disp->cols, disp->rows, disp->cols, QImage::Format_Indexed8)).scaled(IMG_DIS_W, IMG_DIS_H));
     }
