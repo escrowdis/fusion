@@ -513,7 +513,7 @@ top_view::~top_view()
 void top_view::releaseTopView()
 {
     if (fg_topview) {
-        for (int i = 0; i < (img_row + 2); i++)
+        for (int i = 0; i < (img_row + 1); i++)
             delete[] img_grid[i];
         delete[] img_grid;
         fg_topview = false;
@@ -523,9 +523,9 @@ void top_view::releaseTopView()
 void top_view::initialTopView()
 {
     if (!fg_topview) {
-        img_grid = new cv::Point * [img_row + 2];
-        for (int r = 0; r < img_row + 2; r++)
-            img_grid[r] = new cv::Point[img_col + 2];
+        img_grid = new cv::Point * [img_row + 1];
+        for (int r = 0; r < img_row + 1; r++)
+            img_grid[r] = new cv::Point[img_col + 1];
     }
 
     for (int r = 0; r < img_row + 1; r++) {
@@ -536,14 +536,14 @@ void top_view::initialTopView()
             x > 0.5 * chord_length ? 0.5 * chord_length : x;
 
             if (c == 0) {
-                img_grid[r][img_col_half + 1] = cv::Point(0.5 * chord_length - x, MAX_DISTANCE - z);
+                img_grid[r][img_col_half] = cv::Point(0.5 * chord_length - x, MAX_DISTANCE - z);
 #ifdef debug_info_sv_topview
                 cv::circle(topview, img_grid[r][img_col_half + 1], 3, cv::Scalar(0, 255, 0, 255), 5, 8, 0);
 #endif
             }
             else {
-                img_grid[r][img_col_half + 1 - c] = cv::Point(0.5 * chord_length - x, MAX_DISTANCE - z);
-                img_grid[r][img_col_half + 1 + c] = cv::Point(0.5 * chord_length + x, MAX_DISTANCE - z);
+                img_grid[r][img_col_half - c] = cv::Point(0.5 * chord_length - x, MAX_DISTANCE - z);
+                img_grid[r][img_col_half + c] = cv::Point(0.5 * chord_length + x, MAX_DISTANCE - z);
 #ifdef debug_info_sv_topview
                 cv::circle(topview, img_grid[r][img_col_half + 1 - c], 3, cv::Scalar(255, 0, 0, 255), 5, 8, 0);
                 cv::circle(topview, img_grid[r][img_col_half + 1 + c], 3, cv::Scalar(0, 0, 255, 255), 5, 8, 0);
@@ -551,8 +551,8 @@ void top_view::initialTopView()
             }
             if (r == img_row) {
                 x = MAX_DISTANCE * tan(0.5 * view_angle * CV_PI / 180.0 * c / img_col_half);
-                img_grid[r + 1][img_col_half + 1 - c] = cv::Point(0.5 * chord_length - x, 0);
-                img_grid[r + 1][img_col_half + 1 + c] = cv::Point(0.5 * chord_length + x, 0);
+                img_grid[r][img_col_half - c] = cv::Point(0.5 * chord_length - x, 0);
+                img_grid[r][img_col_half + c] = cv::Point(0.5 * chord_length + x, 0);
 #ifdef debug_info_sv_topview
                 cv::circle(topview, img_grid[r + 1][img_col_half + 1 - c], 3, cv::Scalar(255, 255, 0, 255), 5, 8, 0);
                 cv::circle(topview, img_grid[r + 1][img_col_half + 1 + c], 3, cv::Scalar(0, 255, 255, 255), 5, 8, 0);
@@ -576,14 +576,14 @@ void top_view::updateTopView(int rows_interval, int cols_interval)
     topview.setTo(cv::Scalar(0, 0, 0, 0));
 
     for (int r = 0; r < img_row + 1; r += rows_interval) {
-        cv::line(topview, img_grid[r][1], img_grid[r][img_col + 1], cv::Scalar(0, 255, 0, 255), 10, 8, 0);
+        cv::line(topview, img_grid[r][0], img_grid[r][img_col], cv::Scalar(0, 255, 0, 255), 10, 8, 0);
     }
     for (int c = 0; c < img_col_half + 1; c += cols_interval) {
 #ifdef debug_info_sv_topview
         std::cout<<img_col_half + 1 - c<<" ";
 #endif
-        cv::line(topview, img_grid[0][img_col_half + 1 - c], img_grid[img_row + 1][img_col_half + 1 - c], cv::Scalar(0, 255, 0, 255), 10, 8, 0);
-        cv::line(topview, img_grid[0][img_col_half + 1 + c], img_grid[img_row + 1][img_col_half + 1 + c], cv::Scalar(0, 255, 0, 255), 10, 8, 0);
+        cv::line(topview, img_grid[0][img_col_half - c], img_grid[img_row][img_col_half - c], cv::Scalar(0, 255, 0, 255), 10, 8, 0);
+        cv::line(topview, img_grid[0][img_col_half + c], img_grid[img_row][img_col_half + c], cv::Scalar(0, 255, 0, 255), 10, 8, 0);
     }
 #ifdef debug_info_sv_topview
     std::cout<<std::endl;
