@@ -490,11 +490,18 @@ top_view::top_view()
     fg_topview = false;
 
     img_col = 100;
+
     img_col_half = img_col / 2;
+
     img_row = 125;
+
     z_min = 250;
-    c = 6;
+
+    c = 6.4;
+
     k = 0.02;
+
+    thresh_free_space = 20;
 
     //**// diff cam, diff fov
     view_angle = 19.8;
@@ -516,6 +523,11 @@ void top_view::releaseTopView()
         for (int i = 0; i < (img_row + 1); i++)
             delete[] img_grid[i];
         delete[] img_grid;
+
+        for (int i = 0; i < (img_row + 1); i++)
+            delete[] grid_map[i];
+        delete[] grid_map;
+
         fg_topview = false;
     }
 }
@@ -526,6 +538,12 @@ void top_view::initialTopView()
         img_grid = new cv::Point * [img_row + 1];
         for (int r = 0; r < img_row + 1; r++)
             img_grid[r] = new cv::Point[img_col + 1];
+
+        grid_map = new int * [img_row];
+        for (int r = 0; r< img_row; r++)
+            grid_map[r] = new int[img_col];
+
+        resetTopView();
     }
 
     for (int r = 0; r < img_row + 1; r++) {
@@ -571,7 +589,7 @@ void top_view::initialTopView()
     fg_topview = true;
 }
 
-void top_view::updateTopView(int rows_interval, int cols_interval)
+void top_view::drawTopViewLines(int rows_interval, int cols_interval)
 {
     topview.setTo(cv::Scalar(0, 0, 0, 0));
 
@@ -588,4 +606,63 @@ void top_view::updateTopView(int rows_interval, int cols_interval)
 #ifdef debug_info_sv_topview
     std::cout<<std::endl;
 #endif
+}
+
+void top_view::resetTopView()
+{
+    for (int r = 0; r < img_row; r++)
+        for (int c = 0; c < img_col; c++)
+            grid_map[r][c] = 0;
+
+    // data mark is reset in objectProjectTopView
+}
+
+void top_view::pointProjectTopView(StereoData **data, bool fg_plot_points)
+{
+    resetTopView();
+
+    int grid_row, grid_col;
+    for (int r = 0; r < IMG_H; r++) {
+        for (int c = 0; c < IMG_W; c++) {
+            // reset
+            data[r][c].marked = -1;
+
+            // porject each 3D point onto a topview
+            if (data[r][c].disp > 0) {
+                grid_row = 1.0 * log10(1.0 * data[r][c].Z / z_min) / log10(1.0 + k);
+                grid_col = 360.0 * img_col_half * atan((c / (double)(IMG_W / img_col) - img_col_half) / data[r][c].Z) / (view_angle * CV_PI) + img_col_half;
+//                grid_col = 1.0 * c / 6.4; //**// old
+
+                // display each point on topview
+                if (fg_plot_points)
+                    if (grid_row >= 0 && grid_row < img_row + 1 &&
+                            grid_col >= 0 && grid_col < img_col + 1)
+                        cv::circle(topview, img_grid[grid_row][grid_col], 3, cv::Scalar(0, 0, 255, 255), 1, 8, 0);
+
+                // mark each point belongs to which cell
+                if (grid_row >= 0 && grid_row < img_row &&
+                        grid_col >= 0 && grid_col < img_col) {
+                    grid_map[img_row - grid_row - 1][grid_col]++;
+                    data[r][c].marked = 1000 * grid_row + grid_col;
+
+                }
+            }
+
+        }
+    }
+
+    // check whether the cell is satisfied as an object
+    cv::Point pts[4];
+    for (int r = 0; r < img_row; r++) {
+        for (int c = 0; c < img_col; c++) {
+            if (grid_map[r][c] > thresh_free_space) {
+                pts[0] = img_grid[img_row - r][c];
+                pts[1] = img_grid[img_row - (r + 1)][c];
+                pts[2] = img_grid[img_row - (r + 1)][c + 1];
+                pts[3] = img_grid[img_row - r][c + 1];
+
+                cv::fillConvexPoly(topview, pts, 4, cv::Scalar(255, 0, 0, 255), 8, 0);
+            }
+        }
+    }
 }

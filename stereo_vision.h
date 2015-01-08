@@ -71,6 +71,10 @@ public:
     bool fg_calib;                      // check whether the calibration button is checked
     bool fg_stereoMatch;                // check whether do the correspondence matching
 
+    // disparity image
+    cv::Mat disp_raw;
+    cv::Mat disp;
+
     // depth estimatiom
     struct camParam
     {
@@ -87,12 +91,15 @@ public:
         int X;
         int Y;
         int Z;
+        int marked; // located cell in topview
+                    // ex: row = 10, col = 95 -> marked = 10095 (1000 * row + col);
 
         StereoData() {
             disp = -1;
             X = -1;
             Y = -1;
             Z = -1;
+            marked = -1;
         }
     };
 
@@ -169,10 +176,6 @@ private:
     cv::Mat img_match_L;
     cv::Mat img_match_R;
 
-    // disparity image
-    cv::Mat disp_raw;
-    cv::Mat disp;
-
 
 private slots:
     // BM ===========================
@@ -223,6 +226,8 @@ class top_view
 {
 
 public:
+    typedef stereo_vision::StereoData StereoData;
+
     top_view();
 
     ~top_view();
@@ -230,20 +235,24 @@ public:
     // malloc and set the grid coordinates
     void initialTopView();
 
-    void updateTopView(int rows_interval, int cols_interval);
+    void drawTopViewLines(int rows_interval, int cols_interval);
+
+    void pointProjectTopView(StereoData **data, bool fg_plot_points);
 
     bool isInitialized() {return fg_topview;}
 
-    cv::Point** img_grid;
+    cv::Point** img_grid;   // topview background cell points
 
-    cv::Mat topview;
+    cv::Mat topview;    // topview on label
 
 private:
     void releaseTopView();
 
-    bool fg_topview;
+    void resetTopView();
 
-    int img_col;
+    bool fg_topview;    // whether topview is initialized
+
+    int img_col;    // topview size on label
 
     int img_col_half;
 
@@ -251,13 +260,17 @@ private:
 
     int z_min;  // minimum detection depth
 
-    int c;      // the number of adjacent image columns grouped into a polar slice
+    float c;    //**// the number of adjacent image columns grouped into a polar slice
 
     float k;    // length of interval
 
     float view_angle;
 
     int chord_length;
+
+    int** grid_map; // Storing pixels into cells
+
+    int thresh_free_space;  // check whether the cell is satisfied as an object
 
 };
 

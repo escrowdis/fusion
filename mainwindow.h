@@ -74,7 +74,7 @@ private:
 
     top_view* tv;
 
-    void display_topview();
+    void svDisplayTopView();
     // ======================== End
 
     // Stereo vision param ====

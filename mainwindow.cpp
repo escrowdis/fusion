@@ -49,6 +49,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
     // Initialization
     sv = new stereo_vision();
+
     tv = new top_view();
 
     fg_capturing = false;
@@ -71,7 +72,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
     // top view
     tv->initialTopView();
-    display_topview();
+    svDisplayTopView();
 
     // Stereo vision =========================== End
 
@@ -289,22 +290,22 @@ void MainWindow::paramWrite()
     fs.release();
 }
 
-void MainWindow::display_topview()
+void MainWindow::svDisplayTopView()
 {
     if (tv->isInitialized()) {
-        tv->updateTopView(ui->spinBox_topview_r->value(), ui->spinBox_topview_c->value());
+        tv->drawTopViewLines(ui->spinBox_topview_r->value(), ui->spinBox_topview_c->value());
         ui->label_top_view->setPixmap(QPixmap::fromImage(QImage::QImage(tv->topview.data, tv->topview.cols, tv->topview.rows, QImage::Format_RGBA8888)).scaled(270, 750));
     }
 }
 
 void MainWindow::on_spinBox_topview_r_valueChanged(int arg1)
 {
-    display_topview();
+    svDisplayTopView();
 }
 
 void MainWindow::on_spinBox_topview_c_valueChanged(int arg1)
 {
-    display_topview();
+    svDisplayTopView();
 }
 
 void MainWindow::pseudoColorTable()
@@ -475,9 +476,17 @@ void MainWindow::svDisplay(cv::Mat *img_L, cv::Mat *img_R, cv::Mat *disp)
             short int* ptr_raw = (short int*) (sv->disp_raw.data + r * sv->disp_raw.step);
             uchar* ptr = (uchar*) (disp_pseudo.data + r * disp_pseudo.step);
             for (int c = 0; c < IMG_W; c++) {
+                //**// non-overlapping part
+//                if (c < sv->param_sgbm.num_of_disp / 2 && sv->input_mode == SV::STEREO_MATCH::SGBM)
+//                    continue;
+//                else if (c < sv->param_bm.num_of_disp / 2 && sv->input_mode == SV::STEREO_MATCH::BM)
+//                    continue;
+                // Depth calculation
                 sv->data[r][c].disp = ptr_raw[c];
                 if (sv->data[r][c].disp > 0) {
                     sv->data[r][c].Z = sv->cam_param.param_r / ptr_raw[c];
+
+                    // pseudo color transform
                     if (ui->checkBox_pseudo_color->isChecked()) {
                         int z_est;
                         z_est = sv->data[r][c].Z;
@@ -513,7 +522,13 @@ void MainWindow::svDisplay(cv::Mat *img_L, cv::Mat *img_R, cv::Mat *disp)
             ui->label_disp->setPixmap(QPixmap::fromImage(QImage::QImage(disp_pseudo.data, disp_pseudo.cols, disp_pseudo.rows, QImage::Format_RGB888)).scaled(IMG_DIS_W, IMG_DIS_H));
         else
             ui->label_disp->setPixmap(QPixmap::fromImage(QImage::QImage(disp->data, disp->cols, disp->rows, disp->cols, QImage::Format_Indexed8)).scaled(IMG_DIS_W, IMG_DIS_H));
+
+        // update topview
+        svDisplayTopView();
+        tv->pointProjectTopView(sv->data, ui->checkBox_topview_plot_points->isChecked());
+        ui->label_top_view->setPixmap(QPixmap::fromImage(QImage::QImage(tv->topview.data, tv->topview.cols, tv->topview.rows, QImage::Format_RGBA8888)).scaled(270, 750));
     }
+
     lock.unlock();
 #ifdef debug_info_sv
     qDebug()<<"disp - End"<<&img_L;
