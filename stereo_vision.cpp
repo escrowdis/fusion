@@ -39,6 +39,8 @@ stereo_vision::~stereo_vision()
     close();
     sgbm.release();
     bm.release();
+
+    delete color_table;
 }
 
 void stereo_vision::resetOpen(int device_index_L, int device_index_R)
@@ -483,6 +485,68 @@ void stereo_vision::change_sgbm_speckle_range(int value)
 #ifdef debug_info_sv_param
     qDebug()<<sgbm->getSpeckleRange();
 #endif
+}
+
+void stereo_vision::pseudoColorTable()
+{
+    // ==== Produce pseudo-color table
+    color_table = new QImage(MAX_DISTANCE - MIN_DISTANCE, 12, QImage::Format_RGB888) ;
+
+    float hue_start_angle = 0.0;
+    float hue_end_angle = 240.0;
+
+    float h = 0.0;
+    float s = 1.0;
+    float v = 255.0;
+    float step = (hue_end_angle - hue_start_angle) / (MAX_DISTANCE - MIN_DISTANCE);
+
+    float f;
+    int hi, p, q, t;
+
+    for (int r = 0; r < color_table->height(); r++) {
+        uchar* ptr = color_table->scanLine(r);
+        for (int c =0; c < color_table->width(); c++) {
+            h = c * step;
+            hi = (int)(h / 60.0) % 6;
+            f = h / 60.0 - hi;
+            p = v * (1 - s);
+            q = v * (1 - f * s);
+            t = v * (1 - (1 - f) * s);
+
+            switch (hi) {
+            case 0:
+                ptr[3 * c + 0] = v;
+                ptr[3 * c + 1] = t;
+                ptr[3 * c + 2] = p;
+                break;
+            case 1:
+                ptr[3 * c + 0] = q;
+                ptr[3 * c + 1] = v;
+                ptr[3 * c + 2] = p;
+                break;
+            case 2:
+                ptr[3 * c + 0] = p;
+                ptr[3 * c + 1] = v;
+                ptr[3 * c + 2] = t;
+                break;
+            case 3:
+                ptr[3 * c + 0] = p;
+                ptr[3 * c + 1] = q;
+                ptr[3 * c + 2] = v;
+                break;
+            case 4:
+                ptr[3 * c + 0] = t;
+                ptr[3 * c + 1] = p;
+                ptr[3 * c + 2] = v;
+                break;
+            case 5:
+                ptr[3 * c + 0] = v;
+                ptr[3 * c + 1] = p;
+                ptr[3 * c + 2] = q;
+                break;
+            }
+        }
+    }
 }
 
 top_view::top_view()

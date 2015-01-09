@@ -75,6 +75,12 @@ public:
     cv::Mat disp_raw;
     cv::Mat disp;
 
+    // psuedo-color table
+    QImage *color_table;
+    cv::Mat disp_pseudo;
+
+    void pseudoColorTable();
+
     // depth estimatiom
     struct camParam
     {

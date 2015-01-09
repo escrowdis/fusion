@@ -65,13 +65,6 @@ private:
 
     void camStop() {}
 
-    // psuedo-color table
-    QImage *color_table;
-
-    cv::Mat disp_pseudo;
-
-    void pseudoColorTable();
-
     top_view* tv;
 
     void svDisplayTopView();
