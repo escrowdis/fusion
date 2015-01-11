@@ -572,6 +572,9 @@ top_view::top_view()
 
     chord_length = 1080;
 
+    topview_BG.create(MAX_DISTANCE, chord_length, CV_8UC4);
+    topview_BG.setTo(cv::Scalar(0, 0, 0, 0));
+
     topview.create(MAX_DISTANCE, chord_length, CV_8UC4);
     topview.setTo(cv::Scalar(0, 0, 0, 0));
 }
@@ -655,17 +658,26 @@ void top_view::initialTopView()
 
 void top_view::drawTopViewLines(int rows_interval, int cols_interval)
 {
-    topview.setTo(cv::Scalar(0, 0, 0, 0));
+    topview_BG.setTo(cv::Scalar(0, 0, 0, 0));
 
+    // Background color
+    cv::Point pts[4];
+    pts[0] = img_grid[0][0];
+    pts[1] = img_grid[0][img_col];
+    pts[2] = img_grid[img_row][img_col];
+    pts[3] = img_grid[img_row][0];
+    cv::fillConvexPoly(topview_BG, pts, 4, cv::Scalar(161, 158, 149, 255), 8, 0);
+
+    // draw lines
     for (int r = 0; r < img_row + 1; r += rows_interval) {
-        cv::line(topview, img_grid[r][0], img_grid[r][img_col], cv::Scalar(0, 255, 0, 255), 10, 8, 0);
+        cv::line(topview_BG, img_grid[r][0], img_grid[r][img_col], cv::Scalar(0, 255, 0, 255), 10, 8, 0);
     }
     for (int c = 0; c < img_col_half + 1; c += cols_interval) {
 #ifdef debug_info_sv_topview
         std::cout<<img_col_half + 1 - c<<" ";
 #endif
-        cv::line(topview, img_grid[0][img_col_half - c], img_grid[img_row][img_col_half - c], cv::Scalar(0, 255, 0, 255), 10, 8, 0);
-        cv::line(topview, img_grid[0][img_col_half + c], img_grid[img_row][img_col_half + c], cv::Scalar(0, 255, 0, 255), 10, 8, 0);
+        cv::line(topview_BG, img_grid[0][img_col_half - c], img_grid[img_row][img_col_half - c], cv::Scalar(0, 255, 0, 255), 10, 8, 0);
+        cv::line(topview_BG, img_grid[0][img_col_half + c], img_grid[img_row][img_col_half + c], cv::Scalar(0, 255, 0, 255), 10, 8, 0);
     }
 #ifdef debug_info_sv_topview
     std::cout<<std::endl;
@@ -674,6 +686,8 @@ void top_view::drawTopViewLines(int rows_interval, int cols_interval)
 
 void top_view::resetTopView()
 {
+    topview.setTo(cv::Scalar(0, 0, 0, 0));
+
     for (int r = 0; r < img_row; r++)
         for (int c = 0; c < img_col; c++)
             grid_map[r][c] = 0;
@@ -681,7 +695,7 @@ void top_view::resetTopView()
     // data mark is reset in objectProjectTopView
 }
 
-void top_view::pointProjectTopView(StereoData **data, bool fg_plot_points)
+void top_view::pointProjectTopView(StereoData **data, QImage *color_table, bool fg_plot_points)
 {
     resetTopView();
 
@@ -717,6 +731,8 @@ void top_view::pointProjectTopView(StereoData **data, bool fg_plot_points)
 
     // check whether the cell is satisfied as an object
     cv::Point pts[4];
+    uchar* ptr = color_table->scanLine(0);
+    int p;
     for (int r = 0; r < img_row; r++) {
         for (int c = 0; c < img_col; c++) {
             if (grid_map[r][c] > thresh_free_space) {
@@ -725,7 +741,9 @@ void top_view::pointProjectTopView(StereoData **data, bool fg_plot_points)
                 pts[2] = img_grid[img_row - (r + 1)][c + 1];
                 pts[3] = img_grid[img_row - r][c + 1];
 
-                cv::fillConvexPoly(topview, pts, 4, cv::Scalar(255, 0, 0, 255), 8, 0);
+                p = (MAX_DISTANCE - 0.5 * (pts[0].y + pts[1].y)) - z_min;
+
+                cv::fillConvexPoly(topview, pts, 4, cv::Scalar(ptr[3 * p + 0], ptr[3 * p + 1], ptr[3 * p + 2], 255), 8, 0);
             }
         }
     }

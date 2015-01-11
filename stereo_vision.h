@@ -243,13 +243,15 @@ public:
 
     void drawTopViewLines(int rows_interval, int cols_interval);
 
-    void pointProjectTopView(StereoData **data, bool fg_plot_points);
+    void pointProjectTopView(StereoData **data, QImage *color_table, bool fg_plot_points);
 
     bool isInitialized() {return fg_topview;}
 
     cv::Point** img_grid;   // topview background cell points
 
     cv::Mat topview;    // topview on label
+
+    cv::Mat topview_BG;
 
 private:
     void releaseTopView();
@@ -270,13 +272,14 @@ private:
 
     float k;    // length of interval
 
-    float view_angle;
+    float view_angle;   // the view angle of stereo vision
 
-    int chord_length;
+    int chord_length;   // the chord length of stereo vision
 
     int** grid_map; // Storing pixels into cells
 
-    int thresh_free_space;  // check whether the cell is satisfied as an object
+    int thresh_free_space;  // check whether the cell is satisfied as an object.
+                            // Each cell containing more than this value is consider as an object.
 
 };
 

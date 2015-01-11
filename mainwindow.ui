@@ -958,6 +958,19 @@ parameters</string>
      <string>Top View</string>
     </property>
    </widget>
+   <widget class="QLabel" name="label_top_view_bg">
+    <property name="geometry">
+     <rect>
+      <x>1080</x>
+      <y>20</y>
+      <width>270</width>
+      <height>750</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Top View Background</string>
+    </property>
+   </widget>
    <zorder>pushButton</zorder>
    <zorder>tabWidget</zorder>
    <zorder>layoutWidget</zorder>
@@ -968,6 +981,7 @@ parameters</string>
    <zorder>layoutWidget</zorder>
    <zorder>label_color_table</zorder>
    <zorder>label_depth_info</zorder>
+   <zorder>label_top_view_bg</zorder>
    <zorder>label_top_view</zorder>
   </widget>
   <widget class="QMenuBar" name="menuBar">

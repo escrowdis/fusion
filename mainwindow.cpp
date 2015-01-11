@@ -298,7 +298,7 @@ void MainWindow::svDisplayTopView()
 {
     if (tv->isInitialized()) {
         tv->drawTopViewLines(ui->spinBox_topview_r->value(), ui->spinBox_topview_c->value());
-        ui->label_top_view->setPixmap(QPixmap::fromImage(QImage::QImage(tv->topview.data, tv->topview.cols, tv->topview.rows, QImage::Format_RGBA8888)).scaled(270, 750));
+        ui->label_top_view_bg->setPixmap(QPixmap::fromImage(QImage::QImage(tv->topview_BG.data, tv->topview_BG.cols, tv->topview_BG.rows, QImage::Format_RGBA8888)).scaled(270, 750));
     }
 }
 
@@ -415,11 +415,11 @@ void MainWindow::svDisplay(cv::Mat *img_L, cv::Mat *img_R, cv::Mat *disp)
             short int* ptr_raw = (short int*) (sv->disp_raw.data + r * sv->disp_raw.step);
             uchar* ptr = (uchar*) (sv->disp_pseudo.data + r * sv->disp_pseudo.step);
             for (int c = 0; c < IMG_W; c++) {
-                //**// non-overlapping part
-//                if (c < sv->param_sgbm.num_of_disp / 2 && sv->input_mode == SV::STEREO_MATCH::SGBM)
-//                    continue;
-//                else if (c < sv->param_bm.num_of_disp / 2 && sv->input_mode == SV::STEREO_MATCH::BM)
-//                    continue;
+                // non-overlapping part
+                if (c < sv->param_sgbm.num_of_disp / 2 && sv->input_mode == SV::STEREO_MATCH::SGBM)
+                    continue;
+                else if (c < sv->param_bm.num_of_disp / 2 && sv->input_mode == SV::STEREO_MATCH::BM)
+                    continue;
                 // Depth calculation
                 sv->data[r][c].disp = ptr_raw[c];
                 if (sv->data[r][c].disp > 0) {
@@ -458,13 +458,12 @@ void MainWindow::svDisplay(cv::Mat *img_L, cv::Mat *img_R, cv::Mat *disp)
 
 
         if (ui->checkBox_pseudo_color->isChecked())
-            ui->label_disp->setPixmap(QPixmap::fromImage(QImage::QImage(disp_pseudo.data, disp_pseudo.cols, disp_pseudo.rows, QImage::Format_RGB888)).scaled(IMG_DIS_W, IMG_DIS_H));
+            ui->label_disp->setPixmap(QPixmap::fromImage(QImage::QImage(sv->disp_pseudo.data, sv->disp_pseudo.cols, sv->disp_pseudo.rows, QImage::Format_RGB888)).scaled(IMG_DIS_W, IMG_DIS_H));
         else
             ui->label_disp->setPixmap(QPixmap::fromImage(QImage::QImage(disp->data, disp->cols, disp->rows, disp->cols, QImage::Format_Indexed8)).scaled(IMG_DIS_W, IMG_DIS_H));
 
         // update topview
-        svDisplayTopView();
-        tv->pointProjectTopView(sv->data, ui->checkBox_topview_plot_points->isChecked());
+        tv->pointProjectTopView(sv->data, sv->color_table, ui->checkBox_topview_plot_points->isChecked());
         ui->label_top_view->setPixmap(QPixmap::fromImage(QImage::QImage(tv->topview.data, tv->topview.cols, tv->topview.rows, QImage::Format_RGBA8888)).scaled(270, 750));
     }
 
