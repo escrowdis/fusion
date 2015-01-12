@@ -76,13 +76,23 @@ MainWindow::MainWindow(QWidget *parent) :
 
     // Stereo vision =========================== End
 
+    // Radar ESR ===============================
+    rc = new RadarController();
+
+    fg_retrieving = false;
+
+    QObject::connect(rc, SIGNAL(radarUpdateGui(cv::Mat *)), this, SLOT(radarDisplay(cv::Mat *)));
+    // Radar ESR =============================== End
+
     // Thread control ==========================
     f_sv.setPaused(true);
     f_lrf.setPaused(true);
     f_lrf_buf.setPaused(true);
+    f_radar.setPaused(true);
     sync.addFuture(f_sv);
     sync.addFuture(f_lrf);
     sync.addFuture(f_lrf_buf);
+    sync.addFuture(f_radar);
     // ========================================= End
 
     // camera calibration ======================
@@ -127,6 +137,7 @@ MainWindow::~MainWindow()
 //    if (reply == QMessageBox::Yes)
         paramWrite();
     cv::destroyAllWindows();
+    delete rc;
     lrf->close();
     delete lrf;
     delete sv;
@@ -508,9 +519,16 @@ void MainWindow::on_pushButton_cam_stop_clicked()
 {
     fg_capturing = false;
     f_sv.setPaused(true);
+    threadCheck();
 }
 
-void MainWindow::threadbuffering()
+void MainWindow::threadCheck()
+{
+    if (fg_running && !fg_acquiring && !fg_buffering && !fg_capturing && !fg_retrieving)
+        fg_running = false;
+}
+
+void MainWindow::threadBuffering()
 {
     // unimplement
     while (fg_buffering) {
@@ -530,6 +548,7 @@ void MainWindow::threadProcessing()
         if (fg_capturing && !f_sv.isRunning()) {
 //            sv->stereoVision();
             f_sv = QtConcurrent::run(sv, &stereo_vision::stereoVision);
+            qApp->processEvents();
         }
         ui->label_sv_proc->setText(QString::number(t_proc.restart()));
 
@@ -537,6 +556,7 @@ void MainWindow::threadProcessing()
         if (fg_acquiring && !f_lrf.isRunning()) {
 //            lrfReadData();
             f_lrf = QtConcurrent::run(this, &MainWindow::lrfReadData);
+            qApp->processEvents();
         }
         ui->label_lrf_proc->setText(QString::number(t_proc.restart()));
 
@@ -544,12 +564,18 @@ void MainWindow::threadProcessing()
         if (fg_buffering && lrf->bufNotFull() && !f_lrf_buf.isRunning()) {
 //            lrf->pushToBuf();
             f_lrf_buf = QtConcurrent::run(lrf, &lrf_controller::pushToBuf);
+            qApp->processEvents();
         }
         ui->label_lrf_buf_proc->setText(QString::number(t_proc.restart()));
 
-        sync.waitForFinished();
+        // Radar ESR
+        if (fg_retrieving && !f_radar.isRunning()) {
+//            rc->retrievingData();
+            f_radar = QtConcurrent::run(rc, &RadarController::retrievingData);
+            qApp->processEvents();
+        }
 
-        qApp->processEvents();
+        sync.waitForFinished();
     }
 
     sync.setCancelOnWait(true);
@@ -1021,13 +1047,13 @@ void MainWindow::on_pushButton_lrf_read_range_clicked()
         uchar* ptr_p = img_lrf_proc.ptr<uchar>(r);
         for (int c = 0; c < img_lrf.cols - pxl_dev; c++) {
             int neighbor = ptr[c + pxl_dev];
-            int small = ptr[c] > neighbor ? neighbor : ptr[c];
-            int big = ptr[c] > neighbor ? ptr[c] : neighbor;
-            double ratio = 1.0 * (big - small) / small;
+            int smaller = ptr[c] > neighbor ? neighbor : ptr[c];
+            int bigger = ptr[c] > neighbor ? ptr[c] : neighbor;
+            double ratio = 1.0 * (bigger - smaller) / smaller;
             neighbor = img_lrf.ptr<short int>(r + pxl_dev)[c];
-            small = ptr[c] > neighbor ? neighbor : ptr[c];
-            big = ptr[c] > neighbor ? ptr[c] : neighbor;
-            double ratio_1 = 1.0 * (big - small) / small;
+            smaller = ptr[c] > neighbor ? neighbor : ptr[c];
+            bigger = ptr[c] > neighbor ? ptr[c] : neighbor;
+            double ratio_1 = 1.0 * (bigger - smaller) / smaller;
             if (ratio > 0.5 || ratio_1 > 0.5) {
                 ptr_p[c] = 255;
             }
@@ -1120,9 +1146,47 @@ void MainWindow::on_pushButton_lrf_stop_2_clicked()
     fg_acquiring = false;
 
     lrf->stopRetrieve();
+    threadCheck();
 }
 
 void MainWindow::on_pushButton_clicked()
 {
 
+}
+
+void MainWindow::on_pushButton_radar_open_clicked()
+{
+    if (rc->open())
+        report("Radar's Opened");
+    else
+        reportError("radar", "Error!", "Failed to open");
+}
+
+void MainWindow::on_pushButton_radar_write_clicked()
+{
+    rc->write();
+}
+
+void MainWindow::on_pushButton_radar_bus_on_clicked()
+{
+    rc->busOn();
+
+    fg_retrieving = true;
+    f_radar.setPaused(false);
+    if (!fg_running)
+        threadProcessing();
+}
+
+void MainWindow::on_pushButton_radar_bus_off_clicked()
+{
+    fg_retrieving = false;
+    f_radar.setPaused(true);
+
+    rc->busOff();
+    threadCheck();
+}
+
+void MainWindow::radarDisplay(cv::Mat *img)
+{
+    ui->label_lrf_data->setPixmap(QPixmap::fromImage(QImage::QImage(img->data, img->cols, img->rows, 3 * img->cols, QImage::Format_RGB888)));\
 }

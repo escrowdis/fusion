@@ -25,6 +25,9 @@ extern QDir project_path;
 // camera calibration
 #include "calibrationform.h"
 
+// Radar ESR controller
+#include "radarcontroller.h"
+
 static bool fg_running;
 
 namespace Ui {
@@ -55,6 +58,12 @@ private:
     void paramWrite();
 
     void readFromTxt(QString file_name, cv::Mat *output);
+
+    // Radar ESR ==============
+    RadarController* rc;
+
+    bool fg_retrieving;
+    // ======================== End
 
     // Stereo vision ==========
     stereo_vision* sv;
@@ -107,11 +116,14 @@ private:
     QFuture<bool> f_sv;
     QFuture<bool> f_lrf;
     QFuture<void> f_lrf_buf;
+    QFuture<void> f_radar;
 //    QFutureWatcher<void> fw_sv;
 //    QFutureWatcher<void> fw_lrf;
 //    QFutureWatcher<void> fw_lrf_buf;
 
-    void threadbuffering();
+    void threadCheck();
+
+    void threadBuffering();
 
     void threadProcessing();
     // ======================== End
@@ -189,6 +201,10 @@ private slots:
     void closeFormCalib(void);
     // ======================== End
 
+    // Radar ESR ==============
+    void radarDisplay(cv::Mat *img);
+    // ======================== End
+
     // Mouse control ==========
     void mouseXY(int x, int y);
     // ======================== End
@@ -229,6 +245,10 @@ private slots:
     void on_pushButton_clicked();
     void on_spinBox_topview_r_valueChanged(int arg1);
     void on_spinBox_topview_c_valueChanged(int arg1);
+    void on_pushButton_radar_open_clicked();
+    void on_pushButton_radar_write_clicked();
+    void on_pushButton_radar_bus_on_clicked();
+    void on_pushButton_radar_bus_off_clicked();
 };
 
     // Mouse control ==========
