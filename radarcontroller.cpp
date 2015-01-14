@@ -16,6 +16,8 @@ RadarController::RadarController() : TopView(1)
     topview.create(MAX_DISTANCE, chord_length, CV_8UC4);
     topview.setTo(cv::Scalar(0, 0, 0, 0));
 
+    time_gap = 10;
+    t.start();
 }
 
 RadarController::~RadarController()
@@ -181,9 +183,14 @@ void RadarController::retrievingData()
 //            }
         }
 
-//        ui->label_5->setText(QString::number(detected_obj));
+        if (t.elapsed() > 10) {
+            emit radarUpdateGUI(&img_radar, detected_obj);
+//            pointProjectTopView(esr_obj, color_table);
+            t.restart();
+        }
+    }
+}
 
-        emit radarUpdateGui(&img_radar);
 void RadarController::pointProjectTopView(ESR_track_object_info *data, QImage *color_table)
 {
     resetTopView();

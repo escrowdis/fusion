@@ -34,6 +34,9 @@ stereo_vision::stereo_vision() : TopView(20)
 
     topview.create(MAX_DISTANCE, chord_length, CV_8UC4);
     topview.setTo(cv::Scalar(0, 0, 0, 0));
+
+    time_gap = 10;
+    t.start();
 }
 
 stereo_vision::~stereo_vision()
@@ -328,7 +331,10 @@ bool stereo_vision::stereoVision()
     qDebug()<<"run"<<&img_L<<"emit"<<&img_r_L;
 #endif
 
-    emit svUpdateGUI(&img_r_L, &img_r_R, &disp);
+    if (t.elapsed() > time_gap) {
+        emit svUpdateGUI(&img_r_L, &img_r_R, &disp);
+        t.restart();
+    }
     return true;
 }
 

@@ -2,6 +2,7 @@
 #define RADARCONTROLLER_H
 
 #include <QObject>
+#include <QTime>
 
 #include <iostream>
 #include <bitset>
@@ -70,6 +71,9 @@ private:
     // Topview =====================
     void pointProjectTopView(ESR_track_object_info *data, QImage *color_table);
     // ============================= End
+    QTime t;                        // control gui not to update too fast
+    int time_gap;
+
     // CAN bus params ==============
     long            id;
     unsigned char   data[8];

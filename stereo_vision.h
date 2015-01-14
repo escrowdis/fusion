@@ -5,6 +5,7 @@
 
 //#include <QThread>
 #include <QImage>
+#include <QTime>
 #include <QFile>
 #include <QDir>
 extern QDir project_path;
@@ -155,6 +156,8 @@ private:
     bool fg_cam_L, fg_cam_R;            // open or not
     bool fg_cam_opened;
     bool fg_calib_loaded;               // load the calibration files or not
+    QTime t;                            // control gui not to update too fast
+    int time_gap;
 
     // capture from camera
     int device_index_L;
