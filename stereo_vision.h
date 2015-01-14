@@ -15,13 +15,13 @@ extern QReadWriteLock lock;
 
 #include <opencv2/opencv.hpp>
 
+// topview
+#include "topview.h"
+
 #define IMG_W 640
 #define IMG_H 480
 #define IMG_DIS_W 320
 #define IMG_DIS_H 240
-
-#define MIN_DISTANCE 200 // cm
-#define MAX_DISTANCE 3000
 
 namespace SV {
 
@@ -37,7 +37,7 @@ enum INPUT_SOURCE {
 
 }
 
-class stereo_vision : public QObject
+class stereo_vision : public QObject, public TopView
 {
     Q_OBJECT
 
@@ -74,12 +74,7 @@ public:
     // disparity image
     cv::Mat disp_raw;
     cv::Mat disp;
-
-    // psuedo-color table
-    QImage *color_table;
     cv::Mat disp_pseudo;
-
-    void pseudoColorTable();
 
     // depth estimatiom
     struct camParam
@@ -141,6 +136,10 @@ public:
         int speckle_range;
     }param_bm;
 
+    // ============================= End
+
+    // Topview =====================
+    void pointProjectTopView(StereoData **data, QImage *color_table, bool fg_plot_points);
     // ============================= End
 
 private:
@@ -226,61 +225,6 @@ signals:
     void svUpdateGUI(cv::Mat *img_L, cv::Mat *img_R, cv::Mat *disp);
 
     void setConnect(int old_mode, int new_mode);
-};
-
-class top_view
-{
-
-public:
-    typedef stereo_vision::StereoData StereoData;
-
-    top_view();
-
-    ~top_view();
-
-    // malloc and set the grid coordinates
-    void initialTopView();
-
-    void drawTopViewLines(int rows_interval, int cols_interval);
-
-    void pointProjectTopView(StereoData **data, QImage *color_table, bool fg_plot_points);
-
-    bool isInitialized() {return fg_topview;}
-
-    cv::Point** img_grid;   // topview background cell points
-
-    cv::Mat topview;    // topview on label
-
-    cv::Mat topview_BG;
-
-private:
-    void releaseTopView();
-
-    void resetTopView();
-
-    bool fg_topview;    // whether topview is initialized
-
-    int img_col;    // topview size on label
-
-    int img_col_half;
-
-    int img_row;
-
-    int z_min;  // minimum detection depth
-
-    float c;    //**// the number of adjacent image columns grouped into a polar slice
-
-    float k;    // length of interval
-
-    float view_angle;   // the view angle of stereo vision
-
-    int chord_length;   // the chord length of stereo vision
-
-    int** grid_map; // Storing pixels into cells
-
-    int thresh_free_space;  // check whether the cell is satisfied as an object.
-                            // Each cell containing more than this value is consider as an object.
-
 };
 
 #endif // STEREO_VISION_H

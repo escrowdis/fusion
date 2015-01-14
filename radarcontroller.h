@@ -10,7 +10,10 @@
 
 #include <opencv2/opencv.hpp>
 
-class RadarController : public QObject
+// topview
+#include "topview.h"
+
+class RadarController : public QObject, public TopView
 {
     Q_OBJECT
 
@@ -63,6 +66,10 @@ private:
 
     ESR_track_object_info* esr_obj;
 
+
+    // Topview =====================
+    void pointProjectTopView(ESR_track_object_info *data, QImage *color_table);
+    // ============================= End
     // CAN bus params ==============
     long            id;
     unsigned char   data[8];

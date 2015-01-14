@@ -50,8 +50,6 @@ MainWindow::MainWindow(QWidget *parent) :
     // Initialization
     sv = new stereo_vision();
 
-    tv = new top_view();
-
     fg_capturing = false;
 
     QObject::connect(sv, SIGNAL(svUpdateGUI(cv::Mat *, cv::Mat *, cv::Mat *)), this, SLOT(svDisplay(cv::Mat *, cv::Mat *, cv::Mat *)));
@@ -67,11 +65,7 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->comboBox_camera_focal_length->addItem("12");
     ui->comboBox_camera_focal_length->addItem("4");
 
-    // pseudo color
-    sv->disp_pseudo = cv::Mat::zeros(IMG_H, IMG_W, CV_8UC3);
-
     // top view
-    tv->initialTopView();
     svDisplayTopView();
 
     // Stereo vision =========================== End
@@ -104,7 +98,6 @@ MainWindow::MainWindow(QWidget *parent) :
     // ========================================= End
 
     // Pseudo color table ======================
-    sv->pseudoColorTable();
     ui->label_color_table->setScaledContents(true) ;
     ui->label_color_table->setPixmap(QPixmap::fromImage(*sv->color_table));
     // ========================================= End
@@ -307,9 +300,9 @@ void MainWindow::paramWrite()
 
 void MainWindow::svDisplayTopView()
 {
-    if (tv->isInitialized()) {
-        tv->drawTopViewLines(ui->spinBox_topview_r->value(), ui->spinBox_topview_c->value());
-        ui->label_top_view_bg->setPixmap(QPixmap::fromImage(QImage::QImage(tv->topview_BG.data, tv->topview_BG.cols, tv->topview_BG.rows, QImage::Format_RGBA8888)).scaled(270, 750));
+    if (sv->isInitializedTopView()) {
+        sv->drawTopViewLines(ui->spinBox_topview_r->value(), ui->spinBox_topview_c->value());
+        ui->label_top_view_bg->setPixmap(QPixmap::fromImage(QImage::QImage(sv->topview_BG.data, sv->topview_BG.cols, sv->topview_BG.rows, QImage::Format_RGBA8888)).scaled(270, 750));
     }
 }
 
@@ -474,8 +467,8 @@ void MainWindow::svDisplay(cv::Mat *img_L, cv::Mat *img_R, cv::Mat *disp)
             ui->label_disp->setPixmap(QPixmap::fromImage(QImage::QImage(disp->data, disp->cols, disp->rows, disp->cols, QImage::Format_Indexed8)).scaled(IMG_DIS_W, IMG_DIS_H));
 
         // update topview
-        tv->pointProjectTopView(sv->data, sv->color_table, ui->checkBox_topview_plot_points->isChecked());
-        ui->label_top_view->setPixmap(QPixmap::fromImage(QImage::QImage(tv->topview.data, tv->topview.cols, tv->topview.rows, QImage::Format_RGBA8888)).scaled(270, 750));
+            sv->pointProjectTopView(sv->data, sv->color_table, ui->checkBox_topview_plot_points->isChecked());
+            ui->label_top_view_sv->setPixmap(QPixmap::fromImage(QImage::QImage(sv->topview.data, sv->topview.cols, sv->topview.rows, QImage::Format_RGBA8888)).scaled(270, 750));
     }
 
     lock.unlock();

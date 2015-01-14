@@ -1,6 +1,6 @@
 #include "radarcontroller.h"
 
-RadarController::RadarController()
+RadarController::RadarController() : TopView(1)
 {
     fg_read = false;
     fg_data_in = false;
@@ -9,6 +9,13 @@ RadarController::RadarController()
 //    qDebug()<<sizeof(esr_obj)<<sizeof(ESR_track_object_info)<<sizeof(int)<<sizeof(float)<<sizeof(bool)<<sizeof(double);
 
     img_radar = cv::Mat::zeros(250, 300, CV_8UC3);
+
+    topview_BG.create(MAX_DISTANCE, chord_length, CV_8UC4);
+    topview_BG.setTo(cv::Scalar(0, 0, 0, 0));
+
+    topview.create(MAX_DISTANCE, chord_length, CV_8UC4);
+    topview.setTo(cv::Scalar(0, 0, 0, 0));
+
 }
 
 RadarController::~RadarController()
@@ -177,5 +184,43 @@ void RadarController::retrievingData()
 //        ui->label_5->setText(QString::number(detected_obj));
 
         emit radarUpdateGui(&img_radar);
+void RadarController::pointProjectTopView(ESR_track_object_info *data, QImage *color_table)
+{
+    resetTopView();
+
+    double va = 70.7;
+    int grid_row, grid_col;
+    for (int m = 0; m < 64; m++) {
+        if (esr_obj[m].status != 0) {
+            //esr_obj[k].x + 150
+            grid_row = 1.0 * log10(100.0 * data[m].z / MIN_DISTANCE) / log10(1.0 + k);
+            grid_col = 360.0 * img_col_half * atan((c / (double)(320.0 / img_col) - img_col_half) / (data[m].z * 100.0)) / (va * CV_PI) + img_col_half;
+//            std::cout<<data[m].z<<" "<<data[m].x<<"\t"<<grid_row<<" "<<grid_col<<std::endl;
+            // mark each point belongs to which cell
+            if (grid_row >= 0 && grid_row < img_row &&
+                    grid_col >= 0 && grid_col < img_col) {
+                grid_map[img_row - grid_row - 1][grid_col]++;
+            }
+        }
+    }
+    // check whether the cell is satisfied as an object
+    cv::Point pts[4];
+    uchar* ptr = color_table->scanLine(0);
+    int p;
+    for (int r = 0; r < img_row; r++) {
+        for (int c = 0; c < img_col; c++) {
+            if (grid_map[r][c] >= thresh_free_space) {
+                int ch_row = img_row - (r + 5) > img_row ? img_row : img_row - (r + 5);
+                int ch_col = c + 5 > img_col ? img_col : c + 5;
+                pts[0] = img_grid[img_row - r][c];
+                pts[1] = img_grid[ch_row][c];
+                pts[2] = img_grid[ch_row][ch_col];
+                pts[3] = img_grid[img_row - r][ch_col];
+                p = (MAX_DISTANCE - 0.5 * (pts[0].y + pts[1].y)) - MIN_DISTANCE;
+
+                cv::fillConvexPoly(topview, pts, 4, cv::Scalar(ptr[3 * p + 0], ptr[3 * p + 1], ptr[3 * p + 2], 255), 8, 0);
+                cv::circle(topview, pts[0], 5, cv::Scalar(ptr[3 * p + 0], ptr[3 * p + 1], ptr[3 * p + 2], 255), -1, 8, 0);
+            }
+        }
     }
 }
