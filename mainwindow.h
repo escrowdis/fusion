@@ -63,6 +63,8 @@ private:
     RadarController* rc;
 
     bool fg_retrieving;
+
+    void radarDisplayTopViewBG();
     // ======================== End
 
     // Stereo vision ==========
@@ -74,7 +76,7 @@ private:
 
     void camStop() {}
 
-    void svDisplayTopView();
+    void svDisplayTopViewBG();
     // ======================== End
 
     // Stereo vision param ====
@@ -199,7 +201,7 @@ private slots:
     // ======================== End
 
     // Radar ESR ==============
-    void radarDisplay(cv::Mat *img);
+    void radarDisplay(cv::Mat *img, int detected_obj);
     // ======================== End
 
     // Mouse control ==========
@@ -239,13 +241,31 @@ private slots:
     void on_pushButton_lrf_retrieve_2_clicked();
 
     void on_pushButton_lrf_stop_2_clicked();
+
     void on_pushButton_clicked();
-    void on_spinBox_topview_r_valueChanged(int arg1);
-    void on_spinBox_topview_c_valueChanged(int arg1);
+
     void on_pushButton_radar_open_clicked();
+
     void on_pushButton_radar_write_clicked();
+
     void on_pushButton_radar_bus_on_clicked();
+
     void on_pushButton_radar_bus_off_clicked();
+
+    void on_checkBox_sv_topview_clicked(bool checked);
+
+    void on_checkBox_radar_topview_clicked(bool checked);
+
+    void on_pushButton_stop_all_clicked();
+
+    void on_spinBox_radar_topview_r_valueChanged(int arg1);
+
+    void on_spinBox_radar_topview_c_valueChanged(int arg1);
+
+    void on_spinBox_topview_r_valueChanged(int arg1);
+
+    void on_spinBox_topview_c_valueChanged(int arg1);
+
 };
 
     // Mouse control ==========
