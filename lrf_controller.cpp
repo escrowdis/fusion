@@ -9,6 +9,8 @@ lrf_controller::lrf_controller()
     // allocate size
     buf = new QByteArray(MAX_BUF_SIZE, '0x0');
 //    buf->reserve(MAX_BUF_SIZE);
+
+    count_resend = 0;
 }
 
 lrf_controller::~lrf_controller()

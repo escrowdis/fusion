@@ -83,6 +83,11 @@ public:
     bool bufEnoughSet() {
         if (buf->size() >= dataset_size)
             return true;
+        count_resend++;
+        if (count_resend > 220) {
+            requestData(LRF::CAPTURE_MODE::ONCE);
+            count_resend = 0;
+        }
         return false;
     }
 
@@ -94,6 +99,7 @@ public:
     }
 
 private:
+
     QSerialPort *serial;
 
     unsigned char data_raw[LENGTH_RAW_DATA_ONCE - LENGTH_HEADER_ONCE];
@@ -119,6 +125,8 @@ private:
     // ======================
 
     QByteArray dataSet;
+
+    int count_resend;
 
     bool sendMsg(int mode);
 
