@@ -1,14 +1,16 @@
 #include "topview.h"
 
-TopView::TopView(int thresh_free_space)
+TopView::TopView(int thresh_free_space, int min_distance, int max_distance,
+                 float view_angle, int chord_length, int display_row, int display_col,
+                 int grid_row, int grid_col)
 {
     fg_topview = false;
 
-    img_col = 100;
+    img_col = grid_col;
 
     img_col_half = img_col / 2;
 
-    img_row = 125;
+    img_row = grid_row;
 
     c = 6.4;
 
@@ -16,10 +18,27 @@ TopView::TopView(int thresh_free_space)
 
     this->thresh_free_space = thresh_free_space;
 
-    //**// diff cam, diff fov
-    view_angle = 19.8;
+    this->min_distance = min_distance;
 
-    chord_length = 1080;
+    this->max_distance = max_distance;
+
+    this->view_angle = view_angle;
+
+    this->chord_length = chord_length;
+
+    this->display_row = display_row;
+
+    this->display_col = display_col;
+
+    ratio_row = 1.0 * display_row / max_distance;
+
+    ratio_col = 1.0 * display_col / chord_length;
+
+    color_BG = cv::Scalar(161, 158, 149, 255);
+
+    color_tag = cv::Scalar(0, 0, 255, 255);
+
+    color_line = cv::Scalar(0, 255, 0, 255);
 
     initialTopView();
 
@@ -48,10 +67,17 @@ void TopView::releaseTopView()
     }
 }
 
+void TopView::changeParams(float view_angle, int chord_length)
+{
+    this->view_angle = view_angle;
+
+    this->chord_length = chord_length;
+}
+
 void TopView::pseudoColorTable()
 {
     // ==== Produce pseudo-color table
-    color_table = new QImage(MAX_DISTANCE - MIN_DISTANCE, 12, QImage::Format_RGB888) ;
+    color_table = new QImage(max_distance - min_distance, 12, QImage::Format_RGB888) ;
 
     float hue_start_angle = 0.0;
     float hue_end_angle = 240.0;
@@ -59,7 +85,7 @@ void TopView::pseudoColorTable()
     float h = 0.0;
     float s = 1.0;
     float v = 255.0;
-    float step = (hue_end_angle - hue_start_angle) / (MAX_DISTANCE - MIN_DISTANCE);
+    float step = (hue_end_angle - hue_start_angle) / (max_distance - min_distance);
 
     float f;
     int hi, p, q, t;
@@ -121,32 +147,37 @@ void TopView::initialTopView()
         for (int r = 0; r< img_row; r++)
             grid_map[r] = new int[img_col];
 
+        topview_BG.create(display_row, display_col, CV_8UC4);
+        topview_BG.setTo(cv::Scalar(0, 0, 0, 0));
+
+        topview.create(display_row, display_col, CV_8UC4);
+        topview.setTo(cv::Scalar(0, 0, 0, 0));
+
         resetTopView();
     }
 
     for (int r = 0; r < img_row + 1; r++) {
         for (int c = 0; c < img_col_half + 1; c++) {
-            int z = MIN_DISTANCE * pow(1.0 + k, r);
+            int z = min_distance * pow(1.0 + k, r);
             int x = z * tan(0.5 * view_angle * CV_PI / 180.0 * c / img_col_half);
-
             x > 0.5 * chord_length ? 0.5 * chord_length : x;
 
             if (c == 0) {
-                img_grid[r][img_col_half] = cv::Point(0.5 * chord_length - x, MAX_DISTANCE - z);
+                img_grid[r][img_col_half] = cv::Point(0.5 * chord_length - x, max_distance - z);
 #ifdef debug_info_sv_topview
                 cv::circle(topview, img_grid[r][img_col_half + 1], 3, cv::Scalar(0, 255, 0, 255), 5, 8, 0);
 #endif
             }
             else {
-                img_grid[r][img_col_half - c] = cv::Point(0.5 * chord_length - x, MAX_DISTANCE - z);
-                img_grid[r][img_col_half + c] = cv::Point(0.5 * chord_length + x, MAX_DISTANCE - z);
+                img_grid[r][img_col_half - c] = cv::Point(0.5 * chord_length - x, max_distance - z);
+                img_grid[r][img_col_half + c] = cv::Point(0.5 * chord_length + x, max_distance - z);
 #ifdef debug_info_sv_topview
                 cv::circle(topview, img_grid[r][img_col_half + 1 - c], 3, cv::Scalar(255, 0, 0, 255), 5, 8, 0);
                 cv::circle(topview, img_grid[r][img_col_half + 1 + c], 3, cv::Scalar(0, 0, 255, 255), 5, 8, 0);
 #endif
             }
             if (r == img_row) {
-                x = MAX_DISTANCE * tan(0.5 * view_angle * CV_PI / 180.0 * c / img_col_half);
+                x = max_distance * tan(0.5 * view_angle * CV_PI / 180.0 * c / img_col_half);
                 img_grid[r][img_col_half - c] = cv::Point(0.5 * chord_length - x, 0);
                 img_grid[r][img_col_half + c] = cv::Point(0.5 * chord_length + x, 0);
 #ifdef debug_info_sv_topview
@@ -167,28 +198,61 @@ void TopView::initialTopView()
     fg_topview = true;
 }
 
-void TopView::drawTopViewLines(int rows_interval, int cols_interval)
+void TopView::drawTopViewLines(int rows_interval, int cols_interval, bool fg_tag)
 {
     topview_BG.setTo(cv::Scalar(0, 0, 0, 0));
 
     // Background color
     cv::Point pts[4];
-    pts[0] = img_grid[0][0];
-    pts[1] = img_grid[0][img_col];
-    pts[2] = img_grid[img_row][img_col];
-    pts[3] = img_grid[img_row][0];
-    cv::fillConvexPoly(topview_BG, pts, 4, cv::Scalar(161, 158, 149, 255), 8, 0);
+    pts[0] = pointT(img_grid[0][0]);
+    pts[1] = pointT(img_grid[0][img_col]);
+    pts[2] = pointT(img_grid[img_row][img_col]);
+    pts[3] = pointT(img_grid[img_row][0]);
+    cv::fillConvexPoly(topview_BG, pts, 4, color_BG, 8, 0);
+
+    // distance tag
+    int distance, text_dev, font_size, line_thickness;
+    // 30 m
+    distance = 3000;
+    text_dev = 100;
+    font_size = 1;
+    line_thickness = 1;
+    cv::Point pt1 = cv::Point(0, max_distance - distance);
+    cv::Point pt2 = cv::Point(chord_length, max_distance - distance);
+    cv::line(topview_BG, pointT(pt1), pointT(pt2), color_tag, line_thickness, 8, 0);
+    pt1.y += text_dev;
+    cv::putText(topview_BG, "30 m", pointT(pt1), cv::FONT_HERSHEY_DUPLEX, font_size, color_tag, 1);
+
+    if (fg_tag) {
+        // 20 m
+        distance = 2000;
+        pt1.y = max_distance - distance;
+        pt2.y = max_distance - distance;
+        cv::line(topview_BG, pointT(pt1), pointT(pt2), color_tag, line_thickness, 8, 0);
+        pt1.y += text_dev;
+        cv::putText(topview_BG, "20 m", pointT(pt1), cv::FONT_HERSHEY_DUPLEX, font_size, color_tag, 1);
+        // 10 m
+        distance = 1000;
+        pt1.y = max_distance - distance;
+        pt2.y = max_distance - distance;
+        cv::line(topview_BG, pointT(pt1), pointT(pt2), color_tag, line_thickness, 8, 0);
+        pt1.y += text_dev;
+        cv::putText(topview_BG, "10 m", pointT(pt1), cv::FONT_HERSHEY_DUPLEX, font_size, color_tag, 1);
+    }
 
     // draw lines
+    line_thickness = 1;
     for (int r = 0; r < img_row + 1; r += rows_interval) {
-        cv::line(topview_BG, img_grid[r][0], img_grid[r][img_col], cv::Scalar(0, 255, 0, 255), 10, 8, 0);
+        cv::line(topview_BG, pointT(img_grid[r][0]), pointT(img_grid[r][img_col]), color_line, line_thickness, 8, 0);
     }
     for (int c = 0; c < img_col_half + 1; c += cols_interval) {
 #ifdef debug_info_sv_topview
         std::cout<<img_col_half + 1 - c<<" ";
 #endif
-        cv::line(topview_BG, img_grid[0][img_col_half - c], img_grid[img_row][img_col_half - c], cv::Scalar(0, 255, 0, 255), 10, 8, 0);
-        cv::line(topview_BG, img_grid[0][img_col_half + c], img_grid[img_row][img_col_half + c], cv::Scalar(0, 255, 0, 255), 10, 8, 0);
+        cv::line(topview_BG, pointT(img_grid[0][img_col_half - c]),
+                pointT(img_grid[img_row][img_col_half - c]), color_line, line_thickness, 8, 0);
+        cv::line(topview_BG, pointT(img_grid[0][img_col_half + c]),
+                pointT(img_grid[img_row][img_col_half + c]), color_line, line_thickness, 8, 0);
     }
 #ifdef debug_info_sv_topview
     std::cout<<std::endl;
@@ -204,4 +268,14 @@ void TopView::resetTopView()
             grid_map[r][c] = 0;
 
     // data mark is reset in objectProjectTopView
+}
+
+cv::Point TopView::pointT(cv::Point src)
+{
+    cv::Point rst;
+
+    rst.x = 1.0 * src.x * ratio_col;
+    rst.y = 1.0 * src.y * ratio_row;
+
+    return rst;
 }
