@@ -214,6 +214,8 @@ void MainWindow::paramRead()
     n = fs["topView"];
     ui->spinBox_topview_r->setValue((int) n["row_interval"]);
     ui->spinBox_topview_c->setValue((int) n["col_interval"]);
+    ui->spinBox_radar_topview_r->setValue((int) n["row_interval_radar"]);
+    ui->spinBox_radar_topview_c->setValue((int) n["col_interval_radar"]);
 
     n = fs["laserRangeFinder"];
     ui->comboBox_lrf_com->setCurrentIndex((int) n["port"]);
@@ -263,6 +265,8 @@ void MainWindow::paramWrite()
     fs << "topView" << "{";
     fs << "row_interval" << ui->spinBox_topview_r->value();
     fs << "col_interval" << ui->spinBox_topview_c->value();
+    fs << "row_interval_radar" << ui->spinBox_radar_topview_r->value();
+    fs << "col_interval_radar" << ui->spinBox_radar_topview_c->value();
     fs << "}";
 
     fs << "laserRangeFinder" << "{";
