@@ -3,8 +3,6 @@
 
 #include "debug_info.h"
 
-//#include <QThread>
-#include <QImage>
 #include <QTime>
 #include <QFile>
 #include <QDir>
@@ -183,7 +181,6 @@ private:
 
     cv::Mat img_match_L;
     cv::Mat img_match_R;
-
 
 private slots:
     // BM ===========================

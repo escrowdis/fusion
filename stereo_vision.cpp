@@ -1,6 +1,6 @@
 #include "stereo_vision.h"
 
-stereo_vision::stereo_vision() : TopView(20)
+stereo_vision::stereo_vision() : TopView(20, 200, 3000, 19.8, 1080, 750, 270, 125, 100)
 {
     device_index_L = -1;
     device_index_R = -1;
@@ -22,18 +22,12 @@ stereo_vision::stereo_vision() : TopView(20)
     img_r_L = cv::Mat::zeros(IMG_H, IMG_W, CV_8UC3);
     img_r_R = cv::Mat::zeros(IMG_H, IMG_W, CV_8UC3);
     disp = cv::Mat::zeros(IMG_H, IMG_W, CV_8UC1);
-
+    disp_pseudo = cv::Mat::zeros(IMG_H, IMG_W, CV_8UC3);
     bm = cv::createStereoBM(16, 9);
     sgbm = cv::createStereoSGBM(0, 16, 3);
 
     match_mode = -1;
     matchParamInitialize(SV::STEREO_MATCH::SGBM);
-
-    topview_BG.create(MAX_DISTANCE, chord_length, CV_8UC4);
-    topview_BG.setTo(cv::Scalar(0, 0, 0, 0));
-
-    topview.create(MAX_DISTANCE, chord_length, CV_8UC4);
-    topview.setTo(cv::Scalar(0, 0, 0, 0));
 
     time_gap = 10;
     t.start();
@@ -509,15 +503,15 @@ void stereo_vision::pointProjectTopView(StereoData **data, QImage *color_table, 
 
             // porject each 3D point onto a topview
             if (data[r][c].disp > 0) {
-                grid_row = 1.0 * log10(1.0 * data[r][c].Z / z_min) / log10(1.0 + k);
-                grid_col = 360.0 * img_col_half * atan((c / (double)(IMG_W / img_col) - img_col_half) / data[r][c].Z) / (view_angle * CV_PI) + img_col_half;
-//                grid_col = 1.0 * c / 6.4; //**// old
+                grid_row = 1.0 * log10(1.0 * data[r][c].Z / min_distance) / log10(1.0 + k);
+//                grid_col = 360.0 * img_col_half * atan((c / (double)(IMG_W / img_col) - img_col_half) / data[r][c].Z) / (view_angle * CV_PI) + img_col_half;
+                grid_col = 1.0 * c * ratio_col; //**// old
 
                 // display each point on topview
                 if (fg_plot_points)
                     if (grid_row >= 0 && grid_row < img_row + 1 &&
                             grid_col >= 0 && grid_col < img_col + 1)
-                        cv::circle(topview, img_grid[grid_row][grid_col], 3, cv::Scalar(0, 0, 255, 255), 1, 8, 0);
+                        cv::circle(topview, pointT(img_grid[grid_row][grid_col]), 3, cv::Scalar(0, 0, 255, 255), 1, 8, 0);
 
                 // mark each point belongs to which cell
                 if (grid_row >= 0 && grid_row < img_row &&
@@ -535,15 +529,21 @@ void stereo_vision::pointProjectTopView(StereoData **data, QImage *color_table, 
     cv::Point pts[4];
     uchar* ptr = color_table->scanLine(0);
     int p;
+    int gap = 0;
     for (int r = 0; r < img_row; r++) {
         for (int c = 0; c < img_col; c++) {
-            if (grid_map[r][c] > thresh_free_space) {
-                pts[0] = img_grid[img_row - r][c];
-                pts[1] = img_grid[img_row - (r + 1)][c];
-                pts[2] = img_grid[img_row - (r + 1)][c + 1];
-                pts[3] = img_grid[img_row - r][c + 1];
+            if (grid_map[r][c] >= thresh_free_space) {
+                int row = img_row - r - gap > 0 ? img_row - r - gap : 0;
+                int row_1 = img_row - (r + 1) + gap <= img_row ? img_row - (r + 1) + gap : img_row;
+                int col = c - gap > 0 ? c - gap : 0;
+                int col_1 = c + 1 + gap <= img_col ? c + 1 + gap : img_col;
 
-                p = (MAX_DISTANCE - 0.5 * (pts[0].y + pts[1].y)) - z_min;
+                pts[0] = pointT(img_grid[row][col]);
+                pts[1] = pointT(img_grid[row_1][col]);
+                pts[2] = pointT(img_grid[row_1][col_1]);
+                pts[3] = pointT(img_grid[row][col_1]);
+
+                p = (max_distance - 0.5 * (img_grid[row][col].y + img_grid[row_1][col].y)) - min_distance;
 
                 cv::fillConvexPoly(topview, pts, 4, cv::Scalar(ptr[3 * p + 0], ptr[3 * p + 1], ptr[3 * p + 2], 255), 8, 0);
             }
