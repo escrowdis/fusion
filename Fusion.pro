@@ -35,6 +35,11 @@ FORMS    += mainwindow.ui \
     calibrationform.ui \
     stereomatchparamform.ui
 
+RESOURCES += \
+    icon.qrc
+
+RC_ICONS = icon\\car.ico
+
 OpenCV_Lib = D:/OpenCV/opencv3alpha/x86/vc12/lib
 
 CAN_Lib = $$quote(C:\Program Files (x86)\Kvaser\Canlib\Lib\MS)
