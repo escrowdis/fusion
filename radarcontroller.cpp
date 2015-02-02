@@ -1,28 +1,25 @@
 #include "radarcontroller.h"
 
-RadarController::RadarController() : TopView(1)
+RadarController::RadarController() : TopView(1, 100, 20470, 102.3, 31900, 600, 900, 300, 400)//TopView(1, 200, 3000, 19.8, 1080, 750, 270, 125, 100)
 {
     fg_read = false;
     fg_data_in = false;
 
     esr_obj = new ESR_track_object_info[64];
-//    qDebug()<<sizeof(esr_obj)<<sizeof(ESR_track_object_info)<<sizeof(int)<<sizeof(float)<<sizeof(bool)<<sizeof(double);
 
-    img_radar = cv::Mat::zeros(250, 300, CV_8UC3);
+    img_radar = cv::Mat::zeros(240, 320, CV_8UC3);
 
-    topview_BG.create(MAX_DISTANCE, chord_length, CV_8UC4);
-    topview_BG.setTo(cv::Scalar(0, 0, 0, 0));
+    count_obj = 0;
 
-    topview.create(MAX_DISTANCE, chord_length, CV_8UC4);
-    topview.setTo(cv::Scalar(0, 0, 0, 0));
-
-    time_gap = 10;
+    time_gap = 50;
     t.start();
 }
 
 RadarController::~RadarController()
 {
     canClose(h);
+
+    delete[] esr_obj;
 }
 
 bool RadarController::open()
@@ -31,9 +28,9 @@ bool RadarController::open()
     h = canOpenChannel(0, canOPEN_NO_INIT_ACCESS);
     stat = canRequestBusStatistics(h);
     if (stat != canOK) {
-        char msg[64];
-        stat = canGetErrorText(stat, &msg[0], sizeof(msg));
-        std::cout<<"ERR"<<std::endl;
+//        char msg[64];
+//        stat = canGetErrorText(stat, &msg[0], sizeof(msg));
+//        std::cout<<"ERR"<<std::endl;
         return false;
     }
 
@@ -46,8 +43,10 @@ bool RadarController::write()
     msg[6] = 0xBF;
     stat = canWriteWait(h, id_esr, msg, dlc_esr, 0, 0xff);
     std::cout<<"write stat: "<<stat<<std::endl;
-    if (stat == canOK)
+    if (stat == canOK) {
         fg_data_in = true;
+        return true;
+    }
 
     return false;
 }
@@ -92,7 +91,7 @@ void RadarController::retrievingData()
         return;
     }
 
-//    reset();
+    reset();
     for (int i = 0; i < dlc; i++) {
         b = data[i];
         bin += b.to_string();
@@ -183,7 +182,7 @@ void RadarController::retrievingData()
 //            }
         }
 
-        if (t.elapsed() > 10) {
+        if (t.elapsed() > time_gap) {
             emit radarUpdateGUI(&img_radar, detected_obj);
 //            pointProjectTopView(esr_obj, color_table);
             t.restart();
@@ -193,16 +192,17 @@ void RadarController::retrievingData()
 
 void RadarController::pointProjectTopView(ESR_track_object_info *data, QImage *color_table)
 {
-    resetTopView();
+    if (count_obj > 10) {
+        resetTopView();
 
-    double va = 70.7;
+        count_obj = 0;
+    }
+
     int grid_row, grid_col;
     for (int m = 0; m < 64; m++) {
         if (esr_obj[m].status != 0) {
-            //esr_obj[k].x + 150
-            grid_row = 1.0 * log10(100.0 * data[m].z / MIN_DISTANCE) / log10(1.0 + k);
-            grid_col = 360.0 * img_col_half * atan((c / (double)(320.0 / img_col) - img_col_half) / (data[m].z * 100.0)) / (va * CV_PI) + img_col_half;
-//            std::cout<<data[m].z<<" "<<data[m].x<<"\t"<<grid_row<<" "<<grid_col<<std::endl;
+            grid_row = 1.0 * log10(100.0 * data[m].z / min_distance) / log10(1.0 + k);
+            grid_col = (100.0 * data[m].x + 0.5 * chord_length) * img_col / chord_length;
             // mark each point belongs to which cell
             if (grid_row >= 0 && grid_row < img_row &&
                     grid_col >= 0 && grid_col < img_col) {
@@ -214,20 +214,36 @@ void RadarController::pointProjectTopView(ESR_track_object_info *data, QImage *c
     cv::Point pts[4];
     uchar* ptr = color_table->scanLine(0);
     int p;
+    int gap_row  = 3;
+    int gap_col  = 3;
     for (int r = 0; r < img_row; r++) {
         for (int c = 0; c < img_col; c++) {
             if (grid_map[r][c] >= thresh_free_space) {
-                int ch_row = img_row - (r + 5) > img_row ? img_row : img_row - (r + 5);
-                int ch_col = c + 5 > img_col ? img_col : c + 5;
-                pts[0] = img_grid[img_row - r][c];
-                pts[1] = img_grid[ch_row][c];
-                pts[2] = img_grid[ch_row][ch_col];
-                pts[3] = img_grid[img_row - r][ch_col];
-                p = (MAX_DISTANCE - 0.5 * (pts[0].y + pts[1].y)) - MIN_DISTANCE;
+                int row = img_row - r - gap_row > 0 ? img_row - r - gap_row : 0;
+                int row_1 = img_row - (r + 1) + gap_row <= img_row ? img_row - (r + 1) + gap_row : img_row;
+                int col = c - gap_col > 0 ? c - gap_col : 0;
+                int col_1 = c + 1 + gap_col <= img_col ? c + 1 + gap_col : img_col;
 
-                cv::fillConvexPoly(topview, pts, 4, cv::Scalar(ptr[3 * p + 0], ptr[3 * p + 1], ptr[3 * p + 2], 255), 8, 0);
-                cv::circle(topview, pts[0], 5, cv::Scalar(ptr[3 * p + 0], ptr[3 * p + 1], ptr[3 * p + 2], 255), -1, 8, 0);
+                pts[0] = pointT(img_grid[row][col]);
+                pts[1] = pointT(img_grid[row_1][col]);
+                pts[2] = pointT(img_grid[row_1][col_1]);
+                pts[3] = pointT(img_grid[row][col_1]);
+
+                p = (max_distance - 0.5 * (img_grid[row][col].y + img_grid[row_1][col].y)) - min_distance;
+
+//                cv::fillConvexPoly(topview, pts, 4, cv::Scalar(ptr[3 * p + 0], ptr[3 * p + 1], ptr[3 * p + 2], 255), 8, 0);
+//                cv::fillConvexPoly(topview, pts, 4, cv::Scalar(255, 255, 255, 255), 8, 0);
+                cv::fillConvexPoly(topview, pts, 4, cv::Scalar(0, 0, 0, 255), 8, 0);
             }
         }
     }
+
+    count_obj++;
+
+//    if (count_obj >= 10) {
+//        cv::Mat tp;
+//        tp = topview.clone();
+//        //    cv::transpose(topview, tp);
+//        cv::imshow("topview - rc", tp);
+//    }
 }

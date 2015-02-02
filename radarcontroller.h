@@ -3,10 +3,12 @@
 
 #include <QObject>
 #include <QTime>
+#include <QThread>
 
 #include <iostream>
 #include <bitset>
 
+// CAN bus lib
 #include <canlib.h>
 
 #include <opencv2/opencv.hpp>
@@ -19,7 +21,7 @@ class RadarController : public QObject, public TopView
     Q_OBJECT
 
 public:
-    RadarController();
+    explicit RadarController();
 
     ~RadarController();
 
@@ -33,19 +35,7 @@ public:
 
     void retrievingData();
 
-    cv::Mat img_radar;
-
-private:
-    void reset();
-
-    const static long id_esr = 0x4F1;
-    const static int dlc_esr = 8;
-
-    canHandle h;
-    canStatus stat; // current CAN status
-
-    bool fg_read;   // reading data
-    bool fg_data_in;    // data is retrievable
+    int count_obj = 0;
 
     struct ESR_track_object_info{
         float angle;
@@ -67,12 +57,26 @@ private:
 
     ESR_track_object_info* esr_obj;
 
+    cv::Mat img_radar;
 
     // Topview =====================
     void pointProjectTopView(ESR_track_object_info *data, QImage *color_table);
     // ============================= End
+
+private:
+    void reset();
+
+    const static long id_esr = 0x4F1;
+    const static int dlc_esr = 8;
+
+    canHandle h;
+    canStatus stat;                 // current CAN status
+
     QTime t;                        // control gui not to update too fast
     int time_gap;
+
+    bool fg_read;                   // reading data
+    bool fg_data_in;                // data is retrievable
 
     // CAN bus params ==============
     long            id;
@@ -145,7 +149,7 @@ private:
     };
 
 signals:
-    void radarUpdateGui(cv::Mat *img);
+    void radarUpdateGUI(cv::Mat *img, int detected_obj);
 };
 
 #endif // RADARCONTROLLER_H
