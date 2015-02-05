@@ -21,6 +21,8 @@ extern QReadWriteLock lock;
 #define IMG_H 480
 #define IMG_DIS_W 320
 #define IMG_DIS_H 240
+#define IMG_DIS_DISP_W 640
+#define IMG_DIS_DISP_H 480
 
 namespace SV {
 

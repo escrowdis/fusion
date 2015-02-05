@@ -24,6 +24,8 @@ MainWindow::MainWindow(QWidget *parent) :
 
     QObject::connect(this, SIGNAL(lrfUpdateGUI()), this, SLOT(lrfDisplay()));
 
+    ui->label_lrf_data->setStyleSheet("background-color:silver");
+
     // COM port
     for (int i = 1; i <= 20; i++)
         ui->comboBox_lrf_com->addItem("COM" + QString::number(i));
@@ -54,6 +56,10 @@ MainWindow::MainWindow(QWidget *parent) :
 
     QObject::connect(sv, SIGNAL(svUpdateGUI(cv::Mat *, cv::Mat *, cv::Mat *)), this, SLOT(svDisplay(cv::Mat *, cv::Mat *, cv::Mat *)));
 
+    ui->label_cam_img_L->setStyleSheet("background-color:silver");
+    ui->label_cam_img_R->setStyleSheet("background-color:silver");
+    ui->label_disp->setStyleSheet("background-color:silver");
+
     // COM port
     for (int i = 0; i < 5; i++) {
         ui->comboBox_cam_device_index_L->addItem(QString::number(i));
@@ -67,7 +73,6 @@ MainWindow::MainWindow(QWidget *parent) :
 
     // top view
     svDisplayTopViewBG();
-
     // Stereo vision =========================== End
 
     // Radar ESR ===============================
@@ -105,7 +110,7 @@ MainWindow::MainWindow(QWidget *parent) :
     // ========================================= End
 
     // mouse control ===========================
-    QObject::connect(ui->label_cam_img_L, SIGNAL(mXY(int, int)), this, SLOT(mouseXY(int, int)));
+//    QObject::connect(ui->label_cam_img_L, SIGNAL(mXY(int, int)), this, SLOT(mouseXY(int, int)));
     QObject::connect(ui->label_disp, SIGNAL(mXY(int, int)), this, SLOT(mouseXY(int, int)));
     // ========================================= End
 
@@ -159,16 +164,16 @@ void MainWindow::keyPressEvent(QKeyEvent *ev)
 
     //single click
     // Up
-    if (ev->key() == 16777235)
+    if (ev->key() == Qt::Key_Up)
         ui->tabWidget_display->setCurrentIndex(index - 1);
     // Down
-    else if (ev->key() == 16777237)
+    else if (ev->key() == Qt::Key_Down)
         ui->tabWidget_display->setCurrentIndex(index + 1);
     // Left
-    else if (ev->key() == 16777234)
+    else if (ev->key() == Qt::Key_Left)
         ui->tabWidget->setCurrentIndex(index_1 - 1);
     // Right
-    else if (ev->key() == 16777236)
+    else if (ev->key() == Qt::Key_Right)
         ui->tabWidget->setCurrentIndex(index_1 + 1);
 
     // combination clicks
@@ -197,11 +202,9 @@ void MouseLabel::mouseMoveEvent(QMouseEvent *e)
 
 void MainWindow::mouseXY(int x, int y)
 {
-    int xx = 2 * x;
-    int yy = 2 * y;
     mouse_info.sprintf("(x,y) = (%d,%d), Disp. = %d, (X,Y,Z) = (%d,%d,%d)",
-                       xx, yy, sv->data[yy][xx].disp,
-                       -1, -1, sv->data[yy][xx].Z); //**// real X, Y, Z
+                       x, y, sv->data[y][x].disp,
+                       -1, -1, sv->data[y][x].Z); //**// real X, Y, Z
     ui->label_depth_info->setText(mouse_info);
 }
 
@@ -428,8 +431,8 @@ void MainWindow::lrfDisplay()
         angle += RESOLUTION;
     }
 
-//    ui->label_lrf_data->setPixmap(QPixmap::fromImage(QImage::QImage(display_lrf.data, display_lrf.cols, display_lrf.rows, 3 * display_lrf.cols, QImage::Format_RGB888)).scaled(IMG_DIS_W, IMG_DIS_H));
-    cv::imshow("image", display_lrf);
+    ui->label_lrf_data->setPixmap(QPixmap::fromImage(QImage::QImage(display_lrf.data, display_lrf.cols, display_lrf.rows, 3 * display_lrf.cols, QImage::Format_RGB888)).scaled(IMG_DIS_W, IMG_DIS_H));
+//    cv::imshow("image", display_lrf);
     cv::waitKey(10);
 
     lock.unlock();
@@ -521,9 +524,9 @@ void MainWindow::svDisplay(cv::Mat *img_L, cv::Mat *img_R, cv::Mat *disp)
 
 
         if (ui->checkBox_pseudo_color->isChecked())
-            ui->label_disp->setPixmap(QPixmap::fromImage(QImage::QImage(sv->disp_pseudo.data, sv->disp_pseudo.cols, sv->disp_pseudo.rows, QImage::Format_RGB888)).scaled(IMG_DIS_W, IMG_DIS_H));
+            ui->label_disp->setPixmap(QPixmap::fromImage(QImage::QImage(sv->disp_pseudo.data, sv->disp_pseudo.cols, sv->disp_pseudo.rows, QImage::Format_RGB888)).scaled(IMG_DIS_DISP_W, IMG_DIS_DISP_H));
         else
-            ui->label_disp->setPixmap(QPixmap::fromImage(QImage::QImage(disp->data, disp->cols, disp->rows, disp->cols, QImage::Format_Indexed8)).scaled(IMG_DIS_W, IMG_DIS_H));
+            ui->label_disp->setPixmap(QPixmap::fromImage(QImage::QImage(disp->data, disp->cols, disp->rows, disp->cols, QImage::Format_Indexed8)).scaled(IMG_DIS_DISP_W, IMG_DIS_DISP_H));
 
         // update topview
         if (ui->checkBox_sv_topview->isChecked()) {

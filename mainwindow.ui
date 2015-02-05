@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>1415</width>
-    <height>867</height>
+    <height>908</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -24,7 +24,7 @@
      </rect>
     </property>
     <property name="currentIndex">
-     <number>2</number>
+     <number>0</number>
     </property>
     <widget class="QWidget" name="tab">
      <attribute name="title">
@@ -1068,8 +1068,8 @@ parameters</string>
      <rect>
       <x>390</x>
       <y>20</y>
-      <width>1000</width>
-      <height>800</height>
+      <width>1011</width>
+      <height>831</height>
      </rect>
     </property>
     <property name="currentIndex">
@@ -1077,15 +1077,15 @@ parameters</string>
     </property>
     <widget class="QWidget" name="tab_5">
      <attribute name="title">
-      <string>Topview (Fused)</string>
+      <string>Topview - SV</string>
      </attribute>
      <widget class="QLabel" name="label_color_table">
       <property name="geometry">
        <rect>
-        <x>84</x>
-        <y>560</y>
-        <width>256</width>
-        <height>12</height>
+        <x>680</x>
+        <y>270</y>
+        <width>12</width>
+        <height>256</height>
        </rect>
       </property>
       <property name="text">
@@ -1095,8 +1095,8 @@ parameters</string>
      <widget class="QLabel" name="label_top_view_radar">
       <property name="geometry">
        <rect>
-        <x>700</x>
-        <y>10</y>
+        <x>710</x>
+        <y>20</y>
         <width>270</width>
         <height>750</height>
        </rect>
@@ -1108,9 +1108,9 @@ parameters</string>
      <widget class="QLabel" name="label_depth_info">
       <property name="geometry">
        <rect>
-        <x>350</x>
-        <y>560</y>
-        <width>371</width>
+        <x>285</x>
+        <y>760</y>
+        <width>380</width>
         <height>16</height>
        </rect>
       </property>
@@ -1126,24 +1126,11 @@ parameters</string>
        <string>Depth Info</string>
       </property>
      </widget>
-     <widget class="QLabel" name="label_lrf_data">
-      <property name="geometry">
-       <rect>
-        <x>350</x>
-        <y>310</y>
-        <width>320</width>
-        <height>240</height>
-       </rect>
-      </property>
-      <property name="text">
-       <string>0123</string>
-      </property>
-     </widget>
      <widget class="QLabel" name="label_top_view_bg">
       <property name="geometry">
        <rect>
-        <x>700</x>
-        <y>10</y>
+        <x>710</x>
+        <y>20</y>
         <width>270</width>
         <height>750</height>
        </rect>
@@ -1155,8 +1142,8 @@ parameters</string>
      <widget class="QLabel" name="label_top_view_sv">
       <property name="geometry">
        <rect>
-        <x>700</x>
-        <y>10</y>
+        <x>710</x>
+        <y>20</y>
         <width>270</width>
         <height>750</height>
        </rect>
@@ -1169,7 +1156,7 @@ parameters</string>
       <property name="geometry">
        <rect>
         <x>350</x>
-        <y>50</y>
+        <y>20</y>
         <width>320</width>
         <height>240</height>
        </rect>
@@ -1181,10 +1168,10 @@ parameters</string>
      <widget class="MouseLabel" name="label_disp">
       <property name="geometry">
        <rect>
-        <x>20</x>
-        <y>310</y>
-        <width>320</width>
-        <height>240</height>
+        <x>25</x>
+        <y>270</y>
+        <width>640</width>
+        <height>480</height>
        </rect>
       </property>
       <property name="text">
@@ -1195,7 +1182,7 @@ parameters</string>
       <property name="geometry">
        <rect>
         <x>20</x>
-        <y>50</y>
+        <y>20</y>
         <width>320</width>
         <height>240</height>
        </rect>
@@ -1204,10 +1191,18 @@ parameters</string>
        <string>Left image</string>
       </property>
      </widget>
+     <zorder>label_top_view_radar</zorder>
+     <zorder>label_top_view_bg</zorder>
+     <zorder>label_top_view_sv</zorder>
+     <zorder>label_disp</zorder>
+     <zorder>label_color_table</zorder>
+     <zorder>label_depth_info</zorder>
+     <zorder>label_cam_img_R</zorder>
+     <zorder>label_cam_img_L</zorder>
     </widget>
     <widget class="QWidget" name="tab_6">
      <attribute name="title">
-      <string>Topview (ESR)</string>
+      <string>Topview - ESR</string>
      </attribute>
      <widget class="QLabel" name="label_top_view_radar_long">
       <property name="geometry">
@@ -1233,6 +1228,37 @@ parameters</string>
       </property>
       <property name="text">
        <string>radar topview Background</string>
+      </property>
+     </widget>
+     <widget class="QLabel" name="label_radar_data">
+      <property name="geometry">
+       <rect>
+        <x>30</x>
+        <y>550</y>
+        <width>900</width>
+        <height>200</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Radar</string>
+      </property>
+     </widget>
+    </widget>
+    <widget class="QWidget" name="tab_7">
+     <attribute name="title">
+      <string>LRF data</string>
+     </attribute>
+     <widget class="QLabel" name="label_lrf_data">
+      <property name="geometry">
+       <rect>
+        <x>40</x>
+        <y>40</y>
+        <width>640</width>
+        <height>480</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Laser rangefinder</string>
       </property>
      </widget>
     </widget>
