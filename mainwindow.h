@@ -8,6 +8,8 @@
 #include <QMessageBox>
 #include <QTime>
 #include <QLabel>
+#include <QKeyEvent>
+#include <QKeySequence>
 #include <QtConcurrent/QtConcurrent>
 #include <QDir>
 extern QDir project_path;
@@ -265,6 +267,8 @@ private slots:
     void on_spinBox_topview_r_valueChanged(int arg1);
 
     void on_spinBox_topview_c_valueChanged(int arg1);
+
+    void keyPressEvent(QKeyEvent *ev);
 
 };
 

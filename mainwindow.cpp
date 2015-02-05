@@ -151,6 +151,38 @@ void MainWindow::closeEvent(QCloseEvent *)
             form_smp->close();
 }
 
+void MainWindow::keyPressEvent(QKeyEvent *ev)
+{
+//    std::cout<<ev->key()<<std::endl;
+    int index = ui->tabWidget_display->currentIndex();
+    int index_1 = ui->tabWidget->currentIndex();
+
+    //single click
+    // Up
+    if (ev->key() == 16777235)
+        ui->tabWidget_display->setCurrentIndex(index - 1);
+    // Down
+    else if (ev->key() == 16777237)
+        ui->tabWidget_display->setCurrentIndex(index + 1);
+    // Left
+    else if (ev->key() == 16777234)
+        ui->tabWidget->setCurrentIndex(index_1 - 1);
+    // Right
+    else if (ev->key() == 16777236)
+        ui->tabWidget->setCurrentIndex(index_1 + 1);
+
+    // combination clicks
+//    int key_in = ev->key();
+//    if (ev->modifiers() & Qt::ControlModifier) {
+//        key_in += Qt::CTRL;
+////        std::cout<<key_in<<", "<<QKeySequence(key_in).toString(QKeySequence::NativeText).toStdString()<<std::endl;
+//        if (QKeySequence(key_in).matches(QKeySequence("Ctrl+Up")) == QKeySequence::ExactMatch)
+//            ui->tabWidget_display->setCurrentIndex(index - 1);
+//        else if (QKeySequence(key_in).matches(QKeySequence("Ctrl+Down")) == QKeySequence::ExactMatch)
+//            ui->tabWidget_display->setCurrentIndex(index + 1);
+//    }
+}
+
 MouseLabel::MouseLabel(QWidget * parent): QLabel(parent)
 {
     this->setMouseTracking(true);

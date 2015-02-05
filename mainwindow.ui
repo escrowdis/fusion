@@ -1063,7 +1063,7 @@ parameters</string>
      <bool>true</bool>
     </property>
    </widget>
-   <widget class="QTabWidget" name="tabWidget_2">
+   <widget class="QTabWidget" name="tabWidget_display">
     <property name="geometry">
      <rect>
       <x>390</x>
@@ -1242,7 +1242,7 @@ parameters</string>
    <zorder>layoutWidget</zorder>
    <zorder>layoutWidget</zorder>
    <zorder>pushButton_stop_all</zorder>
-   <zorder>tabWidget_2</zorder>
+   <zorder>tabWidget_display</zorder>
   </widget>
   <widget class="QMenuBar" name="menuBar">
    <property name="geometry">
