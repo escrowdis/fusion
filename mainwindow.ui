@@ -1073,7 +1073,7 @@ parameters</string>
      </rect>
     </property>
     <property name="currentIndex">
-     <number>0</number>
+     <number>2</number>
     </property>
     <widget class="QWidget" name="tab_5">
      <attribute name="title">
@@ -1082,10 +1082,10 @@ parameters</string>
      <widget class="QLabel" name="label_color_table">
       <property name="geometry">
        <rect>
-        <x>680</x>
-        <y>270</y>
-        <width>12</width>
-        <height>256</height>
+        <x>84</x>
+        <y>520</y>
+        <width>256</width>
+        <height>12</height>
        </rect>
       </property>
       <property name="text">
@@ -1108,8 +1108,8 @@ parameters</string>
      <widget class="QLabel" name="label_depth_info">
       <property name="geometry">
        <rect>
-        <x>285</x>
-        <y>760</y>
+        <x>10</x>
+        <y>540</y>
         <width>380</width>
         <height>16</height>
        </rect>
@@ -1168,10 +1168,10 @@ parameters</string>
      <widget class="MouseLabel" name="label_disp">
       <property name="geometry">
        <rect>
-        <x>25</x>
+        <x>20</x>
         <y>270</y>
-        <width>640</width>
-        <height>480</height>
+        <width>320</width>
+        <height>240</height>
        </rect>
       </property>
       <property name="text">
@@ -1243,6 +1243,9 @@ parameters</string>
        <string>Radar</string>
       </property>
      </widget>
+     <zorder>label_top_view_radar_long_BG</zorder>
+     <zorder>label_top_view_radar_long</zorder>
+     <zorder>label_radar_data</zorder>
     </widget>
     <widget class="QWidget" name="tab_7">
      <attribute name="title">

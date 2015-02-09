@@ -77,7 +77,7 @@ void TopView::changeParams(float view_angle, int chord_length)
 void TopView::pseudoColorTable()
 {
     // ==== Produce pseudo-color table
-    color_table = new QImage(12, max_distance - min_distance, QImage::Format_RGB888) ;
+    color_table = new QImage(max_distance - min_distance, 12, QImage::Format_RGB888) ;
 
     float hue_start_angle = 0.0;
     float hue_end_angle = 240.0;
@@ -93,7 +93,7 @@ void TopView::pseudoColorTable()
     for (int r = 0; r < color_table->height(); r++) {
         uchar* ptr = color_table->scanLine(r);
         for (int c =0; c < color_table->width(); c++) {
-            h = r * step;
+            h = c * step;
             hi = (int)(h / 60.0) % 6;
             f = h / 60.0 - hi;
             p = v * (1 - s);

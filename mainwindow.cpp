@@ -202,9 +202,12 @@ void MouseLabel::mouseMoveEvent(QMouseEvent *e)
 
 void MainWindow::mouseXY(int x, int y)
 {
+    int xx, yy;
+    xx = 2 * x;
+    yy = 2 * y;
     mouse_info.sprintf("(x,y) = (%d,%d), Disp. = %d, (X,Y,Z) = (%d,%d,%d)",
-                       x, y, sv->data[y][x].disp,
-                       -1, -1, sv->data[y][x].Z); //**// real X, Y, Z
+                       xx, yy, sv->data[yy][xx].disp,
+                       -1, -1, sv->data[yy][xx].Z); //**// real X, Y, Z
     ui->label_depth_info->setText(mouse_info);
 }
 

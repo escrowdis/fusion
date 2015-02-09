@@ -35,6 +35,7 @@ public:
 
     void retrievingData();
 
+    // smoothing for displaying
     int count_obj = 0;
 
     int count_update = 5;
