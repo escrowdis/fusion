@@ -200,7 +200,7 @@ void RadarController::pointProjectTopView(ESR_track_object_info *data, QImage *c
 
     int grid_row, grid_col;
     for (int m = 0; m < 64; m++) {
-        if (esr_obj[m].status != 0) {
+        if (data[m].status != 0) {
             grid_row = 1.0 * log10(100.0 * data[m].z / min_distance) / log10(1.0 + k);
             grid_col = (100.0 * data[m].x + 0.5 * chord_length) * img_col / chord_length;
             // mark each point belongs to which cell
