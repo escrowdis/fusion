@@ -192,7 +192,7 @@ void RadarController::retrievingData()
 
 void RadarController::pointProjectTopView(ESR_track_object_info *data, QImage *color_table)
 {
-    if (count_obj > 10) {
+    if (count_obj > count_update) {
         resetTopView();
 
         count_obj = 0;

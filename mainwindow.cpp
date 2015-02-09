@@ -531,8 +531,7 @@ void MainWindow::svDisplay(cv::Mat *img_L, cv::Mat *img_R, cv::Mat *disp)
         // update topview
         if (ui->checkBox_sv_topview->isChecked()) {
             sv->pointProjectTopView(sv->data, sv->color_table, ui->checkBox_topview_plot_points->isChecked());
-            if (rc->count_obj >= 10)
-                ui->label_top_view_sv->setPixmap(QPixmap::fromImage(QImage::QImage(sv->topview.data, sv->topview.cols, sv->topview.rows, QImage::Format_RGBA8888)).scaled(270, 750));
+            ui->label_top_view_sv->setPixmap(QPixmap::fromImage(QImage::QImage(sv->topview.data, sv->topview.cols, sv->topview.rows, QImage::Format_RGBA8888)).scaled(270, 750));
         }
     }
     lock.unlock();
@@ -1286,8 +1285,8 @@ void MainWindow::radarDisplay(cv::Mat *img, int detected_obj)
     // update topview
     if (ui->checkBox_radar_topview->isChecked()) {
         rc->pointProjectTopView(rc->esr_obj, rc->color_table);
-        ui->label_top_view_radar_long->setPixmap(QPixmap::fromImage(QImage::QImage(rc->topview.data, rc->topview.cols, rc->topview.rows, QImage::Format_RGBA8888)).scaled(900, 600));
-        ui->label_top_view_radar_long->setPixmap(QPixmap::fromImage(QImage::QImage(rc->topview.data, rc->topview.cols, rc->topview.rows, QImage::Format_RGBA8888)).scaled(900, 600));
+        if (rc->count_obj >= rc->count_update)
+            ui->label_top_view_radar_long->setPixmap(QPixmap::fromImage(QImage::QImage(rc->topview.data, rc->topview.cols, rc->topview.rows, QImage::Format_RGBA8888)).scaled(900, 600));
     }
 }
 

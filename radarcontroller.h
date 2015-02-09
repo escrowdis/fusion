@@ -37,6 +37,8 @@ public:
 
     int count_obj = 0;
 
+    int count_update = 5;
+
     struct ESR_track_object_info{
         float angle;
         bool bridge_object;
