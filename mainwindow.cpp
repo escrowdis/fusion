@@ -3,13 +3,62 @@
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
-    ui(new Ui::MainWindow)
+    ui(new Ui::MainWindow),
+    TopView(20, 100, 3000, 102.3, 4675, 600, 640, 200, 320)
 {
     ui->setupUi(this);
 
     fg_running = false;
 
     qRegisterMetaType<cv::Mat>("cv::Mat");
+
+    f_rc_img_grid = new cv::Point * [img_row + 1];
+    for (int r = 0; r < img_row + 1; r++)
+        f_rc_img_grid[r] = new cv::Point[img_col + 1];
+
+    f_rc_grid_map = new int * [img_row];
+    for (int r = 0; r< img_row; r++)
+        f_rc_grid_map[r] = new int[img_col];
+
+
+    f_sv_img_grid = new cv::Point * [img_row + 1];
+    for (int r = 0; r < img_row + 1; r++)
+        f_sv_img_grid[r] = new cv::Point[img_col + 1];
+
+    f_sv_grid_map = new int * [img_row];
+    for (int r = 0; r< img_row; r++)
+        f_sv_grid_map[r] = new int[img_col];
+
+    for (int r = 0; r < img_row + 1; r++) {
+        for (int c = 0; c < img_col_half + 1; c++) {
+            int z = min_distance * pow(1.0 + k, r);
+            int x = z * tan(0.5 * view_angle * CV_PI / 180.0 * c / img_col_half);
+            x > 0.5 * chord_length ? 0.5 * chord_length : x;
+
+            if (c == 0) {
+                f_rc_img_grid[r][img_col_half] = cv::Point(0.5 * chord_length - x, max_distance - z);
+                f_sv_img_grid[r][img_col_half] = cv::Point(0.5 * chord_length - x, max_distance - z);
+            }
+            else {
+                f_rc_img_grid[r][img_col_half - c] = cv::Point(0.5 * chord_length - x, max_distance - z);
+                f_rc_img_grid[r][img_col_half + c] = cv::Point(0.5 * chord_length + x, max_distance - z);
+                f_sv_img_grid[r][img_col_half - c] = cv::Point(0.5 * chord_length - x, max_distance - z);
+                f_sv_img_grid[r][img_col_half + c] = cv::Point(0.5 * chord_length + x, max_distance - z);
+            }
+            if (r == img_row) {
+                x = max_distance * tan(0.5 * view_angle * CV_PI / 180.0 * c / img_col_half);
+                f_rc_img_grid[r][img_col_half - c] = cv::Point(0.5 * chord_length - x, 0);
+                f_rc_img_grid[r][img_col_half + c] = cv::Point(0.5 * chord_length + x, 0);
+                f_sv_img_grid[r][img_col_half - c] = cv::Point(0.5 * chord_length - x, 0);
+                f_sv_img_grid[r][img_col_half + c] = cv::Point(0.5 * chord_length + x, 0);
+            }
+        }
+    }
+
+    if (isInitializedTopView()) {
+        drawTopViewLines(ui->spinBox_topview_r->value(), ui->spinBox_topview_c->value(), false);
+        ui->label_fusion_BG->setPixmap(QPixmap::fromImage(QImage::QImage(topview_BG.data, topview_BG.cols, topview_BG.rows, QImage::Format_RGBA8888)));
+    }
 
     // Laser range finder ======================
 
@@ -137,6 +186,23 @@ MainWindow::~MainWindow()
 //    if (reply == QMessageBox::Yes)
         paramWrite();
     cv::destroyAllWindows();
+
+    for (int i = 0; i < (img_row + 1); i++)
+        delete[] f_rc_img_grid[i];
+    delete[] f_rc_img_grid;
+
+    for (int i = 0; i < (img_row + 1); i++)
+        delete[] f_rc_grid_map[i];
+    delete[] f_rc_grid_map;
+
+    for (int i = 0; i < (img_row + 1); i++)
+        delete[] f_sv_img_grid[i];
+    delete[] f_sv_img_grid;
+
+    for (int i = 0; i < (img_row + 1); i++)
+        delete[] f_sv_grid_map[i];
+    delete[] f_sv_grid_map;
+
     delete rc;
     lrf->close();
     delete lrf;
@@ -453,6 +519,120 @@ void MainWindow::lrfDisplay()
     }
 }
 
+void MainWindow::f_resetTopView()
+{
+    for (int r = 0; r < img_row; r++)
+        for (int c = 0; c < img_col; c++) {
+            f_rc_grid_map[r][c] = 0;
+            f_sv_grid_map[r][c] = 0;
+        }
+
+    // data mark is reset in objectProjectTopView
+}
+
+void MainWindow::pointProjectTopView(stereo_vision::StereoData **d_sv, RadarController::ESR_track_object_info *d_rc, QImage *color_table)
+{
+    resetTopView();
+    f_resetTopView();
+
+    int grid_row, grid_col;
+    cv::Point pts[4];
+    uchar* ptr = color_table->scanLine(0);
+    int p;
+
+    // SV ============================================
+    if (ui->checkBox_fusion_sv->isChecked()) {
+        for (int r = 0; r < IMG_H; r++) {
+            for (int c = 0; c < IMG_W; c++) {
+                // reset
+                d_sv[r][c].marked = -1;
+
+                // po.rject each 3D point onto a topview
+                if (d_sv[r][c].disp > 0) {
+                    grid_row = 1.0 * log10(1.0 * d_sv[r][c].Z / min_distance) / log10(1.0 + k);
+                    //                grid_col = 360.0 * img_col_half * atan((c / (double)(IMG_W / img_col) - img_col_half) / d_sv[r][c].Z) / (view_angle * CV_PI) + img_col_half;
+                    grid_col = 1.0 * c * ratio_col + 110; //**// old
+
+                    // mark each point belongs to which cell
+                    if (grid_row >= 0 && grid_row < img_row &&
+                            grid_col >= 0 && grid_col < img_col) {
+                        f_sv_grid_map[img_row - grid_row - 1][grid_col]++;
+                        d_sv[r][c].marked = 1000 * grid_row + grid_col;
+
+                    }
+                }
+
+            }
+        }
+
+        // check whether the cell is satisfied as an object
+        int gap = 0;
+        for (int r = 0; r < img_row; r++) {
+            for (int c = 0; c < img_col; c++) {
+                if (f_sv_grid_map[r][c] >= thresh_free_space) {
+                    int row = img_row - r - gap > 0 ? img_row - r - gap : 0;
+                    int row_1 = img_row - (r + 1) + gap <= img_row ? img_row - (r + 1) + gap : img_row;
+                    int col = c - gap > 0 ? c - gap : 0;
+                    int col_1 = c + 1 + gap <= img_col ? c + 1 + gap : img_col;
+
+                    pts[0] = pointT(f_sv_img_grid[row][col]);
+                    pts[1] = pointT(f_sv_img_grid[row_1][col]);
+                    pts[2] = pointT(f_sv_img_grid[row_1][col_1]);
+                    pts[3] = pointT(f_sv_img_grid[row][col_1]);
+
+                    p = (max_distance - 0.5 * (f_sv_img_grid[row][col].y + f_sv_img_grid[row_1][col].y)) - min_distance;
+
+                    cv::fillConvexPoly(topview, pts, 4, cv::Scalar(ptr[3 * p + 0], ptr[3 * p + 1], ptr[3 * p + 2], 255), 8, 0);
+                }
+            }
+        }
+    }
+
+    // Radar =========================================
+    if (ui->checkBox_fusion_radar->isChecked()) {
+        for (int m = 0; m < 64; m++) {
+            if (d_rc[m].status != 0) {
+                grid_row = 1.0 * log10(100.0 * d_rc[m].z / min_distance) / log10(1.0 + k);
+                grid_col = (100.0 * d_rc[m].x + 0.5 * chord_length) * img_col / chord_length;
+                // mark each point belongs to which cell
+                if (grid_row >= 0 && grid_row < img_row &&
+                        grid_col >= 0 && grid_col < img_col) {
+                    f_rc_grid_map[img_row - grid_row - 1][grid_col]++;
+                    //                std::cout<<d_rc[m].z<<std::endl;
+                }
+            }
+        }
+        // check whether the cell is satisfied as an object
+        int gap_row  = 3;
+        int gap_col  = 5;
+        int thresh_free_space_rc = 1;
+        for (int r = 0; r < img_row; r++) {
+            for (int c = 0; c < img_col; c++) {
+                if (f_rc_grid_map[r][c] >= thresh_free_space_rc) {
+                    int row = img_row - r - gap_row > 0 ? img_row - r - gap_row : 0;
+                    int row_1 = img_row - (r + 1) + gap_row <= img_row ? img_row - (r + 1) + gap_row : img_row;
+                    int col = c - gap_col > 0 ? c - gap_col : 0;
+                    int col_1 = c + 1 + gap_col <= img_col ? c + 1 + gap_col : img_col;
+
+                    pts[0] = pointT(f_rc_img_grid[row][col]);
+                    pts[1] = pointT(f_rc_img_grid[row_1][col]);
+                    pts[2] = pointT(f_rc_img_grid[row_1][col_1]);
+                    pts[3] = pointT(f_rc_img_grid[row][col_1]);
+
+                    p = (max_distance - 0.5 * (f_rc_img_grid[row][col].y + f_rc_img_grid[row_1][col].y)) - min_distance;
+
+                    //                cv::fillConvexPoly(topview, pts, 4, cv::Scalar(ptr[3 * p + 0], ptr[3 * p + 1], ptr[3 * p + 2], 255), 8, 0);
+                    cv::fillConvexPoly(topview, pts, 4, cv::Scalar(255, 255, 255, 255), 8, 0);
+                    //                cv::fillConvexPoly(topview, pts, 4, cv::Scalar(0, 0, 0, 255), 8, 0);
+                }
+            }
+        }
+    }
+
+    ui->label_fusion->setPixmap(QPixmap::fromImage(QImage::QImage(topview.data, topview.cols, topview.rows, QImage::Format_RGBA8888)));
+    cv::imshow("Fusion", topview);
+}
+
 void MainWindow::camOpen()
 {
     int L = ui->comboBox_cam_device_index_L->currentIndex();
@@ -660,6 +840,9 @@ void MainWindow::threadProcessing()
             f_radar = QtConcurrent::run(rc, &RadarController::retrievingData);
             qApp->processEvents();
         }
+
+        if (fg_retrieving && fg_capturing)
+            pointProjectTopView(sv->data, rc->esr_obj, color_table);
 
         sync.waitForFinished();
     }
@@ -1288,8 +1471,9 @@ void MainWindow::radarDisplay(cv::Mat *img, int detected_obj)
     // update topview
     if (ui->checkBox_radar_topview->isChecked()) {
         rc->pointProjectTopView(rc->esr_obj, rc->color_table);
-        if (rc->count_obj >= rc->count_update)
+        if (rc->count_obj >= rc->count_update) {
             ui->label_top_view_radar_long->setPixmap(QPixmap::fromImage(QImage::QImage(rc->topview.data, rc->topview.cols, rc->topview.rows, QImage::Format_RGBA8888)).scaled(900, 600));
+        }
     }
 }
 

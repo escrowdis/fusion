@@ -1073,7 +1073,7 @@ parameters</string>
      </rect>
     </property>
     <property name="currentIndex">
-     <number>2</number>
+     <number>0</number>
     </property>
     <widget class="QWidget" name="tab_5">
      <attribute name="title">
@@ -1191,6 +1191,19 @@ parameters</string>
        <string>Left image</string>
       </property>
      </widget>
+     <widget class="MouseLabel" name="label_sv_detected">
+      <property name="geometry">
+       <rect>
+        <x>350</x>
+        <y>270</y>
+        <width>320</width>
+        <height>240</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Detected image</string>
+      </property>
+     </widget>
      <zorder>label_top_view_radar</zorder>
      <zorder>label_top_view_bg</zorder>
      <zorder>label_top_view_sv</zorder>
@@ -1199,6 +1212,7 @@ parameters</string>
      <zorder>label_depth_info</zorder>
      <zorder>label_cam_img_R</zorder>
      <zorder>label_cam_img_L</zorder>
+     <zorder>label_sv_detected</zorder>
     </widget>
     <widget class="QWidget" name="tab_6">
      <attribute name="title">
@@ -1262,6 +1276,79 @@ parameters</string>
       </property>
       <property name="text">
        <string>Laser rangefinder</string>
+      </property>
+     </widget>
+     <widget class="QTableView" name="tableView_radar">
+      <property name="geometry">
+       <rect>
+        <x>730</x>
+        <y>40</y>
+        <width>211</width>
+        <height>611</height>
+       </rect>
+      </property>
+     </widget>
+    </widget>
+    <widget class="QWidget" name="tab_8">
+     <attribute name="title">
+      <string>Fusion</string>
+     </attribute>
+     <widget class="QLabel" name="label_fusion_BG">
+      <property name="geometry">
+       <rect>
+        <x>20</x>
+        <y>60</y>
+        <width>640</width>
+        <height>600</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>TextLabel</string>
+      </property>
+     </widget>
+     <widget class="QLabel" name="label_fusion">
+      <property name="geometry">
+       <rect>
+        <x>20</x>
+        <y>60</y>
+        <width>640</width>
+        <height>600</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>TextLabel</string>
+      </property>
+     </widget>
+     <widget class="QCheckBox" name="checkBox_fusion_radar">
+      <property name="geometry">
+       <rect>
+        <x>810</x>
+        <y>50</y>
+        <width>73</width>
+        <height>16</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>ESR</string>
+      </property>
+      <property name="checked">
+       <bool>true</bool>
+      </property>
+     </widget>
+     <widget class="QCheckBox" name="checkBox_fusion_sv">
+      <property name="geometry">
+       <rect>
+        <x>810</x>
+        <y>30</y>
+        <width>73</width>
+        <height>16</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>SV</string>
+      </property>
+      <property name="checked">
+       <bool>true</bool>
       </property>
      </widget>
     </widget>

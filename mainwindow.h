@@ -36,7 +36,7 @@ namespace Ui {
 class MainWindow;
 }
 
-class MainWindow : public QMainWindow
+class MainWindow : public QMainWindow, public TopView
 {
     Q_OBJECT
 
@@ -60,6 +60,19 @@ private:
     void paramWrite();
 
     void readFromTxt(QString file_name, cv::Mat *output);
+    // ======================== End
+
+    void pointProjectTopView(stereo_vision::StereoData **d_sv, RadarController::ESR_track_object_info *d_rc, QImage *color_table);
+
+    void f_resetTopView();
+
+    int** f_rc_grid_map;                 // Storing pixels into cells
+
+    cv::Point** f_rc_img_grid;           // topview background cell points
+
+    int** f_sv_grid_map;                 // Storing pixels into cells
+
+    cv::Point** f_sv_img_grid;           // topview background cell points
 
     // Radar ESR ==============
     RadarController* rc;
