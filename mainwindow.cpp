@@ -4,7 +4,7 @@
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow),
-    TopView(20, 100, 3000, 102.3, 4675, 600, 640, 200, 320)
+    TopView(64, 20, 100, 3000, 102.3, 4675, 600, 640, 200, 320)
 {
     ui->setupUi(this);
 

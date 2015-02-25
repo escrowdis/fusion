@@ -1,6 +1,6 @@
 #include "stereo_vision.h"
 
-stereo_vision::stereo_vision() : TopView(20, 200, 3000, 19.8, 1080, 750, 270, 125, 100)
+stereo_vision::stereo_vision() : TopView(10, 20, 200, 3000, 19.8, 1080, 750, 270, 125, 100)
 {
     device_index_L = -1;
     device_index_R = -1;
@@ -514,16 +514,21 @@ void stereo_vision::pointProjectTopView(StereoData **data, QImage *color_table, 
                         cv::circle(topview, pointT(img_grid[grid_row][grid_col]), 3, cv::Scalar(0, 0, 255, 255), 1, 8, 0);
 
                 // mark each point belongs to which cell
-                if (grid_row >= 0 && grid_row < img_row &&
-                        grid_col >= 0 && grid_col < img_col) {
-                    grid_map[img_row - grid_row - 1][grid_col]++;
+                int grid_row_t = img_row - grid_row - 1;
+                int grid_col_t = grid_col;
+                if (grid_row_t >= 0 && grid_row_t < img_row &&
+                        grid_col_t >= 0 && grid_col_t < img_col) {
+                    grid_map[grid_row_t][grid_col_t].pts_num++;
                     data[r][c].marked = 1000 * grid_row + grid_col;
-
+//                    if (grid_map[grid_row_t][grid_col].pts_num == thresh_free_space)
+//                        grid_map[grid_row_t][grid_col].labeled = true;
                 }
             }
 
         }
     }
+
+    blob();
 
     // check whether the cell is satisfied as an object
     cv::Point pts[4];
@@ -532,7 +537,8 @@ void stereo_vision::pointProjectTopView(StereoData **data, QImage *color_table, 
     int gap = 0;
     for (int r = 0; r < img_row; r++) {
         for (int c = 0; c < img_col; c++) {
-            if (grid_map[r][c] >= thresh_free_space) {
+            if (grid_map[r][c].pts_num >= thresh_free_space) {
+                // plot points onto topview
                 int row = img_row - r - gap > 0 ? img_row - r - gap : 0;
                 int row_1 = img_row - (r + 1) + gap <= img_row ? img_row - (r + 1) + gap : img_row;
                 int col = c - gap > 0 ? c - gap : 0;
@@ -550,3 +556,5 @@ void stereo_vision::pointProjectTopView(StereoData **data, QImage *color_table, 
         }
     }
 }
+
+

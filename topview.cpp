@@ -1,6 +1,6 @@
 #include "topview.h"
 
-TopView::TopView(int thresh_free_space, int min_distance, int max_distance,
+TopView::TopView(int obj_nums, int thresh_free_space, int min_distance, int max_distance,
                  float view_angle, int chord_length, int display_row, int display_col,
                  int grid_row, int grid_col)
 {
@@ -15,6 +15,8 @@ TopView::TopView(int thresh_free_space, int min_distance, int max_distance,
     c = 6.4;
 
     k = 0.02;
+
+    this->obj_nums = obj_nums;
 
     this->thresh_free_space = thresh_free_space;
 
@@ -62,6 +64,8 @@ void TopView::releaseTopView()
         for (int i = 0; i < (img_row + 1); i++)
             delete[] grid_map[i];
         delete[] grid_map;
+
+        delete[] objects;
 
         fg_topview = false;
     }
@@ -143,9 +147,11 @@ void TopView::initialTopView()
         for (int r = 0; r < img_row + 1; r++)
             img_grid[r] = new cv::Point[img_col + 1];
 
-        grid_map = new int * [img_row];
-        for (int r = 0; r< img_row; r++)
-            grid_map[r] = new int[img_col];
+        grid_map = new blobNode * [img_row];
+        for (int r = 0; r < img_row; r++)
+            grid_map[r] = new blobNode[img_col];
+
+        objects = new objInformation[obj_nums];
 
         topview_BG.create(display_row, display_col, CV_8UC4);
         topview_BG.setTo(cv::Scalar(0, 0, 0, 0));
@@ -264,8 +270,20 @@ void TopView::resetTopView()
     topview.setTo(cv::Scalar(0, 0, 0, 0));
 
     for (int r = 0; r < img_row; r++)
-        for (int c = 0; c < img_col; c++)
-            grid_map[r][c] = 0;
+        for (int c = 0; c < img_col; c++) {
+            grid_map[r][c].labeled = false;
+            grid_map[r][c].obj_label = -1;
+            grid_map[r][c].pts_num = 0;
+        }
+
+    for (int i = 0; i < obj_nums; i++) {
+        objects[i].tl = cv::Point(-1, -1);
+        objects[i].br = cv::Point(-1, -1);
+        objects[i].X = -1;
+        objects[i].Y = -1;
+        objects[i].Z = -1;
+        objects[i].pts_num = 0;
+    }
 
     // data mark is reset in objectProjectTopView
 }
@@ -278,4 +296,61 @@ cv::Point TopView::pointT(cv::Point src)
     rst.y = 1.0 * src.y * ratio_row;
 
     return rst;
+}
+
+void TopView::blob()
+{
+    // mask scanning using 8 connectivity
+    int mask_size = 3;
+    int offset = (mask_size - 1) / 2;
+    int cur_label = 0;
+    for (int r = 0; r < img_row; r++) {
+        for (int c = 0; c < img_col; c++) {
+            // blob labeling
+            if (grid_map[r][c].pts_num >= thresh_free_space && grid_map[r][c].obj_label == -1) {
+                std::stack<std::pair<int, int> > neighbors;
+                neighbors.push(std::pair<int, int>(r, c));
+                grid_map[r][c].obj_label = cur_label;
+                objects[cur_label].pts_num += grid_map[r][c].pts_num;
+
+                while (!neighbors.empty()) {
+                    std::pair<int, int> cur_pos = neighbors.top();
+                    neighbors.pop();
+
+                    int r_now, c_now;
+                    for (int rr = - offset; rr <= offset; rr++) {
+                        r_now = cur_pos.first + rr;
+                        for (int cc = - offset; cc <= offset; cc++) {
+                            c_now = cur_pos.second + cc;
+
+                            if (r_now < 0 || r_now >= img_row ||
+                                    c_now < 0 || c_now >= img_col)
+                                continue;
+
+                            if (grid_map[r_now][c_now].pts_num >= thresh_free_space &&
+                                    grid_map[r_now][c_now].obj_label == -1) {
+                                neighbors.push(std::pair<int, int>(r_now, c_now));
+                                grid_map[r_now][c_now].obj_label = cur_label;
+                                objects[cur_label].pts_num += grid_map[r_now][c_now].pts_num;
+                            }
+                        }
+                    }
+
+                }
+                cur_label++;
+            }
+        }
+    }
+
+//    for (int i = 0; i < obj_nums; i++) {
+//        std::cout<<i<<" "<<objects[i].pts_num<<std::endl;
+//    }
+
+//    for (int r = 0; r < img_row; r++) {
+//        for (int c = 0; c < img_col; c++) {
+//            std::cout << grid_map[r][c].obj_label << " ";
+//        }
+//        std::cout<<std::endl;
+//    }
+//    std::cout<<std::endl;
 }

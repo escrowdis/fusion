@@ -1,6 +1,6 @@
 #include "radarcontroller.h"
 
-RadarController::RadarController() : TopView(1, 100, 20470, 102.3, 31900, 600, 900, 300, 400)//TopView(1, 200, 3000, 19.8, 1080, 750, 270, 125, 100)
+RadarController::RadarController() : TopView(64, 1, 100, 20470, 102.3, 31900, 600, 900, 300, 400)//TopView(1, 200, 3000, 19.8, 1080, 750, 270, 125, 100)
 {
     fg_read = false;
     fg_data_in = false;
@@ -203,10 +203,13 @@ void RadarController::pointProjectTopView(ESR_track_object_info *data, QImage *c
         if (data[m].status != 0) {
             grid_row = 1.0 * log10(100.0 * data[m].z / min_distance) / log10(1.0 + k);
             grid_col = (100.0 * data[m].x + 0.5 * chord_length) * img_col / chord_length;
+            int grid_row_t = img_row - grid_row - 1;
+            int grid_col_t = grid_col;
             // mark each point belongs to which cell
-            if (grid_row >= 0 && grid_row < img_row &&
-                    grid_col >= 0 && grid_col < img_col) {
-                grid_map[img_row - grid_row - 1][grid_col]++;
+            if (grid_row_t >= 0 && grid_row_t < img_row &&
+                    grid_col_t >= 0 && grid_col_t < img_col) {
+                grid_map[grid_row_t][grid_col_t].pts_num++;
+//                std::cout<<data[m].z<<std::endl;
             }
         }
     }
@@ -218,7 +221,7 @@ void RadarController::pointProjectTopView(ESR_track_object_info *data, QImage *c
     int gap_col  = 3;
     for (int r = 0; r < img_row; r++) {
         for (int c = 0; c < img_col; c++) {
-            if (grid_map[r][c] >= thresh_free_space) {
+            if (grid_map[r][c].pts_num >= thresh_free_space) {
                 int row = img_row - r - gap_row > 0 ? img_row - r - gap_row : 0;
                 int row_1 = img_row - (r + 1) + gap_row <= img_row ? img_row - (r + 1) + gap_row : img_row;
                 int col = c - gap_col > 0 ? c - gap_col : 0;

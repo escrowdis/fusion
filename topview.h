@@ -3,6 +3,8 @@
 
 #include "debug_info.h"
 
+#include <stack>
+
 #include <QImage>
 
 #include "opencv2/opencv.hpp"
@@ -10,7 +12,7 @@
 class TopView
 {
 public:
-    TopView(int thresh_free_space, int min_distance, int max_distance, float view_angle, int chord_length, int display_row, int display_col, int grid_row, int grid_col);
+    TopView(int obj_nums, int thresh_free_space, int min_distance, int max_distance, float view_angle, int chord_length, int display_row, int display_col, int grid_row, int grid_col);
 
     ~TopView();
 
@@ -54,7 +56,50 @@ protected:
 
     int display_col;
 
-    int** grid_map;                 // Storing pixels into cells
+    struct blobNode
+    {
+        int pts_num;    // pixels in the cell
+
+        bool labeled;   // filtered object
+
+        int obj_label;  // object label number
+
+        blobNode() {
+            obj_label = -1;
+            labeled = false;
+            pts_num = 0;
+        }
+    };
+
+    blobNode** grid_map;            // Storing pixels' information into cells
+
+    int obj_nums;
+
+    struct objInformation
+    {
+        cv::Point tl;   // Top left
+
+        cv::Point br;   // Bottom right
+
+        int X;
+
+        int Y;
+
+        int Z;
+
+        int pts_num;
+
+        objInformation() {
+            tl = cv::Point(-1, -1);
+            br = cv::Point(-1, -1);
+            X = -1;
+            Y = -1;
+            Z = -1;
+            pts_num = 0;
+        }
+    };
+
+    objInformation* objects;           // filtered objects
 
     cv::Point** img_grid;           // topview background cell points
 
