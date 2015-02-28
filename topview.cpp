@@ -1,6 +1,6 @@
 #include "topview.h"
 
-TopView::TopView(int obj_nums, int thresh_free_space, int min_distance, int max_distance,
+TopView::TopView(int thresh_free_space, int min_distance, int max_distance,
                  float view_angle, int chord_length, int display_row, int display_col,
                  int grid_row, int grid_col)
 {
@@ -15,8 +15,6 @@ TopView::TopView(int obj_nums, int thresh_free_space, int min_distance, int max_
     c = 6.4;
 
     k = 0.02;
-
-    this->obj_nums = obj_nums;
 
     this->thresh_free_space = thresh_free_space;
 
@@ -61,11 +59,9 @@ void TopView::releaseTopView()
             delete[] img_grid[i];
         delete[] img_grid;
 
-        for (int i = 0; i < (img_row + 1); i++)
+        for (int i = 0; i < (img_row); i++)
             delete[] grid_map[i];
         delete[] grid_map;
-
-        delete[] objects;
 
         fg_topview = false;
     }
@@ -151,8 +147,6 @@ void TopView::initialTopView()
         for (int r = 0; r < img_row; r++)
             grid_map[r] = new blobNode[img_col];
 
-        objects = new objInformation[obj_nums];
-
         topview_BG.create(display_row, display_col, CV_8UC4);
         topview_BG.setTo(cv::Scalar(0, 0, 0, 0));
 
@@ -186,6 +180,10 @@ void TopView::initialTopView()
                 x = max_distance * tan(0.5 * view_angle * CV_PI / 180.0 * c / img_col_half);
                 img_grid[r][img_col_half - c] = cv::Point(0.5 * chord_length - x, 0);
                 img_grid[r][img_col_half + c] = cv::Point(0.5 * chord_length + x, 0);
+
+                // get min. chord length
+                if (c == img_col_half)
+                    chord_length_min = 2 * x;
 #ifdef debug_info_sv_topview
                 cv::circle(topview, img_grid[r + 1][img_col_half + 1 - c], 3, cv::Scalar(255, 255, 0, 255), 5, 8, 0);
                 cv::circle(topview, img_grid[r + 1][img_col_half + 1 + c], 3, cv::Scalar(0, 255, 255, 255), 5, 8, 0);
@@ -228,6 +226,21 @@ void TopView::drawTopViewLines(int rows_interval, int cols_interval, bool fg_tag
     cv::line(topview_BG, pointT(pt1), pointT(pt2), color_tag, line_thickness, 8, 0);
     pt1.y += text_dev;
     cv::putText(topview_BG, "30 m", pointT(pt1), cv::FONT_HERSHEY_DUPLEX, font_size, color_tag, 1);
+    // 2 m
+    distance = 200;
+    pt1.y = max_distance - distance;
+    pt2.y = max_distance - distance;
+    cv::line(topview_BG, pointT(pt1), pointT(pt2), color_tag, line_thickness, 8, 0);
+    pt1.y += text_dev;
+    cv::putText(topview_BG, "2 m", pointT(pt1), cv::FONT_HERSHEY_DUPLEX, font_size, color_tag, 1);
+    // 1 m
+    distance = 100;
+    pt1.y = max_distance - distance;
+    pt2.y = max_distance - distance;
+    cv::line(topview_BG, pointT(pt1), pointT(pt2), color_tag, line_thickness, 8, 0);
+    pt1.y += text_dev;
+    cv::putText(topview_BG, "1 m", pointT(pt1), cv::FONT_HERSHEY_DUPLEX, font_size, color_tag, 1);
+
 
     if (fg_tag) {
         // 20 m
@@ -276,15 +289,6 @@ void TopView::resetTopView()
             grid_map[r][c].pts_num = 0;
         }
 
-    for (int i = 0; i < obj_nums; i++) {
-        objects[i].tl = cv::Point(-1, -1);
-        objects[i].br = cv::Point(-1, -1);
-        objects[i].X = -1;
-        objects[i].Y = -1;
-        objects[i].Z = -1;
-        objects[i].pts_num = 0;
-    }
-
     // data mark is reset in objectProjectTopView
 }
 
@@ -296,61 +300,4 @@ cv::Point TopView::pointT(cv::Point src)
     rst.y = 1.0 * src.y * ratio_row;
 
     return rst;
-}
-
-void TopView::blob()
-{
-    // mask scanning using 8 connectivity
-    int mask_size = 3;
-    int offset = (mask_size - 1) / 2;
-    int cur_label = 0;
-    for (int r = 0; r < img_row; r++) {
-        for (int c = 0; c < img_col; c++) {
-            // blob labeling
-            if (grid_map[r][c].pts_num >= thresh_free_space && grid_map[r][c].obj_label == -1) {
-                std::stack<std::pair<int, int> > neighbors;
-                neighbors.push(std::pair<int, int>(r, c));
-                grid_map[r][c].obj_label = cur_label;
-                objects[cur_label].pts_num += grid_map[r][c].pts_num;
-
-                while (!neighbors.empty()) {
-                    std::pair<int, int> cur_pos = neighbors.top();
-                    neighbors.pop();
-
-                    int r_now, c_now;
-                    for (int rr = - offset; rr <= offset; rr++) {
-                        r_now = cur_pos.first + rr;
-                        for (int cc = - offset; cc <= offset; cc++) {
-                            c_now = cur_pos.second + cc;
-
-                            if (r_now < 0 || r_now >= img_row ||
-                                    c_now < 0 || c_now >= img_col)
-                                continue;
-
-                            if (grid_map[r_now][c_now].pts_num >= thresh_free_space &&
-                                    grid_map[r_now][c_now].obj_label == -1) {
-                                neighbors.push(std::pair<int, int>(r_now, c_now));
-                                grid_map[r_now][c_now].obj_label = cur_label;
-                                objects[cur_label].pts_num += grid_map[r_now][c_now].pts_num;
-                            }
-                        }
-                    }
-
-                }
-                cur_label++;
-            }
-        }
-    }
-
-//    for (int i = 0; i < obj_nums; i++) {
-//        std::cout<<i<<" "<<objects[i].pts_num<<std::endl;
-//    }
-
-//    for (int r = 0; r < img_row; r++) {
-//        for (int c = 0; c < img_col; c++) {
-//            std::cout << grid_map[r][c].obj_label << " ";
-//        }
-//        std::cout<<std::endl;
-//    }
-//    std::cout<<std::endl;
 }

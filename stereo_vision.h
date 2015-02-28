@@ -67,10 +67,16 @@ public:
     cv::Mat img_r_L;
     cv::Mat img_r_R;
 
+    // blob objects image
+    cv::Mat img_detected;
+
     // status
     int input_mode;
     bool fg_calib;                      // check whether the calibration button is checked
     bool fg_stereoMatch;                // check whether do the correspondence matching
+    bool fg_pseudo;                     // chekc wether pesudo the disparity image
+    bool fg_topview;                    // check wether project to topview
+    bool fg_topview_plot_points;        // check wethere to plot each points on the topview
 
     // disparity image
     cv::Mat disp_raw;
@@ -93,15 +99,14 @@ public:
         int X;
         int Y;
         int Z;
-        int marked; // located cell in topview
-                    // ex: row = 10, col = 95 -> marked = 10095 (1000 * row + col);
+        std::pair<int, int> grid_id;    // located cell in topview
 
         StereoData() {
             disp = -1;
             X = -1;
             Y = -1;
             Z = -1;
-            marked = -1;
+            grid_id = std::pair<int, int>(-1, -1);
         }
     };
 
@@ -140,7 +145,9 @@ public:
     // ============================= End
 
     // Topview =====================
-    void pointProjectTopView(StereoData **data, QImage *color_table, bool fg_plot_points);
+    void pointProjectTopView(StereoData **data, QImage *color_table);
+
+    void pointProjectImage(StereoData **data, cv::Mat *img_r_L);
     // ============================= End
 
 private:
@@ -149,6 +156,8 @@ private:
     void camCapture();
 
     bool rectifyImage();
+
+    void depthCalculation();
 
     void stereoMatch();
 
@@ -183,6 +192,39 @@ private:
 
     cv::Mat img_match_L;
     cv::Mat img_match_R;
+
+    // blob method
+    int obj_nums;
+
+    struct objInformation
+    {
+        cv::Point tl;   // Top left
+
+        cv::Point br;   // Bottom right
+
+        int X;
+
+        int Y;
+
+        int Z;
+
+        int pts_num;
+
+        objInformation() {
+            tl = cv::Point(-1, -1);
+            br = cv::Point(-1, -1);
+            X = -1;
+            Y = -1;
+            Z = -1;
+            pts_num = 0;
+        }
+    };
+
+    objInformation* objects;           // filtered objects
+
+    void resetBlob();
+
+    void blob(int thresh_pts_num);
 
 private slots:
     // BM ===========================
@@ -224,7 +266,7 @@ private slots:
 signals:
     void sendCurrentParams(std::vector<int> param);
 
-    void svUpdateGUI(cv::Mat *img_L, cv::Mat *img_R, cv::Mat *disp);
+    void svUpdateGUI(cv::Mat *img_L, cv::Mat *img_R, cv::Mat *disp, cv::Mat *disp_pseudo, cv::Mat *topview, cv::Mat *img_detected);
 
     void setConnect(int old_mode, int new_mode);
 };

@@ -1,6 +1,6 @@
 #include "radarcontroller.h"
 
-RadarController::RadarController() : TopView(64, 1, 100, 20470, 102.3, 31900, 600, 900, 300, 400)//TopView(1, 200, 3000, 19.8, 1080, 750, 270, 125, 100)
+RadarController::RadarController() : TopView(1, 100, 20470, 102.3, 31900, 600, 900, 300, 400)//TopView(1, 200, 3000, 19.8, 1080, 750, 270, 125, 100)
 {
     fg_read = false;
     fg_data_in = false;
@@ -10,6 +10,8 @@ RadarController::RadarController() : TopView(64, 1, 100, 20470, 102.3, 31900, 60
     img_radar = cv::Mat::zeros(240, 320, CV_8UC3);
 
     count_obj = 0;
+
+    count_update = 3;
 
     time_gap = 30;
     t.start();
@@ -218,7 +220,7 @@ void RadarController::pointProjectTopView(ESR_track_object_info *data, QImage *c
     uchar* ptr = color_table->scanLine(0);
     int p;
     int gap_row  = 3;
-    int gap_col  = 3;
+    int gap_col  = 5;
     for (int r = 0; r < img_row; r++) {
         for (int c = 0; c < img_col; c++) {
             if (grid_map[r][c].pts_num >= thresh_free_space) {
@@ -235,8 +237,8 @@ void RadarController::pointProjectTopView(ESR_track_object_info *data, QImage *c
                 p = (max_distance - 0.5 * (img_grid[row][col].y + img_grid[row_1][col].y)) - min_distance;
 
 //                cv::fillConvexPoly(topview, pts, 4, cv::Scalar(ptr[3 * p + 0], ptr[3 * p + 1], ptr[3 * p + 2], 255), 8, 0);
-//                cv::fillConvexPoly(topview, pts, 4, cv::Scalar(255, 255, 255, 255), 8, 0);
-                cv::fillConvexPoly(topview, pts, 4, cv::Scalar(0, 0, 0, 255), 8, 0);
+                cv::fillConvexPoly(topview, pts, 4, cv::Scalar(255, 255, 255, 255), 8, 0);
+//                cv::fillConvexPoly(topview, pts, 4, cv::Scalar(0, 0, 0, 255), 8, 0);
             }
         }
     }

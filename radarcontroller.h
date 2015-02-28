@@ -36,9 +36,9 @@ public:
     void retrievingData();
 
     // smoothing for displaying
-    int count_obj = 0;
+    int count_obj;
 
-    int count_update = 5;
+    int count_update;
 
     struct ESR_track_object_info{
         float angle;

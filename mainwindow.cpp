@@ -4,7 +4,7 @@
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow),
-    TopView(64, 20, 100, 3000, 102.3, 4675, 600, 640, 200, 320)
+    TopView(20, 100, 3000, 102.3, 4675, 600, 640, 200, 320)
 {
     ui->setupUi(this);
 
@@ -103,11 +103,16 @@ MainWindow::MainWindow(QWidget *parent) :
 
     fg_capturing = false;
 
-    QObject::connect(sv, SIGNAL(svUpdateGUI(cv::Mat *, cv::Mat *, cv::Mat *)), this, SLOT(svDisplay(cv::Mat *, cv::Mat *, cv::Mat *)));
+    on_checkBox_pseudo_color_clicked(ui->checkBox_pseudo_color->isChecked());
+    on_checkBox_sv_topview_clicked(ui->checkBox_sv_topview->isChecked());
+    on_checkBox_topview_plot_points_clicked(ui->checkBox_topview_plot_points->isChecked());
+
+    QObject::connect(sv, SIGNAL(svUpdateGUI(cv::Mat *, cv::Mat *, cv::Mat *, cv::Mat *, cv::Mat *, cv::Mat *)), this, SLOT(svDisplay(cv::Mat *, cv::Mat *, cv::Mat *, cv::Mat *, cv::Mat *, cv::Mat *)));
 
     ui->label_cam_img_L->setStyleSheet("background-color:silver");
     ui->label_cam_img_R->setStyleSheet("background-color:silver");
     ui->label_disp->setStyleSheet("background-color:silver");
+    ui->label_sv_detected->setStyleSheet("background-color:silver");
 
     // COM port
     for (int i = 0; i < 5; i++) {
@@ -172,6 +177,12 @@ MainWindow::MainWindow(QWidget *parent) :
     paramRead();
 
     // ========================================= End
+
+    // Stereo vision (1) =======================
+    // set status after loading params
+    on_checkBox_do_calibration_clicked(ui->checkBox_do_calibration->isChecked());
+    on_checkBox_do_depth_clicked(ui->checkBox_do_depth->isChecked());
+    // Stereo vision (1) ======================= End
 }
 
 MainWindow::~MainWindow()
@@ -191,7 +202,7 @@ MainWindow::~MainWindow()
         delete[] f_rc_img_grid[i];
     delete[] f_rc_img_grid;
 
-    for (int i = 0; i < (img_row + 1); i++)
+    for (int i = 0; i < (img_row); i++)
         delete[] f_rc_grid_map[i];
     delete[] f_rc_grid_map;
 
@@ -199,7 +210,7 @@ MainWindow::~MainWindow()
         delete[] f_sv_img_grid[i];
     delete[] f_sv_img_grid;
 
-    for (int i = 0; i < (img_row + 1); i++)
+    for (int i = 0; i < (img_row); i++)
         delete[] f_sv_grid_map[i];
     delete[] f_sv_grid_map;
 
@@ -271,9 +282,11 @@ void MainWindow::mouseXY(int x, int y)
     int xx, yy;
     xx = 2 * x;
     yy = 2 * y;
+    lock.lockForRead();
     mouse_info.sprintf("(x,y) = (%d,%d), Disp. = %d, (X,Y,Z) = (%d,%d,%d)",
                        xx, yy, sv->data[yy][xx].disp,
                        -1, -1, sv->data[yy][xx].Z); //**// real X, Y, Z
+    lock.unlock();
     ui->label_depth_info->setText(mouse_info);
 }
 
@@ -501,10 +514,10 @@ void MainWindow::lrfDisplay()
     }
 
     ui->label_lrf_data->setPixmap(QPixmap::fromImage(QImage::QImage(display_lrf.data, display_lrf.cols, display_lrf.rows, 3 * display_lrf.cols, QImage::Format_RGB888)).scaled(IMG_DIS_W, IMG_DIS_H));
+    lock.unlock();
 //    cv::imshow("image", display_lrf);
     cv::waitKey(10);
 
-    lock.unlock();
     if (fg_lrf_record) {
         lock.lockForWrite();
         for (int i = 0; i < LENGTH_DATA; i++) {
@@ -545,7 +558,7 @@ void MainWindow::pointProjectTopView(stereo_vision::StereoData **d_sv, RadarCont
         for (int r = 0; r < IMG_H; r++) {
             for (int c = 0; c < IMG_W; c++) {
                 // reset
-                d_sv[r][c].marked = -1;
+                d_sv[r][c].grid_id = std::pair<int, int>(-1, -1);
 
                 // po.rject each 3D point onto a topview
                 if (d_sv[r][c].disp > 0) {
@@ -554,14 +567,14 @@ void MainWindow::pointProjectTopView(stereo_vision::StereoData **d_sv, RadarCont
                     grid_col = 1.0 * c * ratio_col + 110; //**// old
 
                     // mark each point belongs to which cell
-                    if (grid_row >= 0 && grid_row < img_row &&
-                            grid_col >= 0 && grid_col < img_col) {
-                        f_sv_grid_map[img_row - grid_row - 1][grid_col]++;
-                        d_sv[r][c].marked = 1000 * grid_row + grid_col;
-
+                    int grid_row_t = img_row - grid_row - 1;
+                    int grid_col_t = grid_col;
+                    if (grid_row_t >= 0 && grid_row_t < img_row &&
+                            grid_col_t >= 0 && grid_col_t < img_col) {
+                        f_sv_grid_map[grid_row_t][grid_col_t]++;
+                        d_sv[r][c].grid_id = std::pair<int, int>(grid_row_t, grid_col_t);
                     }
                 }
-
             }
         }
 
@@ -648,90 +661,38 @@ void MainWindow::camOpen()
     }
 }
 
-void MainWindow::svDisplay(cv::Mat *img_L, cv::Mat *img_R, cv::Mat *disp)
+void MainWindow::svDisplay(cv::Mat *img_L, cv::Mat *img_R, cv::Mat *disp, cv::Mat *disp_pseudo, cv::Mat *topview, cv::Mat *img_detected)
 {
-#ifdef debug_info_sv
-    qDebug()<<"disp"<<&img_L;
-#endif
     lock.lockForRead();
     ui->label_cam_img_L->setPixmap(QPixmap::fromImage(QImage::QImage(img_L->data, img_L->cols, img_L->rows, 3 * img_L->cols, QImage::Format_RGB888)).scaled(IMG_DIS_W, IMG_DIS_H));
     ui->label_cam_img_R->setPixmap(QPixmap::fromImage(QImage::QImage(img_R->data, img_R->cols, img_R->rows, 3 * img_R->cols, QImage::Format_RGB888)).scaled(IMG_DIS_W, IMG_DIS_H));
-    if (ui->checkBox_do_depth->isChecked()) {
+
+    if (ui->checkBox_do_depth->isChecked()) {    
         if (ui->checkBox_pseudo_color->isChecked())
-            sv->disp_pseudo.setTo(0);
-        uchar *ptr_color = sv->color_table->scanLine(0);
-        for (int r = 0; r < IMG_H; r++) {
-            short int* ptr_raw = (short int*) (sv->disp_raw.data + r * sv->disp_raw.step);
-            uchar* ptr = (uchar*) (sv->disp_pseudo.data + r * sv->disp_pseudo.step);
-            for (int c = 0; c < IMG_W; c++) {
-                // non-overlapping part
-                if (c < sv->param_sgbm.num_of_disp / 2 && sv->input_mode == SV::STEREO_MATCH::SGBM)
-                    continue;
-                else if (c < sv->param_bm.num_of_disp / 2 && sv->input_mode == SV::STEREO_MATCH::BM)
-                    continue;
-                // Depth calculation
-                sv->data[r][c].disp = ptr_raw[c];
-                if (sv->data[r][c].disp > 0) {
-                    sv->data[r][c].Z = sv->cam_param.param_r / ptr_raw[c];
-
-                    // pseudo color transform
-                    if (ui->checkBox_pseudo_color->isChecked()) {
-                        int z_est;
-                        z_est = sv->data[r][c].Z;
-//                        std::cout<<z_est<<" ";
-                        if (z_est >= sv->min_distance && z_est <= sv->max_distance) {
-                            int jj = z_est - sv->min_distance;
-                            ptr[3 * c + 0] = ptr_color[3 * jj + 0];
-                            ptr[3 * c + 1] = ptr_color[3 * jj + 1];
-                            ptr[3 * c + 2] = ptr_color[3 * jj + 2];
-                        }
-                        else if (z_est > sv->max_distance) {
-                            ptr[3 * c + 0] = 0;
-                            ptr[3 * c + 1] = 0;
-                            ptr[3 * c + 2] = 255;
-                        }
-                        else {
-                            ptr[3 * c + 0] = 0;
-                            ptr[3 * c + 1] = 0;
-                            ptr[3 * c + 2] = 0;
-                        }
-                    }
-                }
-                else {
-                    sv->data[r][c].Z = -1;
-                    //                    std::cout<<"0 ";
-                }
-            }
-            //            std::cout<<std::endl;
-        }
-
-
-        if (ui->checkBox_pseudo_color->isChecked())
-            ui->label_disp->setPixmap(QPixmap::fromImage(QImage::QImage(sv->disp_pseudo.data, sv->disp_pseudo.cols, sv->disp_pseudo.rows, QImage::Format_RGB888)).scaled(IMG_DIS_DISP_W, IMG_DIS_DISP_H));
+            ui->label_disp->setPixmap(QPixmap::fromImage(QImage::QImage(disp_pseudo->data, disp_pseudo->cols, disp_pseudo->rows, QImage::Format_RGB888)).scaled(IMG_DIS_DISP_W, IMG_DIS_DISP_H));
         else
             ui->label_disp->setPixmap(QPixmap::fromImage(QImage::QImage(disp->data, disp->cols, disp->rows, disp->cols, QImage::Format_Indexed8)).scaled(IMG_DIS_DISP_W, IMG_DIS_DISP_H));
 
         // update topview
         if (ui->checkBox_sv_topview->isChecked()) {
-            sv->pointProjectTopView(sv->data, sv->color_table, ui->checkBox_topview_plot_points->isChecked());
-            ui->label_top_view_sv->setPixmap(QPixmap::fromImage(QImage::QImage(sv->topview.data, sv->topview.cols, sv->topview.rows, QImage::Format_RGBA8888)).scaled(270, 750));
+            ui->label_top_view_sv->setPixmap(QPixmap::fromImage(QImage::QImage(topview->data, topview->cols, topview->rows, QImage::Format_RGBA8888)).scaled(270, 750));
+            ui->label_sv_detected->setPixmap(QPixmap::fromImage(QImage::QImage(img_detected->data, img_detected->cols, img_detected->rows, QImage::Format_RGB888)).scaled(IMG_DIS_W, IMG_DIS_H));
         }
     }
     lock.unlock();
-#ifdef debug_info_sv
-    qDebug()<<"disp - End"<<&img_L;
-#endif
 }
 
 void MainWindow::on_checkBox_sv_topview_clicked(bool checked)
 {
     if (!checked) {
+        sv->fg_topview = false;
         for (int r = 0; r < sv->topview.rows; r++) {
             for (int c = 0; c < sv->topview.cols; c++)
                 sv->topview.at<cv::Vec4b>(r, c)[3] = 0;
         }
     }
     else {
+        sv->fg_topview = true;
         for (int r = 0; r < sv->topview.rows; r++) {
             for (int c = 0; c < sv->topview.cols; c++) {
                 cv::Vec4b val = sv->topview.at<cv::Vec4b>(r, c);
@@ -873,6 +834,22 @@ void MainWindow::on_checkBox_do_depth_clicked(bool checked)
     }
     else
         sv->fg_stereoMatch = false;
+}
+
+void MainWindow::on_checkBox_pseudo_color_clicked(bool checked)
+{
+    if (checked)
+        sv->fg_pseudo = true;
+    else
+        sv->fg_pseudo = false;
+}
+
+void MainWindow::on_checkBox_topview_plot_points_clicked(bool checked)
+{
+    if (checked)
+        sv->fg_topview_plot_points = true;
+    else
+        sv->fg_topview_plot_points = false;
 }
 
 void MainWindow::on_pushButton_camera_calibration_clicked()

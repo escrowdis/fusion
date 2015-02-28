@@ -186,7 +186,7 @@ private slots:
 
     void on_checkBox_do_depth_clicked(bool checked);
 
-    void svDisplay(cv::Mat *img_L, cv::Mat *img_R, cv::Mat *disp);
+    void svDisplay(cv::Mat *img_L, cv::Mat *img_R, cv::Mat *disp, cv::Mat *disp_pseudo, cv::Mat *topview, cv::Mat *img_detected);
     // ======================== End
 
     // Stereo vision param ====
@@ -283,6 +283,8 @@ private slots:
 
     void keyPressEvent(QKeyEvent *ev);
 
+    void on_checkBox_pseudo_color_clicked(bool checked);
+    void on_checkBox_topview_plot_points_clicked(bool checked);
 };
 
     // Mouse control ==========
