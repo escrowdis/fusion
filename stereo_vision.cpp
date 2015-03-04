@@ -237,8 +237,6 @@ bool stereo_vision::rectifyImage()
         cv::remap(img_R, img_r_R, rmapRx, rmapRy, cv::INTER_LINEAR);
         return true;
     }
-//    img_r_L = img_L.clone();
-//    img_r_R = img_R.clone();
 
     return false;
 }
@@ -371,8 +369,10 @@ bool stereo_vision::stereoVision()
     }
 
     // camera calibration
-    if (fg_calib)
-        rectifyImage();
+    if (fg_calib) {
+        if (!rectifyImage())
+            return false;
+    }
     else {
         img_r_L = img_L.clone();
         img_r_R = img_R.clone();
@@ -576,8 +576,9 @@ void stereo_vision::pointProjectTopView(StereoData **data, QImage *color_table)
             // porject each 3D point onto a topview
             if (data[r][c].disp > 0) {
                 grid_row = 1.0 * log10(1.0 * data[r][c].Z / min_distance) / log10(1.0 + k);
-                grid_col = 360.0 * img_col_half * atan((c / (double)(IMG_W / img_col) - img_col_half) / data[r][c].Z) / (view_angle * CV_PI) + img_col_half;
+//                grid_col = 360.0 * img_col_half * atan((c / (double)(IMG_W / img_col) - img_col_half) / data[r][c].Z) / (view_angle * CV_PI) + img_col_half;
 //                grid_col = 1.0 * c * ratio_col; //**// old
+                grid_col = 1.0 * c / this->c;
 
                 // display each point on topview
                 if (fg_topview_plot_points)

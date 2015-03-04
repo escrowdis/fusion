@@ -3,8 +3,6 @@
 
 #include "debug_info.h"
 
-#include <stack>
-
 #include <QImage>
 
 #include "opencv2/opencv.hpp"
@@ -27,42 +25,47 @@ public:
 
     void changeParams(float view_angle, int chord_length);
 
-    cv::Point pointT(cv::Point src);    // transformed point for display
+    cv::Point pointT(cv::Point src);    // transformed point from grid map to topview for display
 
     int min_distance;
 
     int max_distance;
 
-    cv::Mat topview;                // topview on label
+    float c;                            // ratio of image to grid_map (the number of adjacent image columns grouped into a polar slice)
+
+    cv::Mat topview;                    // topview on label
 
     cv::Mat topview_BG;
 
-    QImage *color_table;            // psuedo-color table //**// wanna make it static
+    QImage *color_table;                // psuedo-color table //**// wanna make it static
 
 protected:
     void resetTopView();
 
-    int img_col;                    // topview grid map size
+    // grid map size
+    int img_col;
 
     int img_col_half;
 
     int img_row;
 
-    float ratio_row;
+    // ratio for transforming from grid map to topview
+    float ratio_row;                    // ratio of display_row to max_distance
 
-    float ratio_col;
+    float ratio_col;                    // ratio of display_col to chord_length
 
+    // topview size
     int display_row;
 
     int display_col;
 
     struct blobNode
     {
-        int pts_num;    // pixels in the cell
+        int pts_num;                    // pixels in the cell
 
-        bool labeled;   // filtered object
+        bool labeled;                   // filtered object
 
-        int obj_label;  // object label number
+        int obj_label;                  // object label number
 
         blobNode() {
             obj_label = -1;
@@ -71,22 +74,20 @@ protected:
         }
     };
 
-    blobNode** grid_map;            // Storing pixels' information into cells
+    blobNode** grid_map;                // Storing pixels' information into cells
 
-    cv::Point** img_grid;           // topview background cell points
+    cv::Point** img_grid;               // topview background cell points
 
-    float k;                        // length of interval
+    float k;                            // length of interval
 
-    float c;                        //**// the number of adjacent image columns grouped into a polar slice
+    float view_angle;                   // the view angle
 
-    float view_angle;               // the view angle
+    int chord_length;                   // the chord length of stereo vision
 
-    int chord_length;               // the chord length of stereo vision
+    int chord_length_min;               // the chord length at min_distance
 
-    int chord_length_min;           // the chord length at min_distance
-
-    int thresh_free_space;          // check whether the cell is satisfied as an object.
-                                    // Each cell containing more than this value is consider as an object.
+    int thresh_free_space;              // check whether the cell is satisfied as an object.
+                                        // Each cell containing more than this value is consider as an object.
 
 private:
     void releaseTopView();

@@ -560,11 +560,12 @@ void MainWindow::pointProjectTopView(stereo_vision::StereoData **d_sv, RadarCont
                 // reset
                 d_sv[r][c].grid_id = std::pair<int, int>(-1, -1);
 
-                // po.rject each 3D point onto a topview
+                // project each 3D point onto a topview
                 if (d_sv[r][c].disp > 0) {
                     grid_row = 1.0 * log10(1.0 * d_sv[r][c].Z / min_distance) / log10(1.0 + k);
                     //                grid_col = 360.0 * img_col_half * atan((c / (double)(IMG_W / img_col) - img_col_half) / d_sv[r][c].Z) / (view_angle * CV_PI) + img_col_half;
-                    grid_col = 1.0 * c * ratio_col + 110; //**// old
+//                    grid_col = 1.0 * c * ratio_col + 110; //**// old
+                    grid_col = 1.0 * c / sv->c + 110;
 
                     // mark each point belongs to which cell
                     int grid_row_t = img_row - grid_row - 1;

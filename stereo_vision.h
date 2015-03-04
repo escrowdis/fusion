@@ -12,6 +12,8 @@ extern QDir project_path;
 #include <QReadWriteLock>
 extern QReadWriteLock lock;
 
+#include <stack>
+
 #include <opencv2/opencv.hpp>
 
 // topview
@@ -96,6 +98,7 @@ public:
     struct StereoData
     {
         short int disp;
+        // World coordinate system (WCS)
         int X;
         int Y;
         int Z;
