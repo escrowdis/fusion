@@ -10,18 +10,25 @@ stereo_vision::stereo_vision() : TopView(20, 200, 3000, 19.8, 1080, 750, 270, 12
     fg_calib_loaded = false;
     fg_calib = false;
     fg_stereoMatch = false;
+    fg_reproject = false;
+    fg_topview_plot_points = false;
 
     // blob
     obj_nums = 256;
 
-    objects = new objInformation[obj_nums];
+    // thickness of frawing paint for objects on the image
+    thick_obj_rect = 2;
+    radius_obj_point = 3;
 
-    input_mode = SV::INPUT_SOURCE::CAM;
+    objects = new objInformation[obj_nums];
 
     data = new StereoData * [IMG_H];
     for (int r = 0; r < IMG_H; r++) {
         data[r] = new StereoData[IMG_W];
     }
+
+    // input source
+    input_mode = SV::INPUT_SOURCE::CAM;
 
     // Initialization images for displaying
     img_r_L = cv::Mat::zeros(IMG_H, IMG_W, CV_8UC3);
@@ -262,38 +269,7 @@ void stereo_vision::stereoMatch()
     disp_raw.convertTo(disp, CV_8U);
     lock.unlock();
 
-    // merge into stereo_vision::depthCalculation
-//    // data
-//    for (int r = 0; r < IMG_H; r++) {
-//        short int* ptr = (short int*) (disp_raw.data + r * disp_raw.step);
-//        for (int c = 0 ; c< IMG_W; c++) {
-//            data[r][c].disp = ptr[c];
-//            if (data[r][c].disp > 0)
-//                data[r][c].Z = cam_param.param_r / ptr[c];
-//            else
-//                data[r][c].Z = -1;
-//        }
-//    }
-
-    // data - disp_raw
-//    for (int r = 0; r < disp_raw.rows; r++) {
-//        short int* ptr = disp_raw.ptr<short int>(r);
-//        for (int c = 0; c < disp_raw.cols; c++) {
-//            std::cout<<ptr[c]<<" ";
-//        }
-//        std::cout<<std::endl;
-//    }
-//    std::cout<<std::endl;
-
-    // data - disp
-//    for (int r = 0; r < disp.rows; r++) {
-//        uchar* ptr = disp.ptr<uchar>(r);
-//        for (int c = 0; c < disp.cols; c++) {
-//            std::cout<<(int)(ptr[c])<<" ";
-//        }
-//        std::cout<<std::endl;
-//    }
-//    std::cout<<std::endl;
+    // depth calculation of points from disp [merge into stereo_vision::depthCalculation]
 }
 
 
@@ -378,14 +354,18 @@ bool stereo_vision::stereoVision()
         img_r_R = img_R.clone();
     }
 
+    detected_obj = 0;
+
     // stereo matching
     if (fg_stereoMatch) {
         stereoMatch();
         depthCalculation();
 
         if (fg_topview) {
-            pointProjectTopView(data, color_table);
-            pointProjectImage(data, &img_r_L);
+            pointProjectTopView();
+
+            if (fg_reproject)
+                pointProjectImage();
         }
     }
     else {
@@ -399,7 +379,7 @@ bool stereo_vision::stereoVision()
 #endif
 
     if (t.elapsed() > time_gap) {
-        emit svUpdateGUI(&img_r_L, &img_r_R, &disp, &disp_pseudo, &topview, &img_detected);
+        emit svUpdateGUI(&img_r_L, &img_r_R, &disp, &disp_pseudo, &topview, &img_detected, detected_obj);
         t.restart();
     }
     return true;
@@ -564,7 +544,7 @@ void stereo_vision::change_sgbm_speckle_range(int value)
 #endif
 }
 
-void stereo_vision::pointProjectTopView(StereoData **data, QImage *color_table)
+void stereo_vision::pointProjectTopView()
 {
     resetTopView();
     int grid_row, grid_col;
@@ -592,7 +572,11 @@ void stereo_vision::pointProjectTopView(StereoData **data, QImage *color_table)
                 if (grid_row_t >= 0 && grid_row_t < img_row &&
                         grid_col_t >= 0 && grid_col_t < img_col) {
                     lock.lockForWrite();
+                    // count the amount of point
                     grid_map[grid_row_t][grid_col_t].pts_num++;
+                    // average the depth
+                    grid_map[grid_row_t][grid_col_t].avg_Z += 1.0 * (data[r][c].Z - grid_map[grid_row_t][grid_col_t].avg_Z) / grid_map[grid_row_t][grid_col_t].pts_num;
+                    // label the point to the belonging cell
                     data[r][c].grid_id = std::pair<int, int>(grid_row_t, grid_col_t);
                     lock.unlock();
                 }
@@ -600,51 +584,26 @@ void stereo_vision::pointProjectTopView(StereoData **data, QImage *color_table)
         }
     }
 
-    blob(500);
+    blob(3000);
 
-    // check whether the cell is satisfied as an object
-    cv::Point pts[4];
-    uchar* ptr = color_table->scanLine(0);
-    int p;
-    int gap = 0;
-    for (int r = 0; r < img_row; r++) {
-        for (int c = 0; c < img_col; c++) {
-            if (grid_map[r][c].labeled) {
-                // plot points onto topview
-                int row = img_row - r - gap > 0 ? img_row - r - gap : 0;
-                int row_1 = img_row - (r + 1) + gap <= img_row ? img_row - (r + 1) + gap : img_row;
-                int col = c - gap > 0 ? c - gap : 0;
-                int col_1 = c + 1 + gap <= img_col ? c + 1 + gap : img_col;
-
-                pts[0] = pointT(img_grid[row][col]);
-                pts[1] = pointT(img_grid[row_1][col]);
-                pts[2] = pointT(img_grid[row_1][col_1]);
-                pts[3] = pointT(img_grid[row][col_1]);
-
-//                p = 256.0 / (1.0 * obj_nums) * grid_map[r][c].obj_label * (max_distance - min_distance);
-                p = (max_distance - 0.5 * (img_grid[row][col].y + img_grid[row_1][col].y)) - min_distance;
-
-                cv::fillConvexPoly(topview, pts, 4, cv::Scalar(ptr[3 * p + 0], ptr[3 * p + 1], ptr[3 * p + 2], 255), 8, 0);
-            }
-        }
-    }
+    // check whether the cell is satisfied as an object [merge into stereo_vision::blob]
 }
 
 void stereo_vision::resetBlob()
 {
     for (int i = 0; i < obj_nums; i++) {
-        objects[i].tl = cv::Point(-1, -1);
-        objects[i].br = cv::Point(-1, -1);
-        objects[i].X = -1;
-        objects[i].Y = -1;
-        objects[i].Z = -1;
+        objects[i].labeled = false;
+        objects[i].tl = std::pair<int, int>(-1, -1);
+        objects[i].br = std::pair<int, int>(-1, -1);
+        objects[i].center = std::pair<int, int>(-1, -1);
+        objects[i].avg_Z = 0;
         objects[i].pts_num = 0;
+        objects[i].closest_count = 0;
     }
 }
 
 void stereo_vision::blob(int thresh_pts_num)
 {
-    // mask scanning using 8 connectivity
     // objects starts from 0
     int mask_size = 3;
     int offset = (mask_size - 1) / 2;
@@ -654,12 +613,21 @@ void stereo_vision::blob(int thresh_pts_num)
         for (int c = 0; c < img_col; c++) {
             // blob labeling
             if (grid_map[r][c].pts_num >= thresh_free_space && grid_map[r][c].obj_label == -1) {
+                if (cur_label == obj_nums) {
+                    qDebug()<<"Objects are over defined.";
+                    break;
+                }
+
+                int count = 1;
+
                 std::stack<std::pair<int, int> > neighbors;
                 neighbors.push(std::pair<int, int>(r, c));
                 lock.lockForWrite();
-                objects[cur_label].pts_num += grid_map[r][c].pts_num;
                 grid_map[r][c].obj_label = cur_label;
+                objects[cur_label].pts_num += grid_map[r][c].pts_num;
+                objects[cur_label].avg_Z += 1.0 * (grid_map[r][c].avg_Z - objects[cur_label].avg_Z) / count;
                 lock.unlock();
+
                 while (!neighbors.empty()) {
                     std::pair<int, int> cur_pos = neighbors.top();
                     neighbors.pop();
@@ -681,6 +649,7 @@ void stereo_vision::blob(int thresh_pts_num)
                                 lock.lockForWrite();
                                 grid_map[r_now][c_now].obj_label = cur_label;
                                 objects[cur_label].pts_num += grid_map[r_now][c_now].pts_num;
+                                objects[cur_label].avg_Z += 1.0 * (grid_map[r][c].avg_Z - objects[cur_label].avg_Z) / count;
                                 lock.unlock();
                             }
                         }
@@ -688,7 +657,17 @@ void stereo_vision::blob(int thresh_pts_num)
 
                 }
                 cur_label++;
+                count++;
             }
+        }
+        if (cur_label == obj_nums)
+            break;
+    }
+
+    for (int i= 0; i < obj_nums; i++) {
+        if (objects[i].pts_num >= thresh_pts_num) {
+            objects[i].labeled = true;
+            detected_obj++;
         }
     }
 
@@ -709,41 +688,110 @@ void stereo_vision::blob(int thresh_pts_num)
     std::cout<<std::endl;
 #endif
 
-    // filter out trivial objects by amount of points
+    // filter out trivial objects by amount of points & check whether the cell is satisfied as an object
+    cv::Point pts[4];
+    uchar* ptr_color = color_table->scanLine(0);
+    int p;
+    int gap = 0;
     for (int r = 0; r < img_row; r++) {
         for (int c = 0; c < img_col; c++) {
             lock.lockForWrite();
-            if (grid_map[r][c].obj_label >= 0 &&
-                    objects[grid_map[r][c].obj_label].pts_num >= thresh_pts_num) {
-                grid_map[r][c].labeled = true;
+            // filtering
+            if (grid_map[r][c].obj_label >= 0 && objects[grid_map[r][c].obj_label].labeled) {
+                // plot points onto topview
+                int row = img_row - r - gap > 0 ? img_row - r - gap : 0;
+                int row_1 = img_row - (r + 1) + gap <= img_row ? img_row - (r + 1) + gap : img_row;
+                int col = c - gap > 0 ? c - gap : 0;
+                int col_1 = c + 1 + gap <= img_col ? c + 1 + gap : img_col;
+
+                pts[0] = pointT(img_grid[row][col]);
+                pts[1] = pointT(img_grid[row_1][col]);
+                pts[2] = pointT(img_grid[row_1][col_1]);
+                pts[3] = pointT(img_grid[row][col_1]);
+
+//                p = 256.0 / (1.0 * obj_nums) * grid_map[r][c].obj_label * (max_distance - min_distance);
+                p = (max_distance - 0.5 * (img_grid[row][col].y + img_grid[row_1][col].y)) - min_distance;
+
+                cv::fillConvexPoly(topview, pts, thick_polygon, cv::Scalar(ptr_color[3 * p + 0], ptr_color[3 * p + 1], ptr_color[3 * p + 2], 255), 8, 0);
             }
             lock.unlock();
         }
     }
+
+    // find the boundary of objects [merge into stereo_vision::pointProjectImage]
 }
 
-void stereo_vision::pointProjectImage(StereoData **data, cv::Mat *img_r_L)
+void stereo_vision::pointProjectImage()
 {
     // remap a blob objects from topview to label
     lock.lockForWrite();
     img_detected.setTo(0);
+    lock.unlock();
     for (int r = 0; r < IMG_H; r++) {
-        uchar *ptr_o = img_r_L->ptr<uchar>(r);
+        uchar *ptr_o = img_r_L.ptr<uchar>(r);
         uchar *ptr_d = img_detected.ptr<uchar>(r);
         for (int c = 0; c < IMG_W; c++) {
             int grid_r, grid_c;
+            lock.lockForRead();
             grid_r = data[r][c].grid_id.first;
             grid_c = data[r][c].grid_id.second;
-            if (grid_r == -1 || grid_c == -1)
+            lock.unlock();
+            if (grid_r == -1 || grid_c == -1 || data[r][c].disp <= 0)
                 continue;
+            lock.lockForWrite();
+            int label = grid_map[grid_r][grid_c].obj_label;
+            if (grid_map[grid_r][grid_c].obj_label >= 0 && objects[label].labeled && data[r][c].disp > 0) {
+                // find the boundary of objects
+                if (objects[label].br == std::pair<int, int>(-1, -1) &&
+                        objects[label].tl == std::pair<int, int>(-1, -1)) {
+                    objects[label].br = std::pair<int, int>(r, c);
+                    objects[label].tl = std::pair<int, int>(r, c);
+                }
+                else {
+                    if (objects[label].br.first < r)
+                        objects[label].br.first = r;
+                    if (objects[label].br.second < c)
+                        objects[label].br.second = c;
+                    if (objects[label].tl.first > r)
+                        objects[label].tl.first = r;
+                    if (objects[label].tl.second > c)
+                        objects[label].tl.second = c;
+                }
 
-            if (grid_map[grid_r][grid_c].labeled && data[r][c].disp > 0) {
+                // draw points
                 ptr_d[3 * c + 0] = ptr_o[3 * c + 0];
                 ptr_d[3 * c + 1] = ptr_o[3 * c + 1];
                 ptr_d[3 * c + 2] = ptr_o[3 * c + 2];
+            }
+            lock.unlock();
+        }
+    }
 
+    // sort objects using depth for displaying color
+    for (int i = 0; i < obj_nums; i++) {
+        for (int j = i + 1; j < obj_nums; j++) {
+            if (objects[i].avg_Z >= objects[j].avg_Z) {
+                obj_temp = objects[j];
+                objects[j] = objects[i];
+                objects[i] = obj_temp;
             }
         }
     }
-    lock.unlock();
+
+    // draw region of detected objects
+    for (int i = 0; i < obj_nums; i++) {
+        uchar* ptr_color = color_table->scanLine(0);
+        int tag = objects[i].avg_Z - min_distance;
+        lock.lockForWrite();
+        if (objects[i].labeled && objects[i].br != std::pair<int, int>(-1, -1) && objects[i].tl != std::pair<int, int>(-1, -1)) {
+            // find center of rect
+            objects[i].center = std::pair<int, int>(0.5 * (objects[i].tl.first + objects[i].br.first), 0.5 * (objects[i].tl.second + objects[i].br.second));
+
+            cv::rectangle(img_detected, cv::Rect(objects[i].tl.second, objects[i].tl.first, objects[i].br.second - objects[i].tl.second, objects[i].br.first - objects[i].tl.first),
+                          cv::Scalar(ptr_color[3 * tag + 0], ptr_color[3 * tag + 1], ptr_color[3 * tag + 2]), thick_obj_rect, 8, 0);
+            cv::circle(img_detected, cv::Point(objects[i].center.second, objects[i].center.first), radius_obj_point, cv::Scalar(0, 255, 0), -1, 8, 0);
+        }
+        lock.unlock();
+    }
 }
+

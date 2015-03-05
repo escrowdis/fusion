@@ -6,6 +6,7 @@
 //#define debug_info_main
 //#define debug_info_lrf
 //#define debug_info_lrf_data
+//#define debug_info_radar_data
 //#define debug_info_sv
 //#define debug_info_sv_param
 //#define debug_info_sv_data

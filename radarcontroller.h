@@ -35,10 +35,12 @@ public:
 
     void retrievingData();
 
-    // smoothing for displaying
-    int count_obj;
+    bool fg_topview;                    // check wether project to topview
 
-    int count_update;
+    // smoothing for displaying
+    int current_count;
+
+    int update_count;
 
     struct ESR_track_object_info{
         float angle;
@@ -60,10 +62,12 @@ public:
 
     ESR_track_object_info* esr_obj;
 
+    int detected_obj;
+
     cv::Mat img_radar;
 
     // Topview =====================
-    void pointProjectTopView(ESR_track_object_info *data, QImage *color_table);
+    void pointProjectTopView();
     // ============================= End
 
 private:
@@ -83,7 +87,7 @@ private:
 
     // CAN bus params ==============
     long            id;
-    unsigned char   data[8];
+    unsigned char   can_data[8];
     unsigned int    dlc;
     unsigned int    flag;
     DWORD           time;

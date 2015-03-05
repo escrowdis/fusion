@@ -78,6 +78,7 @@ public:
     bool fg_stereoMatch;                // check whether do the correspondence matching
     bool fg_pseudo;                     // chekc wether pesudo the disparity image
     bool fg_topview;                    // check wether project to topview
+    bool fg_reproject;                  // check wether re-project detected objects to image
     bool fg_topview_plot_points;        // check wethere to plot each points on the topview
 
     // disparity image
@@ -147,12 +148,6 @@ public:
 
     // ============================= End
 
-    // Topview =====================
-    void pointProjectTopView(StereoData **data, QImage *color_table);
-
-    void pointProjectImage(StereoData **data, cv::Mat *img_r_L);
-    // ============================= End
-
 private:
     void resetOpen(int device_index_L, int device_index_R);
 
@@ -196,38 +191,53 @@ private:
     cv::Mat img_match_L;
     cv::Mat img_match_R;
 
-    // blob method
-    int obj_nums;
+    int obj_nums;                       // maximum object detection amount
+
+    int thick_obj_rect, radius_obj_point;
+
+    int detected_obj;                   // detected object number
 
     struct objInformation
     {
-        cv::Point tl;   // Top left
+        bool labeled;                   // filtered object
 
-        cv::Point br;   // Bottom right
+        std::pair<int, int> tl;         // Top left
 
-        int X;
+        std::pair<int, int> br;         // Bottom right
 
-        int Y;
+        std::pair<int, int> center;     // Center point of object in image
 
-        int Z;
+        int avg_Z;                          // average depth
 
         int pts_num;
 
+        int closest_count;              // smaller number represents closer to vehicle
+
         objInformation() {
-            tl = cv::Point(-1, -1);
-            br = cv::Point(-1, -1);
-            X = -1;
-            Y = -1;
-            Z = -1;
+            labeled = false;
+            tl = std::pair<int, int>(-1, -1);
+            br = std::pair<int, int>(-1, -1);
+            center = std::pair<int, int>(-1, -1);
+            avg_Z = 0;
             pts_num = 0;
+            closest_count = 0;
         }
     };
 
-    objInformation* objects;           // filtered objects
+    objInformation* objects;            // filtered objects
+
+    objInformation obj_temp;            // sorting used
 
     void resetBlob();
 
     void blob(int thresh_pts_num);
+
+public:
+    // Topview =====================
+    void pointProjectTopView();
+
+    void pointProjectImage();
+    // ============================= End
 
 private slots:
     // BM ===========================
@@ -269,7 +279,7 @@ private slots:
 signals:
     void sendCurrentParams(std::vector<int> param);
 
-    void svUpdateGUI(cv::Mat *img_L, cv::Mat *img_R, cv::Mat *disp, cv::Mat *disp_pseudo, cv::Mat *topview, cv::Mat *img_detected);
+    void svUpdateGUI(cv::Mat *img_L, cv::Mat *img_R, cv::Mat *disp, cv::Mat *disp_pseudo, cv::Mat *topview, cv::Mat *img_detected, int detected_obj);
 
     void setConnect(int old_mode, int new_mode);
 };

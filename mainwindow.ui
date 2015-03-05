@@ -394,38 +394,6 @@ calibration</string>
 parameters</string>
       </property>
      </widget>
-     <widget class="QCheckBox" name="checkBox_do_depth">
-      <property name="geometry">
-       <rect>
-        <x>20</x>
-        <y>210</y>
-        <width>71</width>
-        <height>16</height>
-       </rect>
-      </property>
-      <property name="text">
-       <string>Do Depth</string>
-      </property>
-      <property name="checked">
-       <bool>true</bool>
-      </property>
-     </widget>
-     <widget class="QCheckBox" name="checkBox_do_calibration">
-      <property name="geometry">
-       <rect>
-        <x>20</x>
-        <y>180</y>
-        <width>91</width>
-        <height>16</height>
-       </rect>
-      </property>
-      <property name="text">
-       <string>Do Calibration</string>
-      </property>
-      <property name="checked">
-       <bool>true</bool>
-      </property>
-     </widget>
      <widget class="QWidget" name="layoutWidget">
       <property name="geometry">
        <rect>
@@ -481,27 +449,11 @@ parameters</string>
        </item>
       </layout>
      </widget>
-     <widget class="QCheckBox" name="checkBox_pseudo_color">
-      <property name="geometry">
-       <rect>
-        <x>130</x>
-        <y>180</y>
-        <width>91</width>
-        <height>16</height>
-       </rect>
-      </property>
-      <property name="text">
-       <string>Pseudo-color</string>
-      </property>
-      <property name="checked">
-       <bool>true</bool>
-      </property>
-     </widget>
      <widget class="QWidget" name="gridLayoutWidget_10">
       <property name="geometry">
        <rect>
-        <x>20</x>
-        <y>240</y>
+        <x>190</x>
+        <y>310</y>
         <width>111</width>
         <height>88</height>
        </rect>
@@ -564,21 +516,67 @@ parameters</string>
        </item>
       </layout>
      </widget>
-     <widget class="QCheckBox" name="checkBox_sv_topview">
+     <widget class="QWidget" name="">
       <property name="geometry">
        <rect>
-        <x>130</x>
-        <y>210</y>
-        <width>73</width>
-        <height>16</height>
+        <x>10</x>
+        <y>170</y>
+        <width>221</width>
+        <height>81</height>
        </rect>
       </property>
-      <property name="text">
-       <string>Top view</string>
-      </property>
-      <property name="checked">
-       <bool>true</bool>
-      </property>
+      <layout class="QGridLayout" name="gridLayout_17">
+       <item row="0" column="0">
+        <widget class="QCheckBox" name="checkBox_do_calibration">
+         <property name="text">
+          <string>Do Calibration</string>
+         </property>
+         <property name="checked">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="1">
+        <widget class="QCheckBox" name="checkBox_pseudo_color">
+         <property name="text">
+          <string>Pseudo-color</string>
+         </property>
+         <property name="checked">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="0">
+        <widget class="QCheckBox" name="checkBox_do_depth">
+         <property name="text">
+          <string>Do Depth</string>
+         </property>
+         <property name="checked">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="1">
+        <widget class="QCheckBox" name="checkBox_sv_topview">
+         <property name="text">
+          <string>Top view</string>
+         </property>
+         <property name="checked">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="1">
+        <widget class="QCheckBox" name="checkBox_sv_reproject">
+         <property name="text">
+          <string>Detected obj.</string>
+         </property>
+         <property name="checked">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+      </layout>
      </widget>
     </widget>
     <widget class="QWidget" name="tab_4">
@@ -636,32 +634,6 @@ parameters</string>
       <property name="text">
        <string>Bus Off</string>
       </property>
-     </widget>
-     <widget class="QWidget" name="layoutWidget_3">
-      <property name="geometry">
-       <rect>
-        <x>40</x>
-        <y>80</y>
-        <width>60</width>
-        <height>34</height>
-       </rect>
-      </property>
-      <layout class="QGridLayout" name="gridLayout_6">
-       <item row="0" column="0">
-        <widget class="QLabel" name="label_29">
-         <property name="text">
-          <string>Detected obj</string>
-         </property>
-        </widget>
-       </item>
-       <item row="1" column="0">
-        <widget class="QLabel" name="label_radar_detected_obj">
-         <property name="text">
-          <string/>
-         </property>
-        </widget>
-       </item>
-      </layout>
      </widget>
      <widget class="QCheckBox" name="checkBox_radar_topview">
       <property name="geometry">
@@ -929,99 +901,155 @@ parameters</string>
      <rect>
       <x>30</x>
       <y>650</y>
-      <width>81</width>
-      <height>91</height>
+      <width>171</width>
+      <height>108</height>
      </rect>
     </property>
     <layout class="QGridLayout" name="gridLayout_9">
-     <item row="1" column="1">
-      <widget class="QLabel" name="label_sv_proc">
-       <property name="text">
-        <string>0</string>
-       </property>
-      </widget>
-     </item>
-     <item row="0" column="0">
-      <widget class="QLabel" name="label_12">
-       <property name="text">
-        <string>time cost</string>
-       </property>
-      </widget>
-     </item>
-     <item row="4" column="0">
-      <widget class="QLabel" name="label_15">
-       <property name="text">
-        <string>gui</string>
-       </property>
-      </widget>
-     </item>
-     <item row="4" column="2">
+     <item row="5" column="3">
       <widget class="QLabel" name="label_20">
        <property name="text">
         <string>ms</string>
        </property>
       </widget>
      </item>
-     <item row="4" column="1">
+     <item row="5" column="2">
       <widget class="QLabel" name="label_gui_proc">
        <property name="text">
         <string>0</string>
        </property>
       </widget>
      </item>
-     <item row="2" column="0">
-      <widget class="QLabel" name="label_14">
-       <property name="text">
-        <string>lrf</string>
-       </property>
-      </widget>
-     </item>
-     <item row="2" column="2">
-      <widget class="QLabel" name="label_19">
-       <property name="text">
-        <string>ms</string>
-       </property>
-      </widget>
-     </item>
-     <item row="1" column="0">
-      <widget class="QLabel" name="label_13">
-       <property name="text">
-        <string>sv</string>
-       </property>
-      </widget>
-     </item>
      <item row="1" column="2">
+      <widget class="QLabel" name="label_sv_proc">
+       <property name="text">
+        <string>0</string>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="3">
       <widget class="QLabel" name="label_21">
        <property name="text">
         <string>ms</string>
        </property>
       </widget>
      </item>
-     <item row="2" column="1">
-      <widget class="QLabel" name="label_lrf_proc">
+     <item row="3" column="3">
+      <widget class="QLabel" name="label_19">
        <property name="text">
-        <string>0</string>
+        <string>ms</string>
        </property>
       </widget>
      </item>
-     <item row="3" column="0">
-      <widget class="QLabel" name="label_17">
-       <property name="text">
-        <string>buffer</string>
-       </property>
-      </widget>
-     </item>
-     <item row="3" column="1">
+     <item row="4" column="2">
       <widget class="QLabel" name="label_lrf_buf_proc">
        <property name="text">
         <string>0</string>
        </property>
       </widget>
      </item>
-     <item row="3" column="2">
+     <item row="4" column="3">
       <widget class="QLabel" name="label_22">
        <property name="text">
         <string>ms</string>
+       </property>
+      </widget>
+     </item>
+     <item row="3" column="2">
+      <widget class="QLabel" name="label_lrf_proc">
+       <property name="text">
+        <string>0</string>
+       </property>
+      </widget>
+     </item>
+     <item row="2" column="0" colspan="2">
+      <widget class="QLabel" name="label_36">
+       <property name="text">
+        <string>ESR</string>
+       </property>
+      </widget>
+     </item>
+     <item row="2" column="2">
+      <widget class="QLabel" name="label_radar_proc">
+       <property name="text">
+        <string>0</string>
+       </property>
+      </widget>
+     </item>
+     <item row="2" column="3">
+      <widget class="QLabel" name="label_37">
+       <property name="text">
+        <string>ms</string>
+       </property>
+      </widget>
+     </item>
+     <item row="5" column="0" colspan="2">
+      <widget class="QLabel" name="label_15">
+       <property name="text">
+        <string>GUI</string>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="0" colspan="2">
+      <widget class="QLabel" name="label_12">
+       <property name="text">
+        <string>time cost</string>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="4">
+      <widget class="QLabel" name="label_sv_detected_obj">
+       <property name="text">
+        <string>0</string>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="4">
+      <widget class="QLabel" name="label_34">
+       <property name="text">
+        <string>Detected objects</string>
+       </property>
+      </widget>
+     </item>
+     <item row="4" column="1">
+      <widget class="QLabel" name="label_17">
+       <property name="text">
+        <string>buffer</string>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="0" colspan="2">
+      <widget class="QLabel" name="label_13">
+       <property name="text">
+        <string>SV</string>
+       </property>
+      </widget>
+     </item>
+     <item row="3" column="1">
+      <widget class="QLabel" name="label_35">
+       <property name="text">
+        <string>data</string>
+       </property>
+      </widget>
+     </item>
+     <item row="2" column="4">
+      <widget class="QLabel" name="label_radar_detected_obj">
+       <property name="text">
+        <string>0</string>
+       </property>
+      </widget>
+     </item>
+     <item row="3" column="0" rowspan="2">
+      <widget class="QLabel" name="label_14">
+       <property name="text">
+        <string>LRF</string>
+       </property>
+      </widget>
+     </item>
+     <item row="3" column="4" rowspan="2">
+      <widget class="QLabel" name="label_lrf_detected_obj">
+       <property name="text">
+        <string>0</string>
        </property>
       </widget>
      </item>
@@ -1030,7 +1058,7 @@ parameters</string>
    <widget class="QPushButton" name="pushButton">
     <property name="geometry">
      <rect>
-      <x>240</x>
+      <x>300</x>
       <y>680</y>
       <width>75</width>
       <height>23</height>
@@ -1043,7 +1071,7 @@ parameters</string>
    <widget class="QPushButton" name="pushButton_stop_all">
     <property name="geometry">
      <rect>
-      <x>130</x>
+      <x>210</x>
       <y>660</y>
       <width>75</width>
       <height>71</height>

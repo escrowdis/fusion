@@ -42,6 +42,8 @@ public:
 protected:
     void resetTopView();
 
+    int thick_polygon;
+
     // grid map size
     int img_col;
 
@@ -63,14 +65,14 @@ protected:
     {
         int pts_num;                    // pixels in the cell
 
-        bool labeled;                   // filtered object
-
         int obj_label;                  // object label number
+
+        int avg_Z;                      // average depth of this cell
 
         blobNode() {
             obj_label = -1;
-            labeled = false;
             pts_num = 0;
+            avg_Z = 0;
         }
     };
 

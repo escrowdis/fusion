@@ -105,9 +105,10 @@ MainWindow::MainWindow(QWidget *parent) :
 
     on_checkBox_pseudo_color_clicked(ui->checkBox_pseudo_color->isChecked());
     on_checkBox_sv_topview_clicked(ui->checkBox_sv_topview->isChecked());
+    on_checkBox_sv_reproject_clicked(ui->checkBox_sv_reproject->isChecked());
     on_checkBox_topview_plot_points_clicked(ui->checkBox_topview_plot_points->isChecked());
 
-    QObject::connect(sv, SIGNAL(svUpdateGUI(cv::Mat *, cv::Mat *, cv::Mat *, cv::Mat *, cv::Mat *, cv::Mat *)), this, SLOT(svDisplay(cv::Mat *, cv::Mat *, cv::Mat *, cv::Mat *, cv::Mat *, cv::Mat *)));
+    QObject::connect(sv, SIGNAL(svUpdateGUI(cv::Mat *, cv::Mat *, cv::Mat *, cv::Mat *, cv::Mat *, cv::Mat *, int)), this, SLOT(svDisplay(cv::Mat *, cv::Mat *, cv::Mat *, cv::Mat *, cv::Mat *, cv::Mat *, int)));
 
     ui->label_cam_img_L->setStyleSheet("background-color:silver");
     ui->label_cam_img_R->setStyleSheet("background-color:silver");
@@ -135,6 +136,8 @@ MainWindow::MainWindow(QWidget *parent) :
     radarDisplayTopViewBG();
 
     fg_retrieving = false;
+
+    on_checkBox_radar_topview_clicked(ui->checkBox_radar_topview->isChecked());
 
     QObject::connect(rc, SIGNAL(radarUpdateGUI(cv::Mat *, int)), this, SLOT(radarDisplay(cv::Mat *, int)));
     // Radar ESR =============================== End
@@ -643,7 +646,7 @@ void MainWindow::pointProjectTopView(stereo_vision::StereoData **d_sv, RadarCont
         }
     }
 
-    ui->label_fusion->setPixmap(QPixmap::fromImage(QImage::QImage(topview.data, topview.cols, topview.rows, QImage::Format_RGBA8888)));
+//    ui->label_fusion->setPixmap(QPixmap::fromImage(QImage::QImage(topview.data, topview.cols, topview.rows, QImage::Format_RGBA8888)));
     cv::imshow("Fusion", topview);
 }
 
@@ -662,11 +665,12 @@ void MainWindow::camOpen()
     }
 }
 
-void MainWindow::svDisplay(cv::Mat *img_L, cv::Mat *img_R, cv::Mat *disp, cv::Mat *disp_pseudo, cv::Mat *topview, cv::Mat *img_detected)
+void MainWindow::svDisplay(cv::Mat *img_L, cv::Mat *img_R, cv::Mat *disp, cv::Mat *disp_pseudo, cv::Mat *topview, cv::Mat *img_detected, int detected_obj)
 {
     lock.lockForRead();
     ui->label_cam_img_L->setPixmap(QPixmap::fromImage(QImage::QImage(img_L->data, img_L->cols, img_L->rows, 3 * img_L->cols, QImage::Format_RGB888)).scaled(IMG_DIS_W, IMG_DIS_H));
     ui->label_cam_img_R->setPixmap(QPixmap::fromImage(QImage::QImage(img_R->data, img_R->cols, img_R->rows, 3 * img_R->cols, QImage::Format_RGB888)).scaled(IMG_DIS_W, IMG_DIS_H));
+    ui->label_sv_detected_obj->setText(QString::number(detected_obj));
 
     if (ui->checkBox_do_depth->isChecked()) {    
         if (ui->checkBox_pseudo_color->isChecked())
@@ -685,21 +689,23 @@ void MainWindow::svDisplay(cv::Mat *img_L, cv::Mat *img_R, cv::Mat *disp, cv::Ma
 
 void MainWindow::on_checkBox_sv_topview_clicked(bool checked)
 {
-    if (!checked) {
-        sv->fg_topview = false;
-        for (int r = 0; r < sv->topview.rows; r++) {
-            for (int c = 0; c < sv->topview.cols; c++)
-                sv->topview.at<cv::Vec4b>(r, c)[3] = 0;
-        }
-    }
-    else {
+    if (checked) {
         sv->fg_topview = true;
+        ui->checkBox_sv_reproject->setEnabled(true);
         for (int r = 0; r < sv->topview.rows; r++) {
             for (int c = 0; c < sv->topview.cols; c++) {
                 cv::Vec4b val = sv->topview.at<cv::Vec4b>(r, c);
                 if (val[0] != 0 || val [1] != 0 || val[2] != 0)
                     sv->topview.at<cv::Vec4b>(r, c)[3] = 255;
             }
+        }
+    }
+    else {
+        sv->fg_topview = false;
+        ui->checkBox_sv_reproject->setEnabled(false);
+        for (int r = 0; r < sv->topview.rows; r++) {
+            for (int c = 0; c < sv->topview.cols; c++)
+                sv->topview.at<cv::Vec4b>(r, c)[3] = 0;
         }
     }
     ui->label_top_view_sv->setPixmap(QPixmap::fromImage(QImage::QImage(sv->topview.data, sv->topview.cols, sv->topview.rows, QImage::Format_RGBA8888)).scaled(270, 750));
@@ -803,8 +809,8 @@ void MainWindow::threadProcessing()
             qApp->processEvents();
         }
 
-        if (fg_retrieving && fg_capturing)
-            pointProjectTopView(sv->data, rc->esr_obj, color_table);
+//        if (fg_retrieving && fg_capturing)
+//            pointProjectTopView(sv->data, rc->esr_obj, color_table);
 
         sync.waitForFinished();
     }
@@ -843,6 +849,14 @@ void MainWindow::on_checkBox_pseudo_color_clicked(bool checked)
         sv->fg_pseudo = true;
     else
         sv->fg_pseudo = false;
+}
+
+void MainWindow::on_checkBox_sv_reproject_clicked(bool checked)
+{
+    if (checked)
+        sv->fg_reproject = true;
+    else
+        sv->fg_reproject = false;
 }
 
 void MainWindow::on_checkBox_topview_plot_points_clicked(bool checked)
@@ -1447,29 +1461,28 @@ void MainWindow::radarDisplay(cv::Mat *img, int detected_obj)
     ui->label_top_view_radar_long->setPixmap(QPixmap::fromImage(QImage::QImage(rc->topview.data, rc->topview.cols, rc->topview.rows, QImage::Format_RGBA8888)).scaled(900, 600));
 
     // update topview
-    if (ui->checkBox_radar_topview->isChecked()) {
-        rc->pointProjectTopView(rc->esr_obj, rc->color_table);
-        if (rc->count_obj >= rc->count_update) {
-            ui->label_top_view_radar_long->setPixmap(QPixmap::fromImage(QImage::QImage(rc->topview.data, rc->topview.cols, rc->topview.rows, QImage::Format_RGBA8888)).scaled(900, 600));
-        }
+    if (ui->checkBox_radar_topview->isChecked() && rc->current_count >= rc->update_count) {
+        ui->label_top_view_radar_long->setPixmap(QPixmap::fromImage(QImage::QImage(rc->topview.data, rc->topview.cols, rc->topview.rows, QImage::Format_RGBA8888)).scaled(900, 600));
     }
 }
 
 void MainWindow::on_checkBox_radar_topview_clicked(bool checked)
 {
-    if (!checked) {
-        for (int r = 0; r < rc->topview.rows; r++) {
-            for (int c = 0; c < rc->topview.cols; c++)
-                rc->topview.at<cv::Vec4b>(r, c)[3] = 0;
-        }
-    }
-    else {
+    if (checked) {
+        rc->fg_topview = true;
         for (int r = 0; r < rc->topview.rows; r++) {
             for (int c = 0; c < rc->topview.cols; c++) {
                 cv::Vec4b val = sv->topview.at<cv::Vec4b>(r, c);
                 if (val[0] != 0 || val [1] != 0 || val[2] != 0)
                 rc->topview.at<cv::Vec4b>(r, c)[3] = 255;
             }
+        }
+    }
+    else {
+        rc->fg_topview = false;
+        for (int r = 0; r < rc->topview.rows; r++) {
+            for (int c = 0; c < rc->topview.cols; c++)
+                rc->topview.at<cv::Vec4b>(r, c)[3] = 0;
         }
     }
     ui->label_top_view_radar_long->setPixmap(QPixmap::fromImage(QImage::QImage(rc->topview.data, rc->topview.cols, rc->topview.rows, QImage::Format_RGBA8888)).scaled(900, 600));
