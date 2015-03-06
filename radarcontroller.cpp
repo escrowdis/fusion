@@ -1,13 +1,27 @@
 #include "radarcontroller.h"
 
-RadarController::RadarController() : TopView(1, 100, 20470, 102.3, 31900, 600, 900, 300, 400)//TopView(1, 200, 3000, 19.8, 1080, 750, 270, 125, 100)
+RadarController::RadarController(int aim_angle) : TopView(1, 100, 20470, 102.3, 31900, 600, 900, 300, 400)//TopView(1, 200, 3000, 19.8, 1080, 750, 270, 125, 100)
 {
+    this->aim_angle = aim_angle;
+
     fg_read = false;
     fg_data_in = false;
 
     esr_obj = new ESR_track_object_info[64];
 
-    img_radar = cv::Mat::zeros(240, 320, CV_8UC3);
+    img_rows = 160;
+
+    img_cols = 900;
+
+    img_center = cv::Point(img_cols / 2, img_rows / 2);
+
+    obj_rect = cv::Point(20, 40);
+
+    img_radar = cv::Mat::zeros(img_rows, img_cols, CV_8UC4);
+
+    img_radar_BG = cv::Mat::zeros(img_rows, img_cols, CV_8UC3);
+
+    drawFrontView();
 
     current_count = 0;
 
@@ -100,8 +114,6 @@ void RadarController::retrievingData()
     }
 
     if (fg_data_in) {
-        img_radar.setTo(cv::Scalar(0, 0, 0));
-
         int _id;
         if (id >= 0x500 && id <= 0x53F) {
             _id = id - 0x500;
@@ -154,49 +166,65 @@ void RadarController::retrievingData()
 //        }
 #endif
 
-        detected_obj = 0;
-        for (int k = 0; k < 64; k++) {
-            if (esr_obj[k].status != 0) {
-                detected_obj++;
-                if (esr_obj[k].angle >= 0) {
-                    esr_obj[k].x = esr_obj[k].range * cos(abs(esr_obj[k].angle));
-                }
-                else {
-                    esr_obj[k].x = -1.0 * esr_obj[k].range * cos(abs(esr_obj[k].angle));
-                }
-                esr_obj[k].y = 0.0;
-                esr_obj[k].z = esr_obj[k].range * sin(abs(esr_obj[k].angle));
-                int shift_y_dis;
-                if (esr_obj[k].z > 20)
-                    shift_y_dis = esr_obj[k].z * 10 * -1;
-                else
-                    shift_y_dis = esr_obj[k].z * 10;
+        pointDisplayFrontView();
 
-                cv::circle(img_radar, cv::Point(esr_obj[k].x + 150, 100 + shift_y_dis), 1, cv::Scalar(0, 255, 0), -1, 8, 0);
-                cv::rectangle(img_radar, cv::Rect(esr_obj[k].x - 20 + 150, 80 + shift_y_dis, 40, 40), cv::Scalar(0, 0, 255), 2, 8, 0);
-                cv::putText(img_radar, QString::number(k + 1).toStdString(), cv::Point(esr_obj[k].x + 150, 160 + shift_y_dis), cv::FONT_HERSHEY_DUPLEX, 1, cv::Scalar(0, 255, 0));
+        if (fg_topview)
+            pointProjectTopView();
+
+        if (t.elapsed() > time_gap) {
+            emit radarUpdateGUI(detected_obj, &img_radar, &topview);
+
+            t.restart();
+        }
+    }
+}
+
+void RadarController::drawFrontView()
+{
+    short_length = (img_cols / 4);
+    long_length = img_cols;
+    short_length_half = short_length / 2;
+    long_length_half = long_length / 2;
+    cv::line(img_radar_BG, cv::Point(img_center.x + short_length_half, 0), cv::Point(img_center.x + long_length_half, img_rows), cv::Scalar(255, 255, 255), 1, 8, 0);
+    cv::line(img_radar_BG, cv::Point(img_center.x - short_length_half, 0), cv::Point(img_center.x - long_length_half, img_rows), cv::Scalar(255, 255, 255), 1, 8, 0);
+}
+
+void RadarController::pointDisplayFrontView()
+{
+    lock.lockForWrite();
+    img_radar.setTo(cv::Scalar(0, 0, 0, 0));
+    lock.unlock();
+    detected_obj = 0;
+
+    for (int k = 0; k < 64; k++) {
+        if (esr_obj[k].status != 0) {
+            lock.lockForWrite();
+            detected_obj++;
+            esr_obj[k].x = 1.0 * esr_obj[k].range * sin(abs(esr_obj[k].angle));
+            esr_obj[k].y = 0.0;
+            esr_obj[k].z = esr_obj[k].range * cos(esr_obj[k].angle);
+            lock.unlock();
+
+            int pt_x, pt_y;
+            lock.lockForRead();
+            pt_x = 1.0 * esr_obj[k].x * 1.5 * (1.0 - 1.0 * esr_obj[k].z / max_distance) + img_center.x;
+            pt_y = img_rows * (1.0 - 1.0 * esr_obj[k].z / max_distance);
+            cv::circle(img_radar, cv::Point(pt_x, pt_y), 1, cv::Scalar(0, 255, 0, 255), -1, 8, 0);
+            cv::rectangle(img_radar, cv::Rect(pt_x - obj_rect.x / 2, pt_y - obj_rect.y / 2, obj_rect.x, obj_rect.y), cv::Scalar(0, 0, 255, 255), 2, 8, 0);
+            cv::putText(img_radar, QString::number(k + 1).toStdString(), cv::Point(pt_x + obj_rect.x / 2, pt_y), cv::FONT_HERSHEY_DUPLEX, 1, cv::Scalar(0, 255, 0, 255));
+            lock.unlock();
 #ifdef debug_info_radar_data
 //                ui->textEdit->append("data struct\nangle: " + QString::number(esr_obj[k].angle) + " range: " + QString::number(esr_obj[k].range)
 //                                     + " accel: " + QString::number(esr_obj[k].range_accel) + " width: " + QString::number(esr_obj[k].width)
 //                                     + " (x,y,z) = (" + QString::number(esr_obj[k].x) + ", " + QString::number(esr_obj[k].y) + ", " + QString::number(esr_obj[k].z) + ")");
 //                item[k].setText(QString::number(esr_obj[k].range));
 #endif
-            }
+        }
 #ifdef debug_info_radar_data
 //            else {
 //                item[k].setText("0");
 //            }
 #endif
-        }
-
-        if (fg_topview)
-            pointProjectTopView();
-
-        if (t.elapsed() > time_gap) {
-            emit radarUpdateGUI(&img_radar, detected_obj);
-
-            t.restart();
-        }
     }
 }
 
@@ -218,8 +246,10 @@ void RadarController::pointProjectTopView()
             // mark each point belongs to which cell
             if (grid_row_t >= 0 && grid_row_t < img_row &&
                     grid_col_t >= 0 && grid_col_t < img_col) {
+                lock.lockForWrite();
                 grid_map[grid_row_t][grid_col_t].pts_num++;
 //                std::cout<<data[m].z<<std::endl;
+                lock.unlock();
             }
         }
     }

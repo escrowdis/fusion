@@ -260,14 +260,12 @@ void stereo_vision::stereoMatch()
     cv::GaussianBlur(img_match_L, img_match_L, cv::Size(7, 7), 0, 0);
     cv::GaussianBlur(img_match_R, img_match_R, cv::Size(7, 7), 0, 0);
 
-    lock.lockForWrite();
     if (match_mode == SV::STEREO_MATCH::BM)
         bm->compute(img_match_L, img_match_R, disp_raw);
     else if (match_mode == SV::STEREO_MATCH::SGBM)
         sgbm->compute(img_match_L, img_match_R, disp_raw);
 
     disp_raw.convertTo(disp, CV_8U);
-    lock.unlock();
 
     // depth calculation of points from disp [merge into stereo_vision::depthCalculation]
 }
@@ -275,7 +273,6 @@ void stereo_vision::stereoMatch()
 
 void stereo_vision::depthCalculation()
 {
-    lock.lockForWrite();
     if (fg_pseudo)
         disp_pseudo.setTo(0);
     uchar* ptr_color = color_table->scanLine(0);
@@ -289,14 +286,20 @@ void stereo_vision::depthCalculation()
             else if (c < param_bm.num_of_disp / 2 && input_mode == SV::STEREO_MATCH::BM)
                 continue;
             // Depth calculation
+            lock.lockForWrite();
             data[r][c].disp = ptr_raw[c];
+            lock.unlock();
             if (data[r][c].disp > 0) {
+                lock.lockForWrite();
                 data[r][c].Z = cam_param.param_r / ptr_raw[c];
+                lock.unlock();
 
                 // pseudo color transform
                 if (fg_pseudo) {
                     int z_est;
+                    lock.lockForRead();
                     z_est = data[r][c].Z;
+                    lock.unlock();
                     //                        std::cout<<z_est<<" ";
                     if (z_est >= min_distance && z_est <= max_distance) {
                         int jj = z_est - min_distance;
@@ -317,14 +320,14 @@ void stereo_vision::depthCalculation()
                 }
             }
             else {
+                lock.lockForRead();
                 data[r][c].Z = -1;
+                lock.unlock();
                 //                    std::cout<<"0 ";
             }
         }
         //            std::cout<<std::endl;
     }
-
-    lock.unlock();
 }
 
 bool stereo_vision::stereoVision()
@@ -695,7 +698,6 @@ void stereo_vision::blob(int thresh_pts_num)
     int gap = 0;
     for (int r = 0; r < img_row; r++) {
         for (int c = 0; c < img_col; c++) {
-            lock.lockForWrite();
             // filtering
             if (grid_map[r][c].obj_label >= 0 && objects[grid_map[r][c].obj_label].labeled) {
                 // plot points onto topview
@@ -714,7 +716,6 @@ void stereo_vision::blob(int thresh_pts_num)
 
                 cv::fillConvexPoly(topview, pts, thick_polygon, cv::Scalar(ptr_color[3 * p + 0], ptr_color[3 * p + 1], ptr_color[3 * p + 2], 255), 8, 0);
             }
-            lock.unlock();
         }
     }
 
@@ -738,7 +739,6 @@ void stereo_vision::pointProjectImage()
             lock.unlock();
             if (grid_r == -1 || grid_c == -1 || data[r][c].disp <= 0)
                 continue;
-            lock.lockForWrite();
             int label = grid_map[grid_r][grid_c].obj_label;
             if (grid_map[grid_r][grid_c].obj_label >= 0 && objects[label].labeled && data[r][c].disp > 0) {
                 // find the boundary of objects
@@ -748,6 +748,7 @@ void stereo_vision::pointProjectImage()
                     objects[label].tl = std::pair<int, int>(r, c);
                 }
                 else {
+                    lock.lockForWrite();
                     if (objects[label].br.first < r)
                         objects[label].br.first = r;
                     if (objects[label].br.second < c)
@@ -756,6 +757,7 @@ void stereo_vision::pointProjectImage()
                         objects[label].tl.first = r;
                     if (objects[label].tl.second > c)
                         objects[label].tl.second = c;
+                    lock.unlock();
                 }
 
                 // draw points
@@ -763,7 +765,6 @@ void stereo_vision::pointProjectImage()
                 ptr_d[3 * c + 1] = ptr_o[3 * c + 1];
                 ptr_d[3 * c + 2] = ptr_o[3 * c + 2];
             }
-            lock.unlock();
         }
     }
 

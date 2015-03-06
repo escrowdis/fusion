@@ -516,7 +516,7 @@ parameters</string>
        </item>
       </layout>
      </widget>
-     <widget class="QWidget" name="">
+     <widget class="QWidget" name="layoutWidget">
       <property name="geometry">
        <rect>
         <x>10</x>
@@ -1107,7 +1107,7 @@ parameters</string>
      </rect>
     </property>
     <property name="currentIndex">
-     <number>0</number>
+     <number>1</number>
     </property>
     <widget class="QWidget" name="tab_5">
      <attribute name="title">
@@ -1282,18 +1282,32 @@ parameters</string>
       <property name="geometry">
        <rect>
         <x>30</x>
-        <y>550</y>
+        <y>629</y>
         <width>900</width>
-        <height>200</height>
+        <height>160</height>
        </rect>
       </property>
       <property name="text">
        <string>Radar</string>
       </property>
      </widget>
+     <widget class="QLabel" name="label_radar_data_BG">
+      <property name="geometry">
+       <rect>
+        <x>30</x>
+        <y>629</y>
+        <width>900</width>
+        <height>160</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Radar</string>
+      </property>
+     </widget>
+     <zorder>label_radar_data_BG</zorder>
+     <zorder>label_radar_data</zorder>
      <zorder>label_top_view_radar_long_BG</zorder>
      <zorder>label_top_view_radar_long</zorder>
-     <zorder>label_radar_data</zorder>
     </widget>
     <widget class="QWidget" name="tab_7">
      <attribute name="title">
@@ -1325,7 +1339,7 @@ parameters</string>
     </widget>
     <widget class="QWidget" name="tab_8">
      <attribute name="title">
-      <string>Fusion</string>
+      <string>Topview - Fusion</string>
      </attribute>
      <widget class="QLabel" name="label_fusion_BG">
       <property name="geometry">
@@ -1333,11 +1347,11 @@ parameters</string>
         <x>20</x>
         <y>60</y>
         <width>640</width>
-        <height>600</height>
+        <height>640</height>
        </rect>
       </property>
       <property name="text">
-       <string>TextLabel</string>
+       <string/>
       </property>
      </widget>
      <widget class="QLabel" name="label_fusion">
@@ -1346,11 +1360,11 @@ parameters</string>
         <x>20</x>
         <y>60</y>
         <width>640</width>
-        <height>600</height>
+        <height>640</height>
        </rect>
       </property>
       <property name="text">
-       <string>TextLabel</string>
+       <string/>
       </property>
      </widget>
      <widget class="QCheckBox" name="checkBox_fusion_radar">

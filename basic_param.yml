@@ -1,7 +1,7 @@
 %YAML:1.0
 stereoVision:
-   port_L: 0
-   port_R: 1
+   port_L: 2
+   port_R: 0
    cam_focal_length: 0
    focal_length: 29430.
    base_line: 15.

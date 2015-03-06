@@ -3,7 +3,10 @@
 
 #include <QObject>
 #include <QTime>
-#include <QThread>
+
+// thread control
+#include <QReadWriteLock>
+extern QReadWriteLock lock;
 
 #include <iostream>
 #include <bitset>
@@ -21,7 +24,7 @@ class RadarController : public QObject, public TopView
     Q_OBJECT
 
 public:
-    explicit RadarController();
+    explicit RadarController(int aim_angle);
 
     ~RadarController();
 
@@ -35,6 +38,8 @@ public:
 
     void retrievingData();
 
+    int aim_angle;                      // device's aim angle (degree)
+
     bool fg_topview;                    // check wether project to topview
 
     // smoothing for displaying
@@ -43,7 +48,7 @@ public:
     int update_count;
 
     struct ESR_track_object_info{
-        float angle;
+        float angle;                    // degree
         bool bridge_object;
         bool grouping_changed;
         float lat_rate;
@@ -55,7 +60,7 @@ public:
         bool rolling_count;
         int status;
         float width;
-        double x;
+        double x;                       // radar coordinates system (cm)
         double y;
         double z;
     };
@@ -64,11 +69,10 @@ public:
 
     int detected_obj;
 
+    // radar frontview image
     cv::Mat img_radar;
 
-    // Topview =====================
-    void pointProjectTopView();
-    // ============================= End
+    cv::Mat img_radar_BG;
 
 private:
     void reset();
@@ -106,6 +110,28 @@ private:
     std::bitset<10> b_track_range_accel;
     std::bitset<2> b_track_med_range_mode;
     std::bitset<14> b_track_range_rate;
+    // ============================= End
+
+    // 2D image display ============
+    int img_rows;               // frontview image size
+
+    int img_cols;
+
+    int short_length, long_length;
+
+    int short_length_half, long_length_half;
+
+    cv::Point img_center;       // object's center
+
+    cv::Point obj_rect;         // object's rect size
+
+    void drawFrontView();
+
+    void pointDisplayFrontView();
+    // ============================= End
+
+    // Topview =====================
+    void pointProjectTopView();
     // ============================= End
 
     struct ESR_STAT {
@@ -156,7 +182,7 @@ private:
     };
 
 signals:
-    void radarUpdateGUI(cv::Mat *img, int detected_obj);
+    void radarUpdateGUI(int detected_obj, cv::Mat *img, cv::Mat *topview);
 };
 
 #endif // RADARCONTROLLER_H

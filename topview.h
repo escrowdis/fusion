@@ -39,6 +39,13 @@ public:
 
     QImage *color_table;                // psuedo-color table //**// wanna make it static
 
+    // color
+    cv::Scalar color_BG;
+
+    cv::Scalar color_tag;
+
+    cv::Scalar color_line;
+
 protected:
     void resetTopView();
 
@@ -98,13 +105,6 @@ private:
 
     // psuedo-color table
     void pseudoColorTable();
-
-    // color
-    cv::Scalar color_BG;
-
-    cv::Scalar color_tag;
-
-    cv::Scalar color_line;
 };
 
 #endif // TOPVIEW_H

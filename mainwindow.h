@@ -36,7 +36,7 @@ namespace Ui {
 class MainWindow;
 }
 
-class MainWindow : public QMainWindow, public TopView
+class MainWindow : public QMainWindow
 {
     Q_OBJECT
 
@@ -60,19 +60,6 @@ private:
     void paramWrite();
 
     void readFromTxt(QString file_name, cv::Mat *output);
-    // ======================== End
-
-    void pointProjectTopView(stereo_vision::StereoData **d_sv, RadarController::ESR_track_object_info *d_rc, QImage *color_table);
-
-    void f_resetTopView();
-
-    int** f_rc_grid_map;                 // Storing pixels into cells
-
-    cv::Point** f_rc_img_grid;           // topview background cell points
-
-    int** f_sv_grid_map;                 // Storing pixels into cells
-
-    cv::Point** f_sv_img_grid;           // topview background cell points
 
     // Radar ESR ==============
     RadarController* rc;
@@ -121,6 +108,33 @@ private:
 
     std::vector<double> lrf_temp;
     std::vector<std::vector<double> > display_lrf_3D;
+    // ======================== End
+
+    // Fusion =================
+    // topview
+    float ratio;                                // scaling ratio of real to topview (cm -> pixel)
+
+    struct vehicleInfo {
+        cv::Point VCP;                              // topview vehicle current position (pixel)
+
+        int detection_range;                        // topview radius (pixel)
+
+        int width;                                  // average vehicle's size (pixel)
+
+        int length;
+
+        cv::Rect rect;
+
+        cv::Scalar color;                           // vehicle color
+    } vehicle;
+
+    cv::Mat fused_topview_BG;
+
+    cv::Mat fused_topview;
+
+    void initialFusedTopView();
+
+    void drawFusedTopView(stereo_vision::objInformation *d_sv, RadarController::ESR_track_object_info *d_radar);
     // ======================== End
 
     // Thread control =========
@@ -216,7 +230,7 @@ private slots:
     // ======================== End
 
     // Radar ESR ==============
-    void radarDisplay(cv::Mat *img, int detected_obj);
+    void radarDisplay(int detected_obj, cv::Mat *img, cv::Mat *topview);
     // ======================== End
 
     // Mouse control ==========

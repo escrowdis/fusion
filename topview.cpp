@@ -227,21 +227,21 @@ void TopView::drawTopViewLines(int rows_interval, int cols_interval, bool fg_tag
     cv::Point pt2 = cv::Point(chord_length, max_distance - distance);
     cv::line(topview_BG, pointT(pt1), pointT(pt2), color_tag, line_thickness, 8, 0);
     pt1.y += text_dev;
-    cv::putText(topview_BG, "30 m", pointT(pt1), cv::FONT_HERSHEY_DUPLEX, font_size, color_tag, 1);
+    cv::putText(topview_BG, "30 m", pointT(pt1), cv::FONT_HERSHEY_PLAIN, font_size, color_tag, 1);
     // 2 m
     distance = 200;
     pt1.y = max_distance - distance;
     pt2.y = max_distance - distance;
     cv::line(topview_BG, pointT(pt1), pointT(pt2), color_tag, line_thickness, 8, 0);
     pt1.y += text_dev;
-    cv::putText(topview_BG, "2 m", pointT(pt1), cv::FONT_HERSHEY_DUPLEX, font_size, color_tag, 1);
+    cv::putText(topview_BG, "2 m", pointT(pt1), cv::FONT_HERSHEY_PLAIN, font_size, color_tag, 1);
     // 1 m
     distance = 100;
     pt1.y = max_distance - distance;
     pt2.y = max_distance - distance;
     cv::line(topview_BG, pointT(pt1), pointT(pt2), color_tag, line_thickness, 8, 0);
     pt1.y += text_dev;
-    cv::putText(topview_BG, "1 m", pointT(pt1), cv::FONT_HERSHEY_DUPLEX, font_size, color_tag, 1);
+    cv::putText(topview_BG, "1 m", pointT(pt1), cv::FONT_HERSHEY_PLAIN, font_size, color_tag, 1);
 
 
     if (fg_tag) {
@@ -251,14 +251,14 @@ void TopView::drawTopViewLines(int rows_interval, int cols_interval, bool fg_tag
         pt2.y = max_distance - distance;
         cv::line(topview_BG, pointT(pt1), pointT(pt2), color_tag, line_thickness, 8, 0);
         pt1.y += text_dev;
-        cv::putText(topview_BG, "20 m", pointT(pt1), cv::FONT_HERSHEY_DUPLEX, font_size, color_tag, 1);
+        cv::putText(topview_BG, "20 m", pointT(pt1), cv::FONT_HERSHEY_PLAIN, font_size, color_tag, 1);
         // 10 m
         distance = 1000;
         pt1.y = max_distance - distance;
         pt2.y = max_distance - distance;
         cv::line(topview_BG, pointT(pt1), pointT(pt2), color_tag, line_thickness, 8, 0);
         pt1.y += text_dev;
-        cv::putText(topview_BG, "10 m", pointT(pt1), cv::FONT_HERSHEY_DUPLEX, font_size, color_tag, 1);
+        cv::putText(topview_BG, "10 m", pointT(pt1), cv::FONT_HERSHEY_PLAIN, font_size, color_tag, 1);
     }
 
     // draw lines

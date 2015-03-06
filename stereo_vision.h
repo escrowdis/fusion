@@ -148,6 +148,39 @@ public:
 
     // ============================= End
 
+    // object information ==========
+    int obj_nums;                       // maximum object detection amount
+
+    struct objInformation
+    {
+        bool labeled;                   // filtered object
+
+        std::pair<int, int> tl;         // Top left (col, row)
+
+        std::pair<int, int> br;         // Bottom right
+
+        std::pair<int, int> center;     // Center point of object in image
+
+        int avg_Z;                      // average depth
+
+        int pts_num;
+
+        int closest_count;              // smaller number represents closer to vehicle
+
+        objInformation() {
+            labeled = false;
+            tl = std::pair<int, int>(-1, -1);
+            br = std::pair<int, int>(-1, -1);
+            center = std::pair<int, int>(-1, -1);
+            avg_Z = 0;
+            pts_num = 0;
+            closest_count = 0;
+        }
+    };
+
+    objInformation* objects;            // filtered objects
+    // ============================= End
+
 private:
     void resetOpen(int device_index_L, int device_index_R);
 
@@ -191,48 +224,18 @@ private:
     cv::Mat img_match_L;
     cv::Mat img_match_R;
 
-    int obj_nums;                       // maximum object detection amount
-
+    // object params ===============
     int thick_obj_rect, radius_obj_point;
 
     int detected_obj;                   // detected object number
-
-    struct objInformation
-    {
-        bool labeled;                   // filtered object
-
-        std::pair<int, int> tl;         // Top left
-
-        std::pair<int, int> br;         // Bottom right
-
-        std::pair<int, int> center;     // Center point of object in image
-
-        int avg_Z;                          // average depth
-
-        int pts_num;
-
-        int closest_count;              // smaller number represents closer to vehicle
-
-        objInformation() {
-            labeled = false;
-            tl = std::pair<int, int>(-1, -1);
-            br = std::pair<int, int>(-1, -1);
-            center = std::pair<int, int>(-1, -1);
-            avg_Z = 0;
-            pts_num = 0;
-            closest_count = 0;
-        }
-    };
-
-    objInformation* objects;            // filtered objects
 
     objInformation obj_temp;            // sorting used
 
     void resetBlob();
 
     void blob(int thresh_pts_num);
+    // ============================= End
 
-public:
     // Topview =====================
     void pointProjectTopView();
 
