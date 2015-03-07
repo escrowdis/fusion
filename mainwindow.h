@@ -53,14 +53,17 @@ private:
 
     void report(QString);
 
-    bool projectFolder();
+    bool projectFolder();               // find the project folder for loading files
 
-    void paramRead();
+    // Read params ============
+    bool fg_param_loaded;               // check wether the paramerters are loaded
+
+    void paramRead();                   // read params from basic_param.yml
 
     void paramWrite();
-
-    void readFromTxt(QString file_name, cv::Mat *output);
     // ======================== End
+
+    void readFromTxt(QString file_name, cv::Mat *output);   // read image data from text
 
     void pointProjectTopView(stereo_vision::StereoData **d_sv, RadarController::ESR_track_object_info *d_rc, QImage *color_table);
 
