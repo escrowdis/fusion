@@ -138,9 +138,10 @@ MainWindow::MainWindow(QWidget *parent) :
     // ========================================= End
 
     // default setting =========================
+    fg_param_loaded = false;
+
     if (!projectFolder()) {
-        reportError("path", "Error!", "Path cannot be found.");
-        return;
+        reportError("path", "Warning.", "Path folder is NOT \"Fusion\".");
     }
 
     paramRead();
@@ -270,6 +271,12 @@ bool MainWindow::projectFolder()
 
 void MainWindow::paramRead()
 {
+    QFile fout(project_path.path() + "/basic_param.yml");
+    if (!fout.exists()) {
+        reportError("path", "Error!", "basic_param.yml is NOT existed.");
+        return;
+    }
+
     cv::FileStorage fs(project_path.path().toStdString() + "/basic_param.yml", cv::FileStorage::READ);
 
     cv::FileNode n;
@@ -320,10 +327,14 @@ void MainWindow::paramRead()
     sv->param_bm.speckle_range = (int)(n["speckle_range"]);
 
     fs.release();
+    fg_param_loaded = true;
 }
 
 void MainWindow::paramWrite()
 {
+    if (!fg_param_loaded)
+        return;
+
     cv::FileStorage fs(project_path.path().toStdString() + "/basic_param.yml", cv::FileStorage::WRITE);
 
     fs << "stereoVision" << "{";

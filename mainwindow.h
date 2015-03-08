@@ -54,13 +54,16 @@ private:
 
     void report(QString);
 
-    bool projectFolder();
+    bool projectFolder();               // find the project folder for loading files
 
-    void paramRead();
+    // Read params ============
+    bool fg_param_loaded;               // check wether the paramerters are loaded
 
+    void paramRead();                   // read params from basic_param.yml
+
+    void readFromTxt(QString file_name, cv::Mat *output);   // read image data from text
     void paramWrite();
-
-    void readFromTxt(QString file_name, cv::Mat *output);
+    // ======================== End
 
     // Radar ESR ==============
     RadarController* rc;
