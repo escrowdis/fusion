@@ -155,11 +155,15 @@ public:
     {
         bool labeled;                   // filtered object
 
-        std::pair<int, int> tl;         // Top left (col, row)
+        std::pair<int, int> tl;         // Top left (row, col)
 
-        std::pair<int, int> br;         // Bottom right
+        std::pair<int, int> br;         // Bottom right (row, col)
 
-        std::pair<int, int> center;     // Center point of object in image
+        std::pair<int, int> center;     // Center point of object in image (row, col)
+
+        float angle;                    // orientation degree. Middle is zero. (degree)
+
+        float range;                    // (cm)
 
         int avg_Z;                      // average depth
 
@@ -172,6 +176,8 @@ public:
             tl = std::pair<int, int>(-1, -1);
             br = std::pair<int, int>(-1, -1);
             center = std::pair<int, int>(-1, -1);
+            angle = 0.0;
+            range = 0.0;
             avg_Z = 0;
             pts_num = 0;
             closest_count = 0;
@@ -179,6 +185,9 @@ public:
     };
 
     objInformation* objects;            // filtered objects
+    objInformation* objects_display;
+
+    void updateDataFroDisplay();
     // ============================= End
 
 private:

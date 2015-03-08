@@ -10,6 +10,7 @@ MainWindow::MainWindow(QWidget *parent) :
     fg_running = false;
 
     qRegisterMetaType<cv::Mat>("cv::Mat");
+    qRegisterMetaType<QVector<int>>("QVector<int>");
 
     // Laser range finder ======================
 
@@ -82,11 +83,19 @@ MainWindow::MainWindow(QWidget *parent) :
     // Stereo vision =========================== End
 
     // Radar ESR ===============================
-    rc = new RadarController(0);
+    rc = new RadarController(0.0);
 
     radarDisplayTopViewBG();
 
     fg_retrieving = false;
+
+    model_radar = new QStandardItemModel(64, 1, this);
+    model_radar->setHorizontalHeaderItem(0, new QStandardItem(QString("Range")));
+    ui->tableView_radar->setModel(model_radar);
+    rc->item = new QStandardItem[64];
+    for (int i = 0 ; i < 64; i++) {
+        model_radar->setItem(i, 0, &rc->item[i]);
+    }
 
     on_checkBox_radar_topview_clicked(ui->checkBox_radar_topview->isChecked());
 
@@ -102,10 +111,12 @@ MainWindow::MainWindow(QWidget *parent) :
     f_lrf.setPaused(true);
     f_lrf_buf.setPaused(true);
     f_radar.setPaused(true);
+    f_fused.setPaused(true);
     sync.addFuture(f_sv);
     sync.addFuture(f_lrf);
     sync.addFuture(f_lrf_buf);
     sync.addFuture(f_radar);
+    sync.addFuture(f_fused);
     // ========================================= End
 
     // camera calibration ======================
@@ -367,11 +378,12 @@ void MainWindow::paramWrite()
 
 void MainWindow::initialFusedTopView()
 {
-    vehicle.detection_range = 320;
+    // vehicle & fused topview information
+    vehicle.detection_range_pixel = ui->label_fusion->width() / 2;
 
-    ratio = 1.0 * vehicle.detection_range / rc->max_distance;
+    ratio = 1.0 * vehicle.detection_range_pixel / 1000;
 
-    vehicle.VCP = cv::Point(vehicle.detection_range, vehicle.detection_range);
+    vehicle.VCP = cv::Point(vehicle.detection_range_pixel, vehicle.detection_range_pixel);
 
     vehicle.width = 180 * ratio;
 
@@ -382,46 +394,76 @@ void MainWindow::initialFusedTopView()
 
     vehicle.color = cv::Scalar(0, 255, 0, 255);
 
-    fused_topview.create(2 * vehicle.detection_range, 2 * vehicle.detection_range, CV_8UC4);
+    fused_topview.create(2 * vehicle.detection_range_pixel, 2 * vehicle.detection_range_pixel, CV_8UC4);
     fused_topview.setTo(cv::Scalar(0, 0, 0, 0));
 
-    fused_topview_BG.create(2 * vehicle.detection_range, 2 * vehicle.detection_range, CV_8UC4);
+    fused_topview_BG.create(2 * vehicle.detection_range_pixel, 2 * vehicle.detection_range_pixel, CV_8UC4);
     fused_topview_BG.setTo(cv::Scalar(0, 0, 0, 0));
 
-    cv::circle(fused_topview_BG, vehicle.VCP, vehicle.detection_range, rc->color_BG, -1, 8, 0);
+    cv::circle(fused_topview_BG, vehicle.VCP, vehicle.detection_range_pixel, rc->color_BG, -1, 8, 0);
 
     cv::rectangle(fused_topview_BG, vehicle.rect, vehicle.color, -1, 8, 0);
 
     ui->label_fusion_BG->setPixmap(QPixmap::fromImage(QImage::QImage(fused_topview_BG.data, fused_topview_BG.cols, fused_topview_BG.rows, QImage::Format_RGBA8888)));
     ui->label_fusion->setPixmap(QPixmap::fromImage(QImage::QImage(fused_topview.data, fused_topview.cols, fused_topview.rows, QImage::Format_RGBA8888)));
+
+    //**// You may CRASH if you add lots of sensors but you don't revise the number of the array
+    // sensor information
+    sensors = new sensorInformation[3];
+
+    sensors[0].color = cv::Scalar(255, 0, 0, 255);
+    sensors[0].pos = cv::Point(0, vehicle.length / 2);
+    sensors[0].thickness = 2;
+
+    sensors[1].color = cv::Scalar(0, 0, 255, 255);
+    sensors[1].pos = cv::Point(0, vehicle.length / 2);
+    sensors[1].thickness = 2;
+
+    QColor pic_color_sv = QColor(sensors[0].color[0], sensors[0].color[1], sensors[0].color[2]);
+    QPixmap pic_sv(20, 20);
+    pic_sv.fill(pic_color_sv);
+    ui->label_fusion_sv_color->setPixmap(pic_sv);
+    ui->label_fusion_sv_color->setPixmap(pic_sv);
+    QColor pic_color_radar = QColor(sensors[1].color[0], sensors[1].color[1], sensors[1].color[2]);
+    QPixmap pic_radar(20, 20);
+    pic_radar.fill(pic_color_radar);
+    ui->label_fusion_radar_color->setPixmap(pic_radar);
+
 }
 
 void MainWindow::drawFusedTopView(stereo_vision::objInformation *d_sv, RadarController::ESR_track_object_info *d_radar)
 {
     fused_topview.setTo(cv::Scalar(0, 0, 0, 0));
 
-    if (ui->checkBox_fusion_sv->isChecked()) {
+    int device = 0;
+    if (ui->checkBox_fusion_sv->isChecked() && fg_capturing) {
         for (int k = 0; k < sv->obj_nums; k++) {
             if (d_sv[k].labeled) {
-
+                cv::Point plot_pt;
+                pointTransformTopView(sensors[device].pos, d_sv[k].range, d_sv[k].angle, &plot_pt);
+                cv::circle(fused_topview, plot_pt, sensors[device].thickness, cv::Scalar(255, 0, 0, 255), -1, 8, 0);
             }
         }
     }
 
-    if (ui->checkBox_fusion_radar->isChecked()) {
+    device = 1;
+    if (ui->checkBox_fusion_radar->isChecked() && fg_retrieving) {
         for (int m = 0; m < 64; m++) {
             if (d_radar[m].status != 0) {
-                lock.lockForWrite();
-                d_radar[m].range * cos(abs(d_radar[m].angle + rc->aim_angle));
-                d_radar[m].range * sin(abs(d_radar[m].angle + rc->aim_angle));
-
-                cv::circle(fused_topview, cv::Point(vehicle.VCP.x, vehicle.VCP.y), 3, cv::Scalar(0, 0, 255, 255), -1, 8, 0);
-                lock.unlock();
+                cv::Point plot_pt;
+                pointTransformTopView(sensors[device].pos, 100 * d_radar[m].range, d_radar[m].angle + rc->aim_angle, &plot_pt);
+                cv::circle(fused_topview, plot_pt, sensors[device].thickness, cv::Scalar(0, 0, 255, 255), -1, 8, 0);
             }
         }
     }
 
     ui->label_fusion->setPixmap(QPixmap::fromImage(QImage::QImage(fused_topview.data, fused_topview.cols, fused_topview.rows, QImage::Format_RGBA8888)));
+}
+
+void MainWindow::pointTransformTopView(cv::Point sensor_pos, float range, float angle, cv::Point *output)
+{
+    output->x = vehicle.VCP.x + (range * sin(angle * CV_PI / 180.0) * ratio + sensor_pos.x);
+    output->y = vehicle.VCP.y - (range * cos(angle * CV_PI / 180.0) * ratio + sensor_pos.y);
 }
 
 void MainWindow::radarDisplayTopViewBG()
@@ -569,6 +611,7 @@ void MainWindow::svDisplay(cv::Mat *img_L, cv::Mat *img_R, cv::Mat *disp, cv::Ma
             ui->label_sv_detected->setPixmap(QPixmap::fromImage(QImage::QImage(img_detected->data, img_detected->cols, img_detected->rows, QImage::Format_RGB888)).scaled(IMG_DIS_W, IMG_DIS_H));
         }
     }
+
     lock.unlock();
 }
 
@@ -689,13 +732,12 @@ void MainWindow::threadProcessing()
 
         // Radar ESR
         if (fg_retrieving && !f_radar.isRunning()) {
-//            rc->retrievingData();
-            f_radar = QtConcurrent::run(rc, &RadarController::retrievingData);
+            rc->retrievingData();
+//            f_radar = QtConcurrent::run(rc, &RadarController::retrievingData);
             qApp->processEvents();
         }
 
-        if (fg_retrieving && fg_capturing)
-            drawFusedTopView(sv->objects, rc->esr_obj);
+        drawFusedTopView(sv->objects_display, rc->esr_obj);
 
         sync.waitForFinished();
     }
@@ -1341,9 +1383,8 @@ void MainWindow::on_pushButton_radar_bus_off_clicked()
 void MainWindow::radarDisplay(int detected_obj, cv::Mat *img, cv::Mat *topview)
 {
     ui->label_radar_detected_obj->setText(QString::number(detected_obj));
-    lock.lockForRead();
+
     ui->label_radar_data->setPixmap(QPixmap::fromImage(QImage::QImage(img->data, img->cols, img->rows, QImage::Format_RGBA8888)));
-    lock.unlock();
 
     // update topview
     if (ui->checkBox_radar_topview->isChecked() && rc->current_count >= rc->update_count) {

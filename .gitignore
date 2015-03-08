@@ -33,3 +33,7 @@ Makefile*
 
 # calibration stuffs
 calibrationUsedImgs
+
+# build folder
+release/
+debug/

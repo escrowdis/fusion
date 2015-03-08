@@ -21,6 +21,7 @@ stereo_vision::stereo_vision() : TopView(20, 200, 3000, 19.8, 1080, 750, 270, 12
     radius_obj_point = 3;
 
     objects = new objInformation[obj_nums];
+    objects_display = new objInformation[obj_nums];
 
     data = new StereoData * [IMG_H];
     for (int r = 0; r < IMG_H; r++) {
@@ -48,11 +49,13 @@ stereo_vision::stereo_vision() : TopView(20, 200, 3000, 19.8, 1080, 750, 270, 12
 
 stereo_vision::~stereo_vision()
 {
-    for (int i = 0; i < IMG_H; i++)
+    for (int i = 0; i < IMG_H; i++) {
         delete[] data[i];
+    }
     delete[] data;
 
     delete[] objects;
+    delete[] objects_display;
 
     close();
     sgbm.release();
@@ -381,6 +384,8 @@ bool stereo_vision::stereoVision()
     qDebug()<<"run"<<&img_L<<"emit"<<&img_r_L;
 #endif
 
+    updateDataFroDisplay();
+
     if (t.elapsed() > time_gap) {
         emit svUpdateGUI(&img_r_L, &img_r_R, &disp, &disp_pseudo, &topview, &img_detected, detected_obj);
         t.restart();
@@ -599,6 +604,8 @@ void stereo_vision::resetBlob()
         objects[i].tl = std::pair<int, int>(-1, -1);
         objects[i].br = std::pair<int, int>(-1, -1);
         objects[i].center = std::pair<int, int>(-1, -1);
+        objects[i].angle = 0.0;
+        objects[i].range = 0.0;
         objects[i].avg_Z = 0;
         objects[i].pts_num = 0;
         objects[i].closest_count = 0;
@@ -787,6 +794,8 @@ void stereo_vision::pointProjectImage()
         if (objects[i].labeled && objects[i].br != std::pair<int, int>(-1, -1) && objects[i].tl != std::pair<int, int>(-1, -1)) {
             // find center of rect
             objects[i].center = std::pair<int, int>(0.5 * (objects[i].tl.first + objects[i].br.first), 0.5 * (objects[i].tl.second + objects[i].br.second));
+            objects[i].angle = atan(1.0 * (objects[i].center.second - 0.5 * IMG_W) / objects[i].avg_Z) * 180.0 / CV_PI;
+            objects[i].range = sqrt(pow((double)(objects[i].avg_Z), 2) + pow((double)(objects[i].center.second - IMG_W / 2), 2));
 
             cv::rectangle(img_detected, cv::Rect(objects[i].tl.second, objects[i].tl.first, objects[i].br.second - objects[i].tl.second, objects[i].br.first - objects[i].tl.first),
                           cv::Scalar(ptr_color[3 * tag + 0], ptr_color[3 * tag + 1], ptr_color[3 * tag + 2]), thick_obj_rect, 8, 0);
@@ -796,3 +805,19 @@ void stereo_vision::pointProjectImage()
     }
 }
 
+void stereo_vision::updateDataFroDisplay()
+{
+    for (int i = 0; i < obj_nums; i++) {
+        lock.lockForRead();
+        objects_display[i].angle = objects[i].angle;
+        objects_display[i].avg_Z = objects[i].avg_Z;
+        objects_display[i].br = objects[i].br;
+        objects_display[i].center = objects[i].center;
+        objects_display[i].closest_count = objects[i].closest_count;
+        objects_display[i].labeled = objects[i].labeled;
+        objects_display[i].pts_num = objects[i].pts_num;
+        objects_display[i].range = objects[i].range;
+        objects_display[i].tl = objects[i].tl;
+        lock.unlock();
+    }
+}

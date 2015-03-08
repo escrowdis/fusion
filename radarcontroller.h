@@ -3,6 +3,7 @@
 
 #include <QObject>
 #include <QTime>
+#include <QStandardItemModel>
 
 // thread control
 #include <QReadWriteLock>
@@ -24,7 +25,7 @@ class RadarController : public QObject, public TopView
     Q_OBJECT
 
 public:
-    explicit RadarController(int aim_angle);
+    explicit RadarController(float aim_angle);
 
     ~RadarController();
 
@@ -38,7 +39,10 @@ public:
 
     void retrievingData();
 
-    int aim_angle;                      // device's aim angle (degree)
+    // tableView used
+    QStandardItem* item;
+
+    float aim_angle;                    // device's aim (yaw) angle (degree)
 
     bool fg_topview;                    // check wether project to topview
 
@@ -48,13 +52,13 @@ public:
     int update_count;
 
     struct ESR_track_object_info{
-        float angle;                    // degree
+        float angle;                    // orientation degree. Middle is zero. From -51.2 to 51.1. (degree)
         bool bridge_object;
         bool grouping_changed;
         float lat_rate;
         int med_range_mode;
         bool oncoming;
-        float range;
+        float range;                    // (m)
         float range_accel;
         float range_rate;
         bool rolling_count;

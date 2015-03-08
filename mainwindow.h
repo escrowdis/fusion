@@ -8,6 +8,7 @@
 #include <QMessageBox>
 #include <QTime>
 #include <QLabel>
+#include <QTableView>
 #include <QKeyEvent>
 #include <QKeySequence>
 #include <QtConcurrent/QtConcurrent>
@@ -66,6 +67,9 @@ private:
 
     bool fg_retrieving;
 
+    // tableView used
+    QStandardItemModel* model_radar;
+
     void radarDisplayTopViewBG();
     // ======================== End
 
@@ -112,12 +116,27 @@ private:
 
     // Fusion =================
     // topview
-    float ratio;                                // scaling ratio of real to topview (cm -> pixel)
+    float ratio;                                    // scaling ratio of real to fused topview (cm -> pixel)
+
+    // information of objects detected by different sensors on fused topview
+    struct sensorInformation {
+        cv::Point pos;                              // sensor's position based on the vehicle view
+
+        cv::Scalar color;                           // sensor's color on the topview
+
+        int thickness;
+    };
+
+    sensorInformation *sensors;
+    // sensors:
+    // [0] = stereo vision
+    // [1] = radar ESR
+    // [2] = laser rangefinder
 
     struct vehicleInfo {
-        cv::Point VCP;                              // topview vehicle current position (pixel)
+        cv::Point VCP;                              // fused topview vehicle current position (pixel)
 
-        int detection_range;                        // topview radius (pixel)
+        int detection_range_pixel;                  // fused topview radius (pixel)
 
         int width;                                  // average vehicle's size (pixel)
 
@@ -135,6 +154,8 @@ private:
     void initialFusedTopView();
 
     void drawFusedTopView(stereo_vision::objInformation *d_sv, RadarController::ESR_track_object_info *d_radar);
+
+    void pointTransformTopView(cv::Point sensor_pos, float range, float angle, cv::Point *output);
     // ======================== End
 
     // Thread control =========
@@ -145,6 +166,7 @@ private:
     QFuture<bool> f_lrf;
     QFuture<void> f_lrf_buf;
     QFuture<void> f_radar;
+    QFuture<void> f_fused;
 //    QFutureWatcher<void> fw_sv;
 //    QFutureWatcher<void> fw_lrf;
 //    QFutureWatcher<void> fw_lrf_buf;
