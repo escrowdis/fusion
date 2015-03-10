@@ -9,6 +9,8 @@ RadarController::RadarController(float aim_angle) : TopView(1, 100, 20470, 102.3
 
     esr_obj = new ESR_track_object_info[64];
 
+    obj_status_filtered = 2;
+
     item = new QStandardItem[64];
 
     img_rows = 160;
@@ -239,7 +241,7 @@ void RadarController::pointDisplayFrontView()
     detected_obj = 0;
 
     for (int k = 0; k < 64; k++) {
-        if (esr_obj[k].status >= 2) {
+        if (esr_obj[k].status >= obj_status_filtered) {
             detected_obj++;
             lock.lockForWrite();
             esr_obj[k].x = 1.0 * esr_obj[k].range * sin(abs(esr_obj[k].angle));
@@ -278,7 +280,7 @@ void RadarController::pointProjectTopView()
 
     int grid_row, grid_col;
     for (int m = 0; m < 64; m++) {
-        if (esr_obj[m].status >= 2) {
+        if (esr_obj[m].status >= obj_status_filtered) {
             grid_row = 1.0 * log10(100.0 * esr_obj[m].z / min_distance) / log10(1.0 + k);
             grid_col = (100.0 * esr_obj[m].x + 0.5 * chord_length) * img_col / chord_length;
             int grid_row_t = img_row - grid_row - 1;

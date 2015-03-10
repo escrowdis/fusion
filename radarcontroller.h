@@ -73,6 +73,8 @@ public:
 
     int detected_obj;
 
+    int obj_status_filtered;            // depends on the status (CAN_TX_TRACK_STATUS)
+
     // radar frontview image
     cv::Mat img_radar;
 

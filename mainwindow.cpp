@@ -526,7 +526,7 @@ void MainWindow::drawFusedTopView(stereo_vision::objInformation *d_sv, RadarCont
     device = 1;
     if (ui->checkBox_fusion_radar->isChecked() && fg_retrieving) {
         for (int m = 0; m < 64; m++) {
-            if (d_radar[m].status != 0) {
+            if (d_radar[m].status >= obj_status_filtered) {
                 cv::Point plot_pt;
                 pointTransformTopView(sensors[device].pos, 100 * d_radar[m].range, d_radar[m].angle + rc->aim_angle, &plot_pt);
                 cv::circle(fused_topview, plot_pt, sensors[device].thickness, cv::Scalar(0, 0, 255, 255), -1, 8, 0);
