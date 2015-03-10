@@ -119,7 +119,15 @@ private:
 
     // Fusion =================
     // topview
+    int detection_range_pixel;                      // fused topview radius (pixel)
+
+    float detection_range;                          // real detection range radius (cm)
+
     float ratio;                                    // scaling ratio of real to fused topview (cm -> pixel)
+
+    float max_detection_range;                      // max. detection range in all sensors (cm)
+
+    float min_detection_range;                      // min. detection range in all sensors (cm)
 
     // information of objects detected by different sensors on fused topview
     struct sensorInformation {
@@ -128,6 +136,14 @@ private:
         cv::Scalar color;                           // sensor's color on the topview
 
         int thickness;
+
+        sensorInformation() {
+            pos = cv::Point(-1, -1);
+
+            color = cv::Scalar(0, 0, 0);
+
+            thickness = 1;
+        }
     };
 
     sensorInformation *sensors;
@@ -139,9 +155,7 @@ private:
     struct vehicleInfo {
         cv::Point VCP;                              // fused topview vehicle current position (pixel)
 
-        int detection_range_pixel;                  // fused topview radius (pixel)
-
-        int width;                                  // average vehicle's size (pixel)
+        int width;                                  // average vehicle's size (cm)
 
         int length;
 
@@ -155,6 +169,8 @@ private:
     cv::Mat fused_topview;
 
     void initialFusedTopView();
+
+    void updateFusedTopView();
 
     void drawFusedTopView(stereo_vision::objInformation *d_sv, RadarController::ESR_track_object_info *d_radar);
 
@@ -320,10 +336,14 @@ private slots:
 
     void on_spinBox_topview_c_valueChanged(int arg1);
 
+    void wheelEvent(QWheelEvent *ev);
+
     void keyPressEvent(QKeyEvent *ev);
 
     void on_checkBox_pseudo_color_clicked(bool checked);
+
     void on_checkBox_topview_plot_points_clicked(bool checked);
+
     void on_checkBox_sv_reproject_clicked(bool checked);
 };
 

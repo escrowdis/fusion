@@ -390,46 +390,37 @@ void MainWindow::paramWrite()
 void MainWindow::initialFusedTopView()
 {
     // vehicle & fused topview information
-    vehicle.detection_range_pixel = ui->label_fusion->width() / 2;
+    detection_range_pixel = ui->label_fusion->width() / 2;
 
-    ratio = 1.0 * vehicle.detection_range_pixel / 1000;
+    detection_range = sv->max_distance;
 
-    vehicle.VCP = cv::Point(vehicle.detection_range_pixel, vehicle.detection_range_pixel);
+    ratio = 1.0 * detection_range_pixel / sv->max_distance;
 
-    vehicle.width = 180 * ratio;
+    vehicle.length = 400;
 
-    vehicle.length = 400 * ratio;
+    vehicle.width = 180;
 
-    vehicle.rect = cv::Rect(vehicle.VCP.x - vehicle.width / 2, vehicle.VCP.y - vehicle.length / 2,
-                            vehicle.width, vehicle.length);
+    // find max & min detection range in all sensors, so this function shall be called after initialization of all sensors
+    max_detection_range = rc->max_distance;
 
-    vehicle.color = cv::Scalar(0, 255, 0, 255);
+    min_detection_range = rc->min_distance + sqrt(pow(0.5 * vehicle.length, 2) + pow(0.5 * vehicle.width, 2));
 
-    fused_topview.create(2 * vehicle.detection_range_pixel, 2 * vehicle.detection_range_pixel, CV_8UC4);
-    fused_topview.setTo(cv::Scalar(0, 0, 0, 0));
-
-    fused_topview_BG.create(2 * vehicle.detection_range_pixel, 2 * vehicle.detection_range_pixel, CV_8UC4);
-    fused_topview_BG.setTo(cv::Scalar(0, 0, 0, 0));
-
-    cv::circle(fused_topview_BG, vehicle.VCP, vehicle.detection_range_pixel, rc->color_BG, -1, 8, 0);
-
-    cv::rectangle(fused_topview_BG, vehicle.rect, vehicle.color, -1, 8, 0);
-
-    ui->label_fusion_BG->setPixmap(QPixmap::fromImage(QImage::QImage(fused_topview_BG.data, fused_topview_BG.cols, fused_topview_BG.rows, QImage::Format_RGBA8888)));
-    ui->label_fusion->setPixmap(QPixmap::fromImage(QImage::QImage(fused_topview.data, fused_topview.cols, fused_topview.rows, QImage::Format_RGBA8888)));
+    fused_topview.create(2 * detection_range_pixel, 2 * detection_range_pixel, CV_8UC4);
+    fused_topview_BG.create(2 * detection_range_pixel, 2 * detection_range_pixel, CV_8UC4);
 
     //**// You may CRASH if you add lots of sensors but you don't revise the number of the array
     // sensor information
     sensors = new sensorInformation[3];
 
+    // sv
     sensors[0].color = cv::Scalar(255, 0, 0, 255);
-    sensors[0].pos = cv::Point(0, vehicle.length / 2);
     sensors[0].thickness = 2;
 
+    // radar
     sensors[1].color = cv::Scalar(0, 0, 255, 255);
-    sensors[1].pos = cv::Point(0, vehicle.length / 2);
     sensors[1].thickness = 2;
 
+    // object's label color
     QColor pic_color_sv = QColor(sensors[0].color[0], sensors[0].color[1], sensors[0].color[2]);
     QPixmap pic_sv(20, 20);
     pic_sv.fill(pic_color_sv);
@@ -440,6 +431,81 @@ void MainWindow::initialFusedTopView()
     pic_radar.fill(pic_color_radar);
     ui->label_fusion_radar_color->setPixmap(pic_radar);
 
+    updateFusedTopView();
+}
+
+void MainWindow::updateFusedTopView()
+{
+    ratio = 1.0 * detection_range_pixel / detection_range;
+
+    vehicle.VCP = cv::Point(detection_range_pixel, detection_range_pixel);
+
+    vehicle.rect = cv::Rect(vehicle.VCP.x - vehicle.width * ratio / 2, vehicle.VCP.y - vehicle.length * ratio / 2,
+                            vehicle.width * ratio, vehicle.length * ratio);
+
+    vehicle.color = cv::Scalar(0, 255, 0, 255);
+
+    fused_topview.setTo(cv::Scalar(0, 0, 0, 0));
+
+    fused_topview_BG.setTo(cv::Scalar(0, 0, 0, 0));
+
+    // topview
+    cv::circle(fused_topview_BG, vehicle.VCP, detection_range_pixel, rc->color_BG, -1, 8, 0);
+
+    // max detection range [now]
+    cv::putText(fused_topview_BG, QString::number((int)detection_range).toStdString() + " cm", cv::Point(vehicle.VCP.x + 0.65 * detection_range_pixel, vehicle.VCP.y  - 0.8 * detection_range_pixel), cv::FONT_HERSHEY_COMPLEX_SMALL, 1, rc->color_line, 1);
+
+    // 30 m
+    float distance = sv->max_distance * ratio;
+    if (distance <= detection_range_pixel)
+        cv::circle(fused_topview_BG, vehicle.VCP, distance, rc->color_line, 1, 8, 0);
+
+    // 5 m
+    distance = 500 * ratio;
+    if (distance <= detection_range_pixel)
+        cv::circle(fused_topview_BG, vehicle.VCP, distance, rc->color_line, 1, 8, 0);
+
+    // vehicle
+    cv::rectangle(fused_topview_BG, vehicle.rect, vehicle.color, -1, 8, 0);
+
+    ui->label_fusion_BG->setPixmap(QPixmap::fromImage(QImage::QImage(fused_topview_BG.data, fused_topview_BG.cols, fused_topview_BG.rows, QImage::Format_RGBA8888)));
+    ui->label_fusion->setPixmap(QPixmap::fromImage(QImage::QImage(fused_topview.data, fused_topview.cols, fused_topview.rows, QImage::Format_RGBA8888)));
+
+    // sensor information
+    sensors[0].pos = cv::Point(0, vehicle.length * ratio / 2);
+
+    sensors[1].pos = cv::Point(0, vehicle.length * ratio / 2);
+}
+
+void MainWindow::wheelEvent(QWheelEvent *ev)
+{
+    int gap = 500;
+
+    // vertical middle button
+    if (ev->orientation() == Qt::Vertical) {
+        // zoom out (scrolling forward)
+        if (ev->delta() > 0) {
+            if (detection_range == min_detection_range) {
+                int count = min_detection_range / gap;
+                if (count == 0)
+                    count = 1;
+                detection_range = ceil(count) * gap;
+            }
+            else
+                detection_range = detection_range + gap < max_detection_range ? detection_range + gap : max_detection_range;
+        }
+        // zoom in (scrolling backward)
+        if (ev->delta() < 0) {
+            if (detection_range == max_detection_range) {
+                int count = max_detection_range / gap;
+                detection_range = floor(count) * gap;
+            }
+            else
+                detection_range = detection_range - gap > min_detection_range ? detection_range - gap : min_detection_range;
+        }
+    }
+
+    updateFusedTopView();
 }
 
 void MainWindow::drawFusedTopView(stereo_vision::objInformation *d_sv, RadarController::ESR_track_object_info *d_radar)
@@ -1411,7 +1477,7 @@ void MainWindow::on_checkBox_radar_topview_clicked(bool checked)
         rc->fg_topview = true;
         for (int r = 0; r < rc->topview.rows; r++) {
             for (int c = 0; c < rc->topview.cols; c++) {
-                cv::Vec4b val = sv->topview.at<cv::Vec4b>(r, c);
+                cv::Vec4b val = rc->topview.at<cv::Vec4b>(r, c);
                 if (val[0] != 0 || val [1] != 0 || val[2] != 0)
                 rc->topview.at<cv::Vec4b>(r, c)[3] = 255;
             }
