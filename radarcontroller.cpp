@@ -9,6 +9,8 @@ RadarController::RadarController(float aim_angle) : TopView(1, 100, 20470, 102.3
 
     esr_obj = new ESR_track_object_info[64];
 
+    item = new QStandardItem[64];
+
     img_rows = 160;
 
     img_cols = 900;
@@ -36,6 +38,8 @@ RadarController::~RadarController()
     canClose(h);
 
     delete[] esr_obj;
+
+    delete[] item;
 }
 
 bool RadarController::open()

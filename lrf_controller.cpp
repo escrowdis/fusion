@@ -15,6 +15,7 @@ lrf_controller::lrf_controller()
 
 lrf_controller::~lrf_controller()
 {
+    delete buf;
     close();
 }
 

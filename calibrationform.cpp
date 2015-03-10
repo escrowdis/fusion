@@ -7,7 +7,7 @@ calibrationForm::calibrationForm(QWidget *parent) :
 {
     ui->setupUi(this);
 
-    cc = new camera_calibration;
+    cc = new camera_calibration();
 
     reset();
 }

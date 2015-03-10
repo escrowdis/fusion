@@ -92,7 +92,6 @@ MainWindow::MainWindow(QWidget *parent) :
     model_radar = new QStandardItemModel(64, 1, this);
     model_radar->setHorizontalHeaderItem(0, new QStandardItem(QString("Range")));
     ui->tableView_radar->setModel(model_radar);
-    rc->item = new QStandardItem[64];
     for (int i = 0 ; i < 64; i++) {
         model_radar->setItem(i, 0, &rc->item[i]);
     }
@@ -172,6 +171,7 @@ MainWindow::~MainWindow()
     lrf->close();
     delete lrf;
     delete sv;
+    delete[] sensors;
     delete ui;
 }
 
