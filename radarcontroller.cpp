@@ -188,6 +188,10 @@ void RadarController::retrievingData()
             else
                 esr_obj[_id].range_rate = b_track_range_rate.to_ulong() * 0.01;
 
+            esr_obj[k].x = 1.0 * esr_obj[k].range * sin(abs(esr_obj[k].angle));
+            esr_obj[k].y = 0.0;
+            esr_obj[k].z = esr_obj[k].range * cos(esr_obj[k].angle);
+
 #ifdef debug_info_radar_data
             std::cout<<_id<<"\t\n"<<
                     esr_obj[_id].lat_rate <<" "<<
@@ -243,11 +247,6 @@ void RadarController::pointDisplayFrontView()
     for (int k = 0; k < 64; k++) {
         if (esr_obj[k].status >= obj_status_filtered) {
             detected_obj++;
-            lock.lockForWrite();
-            esr_obj[k].x = 1.0 * esr_obj[k].range * sin(abs(esr_obj[k].angle));
-            esr_obj[k].y = 0.0;
-            esr_obj[k].z = esr_obj[k].range * cos(esr_obj[k].angle);
-            lock.unlock();
 
             int pt_x, pt_y;
             float gain = 5.0; //**// another value?
