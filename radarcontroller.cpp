@@ -188,9 +188,9 @@ void RadarController::retrievingData()
             else
                 esr_obj[_id].range_rate = b_track_range_rate.to_ulong() * 0.01;
 
-            esr_obj[k].x = 1.0 * esr_obj[k].range * sin(abs(esr_obj[k].angle));
-            esr_obj[k].y = 0.0;
-            esr_obj[k].z = esr_obj[k].range * cos(esr_obj[k].angle);
+            esr_obj[_id].x = 1.0 * esr_obj[_id].range * sin(abs(esr_obj[_id].angle));
+            esr_obj[_id].y = 0.0;
+            esr_obj[_id].z = esr_obj[_id].range * cos(esr_obj[_id].angle);
 
 #ifdef debug_info_radar_data
             std::cout<<_id<<"\t\n"<<

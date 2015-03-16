@@ -5,7 +5,6 @@
 
 #include <iostream>
 #include <QString>
-#include <QTime>
 #include <QBuffer>
 
 // thread control
