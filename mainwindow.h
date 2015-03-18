@@ -175,6 +175,12 @@ private:
     void drawFusedTopView(stereo_vision::objInformation *d_sv, RadarController::ESR_track_object_info *d_radar);
 
     void pointTransformTopView(cv::Point sensor_pos, float range, float angle, cv::Point *output);
+
+    int gap = 500;
+
+    void zoomOutFusedTopView();
+
+    void zoomInFusedTopView();
     // ======================== End
 
     // Thread control =========

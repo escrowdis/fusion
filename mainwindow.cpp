@@ -193,30 +193,29 @@ void MainWindow::keyPressEvent(QKeyEvent *ev)
     int index = ui->tabWidget_display->currentIndex();
     int index_1 = ui->tabWidget->currentIndex();
 
-    //single click
-    // Up
-    if (ev->key() == Qt::Key_Up)
-        ui->tabWidget_display->setCurrentIndex(index - 1);
-    // Down
-    else if (ev->key() == Qt::Key_Down)
-        ui->tabWidget_display->setCurrentIndex(index + 1);
-    // Left
-    else if (ev->key() == Qt::Key_Left)
-        ui->tabWidget->setCurrentIndex(index_1 - 1);
-    // Right
-    else if (ev->key() == Qt::Key_Right)
-        ui->tabWidget->setCurrentIndex(index_1 + 1);
-
     // combination clicks
-//    int key_in = ev->key();
-//    if (ev->modifiers() & Qt::ControlModifier) {
-//        key_in += Qt::CTRL;
-////        std::cout<<key_in<<", "<<QKeySequence(key_in).toString(QKeySequence::NativeText).toStdString()<<std::endl;
-//        if (QKeySequence(key_in).matches(QKeySequence("Ctrl+Up")) == QKeySequence::ExactMatch)
-//            ui->tabWidget_display->setCurrentIndex(index - 1);
-//        else if (QKeySequence(key_in).matches(QKeySequence("Ctrl+Down")) == QKeySequence::ExactMatch)
-//            ui->tabWidget_display->setCurrentIndex(index + 1);
-//    }
+    int key_in = ev->key();
+    if (ev->modifiers() & Qt::ControlModifier) {
+        ui->centralWidget->setFocus();
+        key_in += Qt::CTRL;
+//        std::cout<<key_in<<", "<<QKeySequence(key_in).toString(QKeySequence::NativeText).toStdString()<<std::endl;
+        if (QKeySequence(key_in).matches(QKeySequence("Ctrl+Up")) == QKeySequence::ExactMatch)
+            ui->tabWidget_display->setCurrentIndex(index - 1);
+        else if (QKeySequence(key_in).matches(QKeySequence("Ctrl+Down")) == QKeySequence::ExactMatch)
+            ui->tabWidget_display->setCurrentIndex(index + 1);
+        else if (QKeySequence(key_in).matches(QKeySequence("Ctrl+Left")) == QKeySequence::ExactMatch)
+            ui->tabWidget->setCurrentIndex(index_1 - 1);
+        else if (QKeySequence(key_in).matches(QKeySequence("Ctrl+Right")) == QKeySequence::ExactMatch)
+            ui->tabWidget->setCurrentIndex(index_1 + 1);
+        else if (QKeySequence(key_in).matches(QKeySequence("Ctrl++")) == QKeySequence::ExactMatch) {
+            zoomInFusedTopView();
+            updateFusedTopView();
+        }
+        else if (QKeySequence(key_in).matches(QKeySequence("Ctrl+-")) == QKeySequence::ExactMatch) {
+            zoomOutFusedTopView();
+            updateFusedTopView();
+        }
+    }
 }
 
 MouseLabel::MouseLabel(QWidget * parent): QLabel(parent)
@@ -440,8 +439,8 @@ void MainWindow::updateFusedTopView()
 
     vehicle.VCP = cv::Point(detection_range_pixel, detection_range_pixel);
 
-    vehicle.rect = cv::Rect(vehicle.VCP.x - vehicle.width * ratio / 2, vehicle.VCP.y - vehicle.length * ratio / 2,
-                            vehicle.width * ratio, vehicle.length * ratio);
+    vehicle.rect = cv::Rect(vehicle.VCP.x - (int)(vehicle.width * ratio / 2), vehicle.VCP.y - (int)(vehicle.length * ratio / 2),
+                            (int)(vehicle.width * ratio), (int)(vehicle.length * ratio));
 
     vehicle.color = cv::Scalar(0, 255, 0, 255);
 
@@ -477,31 +476,41 @@ void MainWindow::updateFusedTopView()
     sensors[1].pos = cv::Point(0, vehicle.length * ratio / 2);
 }
 
+void MainWindow::zoomOutFusedTopView()
+{
+    // zoom out (scrolling forward)
+    if (detection_range == min_detection_range) {
+        int count = min_detection_range / gap;
+        if (count == 0)
+            count = 1;
+        detection_range = ceil(count) * gap;
+    }
+    else
+        detection_range = detection_range + gap < max_detection_range ?
+                    detection_range + gap : max_detection_range;
+}
+
+void MainWindow::zoomInFusedTopView()
+{
+    // zoom in (scrolling backward)
+    if (detection_range == max_detection_range) {
+        int count = max_detection_range / gap;
+        detection_range = floor(count) * gap;
+    }
+    else
+        detection_range = detection_range - gap > min_detection_range ?
+                    detection_range - gap : min_detection_range;
+}
+
 void MainWindow::wheelEvent(QWheelEvent *ev)
 {
-    int gap = 500;
-
     // vertical middle button
     if (ev->orientation() == Qt::Vertical) {
-        // zoom out (scrolling forward)
         if (ev->delta() > 0) {
-            if (detection_range == min_detection_range) {
-                int count = min_detection_range / gap;
-                if (count == 0)
-                    count = 1;
-                detection_range = ceil(count) * gap;
-            }
-            else
-                detection_range = detection_range + gap < max_detection_range ? detection_range + gap : max_detection_range;
+            zoomOutFusedTopView();
         }
-        // zoom in (scrolling backward)
         if (ev->delta() < 0) {
-            if (detection_range == max_detection_range) {
-                int count = max_detection_range / gap;
-                detection_range = floor(count) * gap;
-            }
-            else
-                detection_range = detection_range - gap > min_detection_range ? detection_range - gap : min_detection_range;
+            zoomInFusedTopView();
         }
     }
 
