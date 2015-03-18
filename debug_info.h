@@ -13,5 +13,6 @@
 //#define debug_info_sv_blob_data
 //#define debug_info_sv_topview
 //#define debug_info_cc
+#define stereoMatchCuda
 
 #endif // DEBUG_INFO_H

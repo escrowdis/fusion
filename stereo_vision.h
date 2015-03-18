@@ -15,6 +15,7 @@ extern QReadWriteLock lock;
 #include <stack>
 
 #include <opencv2/opencv.hpp>
+#include "opencv2/cudastereo.hpp"
 
 // topview
 #include "topview.h"
@@ -60,6 +61,15 @@ public:
     bool loadRemapFile(int cam_focal_length, double base_line);
 
     bool stereoVision();
+
+#ifdef stereoMatchCuda
+    // cuda
+    cv::Ptr<cv::cuda::StereoBM> bm;
+
+    cv::cuda::GpuMat d_L;
+    cv::cuda::GpuMat d_R;
+    cv::cuda::GpuMat d_disp;
+#endif
 
     // RGB images for displaying
     cv::Mat img_L;
@@ -187,7 +197,7 @@ public:
     objInformation* objects;            // filtered objects
     objInformation* objects_display;
 
-    void updateDataFroDisplay();
+    void updateDataForDisplay();
     // ============================= End
 
 private:
@@ -226,8 +236,10 @@ private:
     cv::Rect calibROI[2];
 
     // correspondence matching method
+#ifndef stereoMatchCuda
     cv::Ptr<cv::StereoSGBM> sgbm;
     cv::Ptr<cv::StereoBM> bm;
+#endif
     int cn;
 
     cv::Mat img_match_L;
@@ -273,6 +285,7 @@ private slots:
     // ============================== End
 
     // SGBM =========================
+#ifndef stereoMatchCuda
     void change_sgbm_pre_filter_cap(int value);
 
     void change_sgbm_sad_window_size(int value);
@@ -286,6 +299,7 @@ private slots:
     void change_sgbm_speckle_window_size(int value);
 
     void change_sgbm_speckle_range(int value);
+#endif
     // ============================== End
 
 signals:

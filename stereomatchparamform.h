@@ -4,7 +4,7 @@
 #include <QWidget>
 
 #include "debug_info.h"
-#include <stereo_vision.h>
+#include "stereo_vision.h"
 
 namespace Ui {
 class stereoMatchParamForm;
@@ -40,7 +40,7 @@ private slots:
     void on_horizontalSlider_bm_speckle_range_valueChanged(int value);
 
     void closeEvent(QCloseEvent *);
-
+#ifndef stereoMatchCuda
     void on_horizontalSlider_sgbm_pre_filter_cap_valueChanged(int value);
 
     void on_horizontalSlider_sgbm_sad_window_size_valueChanged(int value);
@@ -54,6 +54,7 @@ private slots:
     void on_horizontalSlider_sgbm_speckle_window_size_valueChanged(int value);
 
     void on_horizontalSlider_sgbm_speckle_range_valueChanged(int value);
+#endif
 
     void updateParams(std::vector<int> param);
 
@@ -86,6 +87,7 @@ signals:
     void send_bm_speckle_range(int value);
     // ============================== End
 
+#ifndef stereoMatchCuda
     // SGBM =========================
     void send_sgbm_pre_filter_cap(int value);
 
@@ -101,6 +103,7 @@ signals:
 
     void send_sgbm_speckle_range(int value);
     // ============================== End
+#endif
 };
 
 #endif // STEREOMATCHPARAMFORM_H

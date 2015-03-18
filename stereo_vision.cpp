@@ -36,8 +36,12 @@ stereo_vision::stereo_vision() : TopView(20, 200, 3000, 19.8, 1080, 750, 270, 12
     img_r_R = cv::Mat::zeros(IMG_H, IMG_W, CV_8UC3);
     disp = cv::Mat::zeros(IMG_H, IMG_W, CV_8UC1);
     disp_pseudo = cv::Mat::zeros(IMG_H, IMG_W, CV_8UC3);
+#ifdef stereoMatchCuda
+    bm = cv::cuda::createStereoBM(16, 9);
+#else
     bm = cv::createStereoBM(16, 9);
     sgbm = cv::createStereoSGBM(0, 16, 3);
+#endif
     img_detected = cv::Mat::zeros(IMG_H, IMG_W, CV_8UC3);
 
     match_mode = -1;
@@ -58,8 +62,10 @@ stereo_vision::~stereo_vision()
     delete[] objects_display;
 
     close();
+#ifndef stereoMatchCuda
     sgbm.release();
     bm.release();
+#endif
 }
 
 void stereo_vision::resetOpen(int device_index_L, int device_index_R)
@@ -149,10 +155,10 @@ void stereo_vision::matchParamInitialize(int type)
         bm->setSpeckleRange(32);
         bm->setDisp12MaxDiff(1);
         break;
+#ifndef stereoMatchCuda
     case SV::STEREO_MATCH::SGBM:
         SAD_window_size = 0; // odd number, usually from 3 to 11
         number_disparity = number_disparity > 0 ? number_disparity : ((IMG_W / 8) + 15) & -16;
-
         sgbm->setPreFilterCap(63);
         int sgbm_win_size = SAD_window_size > 0 ? SAD_window_size : 5;
         sgbm->setBlockSize(sgbm_win_size);
@@ -170,6 +176,7 @@ void stereo_vision::matchParamInitialize(int type)
         sgbm->setDisp12MaxDiff(1);
         sgbm->setMode(cv::StereoSGBM::MODE_SGBM);
         break;
+#endif
     }
 
     emit setConnect(match_mode, type);
@@ -180,12 +187,12 @@ void stereo_vision::camCapture()
 {
     if (cam_L.isOpened()) {
         cam_L >> cap_L;
-        cv::cvtColor(cap_L, img_L, cv::COLOR_BGR2RGB);
+        img_L = cap_L.clone();
     }
 
     if (cam_R.isOpened()) {
         cam_R >> cap_R;
-        cv::cvtColor(cap_R, img_R, cv::COLOR_BGR2RGB);
+        img_R = cap_R.clone();
     }
 }
 
@@ -263,11 +270,17 @@ void stereo_vision::stereoMatch()
     cv::GaussianBlur(img_match_L, img_match_L, cv::Size(7, 7), 0, 0);
     cv::GaussianBlur(img_match_R, img_match_R, cv::Size(7, 7), 0, 0);
 
+#ifdef stereoMatchCuda
+        d_L.upload(img_match_L);
+        d_R.upload(img_match_R);
+        bm->compute(d_L, d_R, d_disp);
+        d_disp.download(disp_raw);
+#else
     if (match_mode == SV::STEREO_MATCH::BM)
         bm->compute(img_match_L, img_match_R, disp_raw);
     else if (match_mode == SV::STEREO_MATCH::SGBM)
         sgbm->compute(img_match_L, img_match_R, disp_raw);
-
+#endif
     disp_raw.convertTo(disp, CV_8U);
 
     // depth calculation of points from disp [merge into stereo_vision::depthCalculation]
@@ -384,7 +397,7 @@ bool stereo_vision::stereoVision()
     qDebug()<<"run"<<&img_L<<"emit"<<&img_r_L;
 #endif
 
-    updateDataFroDisplay();
+    updateDataForDisplay();
 
     if (t.elapsed() > time_gap) {
         emit svUpdateGUI(&img_r_L, &img_r_R, &disp, &disp_pseudo, &topview, &img_detected, detected_obj);
@@ -410,6 +423,7 @@ void stereo_vision::updateParamsSmp()
         match_param.push_back(bm->getSpeckleWindowSize());
         match_param.push_back(bm->getSpeckleRange());
         break;
+#ifndef stereoMatchCuda
     case SV::STEREO_MATCH::SGBM:
         match_param.push_back(sgbm->getPreFilterCap());
         match_param.push_back(sgbm->getBlockSize());
@@ -419,6 +433,7 @@ void stereo_vision::updateParamsSmp()
         match_param.push_back(sgbm->getSpeckleWindowSize());
         match_param.push_back(sgbm->getSpeckleRange());
         break;
+#endif
     }
     if (!match_param.empty())
         emit sendCurrentParams(match_param);
@@ -493,7 +508,7 @@ void stereo_vision::change_bm_speckle_range(int value)
     qDebug()<<bm->getSpeckleRange();
 #endif
 }
-
+#ifndef stereoMatchCuda
 void stereo_vision::change_sgbm_pre_filter_cap(int value)
 {
     sgbm->setPreFilterCap(value);
@@ -551,6 +566,7 @@ void stereo_vision::change_sgbm_speckle_range(int value)
     qDebug()<<sgbm->getSpeckleRange();
 #endif
 }
+#endif
 
 void stereo_vision::pointProjectTopView()
 {
@@ -805,7 +821,7 @@ void stereo_vision::pointProjectImage()
     }
 }
 
-void stereo_vision::updateDataFroDisplay()
+void stereo_vision::updateDataForDisplay()
 {
     for (int i = 0; i < obj_nums; i++) {
         lock.lockForRead();

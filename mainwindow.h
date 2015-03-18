@@ -318,8 +318,6 @@ private slots:
 
     void on_pushButton_lrf_stop_2_clicked();
 
-    void on_pushButton_clicked();
-
     void on_pushButton_radar_open_clicked();
 
     void on_pushButton_radar_write_clicked();

@@ -151,6 +151,10 @@ MainWindow::MainWindow(QWidget *parent) :
     // set status after loading params
     on_checkBox_do_calibration_clicked(ui->checkBox_do_calibration->isChecked());
     on_checkBox_do_depth_clicked(ui->checkBox_do_depth->isChecked());
+
+#ifdef stereoMatchCuda
+    on_radioButton_BM_clicked();
+#endif
     // Stereo vision (1) ======================= End
 }
 
@@ -794,8 +798,8 @@ void MainWindow::threadProcessing()
     while (fg_running) {
         // sv
         if (fg_capturing && !f_sv.isRunning()) {
-//            sv->stereoVision();
-            f_sv = QtConcurrent::run(sv, &stereo_vision::stereoVision);
+            sv->stereoVision();
+//            f_sv = QtConcurrent::run(sv, &stereo_vision::stereoVision);
             qApp->processEvents();
         }
         ui->label_sv_proc->setText(QString::number(t_proc.restart()));
@@ -942,6 +946,7 @@ void MainWindow::on_radioButton_BM_clicked()
     if (sv->match_mode == SV::STEREO_MATCH::BM)
         return;
     report("Change to BM mathod.");
+    ui->radioButton_BM->setChecked(true);
     sv->matchParamInitialize(SV::STEREO_MATCH::BM);
     if (fg_form_smp_alloc) {
         sv->updateParamsSmp();
@@ -975,6 +980,7 @@ void MainWindow::connectSmp(int old_mode, int new_mode)
         QObject::disconnect(form_smp, SIGNAL(send_bm_speckle_window_size(int)), sv, SLOT(change_bm_speckle_window_size(int)));
         QObject::disconnect(form_smp, SIGNAL(send_bm_speckle_range(int)), sv, SLOT(change_bm_speckle_range(int)));
         break;
+#ifndef stereoMatchCuda
     case SV::STEREO_MATCH::SGBM:
         QObject::disconnect(form_smp, SIGNAL(send_sgbm_pre_filter_cap(int)), sv, SLOT(change_sgbm_pre_filter_cap(int)));
         QObject::disconnect(form_smp, SIGNAL(send_sgbm_sad_window_size(int)), sv, SLOT(change_sgbm_sad_window_size(int)));
@@ -984,6 +990,7 @@ void MainWindow::connectSmp(int old_mode, int new_mode)
         QObject::disconnect(form_smp, SIGNAL(send_sgbm_speckle_window_size(int)), sv, SLOT(change_sgbm_speckle_window_size(int)));
         QObject::disconnect(form_smp, SIGNAL(send_sgbm_speckle_range(int)), sv, SLOT(change_sgbm_speckle_range(int)));
         break;
+#endif
     }
 
     switch (new_mode) {
@@ -998,6 +1005,7 @@ void MainWindow::connectSmp(int old_mode, int new_mode)
         QObject::connect(form_smp, SIGNAL(send_bm_speckle_window_size(int)), sv, SLOT(change_bm_speckle_window_size(int)));
         QObject::connect(form_smp, SIGNAL(send_bm_speckle_range(int)), sv, SLOT(change_bm_speckle_range(int)));
         break;
+#ifndef stereoMatchCuda
     case SV::STEREO_MATCH::SGBM:
         QObject::connect(form_smp, SIGNAL(send_sgbm_pre_filter_cap(int)), sv, SLOT(change_sgbm_pre_filter_cap(int)));
         QObject::connect(form_smp, SIGNAL(send_sgbm_sad_window_size(int)), sv, SLOT(change_sgbm_sad_window_size(int)));
@@ -1007,6 +1015,7 @@ void MainWindow::connectSmp(int old_mode, int new_mode)
         QObject::connect(form_smp, SIGNAL(send_sgbm_speckle_window_size(int)), sv, SLOT(change_sgbm_speckle_window_size(int)));
         QObject::connect(form_smp, SIGNAL(send_sgbm_speckle_range(int)), sv, SLOT(change_sgbm_speckle_range(int)));
         break;
+#endif
     }
 
     form_smp->changeMode(new_mode);
@@ -1423,11 +1432,6 @@ void MainWindow::on_pushButton_lrf_stop_2_clicked()
 
     lrf->stopRetrieve();
     threadCheck();
-}
-
-void MainWindow::on_pushButton_clicked()
-{
-
 }
 
 void MainWindow::on_pushButton_radar_open_clicked()

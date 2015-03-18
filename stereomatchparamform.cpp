@@ -106,7 +106,7 @@ void stereoMatchParamForm::on_horizontalSlider_bm_speckle_range_valueChanged(int
 {
     emit send_bm_speckle_range(value);
 }
-
+#ifndef stereoMatchCuda
 void stereoMatchParamForm::on_horizontalSlider_sgbm_pre_filter_cap_valueChanged(int value)
 {
     emit send_sgbm_pre_filter_cap(value);
@@ -148,3 +148,4 @@ void stereoMatchParamForm::on_horizontalSlider_sgbm_speckle_range_valueChanged(i
 {
     emit send_sgbm_speckle_range(value);
 }
+#endif
