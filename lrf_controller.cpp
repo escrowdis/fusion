@@ -7,14 +7,20 @@ lrf_controller::lrf_controller()
     mode = LRF::CAPTURE_MODE::STOP;
 
     // allocate size
+    lrf_data = new double[LENGTH_DATA];
+
     buf = new QByteArray(MAX_BUF_SIZE, '0x0');
 //    buf->reserve(MAX_BUF_SIZE);
 
+    display_lrf = cv::Mat::zeros(800, 800, CV_8UC3);
+
+    reset();
     count_resend = 0;
 }
 
 lrf_controller::~lrf_controller()
 {
+    delete[] lrf_data;
     delete buf;
     close();
 }
@@ -202,6 +208,24 @@ bool lrf_controller::retrieveData(double *data)
 #endif
 
     return true;
+}
+
+void lrf_controller::reset()
+{
+    // reset data
+    for (int i = 0; i < LENGTH_DATA; i++)
+        lrf_data[i] = -1.0; //**// lrf range?
+}
+
+bool lrf_controller::dataExec()
+{
+//    reset();
+    if (retrieveData(lrf_data)) {
+        emit updateGUI(lrf_data, &display_lrf);
+        return true;
+    }
+    else
+        return false;
 }
 
 bool lrf_controller::close()

@@ -23,7 +23,7 @@ MainWindow::MainWindow(QWidget *parent) :
     fg_acquiring = false;
     fg_buffering = false;
 
-    QObject::connect(this, SIGNAL(lrfUpdateGUI()), this, SLOT(lrfDisplay()));
+    QObject::connect(lrf, SIGNAL(updateGUI(double *, cv::Mat *)), this, SLOT(lrfDisplay(double *, cv::Mat *)));
 
     ui->label_lrf_data->setStyleSheet("background-color:silver");
 
@@ -35,9 +35,6 @@ MainWindow::MainWindow(QWidget *parent) :
     QStringList list_baudrate;
     list_baudrate << "9600" << "19200" << "38400" << "500000";
     ui->comboBox_lrf_baudRate->addItems(list_baudrate);
-
-    // default settings
-    lrfClearData();
 
     // display
     display_lrf = cv::Mat::zeros(800, 800, CV_8UC3);
@@ -60,7 +57,7 @@ MainWindow::MainWindow(QWidget *parent) :
     on_checkBox_sv_reproject_clicked(ui->checkBox_sv_reproject->isChecked());
     on_checkBox_topview_plot_points_clicked(ui->checkBox_topview_plot_points->isChecked());
 
-    QObject::connect(sv, SIGNAL(svUpdateGUI(cv::Mat *, cv::Mat *, cv::Mat *, cv::Mat *, cv::Mat *, cv::Mat *, int)), this, SLOT(svDisplay(cv::Mat *, cv::Mat *, cv::Mat *, cv::Mat *, cv::Mat *, cv::Mat *, int)));
+    QObject::connect(sv, SIGNAL(updateGUI(cv::Mat *, cv::Mat *, cv::Mat *, cv::Mat *, cv::Mat *, cv::Mat *, int)), this, SLOT(svDisplay(cv::Mat *, cv::Mat *, cv::Mat *, cv::Mat *, cv::Mat *, cv::Mat *, int)));
 
     ui->label_cam_img_L->setStyleSheet("background-color:silver");
     ui->label_cam_img_R->setStyleSheet("background-color:silver");
@@ -68,7 +65,7 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->label_sv_detected->setStyleSheet("background-color:silver");
 
     // COM port
-    for (int i = 0; i < 5; i++) {
+    for (int i = 0; i < 6; i++) {
         ui->comboBox_cam_device_index_L->addItem(QString::number(i));
         ui->comboBox_cam_device_index_R->addItem(QString::number(i));
     }
@@ -98,7 +95,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
     on_checkBox_radar_topview_clicked(ui->checkBox_radar_topview->isChecked());
 
-    QObject::connect(rc, SIGNAL(radarUpdateGUI(int, cv::Mat *, cv::Mat *)), this, SLOT(radarDisplay(int, cv::Mat *, cv::Mat *)));
+    QObject::connect(rc, SIGNAL(updateGUI(int, cv::Mat *, cv::Mat *)), this, SLOT(radarDisplay(int, cv::Mat *, cv::Mat *)));
     // Radar ESR =============================== End
 
     // Fusion ==================================
@@ -168,7 +165,6 @@ MainWindow::~MainWindow()
     cv::destroyAllWindows();
 
     delete rc;
-    lrf->close();
     delete lrf;
     delete sv;
     delete[] sensors;
@@ -411,13 +407,16 @@ void MainWindow::initialFusedTopView()
     // sensor information
     sensors = new sensorInformation[3];
 
+    thickness = 2;
+    font = cv::FONT_HERSHEY_SIMPLEX;
+    font_size = 1;
+    font_thickness = 1;
+
     // sv
     sensors[0].color = cv::Scalar(255, 0, 0, 255);
-    sensors[0].thickness = 2;
 
     // radar
     sensors[1].color = cv::Scalar(0, 0, 255, 255);
-    sensors[1].thickness = 2;
 
     // object's label color
     QColor pic_color_sv = QColor(sensors[0].color[0], sensors[0].color[1], sensors[0].color[2]);
@@ -521,13 +520,16 @@ void MainWindow::drawFusedTopView(stereo_vision::objInformation *d_sv, RadarCont
 {
     fused_topview.setTo(cv::Scalar(0, 0, 0, 0));
 
+    std::string tag;
     int device = 0;
     if (ui->checkBox_fusion_sv->isChecked() && fg_capturing) {
         for (int k = 0; k < sv->obj_nums; k++) {
             if (d_sv[k].labeled) {
                 cv::Point plot_pt;
+                tag = QString::number(k).toStdString() + ", " + QString::number(d_sv[k].range / 100, 'g', 2).toStdString();
                 pointTransformTopView(sensors[device].pos, d_sv[k].range, d_sv[k].angle, &plot_pt);
-                cv::circle(fused_topview, plot_pt, sensors[device].thickness, cv::Scalar(255, 0, 0, 255), -1, 8, 0);
+                cv::circle(fused_topview, plot_pt, thickness, cv::Scalar(255, 0, 0, 255), -1, 8, 0);
+                cv::putText(fused_topview, tag, plot_pt, font, font_size, sensors[device].color, font_thickness);
             }
         }
     }
@@ -537,8 +539,10 @@ void MainWindow::drawFusedTopView(stereo_vision::objInformation *d_sv, RadarCont
         for (int m = 0; m < 64; m++) {
             if (d_radar[m].status >= rc->obj_status_filtered) {
                 cv::Point plot_pt;
+                tag = QString::number(m).toStdString() + ", " + QString::number(d_radar[m].range, 'g', 2).toStdString();
                 pointTransformTopView(sensors[device].pos, 100 * d_radar[m].range, d_radar[m].angle + rc->aim_angle, &plot_pt);
-                cv::circle(fused_topview, plot_pt, sensors[device].thickness, cv::Scalar(0, 0, 255, 255), -1, 8, 0);
+                cv::circle(fused_topview, plot_pt, thickness, cv::Scalar(0, 0, 255, 255), -1, 8, 0);
+                cv::putText(fused_topview, tag, plot_pt, font, font_size, sensors[device].color, font_thickness);
             }
         }
     }
@@ -602,29 +606,11 @@ void MainWindow::on_pushButton_lrf_open_clicked()
     }
 }
 
-void MainWindow::lrfClearData()
-{
-    // reset data
-    for (int i = 0; i < LENGTH_DATA; i++)
-        lrf_data[i] = -1.0; //**// lrf range?
-}
-
-bool MainWindow::lrfReadData()
-{
-//    lrfClearData();
-    if (lrf->retrieveData(lrf_data)) {
-        emit lrfUpdateGUI();
-        return true;
-    }
-    else
-        return false;
-}
-
-void MainWindow::lrfDisplay()
+void MainWindow::lrfDisplay(double *lrf_data, cv::Mat *display_lrf)
 {
     // display
-    cv::Mat display_lrf = cv::Mat::zeros(800, 800, CV_8UC3);
-//    display_lrf.setTo(0);
+//    cv::Mat display_lrf = cv::Mat::zeros(800, 800, CV_8UC3);
+    display_lrf->setTo(0);
     double angle = 0.0;
 
 //    for (int i = 0 ; i < LENGTH_DATA; ++i)
@@ -637,14 +623,14 @@ void MainWindow::lrfDisplay()
         double x = r * cos(angle * CV_PI / 180.0);
         double y = r * sin(angle * CV_PI / 180.0);
 
-        cv::circle(display_lrf, cv::Point(x / ui->spinBox_lrf_scale->value() + 400, 800 - (y / ui->spinBox_lrf_scale->value() + 100)), 1, cv::Scalar(0, 0, 255), -1);
+        cv::circle(*display_lrf, cv::Point(x / ui->spinBox_lrf_scale->value() + 400, 800 - (y / ui->spinBox_lrf_scale->value() + 100)), 1, cv::Scalar(0, 0, 255), -1);
         if (LENGTH_DATA / 2 == i)
-            cv::circle(display_lrf, cv::Point(x / ui->spinBox_lrf_scale->value() + 400, 800 - (y / ui->spinBox_lrf_scale->value() + 100)), 5, cv::Scalar(0, 255, 0), -1);
+            cv::circle(*display_lrf, cv::Point(x / ui->spinBox_lrf_scale->value() + 400, 800 - (y / ui->spinBox_lrf_scale->value() + 100)), 5, cv::Scalar(0, 255, 0), -1);
 
         angle += RESOLUTION;
     }
 
-    ui->label_lrf_data->setPixmap(QPixmap::fromImage(QImage::QImage(display_lrf.data, display_lrf.cols, display_lrf.rows, 3 * display_lrf.cols, QImage::Format_RGB888)).scaled(IMG_DIS_W, IMG_DIS_H));
+    ui->label_lrf_data->setPixmap(QPixmap::fromImage(QImage::QImage(display_lrf->data, display_lrf->cols, display_lrf->rows, 3 * display_lrf->cols, QImage::Format_RGB888)).scaled(IMG_DIS_W, IMG_DIS_H));
     lock.unlock();
 //    cv::imshow("image", display_lrf);
     cv::waitKey(10);
@@ -745,7 +731,7 @@ void MainWindow::on_pushButton_cam_step_clicked()
         return;
     }
 
-    sv->stereoVision();
+    sv->dataExec();
 }
 
 void MainWindow::on_pushButton_cam_capture_clicked()
@@ -790,36 +776,36 @@ void MainWindow::threadBuffering()
 void MainWindow::threadProcessing()
 {
     fg_running = true;
-    t_proc.restart();
     while (fg_running) {
         // sv
         if (fg_capturing && !f_sv.isRunning()) {
-//            sv->stereoVision();
-            f_sv = QtConcurrent::run(sv, &stereo_vision::stereoVision);
+//            sv->dataExec();
+            f_sv = QtConcurrent::run(sv, &stereo_vision::dataExec);
+            ui->label_sv_proc->setText(QString::number(t_proc_sv.restart()));
             qApp->processEvents();
         }
-        ui->label_sv_proc->setText(QString::number(t_proc.restart()));
 
         // lrf
         if (fg_acquiring && !f_lrf.isRunning()) {
-//            lrfReadData();
-            f_lrf = QtConcurrent::run(this, &MainWindow::lrfReadData);
+//            lrf->dataExec();
+            f_lrf = QtConcurrent::run(lrf, &lrf_controller::dataExec);
+            ui->label_lrf_proc->setText(QString::number(t_proc_lrf.restart()));
             qApp->processEvents();
         }
-        ui->label_lrf_proc->setText(QString::number(t_proc.restart()));
 
         // lrf buffer
         if (fg_buffering && lrf->bufNotFull() && !f_lrf_buf.isRunning()) {
 //            lrf->pushToBuf();
             f_lrf_buf = QtConcurrent::run(lrf, &lrf_controller::pushToBuf);
+            ui->label_lrf_buf_proc->setText(QString::number(t_proc_lrf_buf.restart()));
             qApp->processEvents();
         }
-        ui->label_lrf_buf_proc->setText(QString::number(t_proc.restart()));
 
         // Radar ESR
         if (fg_retrieving && !f_radar.isRunning()) {
-            rc->retrievingData();
-//            f_radar = QtConcurrent::run(rc, &RadarController::retrievingData);
+//            rc->retrievingData();
+            f_radar = QtConcurrent::run(rc, &RadarController::dataExec);
+            ui->label_lrf_buf_proc->setText(QString::number(t_proc_radar.restart()));
             qApp->processEvents();
         }
 
@@ -1061,7 +1047,7 @@ void MainWindow::on_pushButton_lrf_request_ONCE_clicked()
     while (!lrf->bufEnoughSet()) {
         lrf->pushToBuf();
     }
-    lrfReadData();
+    lrf->dataExec();
 }
 
 void MainWindow::on_pushButton_lrf_request_clicked()
@@ -1161,7 +1147,7 @@ void MainWindow::on_pushButton_sv_read_images_clicked()
 
     sv->img_L = cv::imread(imgs_path[0].toStdString());
     sv->img_R = cv::imread(imgs_path[1].toStdString());
-    sv->stereoVision();
+    sv->dataExec();
 }
 
 void MainWindow::readFromTxt(QString file_name, cv::Mat *output)
@@ -1409,7 +1395,7 @@ void MainWindow::on_pushButton_lrf_request_2_clicked()
 void MainWindow::on_pushButton_lrf_retrieve_2_clicked()
 {
     while (fg_acquiring) {
-        lrfReadData();
+        lrf->dataExec();
         lrf->pushToBuf();
 
         qApp->processEvents();
@@ -1423,11 +1409,6 @@ void MainWindow::on_pushButton_lrf_stop_2_clicked()
 
     lrf->stopRetrieve();
     threadCheck();
-}
-
-void MainWindow::on_pushButton_clicked()
-{
-
 }
 
 void MainWindow::on_pushButton_radar_open_clicked()

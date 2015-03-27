@@ -333,7 +333,7 @@ void stereo_vision::depthCalculation()
     }
 }
 
-bool stereo_vision::stereoVision()
+bool stereo_vision::dataExec()
 {
 #ifdef debug_info_sv
     qDebug()<<"run";
@@ -387,7 +387,7 @@ bool stereo_vision::stereoVision()
     updateDataFroDisplay();
 
     if (t.elapsed() > time_gap) {
-        emit svUpdateGUI(&img_r_L, &img_r_R, &disp, &disp_pseudo, &topview, &img_detected, detected_obj);
+        emit updateGUI(&img_r_L, &img_r_R, &disp, &disp_pseudo, &topview, &img_detected, detected_obj);
         t.restart();
     }
     return true;

@@ -59,7 +59,7 @@ public:
 
     bool loadRemapFile(int cam_focal_length, double base_line);
 
-    bool stereoVision();
+    bool dataExec();
 
     // RGB images for displaying
     cv::Mat img_L;
@@ -291,7 +291,7 @@ private slots:
 signals:
     void sendCurrentParams(std::vector<int> param);
 
-    void svUpdateGUI(cv::Mat *img_L, cv::Mat *img_R, cv::Mat *disp, cv::Mat *disp_pseudo, cv::Mat *topview, cv::Mat *img_detected, int detected_obj);
+    void updateGUI(cv::Mat *img_L, cv::Mat *img_R, cv::Mat *disp, cv::Mat *disp_pseudo, cv::Mat *topview, cv::Mat *img_detected, int detected_obj);
 
     void setConnect(int old_mode, int new_mode);
 };

@@ -1055,19 +1055,6 @@ parameters</string>
      </item>
     </layout>
    </widget>
-   <widget class="QPushButton" name="pushButton">
-    <property name="geometry">
-     <rect>
-      <x>290</x>
-      <y>690</y>
-      <width>75</width>
-      <height>23</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>PushButton</string>
-    </property>
-   </widget>
    <widget class="QPushButton" name="pushButton_stop_all">
     <property name="geometry">
      <rect>
@@ -1107,7 +1094,7 @@ parameters</string>
      </rect>
     </property>
     <property name="currentIndex">
-     <number>3</number>
+     <number>0</number>
     </property>
     <widget class="QWidget" name="tab_5">
      <attribute name="title">
@@ -1432,12 +1419,6 @@ parameters</string>
      <zorder>label_fusion</zorder>
     </widget>
    </widget>
-   <zorder>pushButton</zorder>
-   <zorder>tabWidget</zorder>
-   <zorder>layoutWidget</zorder>
-   <zorder>layoutWidget</zorder>
-   <zorder>pushButton_stop_all</zorder>
-   <zorder>tabWidget_display</zorder>
   </widget>
   <widget class="QMenuBar" name="menuBar">
    <property name="geometry">

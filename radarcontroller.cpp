@@ -89,6 +89,11 @@ void RadarController::reset()
     b_track_range_accel.reset();
     b_track_med_range_mode.reset();
     b_track_range_rate.reset();
+
+    for (int i = 0; i < dlc; i++) {
+        b = can_data[i];
+        bin += b.to_string();
+    }
 }
 
 void RadarController::busOn()
@@ -105,20 +110,33 @@ void RadarController::busOff()
     stat = canBusOff(h);
 }
 
-void RadarController::retrievingData()
+void RadarController::dataExec()
 {
     stat = canReadWait(h, &id, &can_data[0], &dlc, &flag, &time, 0xff);
     if (stat != canOK) {
         std::cout<<"read FAILED"<<std::endl;
         return;
     }
-
     reset();
-    for (int i = 0; i < dlc; i++) {
-        b = can_data[i];
-        bin += b.to_string();
-    }
 
+    retrievingData();
+
+    if (fg_data_in) {
+        pointDisplayFrontView();
+
+        if (fg_topview)
+            pointProjectTopView();
+
+        if (t.elapsed() > time_gap) {
+            emit updateGUI(detected_obj, &img_radar, &topview);
+
+            t.restart();
+        }
+    }
+}
+
+void RadarController::retrievingData()
+{
     if (fg_data_in) {
         int _id;
         if (id >= 0x500 && id <= 0x53F) {
@@ -214,17 +232,6 @@ void RadarController::retrievingData()
             qDebug()<<t.elapsed();
         }
 #endif
-
-        pointDisplayFrontView();
-
-        if (fg_topview)
-            pointProjectTopView();
-
-        if (t.elapsed() > time_gap) {
-            emit radarUpdateGUI(detected_obj, &img_radar, &topview);
-
-            t.restart();
-        }
     }
 }
 

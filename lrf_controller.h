@@ -64,10 +64,17 @@ public:
 
     ~lrf_controller();
 
+    double *lrf_data;
+
+    cv::Mat display_lrf;
 
     bool open(QString comPortIn, int baudRateIn);
 
     bool isOpen() { return serial->isOpen(); }
+
+    void reset();
+
+    bool dataExec();
 
     void pushToBuf();
 
@@ -140,6 +147,9 @@ private:
     // ======================
 
     ushort doCRC(const QByteArray &data);
+
+signals:
+    void updateGUI(double *data, cv::Mat *display_lrf);
 };
 
 #endif // LRF_CONTROLLER_H

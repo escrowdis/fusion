@@ -39,6 +39,8 @@ public:
 
     void retrievingData();
 
+    void dataExec();
+
     // tableView used
     QStandardItem* item;
 
@@ -53,7 +55,7 @@ public:
 
     struct ESR_track_object_info{
         float angle;                    // orientation degree. Middle is zero. From -51.2 to 51.1. (degree)
-        bool bridge_object;
+        bool bridge_object;             // non-functional
         bool grouping_changed;
         float lat_rate;
         int med_range_mode;
@@ -63,7 +65,7 @@ public:
         float range_rate;
         bool rolling_count;
         int status;
-        float width;
+        float width;                    // non-functional
         double x;                       // radar coordinates system (cm)
         double y;
         double z;
@@ -188,7 +190,7 @@ private:
     };
 
 signals:
-    void radarUpdateGUI(int detected_obj, cv::Mat *img, cv::Mat *topview);
+    void updateGUI(int detected_obj, cv::Mat *img, cv::Mat *topview);
 };
 
 #endif // RADARCONTROLLER_H

@@ -48,7 +48,7 @@ public:
 private:
     Ui::MainWindow *ui;
 
-    QTime t_proc;
+    QTime t_proc_sv, t_proc_lrf, t_proc_lrf_buf, t_proc_radar;
 
     void reportError(QString part, QString level, QString content);
 
@@ -101,10 +101,9 @@ private:
 
     bool fg_buffering;
 
-    double lrf_data[LENGTH_DATA];
-
     bool fg_lrf_record;
     bool fg_lrf_record_quit;
+
     FILE* fp1;
 
     void lrfClearData();
@@ -129,20 +128,24 @@ private:
 
     float min_detection_range;                      // min. detection range in all sensors (cm)
 
+    int thickness;                                  // object params on topview
+
+    int font;
+
+    int font_size;
+
+    int font_thickness;
+
     // information of objects detected by different sensors on fused topview
     struct sensorInformation {
         cv::Point pos;                              // sensor's position based on the vehicle view
 
         cv::Scalar color;                           // sensor's color on the topview
 
-        int thickness;
-
         sensorInformation() {
             pos = cv::Point(-1, -1);
 
             color = cv::Scalar(0, 0, 0);
-
-            thickness = 1;
         }
     };
 
@@ -219,10 +222,6 @@ signals:
     void sendImages(cv::Mat *img_L, cv::Mat *img_R);
     // ======================== End
 
-    // Laser range finder =====
-    void lrfUpdateGUI();
-    // ======================== End
-
     // Stereo vision param ====
     // ======================== End
 
@@ -231,7 +230,7 @@ private slots:
     // Laser range finder =====
     void on_pushButton_lrf_open_clicked();
 
-    void lrfDisplay();
+    void lrfDisplay(double *lrf_data, cv::Mat *display_lrf);
     // ======================== End
 
     // Stereo vision ==========
@@ -317,8 +316,6 @@ private slots:
     void on_pushButton_lrf_retrieve_2_clicked();
 
     void on_pushButton_lrf_stop_2_clicked();
-
-    void on_pushButton_clicked();
 
     void on_pushButton_radar_open_clicked();
 
