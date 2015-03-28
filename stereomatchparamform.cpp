@@ -6,6 +6,8 @@ stereoMatchParamForm::stereoMatchParamForm(QWidget *parent, int mode) :
     ui(new Ui::stereoMatchParamForm)
 {
     this->mode = mode;
+    fg_sgbm_changed = false;
+    fg_bm_changed = false;
     ui->setupUi(this);
     ui->tabWidget->setCurrentIndex(mode);
 }
@@ -25,10 +27,14 @@ void stereoMatchParamForm::changeMode(int mode)
     this->mode = mode;
 }
 
-void stereoMatchParamForm::updateParams(std::vector<int> param)
+void stereoMatchParamForm::updateParams(int cur_mode, std::vector<int> param)
 {
+    mode = cur_mode;
+    ui->tabWidget->setCurrentIndex(mode);
     switch (mode) {
     case SV::STEREO_MATCH::BM:
+        if (fg_bm_changed)
+            break;
         ui->horizontalSlider_bm_pre_filter_size->setValue(param[0]);
         ui->horizontalSlider_bm_pre_filter_cap->setValue(param[1]);
         ui->horizontalSlider_bm_sad_window_size->setValue(param[2]);
@@ -38,8 +44,11 @@ void stereoMatchParamForm::updateParams(std::vector<int> param)
         ui->horizontalSlider_bm_uniqueness_ratio->setValue(param[6]);
         ui->horizontalSlider_bm_speckle_window_size->setValue(param[7]);
         ui->horizontalSlider_bm_speckle_range->setValue(param[8]);
+        fg_bm_changed = true;
         break;
     case SV::STEREO_MATCH::SGBM:
+        if (fg_sgbm_changed)
+            break;
         ui->horizontalSlider_sgbm_pre_filter_cap->setValue(param[0]);
         ui->horizontalSlider_sgbm_sad_window_size->setValue(param[1]);
         ui->horizontalSlider_sgbm_min_disp->setValue(param[2]);
@@ -47,8 +56,11 @@ void stereoMatchParamForm::updateParams(std::vector<int> param)
         ui->horizontalSlider_sgbm_uniqueness_ratio->setValue(param[4]);
         ui->horizontalSlider_sgbm_speckle_window_size->setValue(param[5]);
         ui->horizontalSlider_sgbm_speckle_range->setValue(param[6]);
+        fg_sgbm_changed = true;
         break;
     }
+
+    stereoMatchParamForm::repaint();
 }
 
 void stereoMatchParamForm::on_horizontalSlider_bm_pre_filter_size_valueChanged(int value)
@@ -148,3 +160,4 @@ void stereoMatchParamForm::on_horizontalSlider_sgbm_speckle_range_valueChanged(i
 {
     emit send_sgbm_speckle_range(value);
 }
+

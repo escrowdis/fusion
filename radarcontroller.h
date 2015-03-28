@@ -7,7 +7,7 @@
 
 // thread control
 #include <QReadWriteLock>
-extern QReadWriteLock lock;
+extern QReadWriteLock lock_radar;
 
 #include <iostream>
 #include <bitset>

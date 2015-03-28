@@ -10,7 +10,7 @@ extern QDir project_path;
 
 // thread control
 #include <QReadWriteLock>
-extern QReadWriteLock lock;
+extern QReadWriteLock lock_sv;
 
 #include <stack>
 
@@ -50,6 +50,8 @@ public:
     ~stereo_vision();
 
     int match_mode;
+
+    std::vector <int> match_param;
 
     bool open(int device_index_L, int device_index_R);
 
@@ -93,7 +95,8 @@ public:
         double focal_length;
         int cam_focal_length;
         double base_line;
-    }cam_param;
+    };
+    camParam* cam_param;
 
     // data - stereo vision ========
     struct StereoData
@@ -117,10 +120,14 @@ public:
     StereoData** data;
     // ============================= End
 
-    // Stereo vision params ========
-    void matchParamInitialize(int type);
+    // Stereo match params (SMP) ===
+    void matchParamInitialize(int cur_mode);
 
-    void updateParamsSmp();
+    bool modeChanged(int cur_mode) {
+        return match_mode != cur_mode;
+    }
+
+    void modeChange(int cur_mode, bool fg_form_smp_update);
 
     struct matchParamSGBM
     {
@@ -131,7 +138,8 @@ public:
         int uniquenese_ratio;
         int speckle_window_size;
         int speckle_range;
-    }param_sgbm;
+    };
+    matchParamSGBM* param_sgbm;
 
     struct matchParamBM
     {
@@ -144,7 +152,8 @@ public:
         int uniquenese_ratio;
         int speckle_window_size;
         int speckle_range;
-    }param_bm;
+    };
+    matchParamBM* param_bm;
 
     // ============================= End
 
@@ -230,6 +239,9 @@ private:
     cv::Ptr<cv::StereoBM> bm;
     int cn;
 
+    void updateFormParams();
+    void updateParamsSmp();
+
     cv::Mat img_match_L;
     cv::Mat img_match_R;
 
@@ -289,11 +301,9 @@ private slots:
     // ============================== End
 
 signals:
-    void sendCurrentParams(std::vector<int> param);
-
     void updateGUI(cv::Mat *img_L, cv::Mat *img_R, cv::Mat *disp, cv::Mat *disp_pseudo, cv::Mat *topview, cv::Mat *img_detected, int detected_obj);
 
-    void setConnect(int old_mode, int new_mode);
+    void updateForm(int mode, std::vector<int> params);
 };
 
 #endif // STEREO_VISION_H

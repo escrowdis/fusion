@@ -257,13 +257,13 @@ void RadarController::pointDisplayFrontView()
 
             int pt_x, pt_y;
             float gain = 5.0; //**// another value?
-            lock.lockForRead();
+            lock_radar.lockForWrite();
             pt_x = 1.0 * esr_obj[k].x * gain * (1.0 - 1.0 * esr_obj[k].z / max_distance) + img_center.x;
             pt_y = img_rows * (1.0 - 1.0 * esr_obj[k].z / max_distance);
             cv::circle(img_radar, cv::Point(pt_x, pt_y), 1, cv::Scalar(0, 255, 0, 255), -1, 8, 0);
             cv::rectangle(img_radar, cv::Rect(pt_x - obj_rect.x / 2, pt_y - obj_rect.y / 2, obj_rect.x, obj_rect.y), cv::Scalar(0, 0, 255, 255), 2, 8, 0);
             cv::putText(img_radar, QString::number(k + 1).toStdString(), cv::Point(pt_x + obj_rect.x / 2, pt_y), cv::FONT_HERSHEY_DUPLEX, 1, cv::Scalar(0, 255, 0, 255));
-            lock.unlock();
+            lock_radar.unlock();
 #ifdef debug_info_radar_data
 //                ui->textEdit->append("data struct\nangle: " + QString::number(esr_obj[k].angle) + " range: " + QString::number(esr_obj[k].range)
 //                                     + " accel: " + QString::number(esr_obj[k].range_accel) + " width: " + QString::number(esr_obj[k].width)
@@ -294,10 +294,10 @@ void RadarController::pointProjectTopView()
             // mark each point belongs to which cell
             if (grid_row_t >= 0 && grid_row_t < img_row &&
                     grid_col_t >= 0 && grid_col_t < img_col) {
-                lock.lockForWrite();
+                lock_radar.lockForWrite();
                 grid_map[grid_row_t][grid_col_t].pts_num++;
 //                std::cout<<data[m].z<<std::endl;
-                lock.unlock();
+                lock_radar.unlock();
             }
         }
     }

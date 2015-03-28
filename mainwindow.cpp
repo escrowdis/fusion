@@ -5,37 +5,68 @@ MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow)
 {
-    ui->setupUi(this);
-
-    fg_running = false;
-
+    // default setting =========================
     qRegisterMetaType<cv::Mat>("cv::Mat");
     qRegisterMetaType<QVector<int>>("QVector<int>");
 
-    // Laser range finder ======================
+    // THREAD RUN
+    fg_running = false;
 
-    // Initialization
-    lrf = new lrf_controller();
+    fg_param_loaded = false;
 
+    // LRF
     fg_lrf_record = false;
     fg_lrf_record_quit = false;
 
     fg_acquiring = false;
     fg_buffering = false;
 
-    QObject::connect(lrf, SIGNAL(updateGUI(double *, cv::Mat *)), this, SLOT(lrfDisplay(double *, cv::Mat *)));
+    // SV
+    fg_capturing = false;
 
-    ui->label_lrf_data->setStyleSheet("background-color:silver");
+    // RADAR
+    fg_retrieving = false;
 
+    ui->setupUi(this);
+
+    // LRF
     // COM port
     for (int i = 1; i <= 20; i++)
         ui->comboBox_lrf_com->addItem("COM" + QString::number(i));
-
     // Baud rate
     QStringList list_baudrate;
     list_baudrate << "9600" << "19200" << "38400" << "500000";
     ui->comboBox_lrf_baudRate->addItems(list_baudrate);
 
+    // SV
+    // COM port
+    for (int i = 0; i < 6; i++) {
+        ui->comboBox_cam_device_index_L->addItem(QString::number(i));
+        ui->comboBox_cam_device_index_R->addItem(QString::number(i));
+    }
+
+    // focal length
+    ui->comboBox_camera_focal_length->addItem("16");
+    ui->comboBox_camera_focal_length->addItem("12");
+    ui->comboBox_camera_focal_length->addItem("4");
+
+    fin_cam_param = new stereo_vision::camParam;
+    fin_SGBM = new stereo_vision::matchParamSGBM;
+    fin_BM = new stereo_vision::matchParamBM;
+
+    paramRead();
+
+    if (!projectFolder())
+        reportError("path", "Warning.", "Path folder is NOT \"Fusion\".");
+    // default setting ========================= End
+
+    // Laser range finder ======================
+
+    // Initialization
+    lrf = new lrf_controller();
+
+    QObject::connect(lrf, SIGNAL(updateGUI(double *, cv::Mat *)), this, SLOT(lrfDisplay(double *, cv::Mat *)));
+    
     // display
     display_lrf = cv::Mat::zeros(800, 800, CV_8UC3);
 
@@ -50,30 +81,21 @@ MainWindow::MainWindow(QWidget *parent) :
     // Initialization
     sv = new stereo_vision();
 
-    fg_capturing = false;
-
-    on_checkBox_pseudo_color_clicked(ui->checkBox_pseudo_color->isChecked());
-    on_checkBox_sv_topview_clicked(ui->checkBox_sv_topview->isChecked());
-    on_checkBox_sv_reproject_clicked(ui->checkBox_sv_reproject->isChecked());
-    on_checkBox_topview_plot_points_clicked(ui->checkBox_topview_plot_points->isChecked());
-
-    QObject::connect(sv, SIGNAL(updateGUI(cv::Mat *, cv::Mat *, cv::Mat *, cv::Mat *, cv::Mat *, cv::Mat *, int)), this, SLOT(svDisplay(cv::Mat *, cv::Mat *, cv::Mat *, cv::Mat *, cv::Mat *, cv::Mat *, int)));
+    retrieveMatchParam();
 
     ui->label_cam_img_L->setStyleSheet("background-color:silver");
     ui->label_cam_img_R->setStyleSheet("background-color:silver");
     ui->label_disp->setStyleSheet("background-color:silver");
     ui->label_sv_detected->setStyleSheet("background-color:silver");
 
-    // COM port
-    for (int i = 0; i < 6; i++) {
-        ui->comboBox_cam_device_index_L->addItem(QString::number(i));
-        ui->comboBox_cam_device_index_R->addItem(QString::number(i));
-    }
+    QObject::connect(sv, SIGNAL(updateGUI(cv::Mat *, cv::Mat *, cv::Mat *, cv::Mat *, cv::Mat *, cv::Mat *, int)), this, SLOT(svDisplay(cv::Mat *, cv::Mat *, cv::Mat *, cv::Mat *, cv::Mat *, cv::Mat *, int)));
 
-    // focal length
-    ui->comboBox_camera_focal_length->addItem("16");
-    ui->comboBox_camera_focal_length->addItem("12");
-    ui->comboBox_camera_focal_length->addItem("4");
+    on_checkBox_pseudo_color_clicked(ui->checkBox_pseudo_color->isChecked());
+    on_checkBox_sv_topview_clicked(ui->checkBox_sv_topview->isChecked());
+    on_checkBox_sv_reproject_clicked(ui->checkBox_sv_reproject->isChecked());
+    on_checkBox_topview_plot_points_clicked(ui->checkBox_topview_plot_points->isChecked());
+    on_checkBox_do_calibration_clicked(ui->checkBox_do_calibration->isChecked());
+    on_checkBox_do_depth_clicked(ui->checkBox_do_depth->isChecked());
 
     // top view
     svDisplayTopViewBG();
@@ -83,8 +105,6 @@ MainWindow::MainWindow(QWidget *parent) :
     rc = new RadarController(0.0);
 
     radarDisplayTopViewBG();
-
-    fg_retrieving = false;
 
     model_radar = new QStandardItemModel(64, 1, this);
     model_radar->setHorizontalHeaderItem(0, new QStandardItem(QString("Range")));
@@ -132,23 +152,6 @@ MainWindow::MainWindow(QWidget *parent) :
 //    QObject::connect(ui->label_cam_img_L, SIGNAL(mXY(int, int)), this, SLOT(mouseXY(int, int)));
     QObject::connect(ui->label_disp, SIGNAL(mXY(int, int)), this, SLOT(mouseXY(int, int)));
     // ========================================= End
-
-    // default setting =========================
-    fg_param_loaded = false;
-
-    if (!projectFolder()) {
-        reportError("path", "Warning.", "Path folder is NOT \"Fusion\".");
-    }
-
-    paramRead();
-
-    // ========================================= End
-
-    // Stereo vision (1) =======================
-    // set status after loading params
-    on_checkBox_do_calibration_clicked(ui->checkBox_do_calibration->isChecked());
-    on_checkBox_do_depth_clicked(ui->checkBox_do_depth->isChecked());
-    // Stereo vision (1) ======================= End
 }
 
 MainWindow::~MainWindow()
@@ -162,6 +165,10 @@ MainWindow::~MainWindow()
 //    QMessageBox::StandardButton reply = QMessageBox::question(0, "New change", "Parameters were changed, save the new ones?", QMessageBox::Yes | QMessageBox::No);
 //    if (reply == QMessageBox::Yes)
         paramWrite();
+    delete fin_cam_param;
+    delete fin_SGBM;
+    delete fin_BM;
+
     cv::destroyAllWindows();
 
     delete rc;
@@ -231,11 +238,11 @@ void MainWindow::mouseXY(int x, int y)
     int xx, yy;
     xx = 2 * x;
     yy = 2 * y;
-    lock.lockForRead();
+    lock_sv.lockForRead();
     mouse_info.sprintf("(x,y) = (%d,%d), Disp. = %d, (X,Y,Z) = (%d,%d,%d)",
                        xx, yy, sv->data[yy][xx].disp,
                        -1, -1, sv->data[yy][xx].Z); //**// real X, Y, Z
-    lock.unlock();
+    lock_sv.unlock();
     ui->label_depth_info->setText(mouse_info);
 }
 
@@ -278,12 +285,12 @@ void MainWindow::paramRead()
     n = fs["stereoVision"];
     ui->comboBox_cam_device_index_L->setCurrentIndex((int) n["port_L"]);
     ui->comboBox_cam_device_index_R->setCurrentIndex((int) n["port_R"]);
-    ui->comboBox_camera_focal_length->setCurrentIndex((int) n["cam_focal_length"]);
-    sv->cam_param.cam_focal_length = ui->comboBox_camera_focal_length->currentText().toInt();
-    sv->cam_param.base_line = (double) n["base_line"];
-    sv->cam_param.focal_length = (double) n["focal_length"];
-    ui->lineEdit_base_line->setText(QString::number(sv->cam_param.base_line));
-    ui->label_sv_focal_length->setText(QString::number(sv->cam_param.focal_length));
+    fin_cam_param->cam_focal_length = (int) n["cam_focal_length"];
+    fin_cam_param->base_line = (double) n["base_line"];
+    fin_cam_param->focal_length = (double) n["focal_length"];
+    ui->comboBox_camera_focal_length->setCurrentIndex(fin_cam_param->cam_focal_length);
+    ui->lineEdit_base_line->setText(QString::number(fin_cam_param->base_line));
+    ui->label_sv_focal_length->setText(QString::number(fin_cam_param->focal_length));
 
     n = fs["topView"];
     ui->spinBox_topview_r->setValue((int) n["row_interval"]);
@@ -302,24 +309,24 @@ void MainWindow::paramRead()
         ui->radioButton_lrf_res_mm->setChecked(true);
 
     n = fs["stereoParamSGBM"];
-    sv->param_sgbm.pre_filter_cap = (int)(n["pre_filter_cap"]);
-    sv->param_sgbm.SAD_window_size = (int)(n["SAD_window_size"]);
-    sv->param_sgbm.min_disp = (int)(n["min_disp"]);
-    sv->param_sgbm.num_of_disp = (int)(n["num_of_disp"]);
-    sv->param_sgbm.uniquenese_ratio = (int)(n["uniquenese_ratio"]);
-    sv->param_sgbm.speckle_window_size = (int)(n["speckle_window_size"]);
-    sv->param_sgbm.speckle_range = (int)(n["speckle_range"]);
+    fin_SGBM->pre_filter_cap = (int)(n["pre_filter_cap"]);
+    fin_SGBM->SAD_window_size = (int)(n["SAD_window_size"]);
+    fin_SGBM->min_disp = (int)(n["min_disp"]);
+    fin_SGBM->num_of_disp = (int)(n["num_of_disp"]);
+    fin_SGBM->uniquenese_ratio = (int)(n["uniquenese_ratio"]);
+    fin_SGBM->speckle_window_size = (int)(n["speckle_window_size"]);
+    fin_SGBM->speckle_range = (int)(n["speckle_range"]);
 
     n = fs["stereoParamBM"];
-    sv->param_bm.pre_filter_size = (int)(n["pre_filter_size"]);
-    sv->param_bm.pre_filter_cap = (int)(n["pre_filter_cap"]);
-    sv->param_bm.SAD_window_size = (int)(n["SAD_window_size"]);
-    sv->param_bm.min_disp = (int)(n["min_disp"]);
-    sv->param_bm.num_of_disp = (int)(n["num_of_disp"]);
-    sv->param_bm.texture_thresh = (int)(n["texture_thresh"]);
-    sv->param_bm.uniquenese_ratio = (int)(n["uniquenese_ratio"]);
-    sv->param_bm.speckle_window_size = (int)(n["speckle_window_size"]);
-    sv->param_bm.speckle_range = (int)(n["speckle_range"]);
+    fin_BM->pre_filter_size = (int)(n["pre_filter_size"]);
+    fin_BM->pre_filter_cap = (int)(n["pre_filter_cap"]);
+    fin_BM->SAD_window_size = (int)(n["SAD_window_size"]);
+    fin_BM->min_disp = (int)(n["min_disp"]);
+    fin_BM->num_of_disp = (int)(n["num_of_disp"]);
+    fin_BM->texture_thresh = (int)(n["texture_thresh"]);
+    fin_BM->uniquenese_ratio = (int)(n["uniquenese_ratio"]);
+    fin_BM->speckle_window_size = (int)(n["speckle_window_size"]);
+    fin_BM->speckle_range = (int)(n["speckle_range"]);
 
     fs.release();
     fg_param_loaded = true;
@@ -336,7 +343,7 @@ void MainWindow::paramWrite()
     fs << "port_L" << ui->comboBox_cam_device_index_L->currentIndex();
     fs << "port_R" << ui->comboBox_cam_device_index_R->currentIndex();
     fs << "cam_focal_length" << ui->comboBox_camera_focal_length->currentIndex();
-    fs << "focal_length" << sv->cam_param.focal_length;
+    fs << "focal_length" << sv->cam_param->focal_length;
     fs << "base_line" << ui->lineEdit_base_line->text().toDouble();
     fs << "}";
 
@@ -358,25 +365,25 @@ void MainWindow::paramWrite()
     fs << "}";
 
     fs << "stereoParamSGBM" << "{";
-    fs << "pre_filter_cap" << sv->param_sgbm.pre_filter_cap;
-    fs << "SAD_window_size" << sv->param_sgbm.SAD_window_size;
-    fs << "min_disp" << sv->param_sgbm.min_disp;
-    fs << "num_of_disp" << sv->param_sgbm.num_of_disp;
-    fs << "uniquenese_ratio" << sv->param_sgbm.uniquenese_ratio;
-    fs << "speckle_window_size" << sv->param_sgbm.speckle_window_size;
-    fs << "speckle_range" << sv->param_sgbm.speckle_range;
+    fs << "pre_filter_cap" << sv->param_sgbm->pre_filter_cap;
+    fs << "SAD_window_size" << sv->param_sgbm->SAD_window_size;
+    fs << "min_disp" << sv->param_sgbm->min_disp;
+    fs << "num_of_disp" << sv->param_sgbm->num_of_disp;
+    fs << "uniquenese_ratio" << sv->param_sgbm->uniquenese_ratio;
+    fs << "speckle_window_size" << sv->param_sgbm->speckle_window_size;
+    fs << "speckle_range" << sv->param_sgbm->speckle_range;
     fs << "}";
 
     fs << "stereoParamBM" << "{";
-    fs << "pre_filter_size" << sv->param_bm.pre_filter_cap;
-    fs << "pre_filter_cap" << sv->param_bm.pre_filter_cap;
-    fs << "SAD_window_size" << sv->param_bm.SAD_window_size;
-    fs << "min_disp" << sv->param_bm.min_disp;
-    fs << "num_of_disp" << sv->param_bm.num_of_disp;
-    fs << "texture_thresh" << sv->param_bm.texture_thresh;
-    fs << "uniquenese_ratio" << sv->param_bm.uniquenese_ratio;
-    fs << "speckle_window_size" << sv->param_bm.speckle_window_size;
-    fs << "speckle_range" << sv->param_bm.speckle_range;
+    fs << "pre_filter_size" << sv->param_bm->pre_filter_size;
+    fs << "pre_filter_cap" << sv->param_bm->pre_filter_cap;
+    fs << "SAD_window_size" << sv->param_bm->SAD_window_size;
+    fs << "min_disp" << sv->param_bm->min_disp;
+    fs << "num_of_disp" << sv->param_bm->num_of_disp;
+    fs << "texture_thresh" << sv->param_bm->texture_thresh;
+    fs << "uniquenese_ratio" << sv->param_bm->uniquenese_ratio;
+    fs << "speckle_window_size" << sv->param_bm->speckle_window_size;
+    fs << "speckle_range" << sv->param_bm->speckle_range;
     fs << "}";
 
     fs.release();
@@ -617,7 +624,7 @@ void MainWindow::lrfDisplay(double *lrf_data, cv::Mat *display_lrf)
 //        if (lrf_data[i] == -1)
 //            return;
 
-    lock.lockForRead();
+    lock_lrf.lockForRead();
     for (int i = 0; i < LENGTH_DATA; ++i) {
         double r = lrf_data[i];
         double x = r * cos(angle * CV_PI / 180.0);
@@ -631,22 +638,47 @@ void MainWindow::lrfDisplay(double *lrf_data, cv::Mat *display_lrf)
     }
 
     ui->label_lrf_data->setPixmap(QPixmap::fromImage(QImage::QImage(display_lrf->data, display_lrf->cols, display_lrf->rows, 3 * display_lrf->cols, QImage::Format_RGB888)).scaled(IMG_DIS_W, IMG_DIS_H));
-    lock.unlock();
+    lock_lrf.unlock();
 //    cv::imshow("image", display_lrf);
     cv::waitKey(10);
 
     if (fg_lrf_record) {
-        lock.lockForWrite();
+        lock_lrf.lockForWrite();
         for (int i = 0; i < LENGTH_DATA; i++) {
             fprintf(fp1, "%d ", lrf_data[i]); //**// %f? %d?
         }
         fprintf(fp1, "\n");
-        lock.unlock();
+        lock_lrf.unlock();
         if (fg_lrf_record_quit) {
             fclose(fp1);
             fg_lrf_record = false;
         }
     }
+}
+
+void MainWindow::retrieveMatchParam()
+{
+    sv->cam_param->cam_focal_length   = fin_cam_param->cam_focal_length;
+    sv->cam_param->base_line          = fin_cam_param->base_line;
+    sv->cam_param->focal_length       = fin_cam_param->focal_length;
+
+    sv->param_sgbm->pre_filter_cap      = fin_SGBM->pre_filter_cap;
+    sv->param_sgbm->SAD_window_size     = fin_SGBM->SAD_window_size;
+    sv->param_sgbm->min_disp            = fin_SGBM->min_disp;
+    sv->param_sgbm->num_of_disp         = fin_SGBM->num_of_disp;
+    sv->param_sgbm->uniquenese_ratio    = fin_SGBM->uniquenese_ratio;
+    sv->param_sgbm->speckle_window_size = fin_SGBM->speckle_window_size;
+    sv->param_sgbm->speckle_range       = fin_SGBM->speckle_range;
+
+    sv->param_bm->pre_filter_size     = fin_BM->pre_filter_size;
+    sv->param_bm->pre_filter_cap      = fin_BM->pre_filter_cap;
+    sv->param_bm->SAD_window_size     = fin_BM->SAD_window_size;
+    sv->param_bm->min_disp            = fin_BM->min_disp;
+    sv->param_bm->num_of_disp         = fin_BM->num_of_disp;
+    sv->param_bm->texture_thresh      = fin_BM->texture_thresh;
+    sv->param_bm->uniquenese_ratio    = fin_BM->uniquenese_ratio;
+    sv->param_bm->speckle_window_size = fin_BM->speckle_window_size;
+    sv->param_bm->speckle_range       = fin_BM->speckle_range;
 }
 
 void MainWindow::camOpen()
@@ -666,12 +698,12 @@ void MainWindow::camOpen()
 
 void MainWindow::svDisplay(cv::Mat *img_L, cv::Mat *img_R, cv::Mat *disp, cv::Mat *disp_pseudo, cv::Mat *topview, cv::Mat *img_detected, int detected_obj)
 {
-    lock.lockForRead();
     ui->label_cam_img_L->setPixmap(QPixmap::fromImage(QImage::QImage(img_L->data, img_L->cols, img_L->rows, 3 * img_L->cols, QImage::Format_RGB888)).scaled(IMG_DIS_W, IMG_DIS_H));
     ui->label_cam_img_R->setPixmap(QPixmap::fromImage(QImage::QImage(img_R->data, img_R->cols, img_R->rows, 3 * img_R->cols, QImage::Format_RGB888)).scaled(IMG_DIS_W, IMG_DIS_H));
     ui->label_sv_detected_obj->setText(QString::number(detected_obj));
 
     if (ui->checkBox_do_depth->isChecked()) {    
+        lock_sv.lockForRead();
         if (ui->checkBox_pseudo_color->isChecked())
             ui->label_disp->setPixmap(QPixmap::fromImage(QImage::QImage(disp_pseudo->data, disp_pseudo->cols, disp_pseudo->rows, QImage::Format_RGB888)).scaled(IMG_DIS_DISP_W, IMG_DIS_DISP_H));
         else
@@ -682,9 +714,8 @@ void MainWindow::svDisplay(cv::Mat *img_L, cv::Mat *img_R, cv::Mat *disp, cv::Ma
             ui->label_top_view_sv->setPixmap(QPixmap::fromImage(QImage::QImage(topview->data, topview->cols, topview->rows, QImage::Format_RGBA8888)).scaled(270, 750));
             ui->label_sv_detected->setPixmap(QPixmap::fromImage(QImage::QImage(img_detected->data, img_detected->cols, img_detected->rows, QImage::Format_RGB888)).scaled(IMG_DIS_W, IMG_DIS_H));
         }
+        lock_sv.unlock();
     }
-
-    lock.unlock();
 }
 
 void MainWindow::on_checkBox_sv_topview_clicked(bool checked)
@@ -715,7 +746,6 @@ void MainWindow::on_pushButton_cam_open_clicked()
 {
     camOpen();
     sv->input_mode = SV::INPUT_SOURCE::CAM;
-    sv->matchParamInitialize(SV::STEREO_MATCH::SGBM);
     on_pushButton_cam_step_clicked();
 }
 
@@ -805,7 +835,7 @@ void MainWindow::threadProcessing()
         if (fg_retrieving && !f_radar.isRunning()) {
 //            rc->retrievingData();
             f_radar = QtConcurrent::run(rc, &RadarController::dataExec);
-            ui->label_lrf_buf_proc->setText(QString::number(t_proc_radar.restart()));
+            ui->label_radar_proc->setText(QString::number(t_proc_radar.restart()));
             qApp->processEvents();
         }
 
@@ -835,7 +865,7 @@ void MainWindow::on_checkBox_do_calibration_clicked(bool checked)
 void MainWindow::on_checkBox_do_depth_clicked(bool checked)
 {
     if (checked) {
-        sv->cam_param.param_r = sv->cam_param.focal_length * sv->cam_param.base_line;
+        sv->cam_param->param_r = sv->cam_param->focal_length * sv->cam_param->base_line;
         sv->fg_stereoMatch = true;
     }
     else
@@ -925,77 +955,18 @@ void MainWindow::requestImage(char CCD)
 
 void MainWindow::on_radioButton_BM_clicked()
 {
-    if (sv->match_mode == SV::STEREO_MATCH::BM)
+    if (!sv->modeChanged(SV::STEREO_MATCH::BM))
         return;
     report("Change to BM mathod.");
-    sv->matchParamInitialize(SV::STEREO_MATCH::BM);
-    if (fg_form_smp_alloc) {
-        sv->updateParamsSmp();
-        form_smp->repaint();
-    }
+    sv->modeChange(SV::STEREO_MATCH::BM, fg_form_smp_alloc);
 }
 
 void MainWindow::on_radioButton_SGBM_clicked()
 {
-    if (sv->match_mode == SV::STEREO_MATCH::SGBM)
+    if (!sv->modeChanged(SV::STEREO_MATCH::SGBM))
         return;
     report("Change to SGBM mathod.");
-    sv->matchParamInitialize(SV::STEREO_MATCH::SGBM);
-    if (fg_form_smp_alloc) {
-        sv->updateParamsSmp();
-        form_smp->repaint();
-    }
-}
-
-void MainWindow::connectSmp(int old_mode, int new_mode)
-{
-    switch (old_mode) {
-    case SV::STEREO_MATCH::BM:
-        QObject::disconnect(form_smp, SIGNAL(send_bm_pre_filter_size(int)), sv, SLOT(change_bm_pre_filter_size(int)));
-        QObject::disconnect(form_smp, SIGNAL(send_bm_pre_filter_cap(int)), sv, SLOT(change_bm_pre_filter_cap(int)));
-        QObject::disconnect(form_smp, SIGNAL(send_bm_sad_window_size(int)), sv, SLOT(change_bm_sad_window_size(int)));
-        QObject::disconnect(form_smp, SIGNAL(send_bm_min_disp(int)), sv, SLOT(change_bm_min_disp(int)));
-        QObject::disconnect(form_smp, SIGNAL(send_bm_num_of_disp(int)), sv, SLOT(change_bm_num_of_disp(int)));
-        QObject::disconnect(form_smp, SIGNAL(send_bm_texture_thresh(int)), sv, SLOT(change_bm_texture_thresh(int)));
-        QObject::disconnect(form_smp, SIGNAL(send_bm_uniqueness_ratio(int)), sv, SLOT(change_bm_uniqueness_ratio(int)));
-        QObject::disconnect(form_smp, SIGNAL(send_bm_speckle_window_size(int)), sv, SLOT(change_bm_speckle_window_size(int)));
-        QObject::disconnect(form_smp, SIGNAL(send_bm_speckle_range(int)), sv, SLOT(change_bm_speckle_range(int)));
-        break;
-    case SV::STEREO_MATCH::SGBM:
-        QObject::disconnect(form_smp, SIGNAL(send_sgbm_pre_filter_cap(int)), sv, SLOT(change_sgbm_pre_filter_cap(int)));
-        QObject::disconnect(form_smp, SIGNAL(send_sgbm_sad_window_size(int)), sv, SLOT(change_sgbm_sad_window_size(int)));
-        QObject::disconnect(form_smp, SIGNAL(send_sgbm_min_disp(int)), sv, SLOT(change_sgbm_min_disp(int)));
-        QObject::disconnect(form_smp, SIGNAL(send_sgbm_num_of_disp(int)), sv, SLOT(change_sgbm_num_of_disp(int)));
-        QObject::disconnect(form_smp, SIGNAL(send_sgbm_uniqueness_ratio(int)), sv, SLOT(change_sgbm_uniqueness_ratio(int)));
-        QObject::disconnect(form_smp, SIGNAL(send_sgbm_speckle_window_size(int)), sv, SLOT(change_sgbm_speckle_window_size(int)));
-        QObject::disconnect(form_smp, SIGNAL(send_sgbm_speckle_range(int)), sv, SLOT(change_sgbm_speckle_range(int)));
-        break;
-    }
-
-    switch (new_mode) {
-    case SV::STEREO_MATCH::BM:
-        QObject::connect(form_smp, SIGNAL(send_bm_pre_filter_size(int)), sv, SLOT(change_bm_pre_filter_size(int)));
-        QObject::connect(form_smp, SIGNAL(send_bm_pre_filter_cap(int)), sv, SLOT(change_bm_pre_filter_cap(int)));
-        QObject::connect(form_smp, SIGNAL(send_bm_sad_window_size(int)), sv, SLOT(change_bm_sad_window_size(int)));
-        QObject::connect(form_smp, SIGNAL(send_bm_min_disp(int)), sv, SLOT(change_bm_min_disp(int)));
-        QObject::connect(form_smp, SIGNAL(send_bm_num_of_disp(int)), sv, SLOT(change_bm_num_of_disp(int)));
-        QObject::connect(form_smp, SIGNAL(send_bm_texture_thresh(int)), sv, SLOT(change_bm_texture_thresh(int)));
-        QObject::connect(form_smp, SIGNAL(send_bm_uniqueness_ratio(int)), sv, SLOT(change_bm_uniqueness_ratio(int)));
-        QObject::connect(form_smp, SIGNAL(send_bm_speckle_window_size(int)), sv, SLOT(change_bm_speckle_window_size(int)));
-        QObject::connect(form_smp, SIGNAL(send_bm_speckle_range(int)), sv, SLOT(change_bm_speckle_range(int)));
-        break;
-    case SV::STEREO_MATCH::SGBM:
-        QObject::connect(form_smp, SIGNAL(send_sgbm_pre_filter_cap(int)), sv, SLOT(change_sgbm_pre_filter_cap(int)));
-        QObject::connect(form_smp, SIGNAL(send_sgbm_sad_window_size(int)), sv, SLOT(change_sgbm_sad_window_size(int)));
-        QObject::connect(form_smp, SIGNAL(send_sgbm_min_disp(int)), sv, SLOT(change_sgbm_min_disp(int)));
-        QObject::connect(form_smp, SIGNAL(send_sgbm_num_of_disp(int)), sv, SLOT(change_sgbm_num_of_disp(int)));
-        QObject::connect(form_smp, SIGNAL(send_sgbm_uniqueness_ratio(int)), sv, SLOT(change_sgbm_uniqueness_ratio(int)));
-        QObject::connect(form_smp, SIGNAL(send_sgbm_speckle_window_size(int)), sv, SLOT(change_sgbm_speckle_window_size(int)));
-        QObject::connect(form_smp, SIGNAL(send_sgbm_speckle_range(int)), sv, SLOT(change_sgbm_speckle_range(int)));
-        break;
-    }
-
-    form_smp->changeMode(new_mode);
+    sv->modeChange(SV::STEREO_MATCH::SGBM, fg_form_smp_alloc);
 }
 
 void MainWindow::on_pushButton_stereo_match_param_clicked()
@@ -1008,9 +979,27 @@ void MainWindow::on_pushButton_stereo_match_param_clicked()
     QObject::connect(form_smp, SIGNAL(closed(void)), this, SLOT(closeFormSmp(void)));
 
     // send cuurent stereo matching params to ui
-    QObject::connect(sv, SIGNAL(setConnect(int,int)), this, SLOT(connectSmp(int,int)));
-    QObject::connect(sv, SIGNAL(sendCurrentParams(std::vector<int>)), form_smp, SLOT(updateParams(std::vector<int>)));
-    sv->updateParamsSmp();
+    QObject::connect(sv, SIGNAL(updateForm(int, std::vector<int>)), form_smp, SLOT(updateParams(int, std::vector<int>)));
+
+    // params connection
+    QObject::connect(form_smp, SIGNAL(send_bm_pre_filter_size(int)), sv, SLOT(change_bm_pre_filter_size(int)));
+    QObject::connect(form_smp, SIGNAL(send_bm_pre_filter_cap(int)), sv, SLOT(change_bm_pre_filter_cap(int)));
+    QObject::connect(form_smp, SIGNAL(send_bm_sad_window_size(int)), sv, SLOT(change_bm_sad_window_size(int)));
+    QObject::connect(form_smp, SIGNAL(send_bm_min_disp(int)), sv, SLOT(change_bm_min_disp(int)));
+    QObject::connect(form_smp, SIGNAL(send_bm_num_of_disp(int)), sv, SLOT(change_bm_num_of_disp(int)));
+    QObject::connect(form_smp, SIGNAL(send_bm_texture_thresh(int)), sv, SLOT(change_bm_texture_thresh(int)));
+    QObject::connect(form_smp, SIGNAL(send_bm_uniqueness_ratio(int)), sv, SLOT(change_bm_uniqueness_ratio(int)));
+    QObject::connect(form_smp, SIGNAL(send_bm_speckle_window_size(int)), sv, SLOT(change_bm_speckle_window_size(int)));
+    QObject::connect(form_smp, SIGNAL(send_bm_speckle_range(int)), sv, SLOT(change_bm_speckle_range(int)));
+    QObject::connect(form_smp, SIGNAL(send_sgbm_pre_filter_cap(int)), sv, SLOT(change_sgbm_pre_filter_cap(int)));
+    QObject::connect(form_smp, SIGNAL(send_sgbm_sad_window_size(int)), sv, SLOT(change_sgbm_sad_window_size(int)));
+    QObject::connect(form_smp, SIGNAL(send_sgbm_min_disp(int)), sv, SLOT(change_sgbm_min_disp(int)));
+    QObject::connect(form_smp, SIGNAL(send_sgbm_num_of_disp(int)), sv, SLOT(change_sgbm_num_of_disp(int)));
+    QObject::connect(form_smp, SIGNAL(send_sgbm_uniqueness_ratio(int)), sv, SLOT(change_sgbm_uniqueness_ratio(int)));
+    QObject::connect(form_smp, SIGNAL(send_sgbm_speckle_window_size(int)), sv, SLOT(change_sgbm_speckle_window_size(int)));
+    QObject::connect(form_smp, SIGNAL(send_sgbm_speckle_range(int)), sv, SLOT(change_sgbm_speckle_range(int)));
+
+    sv->modeChange(sv->match_mode, fg_form_smp_alloc);
 
     form_smp->show();
 }
@@ -1018,8 +1007,26 @@ void MainWindow::on_pushButton_stereo_match_param_clicked()
 void MainWindow::closeFormSmp(void)
 {
     QObject::disconnect(form_smp, SIGNAL(closed(void)), this, SLOT(closeFormSmp(void)));
-    QObject::disconnect(sv, SIGNAL(setConnect(int,int)), this, SLOT(connectSmp(int,int)));
-    QObject::disconnect(sv, SIGNAL(sendCurrentParams(std::vector<int>)), form_smp, SLOT(updateParams(std::vector<int>)));
+    QObject::disconnect(sv, SIGNAL(updateForm(int, std::vector<int>)), form_smp, SLOT(updateParams(int, std::vector<int>)));
+
+    // params connection
+    QObject::disconnect(form_smp, SIGNAL(send_bm_pre_filter_size(int)), sv, SLOT(change_bm_pre_filter_size(int)));
+    QObject::disconnect(form_smp, SIGNAL(send_bm_pre_filter_cap(int)), sv, SLOT(change_bm_pre_filter_cap(int)));
+    QObject::disconnect(form_smp, SIGNAL(send_bm_sad_window_size(int)), sv, SLOT(change_bm_sad_window_size(int)));
+    QObject::disconnect(form_smp, SIGNAL(send_bm_min_disp(int)), sv, SLOT(change_bm_min_disp(int)));
+    QObject::disconnect(form_smp, SIGNAL(send_bm_num_of_disp(int)), sv, SLOT(change_bm_num_of_disp(int)));
+    QObject::disconnect(form_smp, SIGNAL(send_bm_texture_thresh(int)), sv, SLOT(change_bm_texture_thresh(int)));
+    QObject::disconnect(form_smp, SIGNAL(send_bm_uniqueness_ratio(int)), sv, SLOT(change_bm_uniqueness_ratio(int)));
+    QObject::disconnect(form_smp, SIGNAL(send_bm_speckle_window_size(int)), sv, SLOT(change_bm_speckle_window_size(int)));
+    QObject::disconnect(form_smp, SIGNAL(send_bm_speckle_range(int)), sv, SLOT(change_bm_speckle_range(int)));
+    QObject::disconnect(form_smp, SIGNAL(send_sgbm_pre_filter_cap(int)), sv, SLOT(change_sgbm_pre_filter_cap(int)));
+    QObject::disconnect(form_smp, SIGNAL(send_sgbm_sad_window_size(int)), sv, SLOT(change_sgbm_sad_window_size(int)));
+    QObject::disconnect(form_smp, SIGNAL(send_sgbm_min_disp(int)), sv, SLOT(change_sgbm_min_disp(int)));
+    QObject::disconnect(form_smp, SIGNAL(send_sgbm_num_of_disp(int)), sv, SLOT(change_sgbm_num_of_disp(int)));
+    QObject::disconnect(form_smp, SIGNAL(send_sgbm_uniqueness_ratio(int)), sv, SLOT(change_sgbm_uniqueness_ratio(int)));
+    QObject::disconnect(form_smp, SIGNAL(send_sgbm_speckle_window_size(int)), sv, SLOT(change_sgbm_speckle_window_size(int)));
+    QObject::disconnect(form_smp, SIGNAL(send_sgbm_speckle_range(int)), sv, SLOT(change_sgbm_speckle_range(int)));
+
     delete form_smp;
     fg_form_smp_alloc = false;
 }
@@ -1089,7 +1096,8 @@ void MainWindow::on_pushButton_lrf_stop_clicked()
 
 void MainWindow::on_lineEdit_sv_focal_length_returnPressed()
 {
-    sv->cam_param.focal_length = ui->lineEdit_sv_focal_length->text().toDouble();
+    sv->cam_param->focal_length = ui->lineEdit_sv_focal_length->text().toDouble();
+    ui->label_sv_focal_length->setText(ui->lineEdit_sv_focal_length->text());
     on_checkBox_do_depth_clicked(true);
 }
 
@@ -1450,14 +1458,15 @@ void MainWindow::on_pushButton_radar_bus_off_clicked()
 void MainWindow::radarDisplay(int detected_obj, cv::Mat *img, cv::Mat *topview)
 {
     ui->label_radar_detected_obj->setText(QString::number(detected_obj));
-
+    lock_radar.lockForRead();
     ui->label_radar_data->setPixmap(QPixmap::fromImage(QImage::QImage(img->data, img->cols, img->rows, QImage::Format_RGBA8888)));
+    lock_radar.unlock();
 
     // update topview
     if (ui->checkBox_radar_topview->isChecked() && rc->current_count >= rc->update_count) {
-        lock.lockForRead();
+        lock_radar.lockForRead();
         ui->label_top_view_radar_long->setPixmap(QPixmap::fromImage(QImage::QImage(topview->data, topview->cols, topview->rows, QImage::Format_RGBA8888)).scaled(900, 600));
-        lock.unlock();
+        lock_radar.unlock();
     }
 }
 

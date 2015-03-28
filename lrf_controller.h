@@ -9,7 +9,7 @@
 
 // thread control
 #include <QReadWriteLock>
-extern QReadWriteLock lock;
+extern QReadWriteLock lock_lrf;
 
 // COM Port Communication
 #include <QtSerialPort/QSerialPort>

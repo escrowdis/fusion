@@ -23,7 +23,7 @@
     </rect>
    </property>
    <property name="currentIndex">
-    <number>0</number>
+    <number>1</number>
    </property>
    <widget class="QWidget" name="tab_2">
     <attribute name="title">
@@ -160,7 +160,7 @@
         <item row="0" column="2">
          <widget class="QLabel" name="label_sgbm_pre_filter_cap">
           <property name="text">
-           <string>1</string>
+           <string>0</string>
           </property>
          </widget>
         </item>
@@ -194,7 +194,7 @@
         <item row="0" column="2">
          <widget class="QLabel" name="label_sgbm_sad_window_size">
           <property name="text">
-           <string>3</string>
+           <string>0</string>
           </property>
          </widget>
         </item>
@@ -268,7 +268,7 @@
         <item row="0" column="2">
          <widget class="QLabel" name="label_sgbm_num_of_disp">
           <property name="text">
-           <string>64</string>
+           <string>0</string>
           </property>
          </widget>
         </item>
@@ -303,7 +303,7 @@
         <item row="0" column="2">
          <widget class="QLabel" name="label_bm_pre_filter_size">
           <property name="text">
-           <string>3</string>
+           <string>0</string>
           </property>
          </widget>
         </item>
@@ -353,7 +353,7 @@
         <item row="0" column="2">
          <widget class="QLabel" name="label_bm_pre_filter_cap">
           <property name="text">
-           <string>1</string>
+           <string>0</string>
           </property>
          </widget>
         </item>
@@ -387,7 +387,7 @@
         <item row="0" column="2">
          <widget class="QLabel" name="label_bm_sad_window_size">
           <property name="text">
-           <string>3</string>
+           <string>0</string>
           </property>
          </widget>
         </item>
@@ -461,7 +461,7 @@
         <item row="0" column="2">
          <widget class="QLabel" name="label_bm_num_of_disp">
           <property name="text">
-           <string>64</string>
+           <string>0</string>
           </property>
          </widget>
         </item>

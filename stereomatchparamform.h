@@ -55,12 +55,16 @@ private slots:
 
     void on_horizontalSlider_sgbm_speckle_range_valueChanged(int value);
 
-    void updateParams(std::vector<int> param);
+    void updateParams(int cur_mode, std::vector<int> param);
 
 private:
     Ui::stereoMatchParamForm *ui;
 
     int mode;
+
+    bool fg_sgbm_changed;
+
+    bool fg_bm_changed;
 
 signals:
 

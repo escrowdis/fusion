@@ -59,6 +59,11 @@ private:
     // Read params ============
     bool fg_param_loaded;               // check wether the paramerters are loaded
 
+    // file in & out
+    stereo_vision::camParam* fin_cam_param;
+    stereo_vision::matchParamSGBM* fin_SGBM;
+    stereo_vision::matchParamBM* fin_BM;
+
     void paramRead();                   // read params from basic_param.yml
 
     void readFromTxt(QString file_name, cv::Mat *output);   // read image data from text
@@ -92,6 +97,8 @@ private:
     stereoMatchParamForm *form_smp;
 
     bool fg_form_smp_alloc;
+
+    void retrieveMatchParam();
     // ======================== End
 
     // Laser range finder =====
@@ -251,8 +258,6 @@ private slots:
 
     // Stereo vision param ====
     void closeFormSmp(void);
-
-    void connectSmp(int old_mode, int new_mode);
 
     void on_radioButton_BM_clicked();
 

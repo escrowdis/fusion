@@ -20,6 +20,10 @@ stereo_vision::stereo_vision() : TopView(20, 200, 3000, 19.8, 1080, 750, 270, 12
     thick_obj_rect = 2;
     radius_obj_point = 3;
 
+    cam_param = new camParam;
+    param_sgbm = new matchParamSGBM;
+    param_bm = new matchParamBM;
+
     objects = new objInformation[obj_nums];
     objects_display = new objInformation[obj_nums];
 
@@ -32,16 +36,14 @@ stereo_vision::stereo_vision() : TopView(20, 200, 3000, 19.8, 1080, 750, 270, 12
     input_mode = SV::INPUT_SOURCE::CAM;
 
     // Initialization images for displaying
-    img_r_L = cv::Mat::zeros(IMG_H, IMG_W, CV_8UC3);
-    img_r_R = cv::Mat::zeros(IMG_H, IMG_W, CV_8UC3);
-    disp = cv::Mat::zeros(IMG_H, IMG_W, CV_8UC1);
     disp_pseudo = cv::Mat::zeros(IMG_H, IMG_W, CV_8UC3);
     bm = cv::createStereoBM(16, 9);
     sgbm = cv::createStereoSGBM(0, 16, 3);
     img_detected = cv::Mat::zeros(IMG_H, IMG_W, CV_8UC3);
 
-    match_mode = -1;
-    matchParamInitialize(SV::STEREO_MATCH::SGBM);
+    match_mode = SV::STEREO_MATCH::SGBM;
+
+    matchParamInitialize(match_mode);
 
     time_gap = 10;
     t.start();
@@ -49,6 +51,10 @@ stereo_vision::stereo_vision() : TopView(20, 200, 3000, 19.8, 1080, 750, 270, 12
 
 stereo_vision::~stereo_vision()
 {
+    delete cam_param;
+    delete param_sgbm;
+    delete param_bm;
+
     for (int i = 0; i < IMG_H; i++) {
         delete[] data[i];
     }
@@ -132,10 +138,11 @@ void stereo_vision::close()
         cam_R.release();
 }
 
-void stereo_vision::matchParamInitialize(int type)
+void stereo_vision::matchParamInitialize(int cur_mode)
 {
+    // default initialization
     int SAD_window_size = 0, number_disparity = 128;  // 0
-    switch (type) {
+    switch (cur_mode) {
     case SV::STEREO_MATCH::BM:
 //        bm->setROI1(roi1);
 //        bm->setROI2(roi2);
@@ -172,8 +179,71 @@ void stereo_vision::matchParamInitialize(int type)
         break;
     }
 
-    emit setConnect(match_mode, type);
-    match_mode = type;
+    match_mode = cur_mode;
+}
+
+void stereo_vision::modeChange(int cur_mode, bool fg_form_smp_update)
+{
+    match_mode = cur_mode;
+    updateParamsSmp();
+
+    if (fg_form_smp_update)
+        updateFormParams();
+}
+
+void stereo_vision::updateParamsSmp()
+{
+    switch(match_mode) {
+    case SV::STEREO_MATCH::BM:
+        bm->setPreFilterSize(param_bm->pre_filter_size);
+        bm->setPreFilterCap(param_bm->pre_filter_cap);
+        bm->setBlockSize(param_bm->SAD_window_size);
+        bm->setMinDisparity(param_bm->min_disp);
+        bm->setNumDisparities(param_bm->num_of_disp);
+        bm->setTextureThreshold(param_bm->texture_thresh);
+        bm->setUniquenessRatio(param_bm->uniquenese_ratio);
+        bm->setSpeckleWindowSize(param_bm->speckle_window_size);
+        bm->setSpeckleRange(param_bm->speckle_range);
+        break;
+    case SV::STEREO_MATCH::SGBM:
+        sgbm->setPreFilterCap(param_sgbm->pre_filter_cap);
+        sgbm->setBlockSize(param_sgbm->SAD_window_size);
+        sgbm->setMinDisparity(param_sgbm->min_disp);
+        sgbm->setNumDisparities(param_sgbm->num_of_disp);
+        sgbm->setUniquenessRatio(param_sgbm->uniquenese_ratio);
+        sgbm->setSpeckleWindowSize(param_sgbm->speckle_window_size);
+        sgbm->setSpeckleRange(param_sgbm->speckle_range);
+        break;
+    }
+}
+
+void stereo_vision::updateFormParams()
+{
+    match_param.clear();
+    switch(match_mode) {
+    case SV::STEREO_MATCH::BM:
+        match_param.push_back(bm->getPreFilterSize());
+        match_param.push_back(bm->getPreFilterCap());
+        match_param.push_back(bm->getBlockSize());
+        match_param.push_back(bm->getMinDisparity());
+        match_param.push_back(bm->getNumDisparities());
+        match_param.push_back(bm->getTextureThreshold());
+        match_param.push_back(bm->getUniquenessRatio());
+        match_param.push_back(bm->getSpeckleWindowSize());
+        match_param.push_back(bm->getSpeckleRange());
+        break;
+    case SV::STEREO_MATCH::SGBM:
+        match_param.push_back(sgbm->getPreFilterCap());
+        match_param.push_back(sgbm->getBlockSize());
+        match_param.push_back(sgbm->getMinDisparity());
+        match_param.push_back(sgbm->getNumDisparities());
+        match_param.push_back(sgbm->getUniquenessRatio());
+        match_param.push_back(sgbm->getSpeckleWindowSize());
+        match_param.push_back(sgbm->getSpeckleRange());
+        break;
+    }
+
+    emit updateForm(match_mode, match_param);
 }
 
 void stereo_vision::camCapture()
@@ -193,7 +263,7 @@ bool stereo_vision::loadRemapFile(int cam_focal_length, double base_line)
 {
     // The folder of calibration files should be placed under project's folder
     // check whether the file has been loaded
-    if (fg_calib_loaded && this->cam_param.cam_focal_length == cam_focal_length && this->cam_param.base_line == base_line)
+    if (fg_calib_loaded && this->cam_param->cam_focal_length == cam_focal_length && this->cam_param->base_line == base_line)
         return fg_calib_loaded;
 
     // find files under which folder and find the folder with calibration files
@@ -233,8 +303,8 @@ bool stereo_vision::loadRemapFile(int cam_focal_length, double base_line)
     fs["ROI1w"] >> calibROI[1].width;
     fs["ROI1h"] >> calibROI[1].height;
     fs.release();
-    this->cam_param.cam_focal_length = cam_focal_length;
-    this->cam_param.base_line = base_line;
+    this->cam_param->cam_focal_length = cam_focal_length;
+    this->cam_param->base_line = base_line;
     fg_calib_loaded = true;
 
     return fg_calib_loaded;
@@ -279,30 +349,26 @@ void stereo_vision::depthCalculation()
     if (fg_pseudo)
         disp_pseudo.setTo(0);
     uchar* ptr_color = color_table->scanLine(0);
+
+    lock_sv.lockForWrite();
     for (int r = 0; r < IMG_H; r++) {
         short int* ptr_raw = (short int*) (disp_raw.data + r * disp_raw.step);
         uchar* ptr = (uchar*) (disp_pseudo.data + r * disp_pseudo.step);
         for (int c = 0; c < IMG_W; c++) {
             // non-overlapping part
-            if (c < param_sgbm.num_of_disp / 2 && input_mode == SV::STEREO_MATCH::SGBM)
-                continue;
-            else if (c < param_bm.num_of_disp / 2 && input_mode == SV::STEREO_MATCH::BM)
-                continue;
+//            if (c < param_sgbm->num_of_disp / 2 && input_mode == SV::STEREO_MATCH::SGBM)
+//                continue;
+//            else if (c < param_bm->num_of_disp / 2 && input_mode == SV::STEREO_MATCH::BM)
+//                continue;
             // Depth calculation
-            lock.lockForWrite();
-            lock.unlock();
             data[r][c].disp = ptr_raw[c] / 16.0;
             if (data[r][c].disp > 0) {
-                lock.lockForWrite();
-                lock.unlock();
-                data[r][c].Z = cam_param.param_r / data[r][c].disp;
+                data[r][c].Z = cam_param->param_r / data[r][c].disp;
 
                 // pseudo color transform
                 if (fg_pseudo) {
                     int z_est;
-                    lock.lockForRead();
                     z_est = data[r][c].Z;
-                    lock.unlock();
                     //                        std::cout<<z_est<<" ";
                     if (z_est >= min_distance && z_est <= max_distance) {
                         int jj = z_est - min_distance;
@@ -323,14 +389,13 @@ void stereo_vision::depthCalculation()
                 }
             }
             else {
-                lock.lockForRead();
                 data[r][c].Z = -1;
-                lock.unlock();
                 //                    std::cout<<"0 ";
             }
         }
         //            std::cout<<std::endl;
     }
+    lock_sv.unlock();
 }
 
 bool stereo_vision::dataExec()
@@ -393,40 +458,10 @@ bool stereo_vision::dataExec()
     return true;
 }
 
-void stereo_vision::updateParamsSmp()
-{
-    emit setConnect(match_mode, match_mode);
-
-    std::vector <int> match_param;
-    switch(match_mode) {
-    case SV::STEREO_MATCH::BM:
-        match_param.push_back(bm->getPreFilterSize());
-        match_param.push_back(bm->getPreFilterCap());
-        match_param.push_back(bm->getBlockSize());
-        match_param.push_back(bm->getMinDisparity());
-        match_param.push_back(bm->getNumDisparities());
-        match_param.push_back(bm->getTextureThreshold());
-        match_param.push_back(bm->getUniquenessRatio());
-        match_param.push_back(bm->getSpeckleWindowSize());
-        match_param.push_back(bm->getSpeckleRange());
-        break;
-    case SV::STEREO_MATCH::SGBM:
-        match_param.push_back(sgbm->getPreFilterCap());
-        match_param.push_back(sgbm->getBlockSize());
-        match_param.push_back(sgbm->getMinDisparity());
-        match_param.push_back(sgbm->getNumDisparities());
-        match_param.push_back(sgbm->getUniquenessRatio());
-        match_param.push_back(sgbm->getSpeckleWindowSize());
-        match_param.push_back(sgbm->getSpeckleRange());
-        break;
-    }
-    if (!match_param.empty())
-        emit sendCurrentParams(match_param);
-}
-
 void stereo_vision::change_bm_pre_filter_size(int value)
 {
     bm->setPreFilterSize(value);
+    param_bm->pre_filter_size = value;
 #ifdef debug_info_sv_param
     qDebug()<<bm->getPreFilterSize();
 #endif
@@ -435,6 +470,7 @@ void stereo_vision::change_bm_pre_filter_size(int value)
 void stereo_vision::change_bm_pre_filter_cap(int value)
 {
     bm->setPreFilterCap(value);
+    param_bm->pre_filter_cap = value;
 #ifdef debug_info_sv_param
     qDebug()<<bm->getPreFilterCap();
 #endif
@@ -443,6 +479,7 @@ void stereo_vision::change_bm_pre_filter_cap(int value)
 void stereo_vision::change_bm_sad_window_size(int value)
 {
     bm->setBlockSize(value);
+    param_bm->SAD_window_size = value;
 #ifdef debug_info_sv_param
     qDebug()<<bm->getBlockSize();
 #endif
@@ -451,6 +488,7 @@ void stereo_vision::change_bm_sad_window_size(int value)
 void stereo_vision::change_bm_min_disp(int value)
 {
     bm->setMinDisparity(value);
+    param_bm->min_disp = value;
 #ifdef debug_info_sv_param
     qDebug()<<bm->getMinDisparity();
 #endif
@@ -459,6 +497,7 @@ void stereo_vision::change_bm_min_disp(int value)
 void stereo_vision::change_bm_num_of_disp(int value)
 {
     bm->setNumDisparities(value);
+    param_bm->num_of_disp = value;
 #ifdef debug_info_sv_param
     qDebug()<<bm->getNumDisparities();
 #endif
@@ -467,6 +506,7 @@ void stereo_vision::change_bm_num_of_disp(int value)
 void stereo_vision::change_bm_texture_thresh(int value)
 {
     bm->setTextureThreshold(value);
+    param_bm->texture_thresh = value;
 #ifdef debug_info_sv_param
     qDebug()<<bm->getTextureThreshold();
 #endif
@@ -475,12 +515,16 @@ void stereo_vision::change_bm_texture_thresh(int value)
 void stereo_vision::change_bm_uniqueness_ratio(int value)
 {
     bm->setUniquenessRatio(value);
+    param_bm->uniquenese_ratio = value;
+#ifdef debug_info_sv_param
     qDebug()<<bm->getUniquenessRatio();
+#endif
 }
 
 void stereo_vision::change_bm_speckle_window_size(int value)
 {
     bm->setSpeckleWindowSize(value);
+    param_bm->speckle_window_size = value;
 #ifdef debug_info_sv_param
     qDebug()<<bm->getSpeckleWindowSize();
 #endif
@@ -489,6 +533,7 @@ void stereo_vision::change_bm_speckle_window_size(int value)
 void stereo_vision::change_bm_speckle_range(int value)
 {
     bm->setSpeckleRange(value);
+    param_bm->speckle_range = value;
 #ifdef debug_info_sv_param
     qDebug()<<bm->getSpeckleRange();
 #endif
@@ -497,6 +542,7 @@ void stereo_vision::change_bm_speckle_range(int value)
 void stereo_vision::change_sgbm_pre_filter_cap(int value)
 {
     sgbm->setPreFilterCap(value);
+    param_sgbm->pre_filter_cap = value;
 #ifdef debug_info_sv_param
     qDebug()<<sgbm->getPreFilterCap();
 #endif
@@ -507,6 +553,7 @@ void stereo_vision::change_sgbm_sad_window_size(int value)
     sgbm->setBlockSize(value);
     sgbm->setP1(8 * cn * value * value);
     sgbm->setP2(32 * cn * value * value);
+    param_sgbm->SAD_window_size = value;
 #ifdef debug_info_sv_param
     qDebug()<<sgbm->getBlockSize();
 #endif
@@ -515,6 +562,7 @@ void stereo_vision::change_sgbm_sad_window_size(int value)
 void stereo_vision::change_sgbm_min_disp(int value)
 {
     sgbm->setMinDisparity(value);
+    param_sgbm->min_disp = value;
 #ifdef debug_info_sv_param
     qDebug()<<sgbm->getMinDisparity();
 #endif
@@ -523,6 +571,7 @@ void stereo_vision::change_sgbm_min_disp(int value)
 void stereo_vision::change_sgbm_num_of_disp(int value)
 {
     sgbm->setNumDisparities(value);
+    param_sgbm->num_of_disp = value;
 #ifdef debug_info_sv_param
     qDebug()<<sgbm->getNumDisparities();
 #endif
@@ -531,6 +580,7 @@ void stereo_vision::change_sgbm_num_of_disp(int value)
 void stereo_vision::change_sgbm_uniqueness_ratio(int value)
 {
     sgbm->setUniquenessRatio(value);
+    param_sgbm->uniquenese_ratio = value;
 #ifdef debug_info_sv_param
     qDebug()<<sgbm->getUniquenessRatio();
 #endif
@@ -539,6 +589,7 @@ void stereo_vision::change_sgbm_uniqueness_ratio(int value)
 void stereo_vision::change_sgbm_speckle_window_size(int value)
 {
     sgbm->setSpeckleWindowSize(value);
+    param_sgbm->speckle_window_size = value;
 #ifdef debug_info_sv_param
     qDebug()<<sgbm->getSpeckleWindowSize();
 #endif
@@ -547,6 +598,7 @@ void stereo_vision::change_sgbm_speckle_window_size(int value)
 void stereo_vision::change_sgbm_speckle_range(int value)
 {
     sgbm->setSpeckleRange(value);
+    param_sgbm->speckle_range = value;
 #ifdef debug_info_sv_param
     qDebug()<<sgbm->getSpeckleRange();
 #endif
@@ -579,14 +631,14 @@ void stereo_vision::pointProjectTopView()
                 int grid_col_t = grid_col;
                 if (grid_row_t >= 0 && grid_row_t < img_row &&
                         grid_col_t >= 0 && grid_col_t < img_col) {
-                    lock.lockForWrite();
+                    lock_sv.lockForWrite();
                     // count the amount of point
                     grid_map[grid_row_t][grid_col_t].pts_num++;
                     // average the depth
                     grid_map[grid_row_t][grid_col_t].avg_Z += 1.0 * (data[r][c].Z - grid_map[grid_row_t][grid_col_t].avg_Z) / grid_map[grid_row_t][grid_col_t].pts_num;
                     // label the point to the belonging cell
                     data[r][c].grid_id = std::pair<int, int>(grid_row_t, grid_col_t);
-                    lock.unlock();
+                    lock_sv.unlock();
                 }
             }
         }
@@ -632,11 +684,11 @@ void stereo_vision::blob(int thresh_pts_num)
 
                 std::stack<std::pair<int, int> > neighbors;
                 neighbors.push(std::pair<int, int>(r, c));
-                lock.lockForWrite();
+                lock_sv.lockForWrite();
                 grid_map[r][c].obj_label = cur_label;
                 objects[cur_label].pts_num += grid_map[r][c].pts_num;
                 objects[cur_label].avg_Z += 1.0 * (grid_map[r][c].avg_Z - objects[cur_label].avg_Z) / count;
-                lock.unlock();
+                lock_sv.unlock();
 
                 while (!neighbors.empty()) {
                     std::pair<int, int> cur_pos = neighbors.top();
@@ -656,11 +708,11 @@ void stereo_vision::blob(int thresh_pts_num)
                             if (grid_map[r_now][c_now].pts_num >= thresh_free_space &&
                                     grid_map[r_now][c_now].obj_label == -1) {
                                 neighbors.push(std::pair<int, int>(r_now, c_now));
-                                lock.lockForWrite();
+                                lock_sv.lockForWrite();
                                 grid_map[r_now][c_now].obj_label = cur_label;
                                 objects[cur_label].pts_num += grid_map[r_now][c_now].pts_num;
                                 objects[cur_label].avg_Z += 1.0 * (grid_map[r][c].avg_Z - objects[cur_label].avg_Z) / count;
-                                lock.unlock();
+                                lock_sv.unlock();
                             }
                         }
                     }
@@ -732,18 +784,18 @@ void stereo_vision::blob(int thresh_pts_num)
 void stereo_vision::pointProjectImage()
 {
     // remap a blob objects from topview to label
-    lock.lockForWrite();
+    lock_sv.lockForWrite();
     img_detected.setTo(0);
-    lock.unlock();
+    lock_sv.unlock();
     for (int r = 0; r < IMG_H; r++) {
         uchar *ptr_o = img_r_L.ptr<uchar>(r);
         uchar *ptr_d = img_detected.ptr<uchar>(r);
         for (int c = 0; c < IMG_W; c++) {
             int grid_r, grid_c;
-            lock.lockForRead();
+            lock_sv.lockForRead();
             grid_r = data[r][c].grid_id.first;
             grid_c = data[r][c].grid_id.second;
-            lock.unlock();
+            lock_sv.unlock();
             if (grid_r == -1 || grid_c == -1 || data[r][c].disp <= 0)
                 continue;
             int label = grid_map[grid_r][grid_c].obj_label;
@@ -755,7 +807,7 @@ void stereo_vision::pointProjectImage()
                     objects[label].tl = std::pair<int, int>(r, c);
                 }
                 else {
-                    lock.lockForWrite();
+                    lock_sv.lockForWrite();
                     if (objects[label].br.first < r)
                         objects[label].br.first = r;
                     if (objects[label].br.second < c)
@@ -764,7 +816,7 @@ void stereo_vision::pointProjectImage()
                         objects[label].tl.first = r;
                     if (objects[label].tl.second > c)
                         objects[label].tl.second = c;
-                    lock.unlock();
+                    lock_sv.unlock();
                 }
 
                 // draw points
@@ -790,7 +842,7 @@ void stereo_vision::pointProjectImage()
     for (int i = 0; i < obj_nums; i++) {
         uchar* ptr_color = color_table->scanLine(0);
         int tag = objects[i].avg_Z - min_distance;
-        lock.lockForWrite();
+        lock_sv.lockForWrite();
         if (objects[i].labeled && objects[i].br != std::pair<int, int>(-1, -1) && objects[i].tl != std::pair<int, int>(-1, -1)) {
             // find center of rect
             objects[i].center = std::pair<int, int>(0.5 * (objects[i].tl.first + objects[i].br.first), 0.5 * (objects[i].tl.second + objects[i].br.second));
@@ -801,14 +853,14 @@ void stereo_vision::pointProjectImage()
                           cv::Scalar(ptr_color[3 * tag + 0], ptr_color[3 * tag + 1], ptr_color[3 * tag + 2]), thick_obj_rect, 8, 0);
             cv::circle(img_detected, cv::Point(objects[i].center.second, objects[i].center.first), radius_obj_point, cv::Scalar(0, 255, 0), -1, 8, 0);
         }
-        lock.unlock();
+        lock_sv.unlock();
     }
 }
 
 void stereo_vision::updateDataFroDisplay()
 {
     for (int i = 0; i < obj_nums; i++) {
-        lock.lockForRead();
+        lock_sv.lockForRead();
         objects_display[i].angle = objects[i].angle;
         objects_display[i].avg_Z = objects[i].avg_Z;
         objects_display[i].br = objects[i].br;
@@ -818,6 +870,6 @@ void stereo_vision::updateDataFroDisplay()
         objects_display[i].pts_num = objects[i].pts_num;
         objects_display[i].range = objects[i].range;
         objects_display[i].tl = objects[i].tl;
-        lock.unlock();
+        lock_sv.unlock();
     }
 }

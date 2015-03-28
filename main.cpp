@@ -3,7 +3,9 @@
 
 // thread control
 #include <QReadWriteLock>
-QReadWriteLock lock;
+QReadWriteLock lock_sv;
+QReadWriteLock lock_lrf;
+QReadWriteLock lock_radar;
 #include <QDir>
 QDir project_path;
 
