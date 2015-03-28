@@ -268,7 +268,7 @@ void stereo_vision::stereoMatch()
     else if (match_mode == SV::STEREO_MATCH::SGBM)
         sgbm->compute(img_match_L, img_match_R, disp_raw);
 
-    disp_raw.convertTo(disp, CV_8U);
+    disp_raw.convertTo(disp, CV_8UC1);
 
     // depth calculation of points from disp [merge into stereo_vision::depthCalculation]
 }
@@ -290,12 +290,12 @@ void stereo_vision::depthCalculation()
                 continue;
             // Depth calculation
             lock.lockForWrite();
-            data[r][c].disp = ptr_raw[c];
             lock.unlock();
+            data[r][c].disp = ptr_raw[c] / 16.0;
             if (data[r][c].disp > 0) {
                 lock.lockForWrite();
-                data[r][c].Z = cam_param.param_r / ptr_raw[c];
                 lock.unlock();
+                data[r][c].Z = cam_param.param_r / data[r][c].disp;
 
                 // pseudo color transform
                 if (fg_pseudo) {
