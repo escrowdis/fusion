@@ -19,7 +19,8 @@ SOURCES += main.cpp\
     camera_calibration.cpp \
     stereomatchparamform.cpp \
     radarcontroller.cpp \
-    topview.cpp
+    topview.cpp \
+    videorecord.cpp
 
 HEADERS  += mainwindow.h \
             lrf_controller.h \
@@ -29,7 +30,8 @@ HEADERS  += mainwindow.h \
     camera_calibration.h \
     stereomatchparamform.h \
     radarcontroller.h \
-    topview.h
+    topview.h \
+    videorecord.h
 
 FORMS    += mainwindow.ui \
     calibrationform.ui \

@@ -88,7 +88,6 @@ MainWindow::MainWindow(QWidget *parent) :
     sv = new stereo_vision();
 
     retrieveMatchParam();
-    sv->modeChange(SV::STEREO_MATCH::SGBM, fg_form_smp_alloc);
 
     ui->label_cam_img_L->setStyleSheet("background-color:silver");
     ui->label_cam_img_R->setStyleSheet("background-color:silver");
@@ -679,6 +678,8 @@ void MainWindow::retrieveMatchParam()
     sv->param_bm->uniquenese_ratio    = fin_BM->uniquenese_ratio;
     sv->param_bm->speckle_window_size = fin_BM->speckle_window_size;
     sv->param_bm->speckle_range       = fin_BM->speckle_range;
+
+    sv->updateParamsSmp();
 }
 
 void MainWindow::camOpen()
@@ -1148,7 +1149,7 @@ void MainWindow::on_pushButton_lrf_record_stop_clicked()
 
 void MainWindow::on_pushButton_sv_read_images_clicked()
 {
-    QStringList imgs_path = QFileDialog::getOpenFileNames(0, "Load images", ".", tr("Image files (*.jpg)"));
+    QStringList imgs_path = QFileDialog::getOpenFileNames(0, "Load images. Choose left and right sequentially.", ".", tr("Image files (*.jpg)"));
     if (imgs_path.empty())
         return;
     sv->input_mode = SV::INPUT_SOURCE::IMG;
@@ -1496,4 +1497,20 @@ void MainWindow::on_pushButton_stop_all_clicked()
 {
     on_pushButton_cam_stop_clicked();
     on_pushButton_radar_bus_off_clicked();
+}
+
+void MainWindow::on_pushButton_sv_record_clicked()
+{
+    // record goes on
+    if (!sv->fg_record) {
+        ui->pushButton_sv_record->setIcon(QIcon(":/icon/icon/record_on.png"));
+        sv->fg_record = true;
+    }
+    // record goes off
+    else {
+        ui->pushButton_sv_record->setIcon(QIcon(":/icon/icon/record_off.png"));
+        sv->stop();
+        sv->fg_record = false;
+    }
+
 }

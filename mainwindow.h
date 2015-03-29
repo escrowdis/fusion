@@ -353,6 +353,7 @@ private slots:
     void on_checkBox_topview_plot_points_clicked(bool checked);
 
     void on_checkBox_sv_reproject_clicked(bool checked);
+    void on_pushButton_sv_record_clicked();
 };
 
     // Mouse control ==========

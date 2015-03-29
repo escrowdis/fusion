@@ -95,6 +95,8 @@ bool stereo_vision::open(int device_index_L, int device_index_R)
                 cam_L.set(cv::CAP_PROP_FRAME_HEIGHT, IMG_H);
                 fg_cam_L = true;
                 this->device_index_L = device_index_L;
+
+                getBasicInfo(&cam_L);
 #ifdef debug_info_sv
                 qDebug()<<"open L";
 #endif
@@ -420,6 +422,12 @@ bool stereo_vision::dataExec()
 //        img_L = ;
 //        img_R = ;
         break;
+    }
+
+    if (fg_record) {
+        cv::Mat img_merge = cv::Mat(IMG_H, 2 * IMG_W, CV_8UC3);
+        combineTwoImages(&img_merge);
+        record(img_merge);
     }
 
     // camera calibration
@@ -879,3 +887,21 @@ void stereo_vision::updateDataFroDisplay()
         lock_sv.unlock();
     }
 }
+
+void stereo_vision::combineTwoImages(cv::Mat *img_merge)
+{
+    for (int r = 0 ; r < IMG_H; r++) {
+        cv::Vec3b pixel_L, pixel_R;
+        cv::Vec3b *pixel;
+        for (int c = 0 ; c < IMG_W; c++) {
+            pixel_L = img_L.at<cv::Vec3b>(r, c);
+            pixel = &img_merge->at<cv::Vec3b>(r, c);
+            *pixel = pixel_L;
+            pixel_R = img_R.at<cv::Vec3b>(r, c);
+            pixel = &img_merge->at<cv::Vec3b>(r, c + IMG_W);
+            *pixel = pixel_L;
+        }
+    }
+}
+
+

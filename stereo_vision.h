@@ -16,6 +16,9 @@ extern QReadWriteLock lock_sv;
 
 #include <opencv2/opencv.hpp>
 
+// video record
+#include "videorecord.h"
+
 // topview
 #include "topview.h"
 
@@ -35,12 +38,13 @@ enum STEREO_MATCH{
 
 enum INPUT_SOURCE {
     CAM,
+    VIDEO,
     IMG
 };
 
 }
 
-class stereo_vision : public QObject, public TopView
+class stereo_vision : public QObject, public TopView, public videoRecord
 {
     Q_OBJECT
 
@@ -128,6 +132,8 @@ public:
     }
 
     void modeChange(int cur_mode, bool fg_form_smp_update);
+
+    void updateParamsSmp();
 
     struct matchParamSGBM
     {
@@ -240,7 +246,6 @@ private:
     int cn;
 
     void updateFormParams();
-    void updateParamsSmp();
 
     cv::Mat img_match_L;
     cv::Mat img_match_R;
@@ -261,6 +266,10 @@ private:
     void pointProjectTopView();
 
     void pointProjectImage();
+    // ============================= End
+
+    // Video record ================
+    void combineTwoImages(cv::Mat *img_merge);
     // ============================= End
 
 private slots:

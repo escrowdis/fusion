@@ -1,6 +1,8 @@
 <RCC>
     <qresource prefix="/icon">
-        <file>icon/stop.png</file>
         <file>icon/car.ico</file>
+        <file>icon/record_off.png</file>
+        <file>icon/record_on.png</file>
+        <file>icon/stop.png</file>
     </qresource>
 </RCC>
