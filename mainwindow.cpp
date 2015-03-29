@@ -54,10 +54,10 @@ MainWindow::MainWindow(QWidget *parent) :
     fin_SGBM = new stereo_vision::matchParamSGBM;
     fin_BM = new stereo_vision::matchParamBM;
 
-    paramRead();
+    if (!cwdIsProjectFolder())
+        reportError("path", "Warning.", "Current folder is NOT \"Fusion\".");
 
-    if (!projectFolder())
-        reportError("path", "Warning.", "Path folder is NOT \"Fusion\".");
+    paramRead();
     // default setting ========================= End
 
     // Laser range finder ======================
@@ -257,7 +257,7 @@ void MainWindow::report(QString content)
     ui->system_log->append(content);
 }
 
-bool MainWindow::projectFolder()
+bool MainWindow::cwdIsProjectFolder()
 {
     project_path = QDir::currentPath();
     QString current_folder = project_path.currentPath().section("/", -1, -1);

@@ -54,7 +54,7 @@ private:
 
     void report(QString);
 
-    bool projectFolder();               // find the project folder for loading files
+    bool cwdIsProjectFolder();               // find the project folder for loading files
 
     // Read params ============
     bool fg_param_loaded;               // check wether the paramerters are loaded
