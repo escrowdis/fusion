@@ -34,6 +34,8 @@ Makefile*
 # calibration stuffs
 calibrationUsedImgs
 
+# video
+video
 # build folder
 release/
 debug/
