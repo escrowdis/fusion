@@ -205,6 +205,8 @@ public:
     void updateDataFroDisplay();
     // ============================= End
 
+    virtual void loadVideo();
+
 private:
     void resetOpen(int device_index_L, int device_index_R);
 
@@ -266,10 +268,6 @@ private:
     void pointProjectTopView();
 
     void pointProjectImage();
-    // ============================= End
-
-    // Video record ================
-    void combineTwoImages(cv::Mat *img_merge);
     // ============================= End
 
 private slots:

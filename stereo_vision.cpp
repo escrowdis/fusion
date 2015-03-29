@@ -36,6 +36,8 @@ stereo_vision::stereo_vision() : TopView(20, 200, 3000, 19.8, 1080, 750, 270, 12
     input_mode = SV::INPUT_SOURCE::CAM;
 
     // Initialization images for displaying
+    img_L = cv::Mat::zeros(IMG_H, IMG_W, CV_8UC3);
+    img_R = cv::Mat::zeros(IMG_H, IMG_W, CV_8UC3);
     disp_pseudo = cv::Mat::zeros(IMG_H, IMG_W, CV_8UC3);
     bm = cv::createStereoBM(16, 9);
     sgbm = cv::createStereoSGBM(0, 16, 3);
@@ -418,6 +420,9 @@ bool stereo_vision::dataExec()
     case SV::INPUT_SOURCE::CAM:
         camCapture();
         break;
+    case SV::INPUT_SOURCE::VIDEO:
+        segmentTwoImages(&img_L, &img_R, cv::Size(IMG_W, IMG_H));
+        break;
     case SV::INPUT_SOURCE::IMG:
 //        img_L = ;
 //        img_R = ;
@@ -426,7 +431,7 @@ bool stereo_vision::dataExec()
 
     if (fg_record) {
         cv::Mat img_merge = cv::Mat(IMG_H, 2 * IMG_W, CV_8UC3);
-        combineTwoImages(&img_merge);
+        combineTwoImages(&img_merge, img_L, img_R, cv::Size(img_L.cols, img_L.rows));
         record(img_merge);
     }
 
@@ -888,20 +893,8 @@ void stereo_vision::updateDataFroDisplay()
     }
 }
 
-void stereo_vision::combineTwoImages(cv::Mat *img_merge)
+void stereo_vision::loadVideo()
 {
-    for (int r = 0 ; r < IMG_H; r++) {
-        cv::Vec3b pixel_L, pixel_R;
-        cv::Vec3b *pixel;
-        for (int c = 0 ; c < IMG_W; c++) {
-            pixel_L = img_L.at<cv::Vec3b>(r, c);
-            pixel = &img_merge->at<cv::Vec3b>(r, c);
-            *pixel = pixel_L;
-            pixel_R = img_R.at<cv::Vec3b>(r, c);
-            pixel = &img_merge->at<cv::Vec3b>(r, c + IMG_W);
-            *pixel = pixel_L;
-        }
-    }
+    videoPath();
+    input_mode = SV::INPUT_SOURCE::VIDEO;
 }
-
-

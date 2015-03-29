@@ -578,12 +578,12 @@ parameters</string>
        </item>
       </layout>
      </widget>
-     <widget class="QWidget" name="">
+     <widget class="QWidget" name="layoutWidget">
       <property name="geometry">
        <rect>
         <x>250</x>
         <y>240</y>
-        <width>61</width>
+        <width>78</width>
         <height>61</height>
        </rect>
       </property>
@@ -631,6 +631,19 @@ parameters</string>
         </widget>
        </item>
       </layout>
+     </widget>
+     <widget class="QPushButton" name="pushButton_sv_load_video">
+      <property name="geometry">
+       <rect>
+        <x>30</x>
+        <y>270</y>
+        <width>75</width>
+        <height>41</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Load video</string>
+      </property>
      </widget>
     </widget>
     <widget class="QWidget" name="tab_4">

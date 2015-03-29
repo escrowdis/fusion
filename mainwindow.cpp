@@ -757,7 +757,7 @@ void MainWindow::on_pushButton_cam_step_clicked()
         return;
     }
 
-    if (!sv->isOpened()) {
+    if (SV::INPUT_SOURCE::CAM && !sv->isOpened()) {
         reportError("sv", "Error!", "Cameras haven't opened.");
         return;
     }
@@ -767,7 +767,7 @@ void MainWindow::on_pushButton_cam_step_clicked()
 
 void MainWindow::on_pushButton_cam_capture_clicked()
 {
-    if (!sv->isOpened()) {
+    if (SV::INPUT_SOURCE::CAM && !sv->isOpened()) {
         reportError("sv", "Error!", "Cameras haven't opened.");
         return;
     }
@@ -1513,4 +1513,9 @@ void MainWindow::on_pushButton_sv_record_clicked()
         sv->fg_record = false;
     }
 
+}
+
+void MainWindow::on_pushButton_sv_load_video_clicked()
+{
+    sv->loadVideo();
 }
