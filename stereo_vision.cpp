@@ -356,14 +356,15 @@ void stereo_vision::depthCalculation()
         uchar* ptr = (uchar*) (disp_pseudo.data + r * disp_pseudo.step);
         for (int c = 0; c < IMG_W; c++) {
             // non-overlapping part
-//            if (c < param_sgbm->num_of_disp / 2 && input_mode == SV::STEREO_MATCH::SGBM)
-//                continue;
-//            else if (c < param_bm->num_of_disp / 2 && input_mode == SV::STEREO_MATCH::BM)
-//                continue;
+            if (c < param_sgbm->num_of_disp / 2 && input_mode == SV::STEREO_MATCH::SGBM)
+                continue;
+            else if (c < param_bm->num_of_disp / 2 && input_mode == SV::STEREO_MATCH::BM)
+                continue;
             // Depth calculation
-            data[r][c].disp = ptr_raw[c] / 16.0;
+            // Though disparity is scaled by 16, GUI takes scaled pixels. If not, the topview looks weird.
+            data[r][c].disp = ptr_raw[c];
             if (data[r][c].disp > 0) {
-                data[r][c].Z = cam_param->param_r / data[r][c].disp;
+                data[r][c].Z = cam_param->param_r / (data[r][c].disp / 16.0);
 
                 // pseudo color transform
                 if (fg_pseudo) {
@@ -376,11 +377,13 @@ void stereo_vision::depthCalculation()
                         ptr[3 * c + 1] = ptr_color[3 * jj + 1];
                         ptr[3 * c + 2] = ptr_color[3 * jj + 2];
                     }
+                    // out of max_distance
                     else if (z_est > max_distance) {
-                        ptr[3 * c + 0] = 0;
+                        ptr[3 * c + 0] = 140;
                         ptr[3 * c + 1] = 0;
-                        ptr[3 * c + 2] = 255;
+                        ptr[3 * c + 2] = 168;
                     }
+                    // below the min_distance
                     else {
                         ptr[3 * c + 0] = 0;
                         ptr[3 * c + 1] = 0;
@@ -388,8 +391,12 @@ void stereo_vision::depthCalculation()
                     }
                 }
             }
+            // unmatched
             else {
                 data[r][c].Z = -1;
+                ptr[3 * c + 0] = 100;
+                ptr[3 * c + 1] = 100;
+                ptr[3 * c + 2] = 100;
                 //                    std::cout<<"0 ";
             }
         }
@@ -434,6 +441,7 @@ bool stereo_vision::dataExec()
 
         if (fg_topview) {
             pointProjectTopView();
+            blob(3000);
 
             if (fg_reproject)
                 pointProjectImage();
@@ -624,7 +632,7 @@ void stereo_vision::pointProjectTopView()
                 if (fg_topview_plot_points)
                     if (grid_row >= 0 && grid_row < img_row + 1 &&
                             grid_col >= 0 && grid_col < img_col + 1)
-                        cv::circle(topview, pointT(img_grid[grid_row][grid_col]), 1, cv::Scalar(0, 0, 255, 255), 1, 8, 0);
+                        cv::circle(topview, pointT(img_grid[grid_row][grid_col]), 1, cv::Scalar(0, 0, 255, 255), -1, 8, 0);
 
                 // mark each point belongs to which cell
                 int grid_row_t = img_row - grid_row - 1;
@@ -643,8 +651,6 @@ void stereo_vision::pointProjectTopView()
             }
         }
     }
-
-    blob(3000);
 
     // check whether the cell is satisfied as an object [merge into stereo_vision::blob]
 }
@@ -676,7 +682,7 @@ void stereo_vision::blob(int thresh_pts_num)
             // blob labeling
             if (grid_map[r][c].pts_num >= thresh_free_space && grid_map[r][c].obj_label == -1) {
                 if (cur_label == obj_nums) {
-                    qDebug()<<"Objects are over defined.";
+                    qDebug()<<"Objects are out of defined.";
                     break;
                 }
 

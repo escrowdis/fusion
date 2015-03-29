@@ -27,6 +27,12 @@ MainWindow::MainWindow(QWidget *parent) :
     // RADAR
     fg_retrieving = false;
 
+    // camera calibration
+    fg_form_calib_alloc = false;
+
+    // Stereo vision param
+    fg_form_smp_alloc = false;
+
     ui->setupUi(this);
 
     // LRF
@@ -82,6 +88,7 @@ MainWindow::MainWindow(QWidget *parent) :
     sv = new stereo_vision();
 
     retrieveMatchParam();
+    sv->modeChange(SV::STEREO_MATCH::SGBM, fg_form_smp_alloc);
 
     ui->label_cam_img_L->setStyleSheet("background-color:silver");
     ui->label_cam_img_R->setStyleSheet("background-color:silver");
@@ -133,14 +140,6 @@ MainWindow::MainWindow(QWidget *parent) :
     sync.addFuture(f_lrf_buf);
     sync.addFuture(f_radar);
     sync.addFuture(f_fused);
-    // ========================================= End
-
-    // camera calibration ======================
-    fg_form_calib_alloc = false;
-    // ========================================= End
-
-    // Stereo vision param =====================
-    fg_form_smp_alloc = false;
     // ========================================= End
 
     // Pseudo color table ======================
@@ -529,11 +528,12 @@ void MainWindow::drawFusedTopView(stereo_vision::objInformation *d_sv, RadarCont
 
     std::string tag;
     int device = 0;
+    int range_precision = 3;
     if (ui->checkBox_fusion_sv->isChecked() && fg_capturing) {
         for (int k = 0; k < sv->obj_nums; k++) {
             if (d_sv[k].labeled) {
                 cv::Point plot_pt;
-                tag = QString::number(k).toStdString() + ", " + QString::number(d_sv[k].range / 100, 'g', 2).toStdString();
+                tag = QString::number(k).toStdString() + ", " + QString::number(d_sv[k].range / 100, 'g', range_precision).toStdString();
                 pointTransformTopView(sensors[device].pos, d_sv[k].range, d_sv[k].angle, &plot_pt);
                 cv::circle(fused_topview, plot_pt, thickness, cv::Scalar(255, 0, 0, 255), -1, 8, 0);
                 cv::putText(fused_topview, tag, plot_pt, font, font_size, sensors[device].color, font_thickness);
@@ -546,7 +546,7 @@ void MainWindow::drawFusedTopView(stereo_vision::objInformation *d_sv, RadarCont
         for (int m = 0; m < 64; m++) {
             if (d_radar[m].status >= rc->obj_status_filtered) {
                 cv::Point plot_pt;
-                tag = QString::number(m).toStdString() + ", " + QString::number(d_radar[m].range, 'g', 2).toStdString();
+                tag = QString::number(m).toStdString() + ", " + QString::number(d_radar[m].range, 'g', range_precision).toStdString();
                 pointTransformTopView(sensors[device].pos, 100 * d_radar[m].range, d_radar[m].angle + rc->aim_angle, &plot_pt);
                 cv::circle(fused_topview, plot_pt, thickness, cv::Scalar(0, 0, 255, 255), -1, 8, 0);
                 cv::putText(fused_topview, tag, plot_pt, font, font_size, sensors[device].color, font_thickness);
