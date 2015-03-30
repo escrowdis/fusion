@@ -34,7 +34,7 @@ public:
 
     void combineTwoImages(cv::Mat *img_merge, cv::Mat img_1, cv::Mat img_2, cv::Size s);
 
-    void segmentTwoImages(cv::Mat *img_1, cv::Mat *img_2, cv::Size s);
+    bool segmentTwoImages(cv::Mat *img_1, cv::Mat *img_2, cv::Size s);
 
 private:
     // folder named by time

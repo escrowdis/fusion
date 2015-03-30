@@ -1,9 +1,9 @@
 %YAML:1.0
 stereoVision:
-   port_L: 2
-   port_R: 0
+   port_L: 0
+   port_R: 1
    cam_focal_length: 0
-   focal_length: 29430.
+   focal_length: 2943.
    base_line: 15.
 topView:
    row_interval: 12
@@ -17,19 +17,19 @@ laserRangeFinder:
    resolution: cm
 stereoParamSGBM:
    pre_filter_cap: 63
-   SAD_window_size: 5
+   SAD_window_size: 13
+   min_disp: 0
+   num_of_disp: 144
+   uniquenese_ratio: 13
+   speckle_window_size: 100
+   speckle_range: 15
+stereoParamBM:
+   pre_filter_size: 63
+   pre_filter_cap: 5
+   SAD_window_size: 39
    min_disp: 0
    num_of_disp: 128
-   uniquenese_ratio: 10
-   speckle_window_size: 100
-   speckle_range: 32
-stereoParamBM:
-   pre_filter_size: 1
-   pre_filter_cap: 1
-   SAD_window_size: 3
-   min_disp: 0
-   num_of_disp: 64
-   texture_thresh: 0
-   uniquenese_ratio: 0
-   speckle_window_size: 0
-   speckle_range: 0
+   texture_thresh: 16
+   uniquenese_ratio: 4
+   speckle_window_size: 41
+   speckle_range: 11

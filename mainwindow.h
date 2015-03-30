@@ -355,6 +355,8 @@ private slots:
     void on_checkBox_sv_reproject_clicked(bool checked);
     void on_pushButton_sv_record_clicked();
     void on_pushButton_sv_load_video_clicked();
+
+    void videoIsEnd();
 };
 
     // Mouse control ==========

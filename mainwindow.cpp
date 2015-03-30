@@ -95,6 +95,7 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->label_sv_detected->setStyleSheet("background-color:silver");
 
     QObject::connect(sv, SIGNAL(updateGUI(cv::Mat *, cv::Mat *, cv::Mat *, cv::Mat *, cv::Mat *, cv::Mat *, int)), this, SLOT(svDisplay(cv::Mat *, cv::Mat *, cv::Mat *, cv::Mat *, cv::Mat *, cv::Mat *, int)));
+    QObject::connect(sv, SIGNAL(videoEnd(void)), this, SLOT(videoIsEnd(void)));
 
     on_checkBox_pseudo_color_clicked(ui->checkBox_pseudo_color->isChecked());
     on_checkBox_sv_topview_clicked(ui->checkBox_sv_topview->isChecked());
@@ -1518,4 +1519,11 @@ void MainWindow::on_pushButton_sv_record_clicked()
 void MainWindow::on_pushButton_sv_load_video_clicked()
 {
     sv->loadVideo();
+}
+
+void MainWindow::videoIsEnd()
+{
+    on_pushButton_cam_stop_clicked();
+    report("Video is end.");
+    // showed twice: multi-thread
 }

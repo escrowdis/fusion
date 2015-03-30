@@ -311,6 +311,8 @@ signals:
     void updateGUI(cv::Mat *img_L, cv::Mat *img_R, cv::Mat *disp, cv::Mat *disp_pseudo, cv::Mat *topview, cv::Mat *img_detected, int detected_obj);
 
     void updateForm(int mode, std::vector<int> params);
+
+    void videoEnd();
 };
 
 #endif // STEREO_VISION_H

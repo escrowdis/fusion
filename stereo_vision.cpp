@@ -421,7 +421,10 @@ bool stereo_vision::dataExec()
         camCapture();
         break;
     case SV::INPUT_SOURCE::VIDEO:
-        segmentTwoImages(&img_L, &img_R, cv::Size(IMG_W, IMG_H));
+        if (!segmentTwoImages(&img_L, &img_R, cv::Size(IMG_W, IMG_H))) {
+            videoEnd();
+            return false;
+        }
         break;
     case SV::INPUT_SOURCE::IMG:
 //        img_L = ;
