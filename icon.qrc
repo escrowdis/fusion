@@ -4,5 +4,6 @@
         <file>icon/record_off.png</file>
         <file>icon/record_on.png</file>
         <file>icon/stop.png</file>
+        <file>icon/iconES.png</file>
     </qresource>
 </RCC>

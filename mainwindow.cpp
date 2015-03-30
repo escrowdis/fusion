@@ -33,6 +33,9 @@ MainWindow::MainWindow(QWidget *parent) :
     // Stereo vision param
     fg_form_smp_alloc = false;
 
+    // Author
+    fg_author = false;
+
     ui->setupUi(this);
 
     // LRF
@@ -187,6 +190,8 @@ void MainWindow::closeEvent(QCloseEvent *)
     if (fg_form_smp_alloc)
         if (form_smp->isVisible())
             form_smp->close();
+
+    releaseAuthor();
 }
 
 void MainWindow::keyPressEvent(QKeyEvent *ev)
@@ -1529,4 +1534,40 @@ void MainWindow::videoIsEnd()
     on_pushButton_cam_stop_clicked();
     report("Video is end.");
     // showed twice: multi-thread
+}
+
+void MainWindow::on_actionShortcut_triggered()
+{
+
+}
+
+void MainWindow::on_actionAuthor_triggered()
+{
+    int l_widget = 400;
+    int l_icon = 200;
+    int x, y;
+    x = y = (l_widget - l_icon) / 2;
+
+    devForm = new QDialog;
+    icon = new QLabel(devForm);
+    text = new QLabel(devForm);
+    devForm->setGeometry(100, 100, l_widget, l_widget);
+    icon->setGeometry(x, y, l_icon, l_icon);
+    icon->setPixmap(QPixmap(":/icon/icon/iconES.png", 0, Qt::AutoColor).scaled(l_icon, l_icon));
+    text->setGeometry(0, l_icon * 1.7, l_widget, l_icon / 2);
+    text->setText("Contributors: Li-Kang Weng, An-Chih Tsai, Kai-Chung Chuang.");
+    text->setAlignment(Qt::AlignHCenter);
+    devForm->show();
+
+    fg_author = true;
+}
+
+void MainWindow::releaseAuthor()
+{
+    if (fg_author) {
+        devForm->close();
+        delete icon;
+        delete text;
+        delete devForm;
+    }
 }

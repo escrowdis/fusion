@@ -222,6 +222,16 @@ private:
     QString mouse_info;
     // ======================== End
 
+    // Author =================
+    QDialog *devForm;
+    QLabel *icon;
+    QLabel *text;
+
+    bool fg_author;
+
+    void releaseAuthor();
+    // ======================== End
+
 signals:
     // Camera calibration =====
     void sendBasicInfo(int focal_length, double base_line);
@@ -357,6 +367,8 @@ private slots:
     void on_pushButton_sv_load_video_clicked();
 
     void videoIsEnd();
+    void on_actionShortcut_triggered();
+    void on_actionAuthor_triggered();
 };
 
     // Mouse control ==========
