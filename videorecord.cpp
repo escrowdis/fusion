@@ -55,6 +55,8 @@ bool videoRecord::record(cv::Mat img)
         createVideo();
 
     if (fg_record) {
+        if (!writer.isOpened())
+            return false;
         writer.write(img);
         return true;
     }
@@ -92,6 +94,8 @@ void videoRecord::combineTwoImages(cv::Mat *img_merge, cv::Mat img_1, cv::Mat im
 
 bool videoRecord::segmentTwoImages(cv::Mat *img_1, cv::Mat *img_2, cv::Size s)
 {
+    if (!cap.isOpened())
+        return false;
     cv::Mat img_merge;
     cap >> img_merge;
     if (img_merge.empty())
@@ -121,5 +125,5 @@ void videoRecord::videoPath()
 {
     checkFolder();
     QString file = QFileDialog::getOpenFileName(0, "Load video", save_path.path(), "Video files (*.avi)");
-    cap.open(file.toStdString());
+    cap.open(file.toStdString());    
 }

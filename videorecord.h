@@ -16,6 +16,8 @@ public:
 
     ~videoRecord();
 
+    bool fileExist() {return !file.isEmpty();}
+
     bool fg_record;
 
     cv::VideoWriter writer;
@@ -37,6 +39,8 @@ public:
     bool segmentTwoImages(cv::Mat *img_1, cv::Mat *img_2, cv::Size s);
 
 private:
+    QString file;
+
     // folder named by time
     QDateTime t_now;
 

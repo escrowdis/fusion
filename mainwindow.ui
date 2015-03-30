@@ -584,7 +584,7 @@ parameters</string>
         <x>250</x>
         <y>240</y>
         <width>78</width>
-        <height>61</height>
+        <height>92</height>
        </rect>
       </property>
       <layout class="QGridLayout" name="gridLayout_18">
@@ -1180,19 +1180,6 @@ parameters</string>
        <string>ColorTable</string>
       </property>
      </widget>
-     <widget class="QLabel" name="label_top_view_radar">
-      <property name="geometry">
-       <rect>
-        <x>710</x>
-        <y>20</y>
-        <width>270</width>
-        <height>750</height>
-       </rect>
-      </property>
-      <property name="text">
-       <string>Top View</string>
-      </property>
-     </widget>
      <widget class="QLabel" name="label_depth_info">
       <property name="geometry">
        <rect>
@@ -1292,7 +1279,6 @@ parameters</string>
        <string>Detected image</string>
       </property>
      </widget>
-     <zorder>label_top_view_radar</zorder>
      <zorder>label_top_view_bg</zorder>
      <zorder>label_top_view_sv</zorder>
      <zorder>label_disp</zorder>
