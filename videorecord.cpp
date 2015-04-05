@@ -124,6 +124,6 @@ bool videoRecord::segmentTwoImages(cv::Mat *img_1, cv::Mat *img_2, cv::Size s)
 void videoRecord::videoPath()
 {
     checkFolder();
-    QString file = QFileDialog::getOpenFileName(0, "Load video", save_path.path(), "Video files (*.avi)");
+    file = QFileDialog::getOpenFileName(0, "Load video", save_path.path(), "Video files (*.avi)");
     cap.open(file.toStdString());    
 }

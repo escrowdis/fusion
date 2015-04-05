@@ -777,8 +777,12 @@ void MainWindow::on_pushButton_cam_step_clicked()
 
 void MainWindow::on_pushButton_cam_capture_clicked()
 {
-    if (SV::INPUT_SOURCE::CAM && !sv->isOpened()) {
+    if (sv->input_mode == SV::INPUT_SOURCE::CAM && !sv->isOpened()) {
         reportError("sv", "Error!", "Cameras haven't opened.");
+        return;
+    }
+    else if (sv->input_mode == SV::INPUT_SOURCE::VIDEO && !sv->fileExist()) {
+        reportError("sv", "Error!", "No video is loaded.");
         return;
     }
 
@@ -1520,6 +1524,7 @@ void MainWindow::on_pushButton_sv_record_clicked()
     else {
         ui->pushButton_sv_record->setIcon(QIcon(":/icon/icon/record_off.png"));
         sv->fg_record = false;
+        while (f_sv.isRunning()) {}
         sv->stop();
     }
 }
