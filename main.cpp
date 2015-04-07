@@ -8,6 +8,8 @@ QReadWriteLock lock_lrf;
 QReadWriteLock lock_radar;
 #include <QDir>
 QDir project_path;
+#include "recording/recording.h"
+recording re;
 
 int main(int argc, char *argv[])
 {

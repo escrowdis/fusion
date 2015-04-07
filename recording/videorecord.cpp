@@ -4,7 +4,12 @@ videoRecord::videoRecord()
 {
     fg_record = false;
 
+    fg_data_end = false;
+
     fg_file_established = false;
+
+    // default setting
+    defaultBasicInfo();
 }
 
 videoRecord::~videoRecord()
@@ -14,35 +19,40 @@ videoRecord::~videoRecord()
         fg_record = false;
     }
 }
-void videoRecord::checkFolder()
+
+void videoRecord::setPath(QString str, bool fg_str_is_file)
 {
-    // set folder named by time
-    save_folder = "video";
-    save_path = project_path;
-    if (!save_path.exists(save_folder))
-        save_path.mkdir(save_folder);
-    save_path.cd(save_folder);
+    if (fg_str_is_file) {
+        file_name = str.section("/", -1, -1);
+        file_path = str;
+    }
+    else {
+        file_name = str.section("/", -1, -1) + ".avi";
+        file_path = str + "/" + file_name;
+    }
 }
 
-void videoRecord::getBasicInfo(cv::VideoCapture *cap)
+void videoRecord::defaultBasicInfo()
 {
-    checkFolder();
-
-//    ex = static_cast<int>(cap->get(cv::CAP_PROP_FOURCC));
-//    fps = cap->get(cv::CAP_PROP_FPS);
+    std::pair<int, int> img_size = std::pair<int, int>(2 * 640, 480);   // (col, row)
     ex = cv::VideoWriter::fourcc('D', 'I', 'V', 'X');
     fps = 24;
-    s = cv::Size(2 * cap->get(cv::CAP_PROP_FRAME_WIDTH),
-                          cap->get(cv::CAP_PROP_FRAME_HEIGHT));
+    s = cv::Size(img_size.first, img_size.second);
 }
+
+//void videoRecord::getBasicInfo(cv::VideoCapture *cap)
+//{
+//    ex = static_cast<int>(cap->get(cv::CAP_PROP_FOURCC));
+//    fps = cap->get(cv::CAP_PROP_FPS);
+//    s = cv::Size(2 * cap->get(cv::CAP_PROP_FRAME_WIDTH),
+//                          cap->get(cv::CAP_PROP_FRAME_HEIGHT));
+//}
 
 void videoRecord::createVideo()
 {
     if (!fg_file_established) {
-        file_name = save_path.path() + "/" + t_now.currentDateTime().toString("yyyy-MM-dd-hh-mm-ss") + ".avi";
-
         if (!writer.isOpened()) {
-            writer.open(file_name.toStdString(), ex, fps, s, true);
+            writer.open(file_path.toStdString(), ex, fps, s, true);
         }
 
         fg_file_established = true;
@@ -121,9 +131,24 @@ bool videoRecord::segmentTwoImages(cv::Mat *img_1, cv::Mat *img_2, cv::Size s)
     return true;
 }
 
-void videoRecord::videoPath()
+bool videoRecord::loadVideo(QString str, bool fg_str_is_file)
 {
-    checkFolder();
-    file = QFileDialog::getOpenFileName(0, "Load video", save_path.path(), "Video files (*.avi)");
-    cap.open(file.toStdString());    
+    setPath(str, fg_str_is_file);
+//    file_path = QFileDialog::getOpenFileName(0, "Load video", save_path, "Video files (*.avi)");
+    if (file_path.isEmpty())
+        return false;
+
+    cap.open(file_path.toStdString());
+    if (!cap.isOpened())
+        return false;
+
+//    while (true) {
+//        cv::Mat img;
+//        cap>>img;
+//        if(img.empty())
+//            break;
+//        cv::imshow("D", img);
+//        cv::waitKey(10);
+//    }
+    return true;
 }

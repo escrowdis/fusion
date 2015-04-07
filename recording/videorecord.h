@@ -4,8 +4,6 @@
 #include <QString>
 #include <QDateTime>
 #include <QFileDialog>
-#include <QDir>
-extern QDir project_path;
 
 #include <opencv2/opencv.hpp>
 
@@ -16,37 +14,35 @@ public:
 
     ~videoRecord();
 
-    bool fileExist() {return !file.isEmpty();}
+    bool fileExist() {return !file_path.isEmpty();}
 
-    bool fg_record;
+    //**// can't work 2015.04.06
+//    void getBasicInfo(cv::VideoCapture *cap);
 
-    cv::VideoWriter writer;
+    void setPath(QString str, bool fg_str_is_file);
 
-    cv::VideoCapture cap;
-
-    void getBasicInfo(cv::VideoCapture *cap);
+    virtual bool loadVideo(QString str, bool fg_str_is_file);
 
     bool record(cv::Mat img);
 
     void stop();
 
-    void videoPath();
-
-    virtual void loadVideo() {}
-
     void combineTwoImages(cv::Mat *img_merge, cv::Mat img_1, cv::Mat img_2, cv::Size s);
 
     bool segmentTwoImages(cv::Mat *img_1, cv::Mat *img_2, cv::Size s);
 
+    bool fg_record;
+
+    bool fg_data_end;
+
+    cv::VideoWriter writer;
+
+    cv::VideoCapture cap;
+
 private:
-    QString file;
+    void defaultBasicInfo();
 
-    // folder named by time
-    QDateTime t_now;
-
-    QDir save_path;
-
-    QString save_folder;
+    QString file_path;
 
     QString file_name;
 
@@ -55,8 +51,6 @@ private:
     cv::Size s;
 
     bool fg_file_established;
-
-    void checkFolder();
 
     void createVideo();
 };

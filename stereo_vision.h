@@ -12,12 +12,13 @@ extern QDir project_path;
 #include <QReadWriteLock>
 extern QReadWriteLock lock_sv;
 
+// recording
+#include "recording/recording.h"
+extern recording re;
+
 #include <stack>
 
 #include <opencv2/opencv.hpp>
-
-// video record
-#include "videorecord.h"
 
 // topview
 #include "topview.h"
@@ -30,7 +31,6 @@ extern QReadWriteLock lock_sv;
 #define IMG_DIS_DISP_H 240
 
 namespace SV {
-
 enum STEREO_MATCH{
     SGBM,
     BM
@@ -41,10 +41,9 @@ enum INPUT_SOURCE {
     VIDEO,
     IMG
 };
-
 }
 
-class stereo_vision : public QObject, public TopView, public videoRecord
+class stereo_vision : public QObject, public TopView
 {
     Q_OBJECT
 
@@ -205,7 +204,7 @@ public:
     void updateDataFroDisplay();
     // ============================= End
 
-    virtual void loadVideo();
+    void loadVideo();
 
 private:
     void resetOpen(int device_index_L, int device_index_R);

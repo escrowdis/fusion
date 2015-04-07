@@ -15,6 +15,10 @@
 #include <QDir>
 extern QDir project_path;
 
+// recording
+#include "recording/recording.h"
+extern recording re;
+
 #include <iostream>
 #include <opencv2/opencv.hpp>
 
@@ -364,11 +368,17 @@ private slots:
 
     void on_checkBox_sv_reproject_clicked(bool checked);
     void on_pushButton_sv_record_clicked();
-    void on_pushButton_sv_load_video_clicked();
+    void on_pushButton_sv_load_data_clicked();
 
     void videoIsEnd();
+    void dataIsEnd();
     void on_actionShortcut_triggered();
     void on_actionAuthor_triggered();
+    void on_pushButton_radar_record_clicked();
+    void on_pushButton_lrf_record_clicked();
+    void on_pushButton_all_record_clicked();
+    void on_pushButton_radar_load_data_clicked();
+    void on_pushButton_lrf_load_data_clicked();
 };
 
     // Mouse control ==========

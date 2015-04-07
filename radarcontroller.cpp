@@ -7,6 +7,9 @@ RadarController::RadarController(float aim_angle) : TopView(1, 100, 20470, 102.3
     fg_read = false;
     fg_data_in = false;
 
+    // input source
+    input_mode = RADAR::INPUT_SOURCE::ESR;
+
     esr_obj = new ESR_track_object_info[64];
 
     obj_status_filtered = 2;
@@ -46,6 +49,7 @@ RadarController::~RadarController()
 
 bool RadarController::open()
 {
+    input_mode = RADAR::INPUT_SOURCE::ESR;
     canInitializeLibrary();
     h = canOpenChannel(0, canOPEN_NO_INIT_ACCESS);
     stat = canRequestBusStatistics(h);
@@ -89,11 +93,6 @@ void RadarController::reset()
     b_track_range_accel.reset();
     b_track_med_range_mode.reset();
     b_track_range_rate.reset();
-
-    for (int i = 0; i < dlc; i++) {
-        b = can_data[i];
-        bin += b.to_string();
-    }
 }
 
 void RadarController::busOn()
@@ -112,12 +111,35 @@ void RadarController::busOff()
 
 void RadarController::dataExec()
 {
-    stat = canReadWait(h, &id, &can_data[0], &dlc, &flag, &time, 0xff);
-    if (stat != canOK) {
-        std::cout<<"read FAILED"<<std::endl;
-        return;
-    }
     reset();
+
+    switch (input_mode) {
+    case RADAR::INPUT_SOURCE::ESR:
+        stat = canReadWait(h, &id, &can_data[0], &dlc, &flag, &time, 0xff);
+        if (stat != canOK) {
+            std::cout<<"read FAILED"<<std::endl;
+            return;
+        }
+
+        for (int i = 0; i < dlc; i++) {
+            b = can_data[i];
+            bin += b.to_string();
+        }
+        break;
+    case RADAR::INPUT_SOURCE::TXT:
+        if (!re.tr->in.atEnd()) {
+            QString text, text_id, text_bin;
+            text = re.tr->file.readLine();
+            text_id = text.section(" ", 0, 0);
+            text_bin = text.section(" ", -1, -1);
+            std::string id__ = text_id.toStdString();
+            this->id = std::atol(id__.c_str());
+            bin = text_bin.toStdString();
+        }
+        else
+            emit dataEnd();
+        break;
+    }
 
     retrievingData();
 
@@ -137,6 +159,18 @@ void RadarController::dataExec()
 
 void RadarController::retrievingData()
 {
+    if (re.tr->fg_record) {
+        std::string text;
+        std::string id__;
+        std::stringstream strstream;
+        strstream << id;
+        id__ = strstream.str();
+        text.append(id__);
+        text.append(" ");
+        text.append(bin);
+        re.recordData(text);
+    }
+
     if (fg_data_in) {
         int _id;
         if (id >= 0x500 && id <= 0x53F) {
@@ -337,4 +371,12 @@ void RadarController::pointProjectTopView()
         cv::imshow("topview - rc", tp);
     }
 #endif
+}
+
+void RadarController::loadData()
+{
+    re.setRecordType(RECORD_TYPE::TXT);
+    input_mode = RECORD_TYPE::TXT;
+    fg_data_in = true;
+    re.loadData();
 }

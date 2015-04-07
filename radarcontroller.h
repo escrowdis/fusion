@@ -9,6 +9,10 @@
 #include <QReadWriteLock>
 extern QReadWriteLock lock_radar;
 
+// recording
+#include "recording/recording.h"
+extern recording re;
+
 #include <iostream>
 #include <bitset>
 
@@ -19,6 +23,13 @@ extern QReadWriteLock lock_radar;
 
 // topview
 #include "topview.h"
+
+namespace RADAR {
+enum INPUT_SOURCE {
+    ESR,
+    TXT
+};
+}
 
 class RadarController : public QObject, public TopView
 {
@@ -40,6 +51,11 @@ public:
     void retrievingData();
 
     void dataExec();
+
+    void loadData();
+
+    // status
+    int input_mode;
 
     // tableView used
     QStandardItem* item;
@@ -191,6 +207,8 @@ private:
 
 signals:
     void updateGUI(int detected_obj, cv::Mat *img, cv::Mat *topview);
+
+    void dataEnd();
 };
 
 #endif // RADARCONTROLLER_H

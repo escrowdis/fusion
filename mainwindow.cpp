@@ -126,6 +126,7 @@ MainWindow::MainWindow(QWidget *parent) :
     on_checkBox_radar_topview_clicked(ui->checkBox_radar_topview->isChecked());
 
     QObject::connect(rc, SIGNAL(updateGUI(int, cv::Mat *, cv::Mat *)), this, SLOT(radarDisplay(int, cv::Mat *, cv::Mat *)));
+    QObject::connect(rc, SIGNAL(dataEnd(void)), this, SLOT(dataIsEnd(void)));
     // Radar ESR =============================== End
 
     // Fusion ==================================
@@ -154,6 +155,8 @@ MainWindow::MainWindow(QWidget *parent) :
 //    QObject::connect(ui->label_cam_img_L, SIGNAL(mXY(int, int)), this, SLOT(mouseXY(int, int)));
     QObject::connect(ui->label_disp, SIGNAL(mXY(int, int)), this, SLOT(mouseXY(int, int)));
     // ========================================= End
+
+    re.setParentFolder("data");
 }
 
 MainWindow::~MainWindow()
@@ -263,9 +266,9 @@ void MainWindow::report(QString content)
 
 bool MainWindow::cwdIsProjectFolder()
 {
-    project_path = QDir::currentPath();
+    project_path = QDir::current();
     QString current_folder = project_path.currentPath().section("/", -1, -1);
-    if (current_folder == "release" || current_folder == "debug")  {
+    if (current_folder == "release" || current_folder == "debug") {
         project_path.cdUp();
     }
     if (project_path.path().section("/", -1, -1) == "Fusion") {
@@ -730,6 +733,7 @@ void MainWindow::on_checkBox_sv_topview_clicked(bool checked)
     if (checked) {
         sv->fg_topview = true;
         ui->checkBox_sv_reproject->setEnabled(true);
+        ui->checkBox_topview_plot_points->setEnabled(true);
         for (int r = 0; r < sv->topview.rows; r++) {
             for (int c = 0; c < sv->topview.cols; c++) {
                 cv::Vec4b val = sv->topview.at<cv::Vec4b>(r, c);
@@ -741,6 +745,7 @@ void MainWindow::on_checkBox_sv_topview_clicked(bool checked)
     else {
         sv->fg_topview = false;
         ui->checkBox_sv_reproject->setEnabled(false);
+        ui->checkBox_topview_plot_points->setEnabled(false);
         for (int r = 0; r < sv->topview.rows; r++) {
             for (int c = 0; c < sv->topview.cols; c++)
                 sv->topview.at<cv::Vec4b>(r, c)[3] = 0;
@@ -767,7 +772,7 @@ void MainWindow::on_pushButton_cam_step_clicked()
         reportError("sv", "Error!", "Cameras haven't opened.");
         return;
     }
-    else if (sv->input_mode == SV::INPUT_SOURCE::VIDEO && !sv->fileExist()) {
+    else if (sv->input_mode == SV::INPUT_SOURCE::VIDEO && !re.vr->fileExist()) {
         reportError("sv", "Error!", "No video is loaded.");
         return;
     }
@@ -781,7 +786,7 @@ void MainWindow::on_pushButton_cam_capture_clicked()
         reportError("sv", "Error!", "Cameras haven't opened.");
         return;
     }
-    else if (sv->input_mode == SV::INPUT_SOURCE::VIDEO && !sv->fileExist()) {
+    else if (sv->input_mode == SV::INPUT_SOURCE::VIDEO && !re.vr->fileExist()) {
         reportError("sv", "Error!", "No video is loaded.");
         return;
     }
@@ -848,7 +853,7 @@ void MainWindow::threadProcessing()
 
         // Radar ESR
         if (fg_retrieving && !f_radar.isRunning()) {
-//            rc->retrievingData();
+//            rc->dataExec();
             f_radar = QtConcurrent::run(rc, &RadarController::dataExec);
             ui->label_radar_proc->setText(QString::number(t_proc_radar.restart()));
             qApp->processEvents();
@@ -881,10 +886,17 @@ void MainWindow::on_checkBox_do_depth_clicked(bool checked)
 {
     if (checked) {
         sv->cam_param->param_r = sv->cam_param->focal_length * sv->cam_param->base_line;
+        ui->checkBox_pseudo_color->setEnabled(true);
+        ui->checkBox_sv_topview->setEnabled(true);
+        ui->checkBox_sv_reproject->setEnabled(true);
         sv->fg_stereoMatch = true;
     }
-    else
+    else {
+        ui->checkBox_pseudo_color->setEnabled(false);
+        ui->checkBox_sv_topview->setEnabled(false);
+        ui->checkBox_sv_reproject->setEnabled(false);
         sv->fg_stereoMatch = false;
+    }
 }
 
 void MainWindow::on_checkBox_pseudo_color_clicked(bool checked)
@@ -1513,34 +1525,6 @@ void MainWindow::on_pushButton_stop_all_clicked()
     on_pushButton_radar_bus_off_clicked();
 }
 
-void MainWindow::on_pushButton_sv_record_clicked()
-{
-    // record goes on
-    if (!sv->fg_record) {
-        ui->pushButton_sv_record->setIcon(QIcon(":/icon/icon/record_on.png"));
-        sv->fg_record = true;
-    }
-    // record goes off
-    else {
-        ui->pushButton_sv_record->setIcon(QIcon(":/icon/icon/record_off.png"));
-        sv->fg_record = false;
-        while (f_sv.isRunning()) {}
-        sv->stop();
-    }
-}
-
-void MainWindow::on_pushButton_sv_load_video_clicked()
-{
-    sv->loadVideo();
-}
-
-void MainWindow::videoIsEnd()
-{
-    on_pushButton_cam_stop_clicked();
-    report("Video is end.");
-    // showed twice: multi-thread
-}
-
 void MainWindow::on_actionShortcut_triggered()
 {
 
@@ -1558,7 +1542,7 @@ void MainWindow::on_actionAuthor_triggered()
     text = new QLabel(devForm);
     devForm->setGeometry(100, 100, l_widget, l_widget);
     icon->setGeometry(x, y, l_icon, l_icon);
-    icon->setPixmap(QPixmap(":/icon/icon/iconES.png", 0, Qt::AutoColor).scaled(l_icon, l_icon));
+    icon->setPixmap(QPixmap(":/icon/iconES.png", 0, Qt::AutoColor).scaled(l_icon, l_icon));
     text->setGeometry(0, l_icon * 1.7, l_widget, l_icon / 2);
     text->setText("Contributors: Li-Kang Weng, An-Chih Tsai, Kai-Chung Chuang.");
     text->setAlignment(Qt::AlignHCenter);
@@ -1575,4 +1559,103 @@ void MainWindow::releaseAuthor()
         delete text;
         delete devForm;
     }
+}
+
+void MainWindow::on_pushButton_sv_record_clicked()
+{
+    // record goes on
+    if (!re.vr->fg_record) {
+        ui->pushButton_sv_record->setIcon(QIcon(":/icon/record_on.png"));
+        re.start(RECORD_TYPE::VIDEO);
+    }
+    // record goes off
+    else {
+        ui->pushButton_sv_record->setIcon(QIcon(":/icon/record_off.png"));
+        while (f_sv.isRunning()) {}
+        re.stop();
+    }
+}
+
+void MainWindow::on_pushButton_radar_record_clicked()
+{
+    // record goes on
+    if (!re.tr->fg_record) {
+        ui->pushButton_radar_record->setIcon(QIcon(":/icon/record_on.png"));
+        re.start(RECORD_TYPE::TXT);
+    }
+    // record goes off
+    else {
+        ui->pushButton_radar_record->setIcon(QIcon(":/icon/record_off.png"));
+        while (f_radar.isRunning()) {}
+        re.stop();
+    }
+}
+
+void MainWindow::on_pushButton_lrf_record_clicked()
+{
+
+}
+
+void MainWindow::on_pushButton_all_record_clicked()
+{
+    // record goes on
+    if (!(re.tr->fg_record && re.vr->fg_record)) {
+        if (fg_capturing)
+            ui->pushButton_sv_record->setIcon(QIcon(":/icon/record_on.png"));
+        if (fg_retrieving)
+            ui->pushButton_radar_record->setIcon(QIcon(":/icon/record_on.png"));
+        ui->pushButton_all_record->setIcon(QIcon(":/icon/all_record_on.png"));
+        re.start(RECORD_TYPE::ALL);
+    }
+    // record goes off
+    else {
+        ui->pushButton_sv_record->setIcon(QIcon(":/icon/record_off.png"));
+        ui->pushButton_radar_record->setIcon(QIcon(":/icon/record_off.png"));
+        ui->pushButton_all_record->setIcon(QIcon(":/icon/all_record_off.png"));
+        while (f_radar.isRunning() && f_sv.isRunning()) {}
+        re.stop();
+    }
+}
+
+void MainWindow::on_pushButton_sv_load_data_clicked()
+{
+    sv->loadVideo();
+}
+
+void MainWindow::videoIsEnd()
+{
+    if (re.vr->fg_data_end)
+        return;
+
+    on_pushButton_cam_stop_clicked();
+
+    while (f_sv.isRunning()) {}
+
+    report("Video is end.");
+
+    re.vr->fg_data_end = true;
+}
+
+void MainWindow::dataIsEnd()
+{
+    if (re.tr->fg_data_end)
+        return;
+
+    on_pushButton_radar_bus_off_clicked();
+
+    while (f_radar.isRunning()) {}
+
+    report("Data is end.");
+
+    re.tr->fg_data_end = true;
+}
+
+void MainWindow::on_pushButton_radar_load_data_clicked()
+{
+    rc->loadData();
+}
+
+void MainWindow::on_pushButton_lrf_load_data_clicked()
+{
+
 }

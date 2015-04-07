@@ -97,8 +97,6 @@ bool stereo_vision::open(int device_index_L, int device_index_R)
                 cam_L.set(cv::CAP_PROP_FRAME_HEIGHT, IMG_H);
                 fg_cam_L = true;
                 this->device_index_L = device_index_L;
-
-                getBasicInfo(&cam_L);
 #ifdef debug_info_sv
                 qDebug()<<"open L";
 #endif
@@ -421,8 +419,8 @@ bool stereo_vision::dataExec()
         camCapture();
         break;
     case SV::INPUT_SOURCE::VIDEO:
-        if (!segmentTwoImages(&img_L, &img_R, cv::Size(IMG_W, IMG_H))) {
-            videoEnd();
+        if (!re.vr->segmentTwoImages(&img_L, &img_R, cv::Size(IMG_W, IMG_H))) {
+            emit videoEnd();
             return false;
         }
         break;
@@ -432,10 +430,10 @@ bool stereo_vision::dataExec()
         break;
     }
 
-    if (fg_record) {
+    if (re.vr->fg_record) {
         cv::Mat img_merge = cv::Mat(IMG_H, 2 * IMG_W, CV_8UC3);
-        combineTwoImages(&img_merge, img_L, img_R, cv::Size(img_L.cols, img_L.rows));
-        record(img_merge);
+        re.vr->combineTwoImages(&img_merge, img_L, img_R, cv::Size(img_L.cols, img_L.rows));
+        re.recordData(img_merge);
     }
 
     // camera calibration
@@ -898,6 +896,7 @@ void stereo_vision::updateDataFroDisplay()
 
 void stereo_vision::loadVideo()
 {
-    videoPath();
+    re.setRecordType(RECORD_TYPE::VIDEO);
     input_mode = SV::INPUT_SOURCE::VIDEO;
+    re.loadData();
 }
