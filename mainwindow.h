@@ -41,6 +41,14 @@ namespace Ui {
 class MainWindow;
 }
 
+
+namespace INPUT_TYPE {
+enum {
+    DEVICE,
+    RECORDING
+};
+}
+
 class MainWindow : public QMainWindow
 {
     Q_OBJECT
@@ -213,11 +221,8 @@ private:
 //    QFutureWatcher<void> fw_lrf_buf;
 
     void exec();
-
     void threadCheck();
-
     void threadBuffering();
-
     void threadProcessing();
     // ======================== End
 
@@ -240,6 +245,10 @@ private:
     void releaseAuthor();
     // ======================== End
 
+    // Recording ==============
+    void inputType(int type);
+    // Recording ============== End
+
 signals:
     // Camera calibration =====
     void sendBasicInfo(int focal_length, double base_line);
@@ -251,11 +260,40 @@ signals:
     // ======================== End
 
 private slots:
+    void on_pushButton_start_all_clicked();
+
+    void on_pushButton_stop_all_clicked();
+
+    void on_actionShortcut_triggered();
+
+    void on_actionAuthor_triggered();
+
+    // Mouse control ==========
+    void mouseXY(int x, int y);
+
+    void wheelEvent(QWheelEvent *ev);
+
+    void keyPressEvent(QKeyEvent *ev);
+    // ======================== End
 
     // Laser range finder =====
     void on_pushButton_lrf_open_clicked();
 
     void lrfDisplay(double *lrf_data, cv::Mat *display_lrf);
+
+    void on_pushButton_lrf_request_clicked();
+
+    void on_pushButton_lrf_retrieve_clicked();
+
+    void on_pushButton_lrf_stop_clicked();
+
+    void on_pushButton_lrf_request_ONCE_clicked();
+
+    void on_pushButton_lrf_record_data_clicked();
+
+    void on_pushButton_lrf_record_stop_clicked();
+
+    void on_pushButton_lrf_read_range_clicked();
     // ======================== End
 
     // Stereo vision ==========
@@ -281,11 +319,31 @@ private slots:
 
     void on_radioButton_SGBM_clicked();
 
+    void on_lineEdit_sv_focal_length_returnPressed();
+
+    void on_checkBox_sv_topview_clicked(bool checked);
+
+    void on_spinBox_topview_r_valueChanged(int arg1);
+
+    void on_spinBox_topview_c_valueChanged(int arg1);
+
     void on_pushButton_stereo_match_param_clicked();
 
     void on_comboBox_camera_focal_length_currentIndexChanged(int index);
 
     void on_lineEdit_base_line_returnPressed();
+
+    void on_checkBox_pseudo_color_clicked(bool checked);
+
+    void on_checkBox_topview_plot_points_clicked(bool checked);
+
+    void on_checkBox_sv_reproject_clicked(bool checked);
+
+    void on_pushButton_sv_record_data_clicked();
+
+    void on_pushButton_sv_read_images_clicked();
+
+    void on_pushButton_sv_read_disp_clicked();
     // ======================== End
 
     // Camera calibration =====
@@ -300,47 +358,6 @@ private slots:
 
     // Radar ESR ==============
     void radarDisplay(int detected_obj, cv::Mat *img, cv::Mat *topview);
-    // ======================== End
-
-    // Mouse control ==========
-    void mouseXY(int x, int y);
-    // ======================== End
-
-    void on_pushButton_lrf_request_clicked();
-
-    void on_pushButton_lrf_retrieve_clicked();
-
-    void on_pushButton_lrf_stop_clicked();
-
-    void on_pushButton_lrf_request_ONCE_clicked();
-
-    void on_lineEdit_sv_focal_length_returnPressed();
-
-    void on_pushButton_lrf_record_data_clicked();
-
-    void on_pushButton_sv_record_data_clicked();
-
-    void on_pushButton_lrf_record_stop_clicked();
-
-    void on_pushButton_sv_read_images_clicked();
-
-    void on_pushButton_sv_read_disp_clicked();
-
-    void on_pushButton_lrf_read_range_clicked();
-
-    void on_pushButton_lrf_read_range_2_clicked();
-
-    void on_horizontalSlider_2_sliderReleased();
-
-    void on_horizontalSlider_sliderReleased();
-
-    void on_pushButton_lrf_request_2_clicked();
-
-    void on_pushButton_lrf_retrieve_2_clicked();
-
-    void on_pushButton_lrf_stop_2_clicked();
-
-    void on_pushButton_radar_open_clicked();
 
     void on_pushButton_radar_write_clicked();
 
@@ -348,46 +365,46 @@ private slots:
 
     void on_pushButton_radar_bus_off_clicked();
 
-    void on_checkBox_sv_topview_clicked(bool checked);
+    void on_pushButton_radar_open_clicked();
 
     void on_checkBox_radar_topview_clicked(bool checked);
-
-    void on_pushButton_stop_all_clicked();
 
     void on_spinBox_radar_topview_r_valueChanged(int arg1);
 
     void on_spinBox_radar_topview_c_valueChanged(int arg1);
+    // ======================== End
 
-    void on_spinBox_topview_r_valueChanged(int arg1);
+    // 2014 BIOME =============
+    void on_horizontalSlider_2_sliderReleased();
 
-    void on_spinBox_topview_c_valueChanged(int arg1);
+    void on_horizontalSlider_sliderReleased();
 
-    void wheelEvent(QWheelEvent *ev);
+    void on_pushButton_lrf_read_range_2_clicked();
 
-    void keyPressEvent(QKeyEvent *ev);
+    void on_pushButton_lrf_request_2_clicked();
 
-    void on_checkBox_pseudo_color_clicked(bool checked);
+    void on_pushButton_lrf_retrieve_2_clicked();
 
-    void on_checkBox_topview_plot_points_clicked(bool checked);
+    void on_pushButton_lrf_stop_2_clicked();
+    // 2014 BIOME ============= End
 
-    void on_checkBox_sv_reproject_clicked(bool checked);
+    // Recording ==============
     void on_pushButton_sv_record_clicked();
     void on_pushButton_sv_load_data_clicked();
-
     void videoIsEnd();
     void dataIsEnd();
-    void on_actionShortcut_triggered();
-    void on_actionAuthor_triggered();
     void on_pushButton_radar_record_clicked();
     void on_pushButton_lrf_record_clicked();
     void on_pushButton_all_record_clicked();
     void on_pushButton_radar_load_data_clicked();
     void on_pushButton_lrf_load_data_clicked();
     void on_pushButton_all_load_data_clicked();
-    void on_pushButton_start_all_clicked();
+    void on_radioButton_input_device_clicked();
+    void on_radioButton_input_recording_clicked();
+    // Recording ============== End
 };
 
-    // Mouse control ==========
+// Mouse control ==========
 class MouseLabel : public QLabel
 {
     Q_OBJECT

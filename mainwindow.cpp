@@ -1531,12 +1531,16 @@ void MainWindow::on_checkBox_radar_topview_clicked(bool checked)
 void MainWindow::on_pushButton_start_all_clicked()
 {
     if (sv->input_mode == SV::INPUT_SOURCE::CAM && rc->input_mode == RADAR::INPUT_SOURCE::ESR) {
+        inputType(INPUT_TYPE::DEVICE);
+
         on_pushButton_cam_open_clicked();
 
         on_pushButton_radar_open_clicked();
         rc->busOn();
         on_pushButton_radar_write_clicked();
     }
+    else
+        inputType(INPUT_TYPE::RECORDING);
 
     if (svWarning())
         return;
@@ -1650,11 +1654,13 @@ void MainWindow::on_pushButton_all_record_clicked()
 void MainWindow::on_pushButton_sv_load_data_clicked()
 {
     sv->loadVideo();
+    inputType(INPUT_TYPE::RECORDING);
 }
 
 void MainWindow::on_pushButton_radar_load_data_clicked()
 {
     rc->loadData();
+    inputType(INPUT_TYPE::RECORDING);
 }
 
 void MainWindow::on_pushButton_lrf_load_data_clicked()
@@ -1667,6 +1673,7 @@ void MainWindow::on_pushButton_all_load_data_clicked()
     re.setRecordType(RECORD_TYPE::ALL);
     sv->input_mode = SV::INPUT_SOURCE::VIDEO;
     rc->input_mode = RECORD_TYPE::TXT;
+    inputType(INPUT_TYPE::RECORDING);
     re.loadData();
 }
 
@@ -1696,4 +1703,30 @@ void MainWindow::dataIsEnd()
     report("Data is end.");
 
     re.tr->fg_data_end = true;
+}
+
+void MainWindow::inputType(int type)
+{
+    switch (type) {
+    case INPUT_TYPE::DEVICE:
+        sv->input_mode = SV::INPUT_SOURCE::CAM;
+        rc->input_mode = RADAR::INPUT_SOURCE::ESR;
+        ui->radioButton_input_device->setChecked(true);
+        break;
+    case INPUT_TYPE::RECORDING:
+        sv->input_mode = SV::INPUT_SOURCE::VIDEO;
+        rc->input_mode = RADAR::INPUT_SOURCE::TXT;
+        ui->radioButton_input_recording->setChecked(true);
+        break;
+    }
+}
+
+void MainWindow::on_radioButton_input_device_clicked()
+{
+    inputType(INPUT_TYPE::DEVICE);
+}
+
+void MainWindow::on_radioButton_input_recording_clicked()
+{
+    inputType(INPUT_TYPE::RECORDING);
 }
