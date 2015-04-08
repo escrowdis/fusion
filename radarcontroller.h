@@ -24,6 +24,8 @@ extern recording re;
 // topview
 #include "topview.h"
 
+#define OBJECT_NUM 64
+
 namespace RADAR {
 enum INPUT_SOURCE {
     ESR,

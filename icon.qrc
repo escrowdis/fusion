@@ -10,5 +10,6 @@
         <file>icon/stop.png</file>
         <file>icon/stop_b1.png</file>
         <file>icon/load_data.png</file>
+        <file>icon/start.png</file>
     </qresource>
 </RCC>

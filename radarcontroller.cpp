@@ -10,11 +10,11 @@ RadarController::RadarController(float aim_angle) : TopView(1, 100, 20470, 102.3
     // input source
     input_mode = RADAR::INPUT_SOURCE::ESR;
 
-    esr_obj = new ESR_track_object_info[64];
+    esr_obj = new ESR_track_object_info[OBJECT_NUM];
 
     obj_status_filtered = 2;
 
-    item = new QStandardItem[64];
+    item = new QStandardItem[OBJECT_NUM];
 
     img_rows = 160;
 
@@ -54,7 +54,7 @@ bool RadarController::open()
     h = canOpenChannel(0, canOPEN_NO_INIT_ACCESS);
     stat = canRequestBusStatistics(h);
     if (stat != canOK) {
-//        char msg[64];
+//        char msg[OBJECT_NUM];
 //        stat = canGetErrorText(stat, &msg[0], sizeof(msg));
 //        std::cout<<"ERR"<<std::endl;
         return false;
@@ -68,7 +68,7 @@ bool RadarController::write()
     BYTE msg[dlc_esr] = {0x00};
     msg[6] = 0xBF;
     stat = canWriteWait(h, id_esr, msg, dlc_esr, 0, 0xff);
-    std::cout<<"write stat: "<<stat<<std::endl;
+//    std::cout<<"write stat: "<<stat<<std::endl;
     if (stat == canOK) {
         fg_data_in = true;
         return true;
@@ -97,16 +97,27 @@ void RadarController::reset()
 
 void RadarController::busOn()
 {
-    stat = canBusOn(h);
+    if (fg_read)
+        return;
+    switch (input_mode) {
+    case RADAR::INPUT_SOURCE::ESR:
+        stat = canBusOn(h);
 
-    if (stat == canOK)
+        if (stat == canOK)
+            fg_read = true;
+        break;
+    case RADAR::INPUT_SOURCE::TXT:
+        //**// add if(file_is_loaded)
         fg_read = true;
+        break;
+    }
 }
 
 void RadarController::busOff()
 {
     fg_read = false;
     stat = canBusOff(h);
+    stat = canClose(h);
 }
 
 void RadarController::dataExec()
@@ -127,6 +138,8 @@ void RadarController::dataExec()
         }
         break;
     case RADAR::INPUT_SOURCE::TXT:
+        if (!fg_data_in)
+            fg_data_in = true;
         if (!re.tr->in.atEnd()) {
             QString text, text_id, text_bin;
             text = re.tr->file.readLine();
@@ -285,7 +298,7 @@ void RadarController::pointDisplayFrontView()
 
     detected_obj = 0;
 
-    for (int k = 0; k < 64; k++) {
+    for (int k = 0; k < OBJECT_NUM; k++) {
         if (esr_obj[k].status >= obj_status_filtered) {
             detected_obj++;
 
@@ -296,7 +309,7 @@ void RadarController::pointDisplayFrontView()
             pt_y = img_rows * (1.0 - 1.0 * esr_obj[k].z / max_distance);
             cv::circle(img_radar, cv::Point(pt_x, pt_y), 1, cv::Scalar(0, 255, 0, 255), -1, 8, 0);
             cv::rectangle(img_radar, cv::Rect(pt_x - obj_rect.x / 2, pt_y - obj_rect.y / 2, obj_rect.x, obj_rect.y), cv::Scalar(0, 0, 255, 255), 2, 8, 0);
-            cv::putText(img_radar, QString::number(k + 1).toStdString(), cv::Point(pt_x + obj_rect.x / 2, pt_y), cv::FONT_HERSHEY_DUPLEX, 1, cv::Scalar(0, 255, 0, 255));
+            cv::putText(img_radar, QString::number(k).toStdString(), cv::Point(pt_x + obj_rect.x / 2, pt_y), cv::FONT_HERSHEY_DUPLEX, 1, cv::Scalar(0, 255, 0, 255));
             lock_radar.unlock();
 #ifdef debug_info_radar_data
 //                ui->textEdit->append("data struct\nangle: " + QString::number(esr_obj[k].angle) + " range: " + QString::number(esr_obj[k].range)
@@ -319,7 +332,7 @@ void RadarController::pointProjectTopView()
     }
 
     int grid_row, grid_col;
-    for (int m = 0; m < 64; m++) {
+    for (int m = 0; m < OBJECT_NUM; m++) {
         if (esr_obj[m].status >= obj_status_filtered) {
             grid_row = 1.0 * log10(100.0 * esr_obj[m].z / min_distance) / log10(1.0 + k);
             grid_col = (100.0 * esr_obj[m].x + 0.5 * chord_length) * img_col / chord_length;
@@ -377,6 +390,5 @@ void RadarController::loadData()
 {
     re.setRecordType(RECORD_TYPE::TXT);
     input_mode = RECORD_TYPE::TXT;
-    fg_data_in = true;
     re.loadData();
 }

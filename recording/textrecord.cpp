@@ -58,7 +58,13 @@ void textRecord::stop()
     fg_file_established = false;
     fg_record = false;
 
+    file.flush();
+    file.reset();
     file.close();
+    out.flush();
+    out.reset();
+    in.flush();
+    in.reset();
 }
 
 bool textRecord::loadText(QString str, bool fg_str_is_file)

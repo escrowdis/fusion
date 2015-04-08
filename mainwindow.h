@@ -90,6 +90,8 @@ private:
 
     bool fg_capturing;
 
+    bool svWarning();
+
     void camOpen();
 
     void camStop() {}
@@ -209,6 +211,8 @@ private:
 //    QFutureWatcher<void> fw_sv;
 //    QFutureWatcher<void> fw_lrf;
 //    QFutureWatcher<void> fw_lrf_buf;
+
+    void exec();
 
     void threadCheck();
 
@@ -379,6 +383,8 @@ private slots:
     void on_pushButton_all_record_clicked();
     void on_pushButton_radar_load_data_clicked();
     void on_pushButton_lrf_load_data_clicked();
+    void on_pushButton_all_load_data_clicked();
+    void on_pushButton_start_all_clicked();
 };
 
     // Mouse control ==========

@@ -119,9 +119,12 @@ MainWindow::MainWindow(QWidget *parent) :
     model_radar = new QStandardItemModel(64, 1, this);
     model_radar->setHorizontalHeaderItem(0, new QStandardItem(QString("Range")));
     ui->tableView_radar->setModel(model_radar);
+    QStringList labels;
     for (int i = 0 ; i < 64; i++) {
-        model_radar->setItem(i, 0, &rc->item[i]);
+        model_radar->setItem(i, &rc->item[i]);
+        labels<<QString::number(i);
     }
+    model_radar->setVerticalHeaderLabels(labels);
 
     on_checkBox_radar_topview_clicked(ui->checkBox_radar_topview->isChecked());
 
@@ -761,6 +764,26 @@ void MainWindow::on_pushButton_cam_open_clicked()
     on_pushButton_cam_step_clicked();
 }
 
+void MainWindow::exec()
+{
+    if (!fg_running)
+        threadProcessing();
+}
+
+bool MainWindow::svWarning()
+{
+    if (sv->input_mode == SV::INPUT_SOURCE::CAM && !sv->isOpened()) {
+        reportError("sv", "Error!", "Cameras haven't opened.");
+        return true;
+    }
+    else if (sv->input_mode == SV::INPUT_SOURCE::VIDEO && !re.vr->fileExist()) {
+        reportError("sv", "Error!", "No video is loaded.");
+        return true;
+    }
+
+    return false;
+}
+
 void MainWindow::on_pushButton_cam_step_clicked()
 {
     if (fg_capturing) {
@@ -768,33 +791,21 @@ void MainWindow::on_pushButton_cam_step_clicked()
         return;
     }
 
-    if (sv->input_mode == SV::INPUT_SOURCE::CAM && !sv->isOpened()) {
-        reportError("sv", "Error!", "Cameras haven't opened.");
+    if (svWarning())
         return;
-    }
-    else if (sv->input_mode == SV::INPUT_SOURCE::VIDEO && !re.vr->fileExist()) {
-        reportError("sv", "Error!", "No video is loaded.");
-        return;
-    }
 
     sv->dataExec();
 }
 
 void MainWindow::on_pushButton_cam_capture_clicked()
 {
-    if (sv->input_mode == SV::INPUT_SOURCE::CAM && !sv->isOpened()) {
-        reportError("sv", "Error!", "Cameras haven't opened.");
+    if (svWarning())
         return;
-    }
-    else if (sv->input_mode == SV::INPUT_SOURCE::VIDEO && !re.vr->fileExist()) {
-        reportError("sv", "Error!", "No video is loaded.");
-        return;
-    }
 
     fg_capturing = true;
     f_sv.setPaused(false);
-    if (!fg_running)
-        threadProcessing();
+
+    exec();
 }
 
 void MainWindow::on_pushButton_cam_stop_clicked()
@@ -952,10 +963,8 @@ void MainWindow::closeFormCalib(void)
 
 void MainWindow::requestImage(char CCD)
 {
-    if (!sv->isOpened()) {
-        reportError("sv", "Error!", "Cameras haven't opened.");
+    if (svWarning())
         return;
-    }
 
     switch (CCD) {
     case 'L':
@@ -1092,16 +1101,16 @@ void MainWindow::on_pushButton_lrf_request_clicked()
     fg_buffering = true;
     f_lrf_buf.setPaused(false);
 //        lrf->bufRunning();
-    if (!fg_running)
-        threadProcessing();
+
+    exec();
 }
 
 void MainWindow::on_pushButton_lrf_retrieve_clicked()
 {
     fg_acquiring = true;
     f_lrf.setPaused(false);
-    if (!fg_running)
-        threadProcessing();
+
+    exec();
 }
 
 void MainWindow::on_pushButton_lrf_stop_clicked()
@@ -1468,8 +1477,8 @@ void MainWindow::on_pushButton_radar_bus_on_clicked()
 
     fg_retrieving = true;
     f_radar.setPaused(false);
-    if (!fg_running)
-        threadProcessing();
+
+    exec();
 }
 
 void MainWindow::on_pushButton_radar_bus_off_clicked()
@@ -1517,6 +1526,27 @@ void MainWindow::on_checkBox_radar_topview_clicked(bool checked)
         }
     }
     ui->label_top_view_radar_long->setPixmap(QPixmap::fromImage(QImage::QImage(rc->topview.data, rc->topview.cols, rc->topview.rows, QImage::Format_RGBA8888)).scaled(900, 600));
+}
+
+void MainWindow::on_pushButton_start_all_clicked()
+{
+    if (sv->input_mode == SV::INPUT_SOURCE::CAM && rc->input_mode == RADAR::INPUT_SOURCE::ESR) {
+        on_pushButton_cam_open_clicked();
+
+        on_pushButton_radar_open_clicked();
+        rc->busOn();
+        on_pushButton_radar_write_clicked();
+    }
+
+    if (svWarning())
+        return;
+
+    fg_capturing = true;
+    f_sv.setPaused(false);
+    fg_retrieving = true;
+    f_radar.setPaused(false);
+
+    exec();
 }
 
 void MainWindow::on_pushButton_stop_all_clicked()
@@ -1622,6 +1652,24 @@ void MainWindow::on_pushButton_sv_load_data_clicked()
     sv->loadVideo();
 }
 
+void MainWindow::on_pushButton_radar_load_data_clicked()
+{
+    rc->loadData();
+}
+
+void MainWindow::on_pushButton_lrf_load_data_clicked()
+{
+
+}
+
+void MainWindow::on_pushButton_all_load_data_clicked()
+{
+    re.setRecordType(RECORD_TYPE::ALL);
+    sv->input_mode = SV::INPUT_SOURCE::VIDEO;
+    rc->input_mode = RECORD_TYPE::TXT;
+    re.loadData();
+}
+
 void MainWindow::videoIsEnd()
 {
     if (re.vr->fg_data_end)
@@ -1648,14 +1696,4 @@ void MainWindow::dataIsEnd()
     report("Data is end.");
 
     re.tr->fg_data_end = true;
-}
-
-void MainWindow::on_pushButton_radar_load_data_clicked()
-{
-    rc->loadData();
-}
-
-void MainWindow::on_pushButton_lrf_load_data_clicked()
-{
-
 }
