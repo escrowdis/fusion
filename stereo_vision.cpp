@@ -32,6 +32,8 @@ stereo_vision::stereo_vision() : TopView(20, 200, 3000, 19.8, 1080, 750, 270, 12
         data[r] = new StereoData[IMG_W];
     }
 
+    createLUT();
+
     // input source
     input_mode = SV::INPUT_SOURCE::CAM;
 
@@ -65,9 +67,38 @@ stereo_vision::~stereo_vision()
     delete[] objects;
     delete[] objects_display;
 
+    delete[] LUT_grid_row;
+    delete[] LUT_grid_col;
+
     close();
     sgbm.release();
     bm.release();
+}
+
+void stereo_vision::createLUT()
+{
+    LUT_grid_row = new int[max_distance + 1];
+    LUT_grid_col = new int[IMG_W];
+
+    for (int k = 0; k < max_distance + 1; k++)
+        LUT_grid_row[k] = 1.0 * log10(1.0 * k / min_distance) / log10(1.0 + this->k);
+
+    for (int k = 0; k < IMG_W; k++)
+        LUT_grid_col[k] = 1.0 * k / c;
+}
+
+int stereo_vision::corrGridRow(int k)
+{
+    int m = k > max_distance ? max_distance : k;
+    if (m <= 0)
+        return -1;
+    return LUT_grid_row[m];
+}
+
+int stereo_vision::corrGridCol(int k)
+{
+    int m = k > IMG_W ? IMG_W : k;
+    return LUT_grid_col[m];
 }
 
 void stereo_vision::resetOpen(int device_index_L, int device_index_R)
@@ -407,14 +438,10 @@ void stereo_vision::depthCalculation()
     lock_sv.unlock();
 }
 
-bool stereo_vision::dataExec()
+bool stereo_vision::dataIn()
 {
-#ifdef debug_info_sv
-    qDebug()<<"run";
-#endif
-
-    // camera capturing
     switch (input_mode) {
+    // camera capturing
     case SV::INPUT_SOURCE::CAM:
         camCapture();
         break;
@@ -436,6 +463,18 @@ bool stereo_vision::dataExec()
         re.recordData(img_merge);
     }
 
+    return true;
+}
+
+bool stereo_vision::dataExec()
+{
+#ifdef debug_info_sv
+    qDebug()<<"run";
+#endif
+
+    if (!dataIn())
+        return false;
+
     // camera calibration
     if (fg_calib) {
         if (!rectifyImage())
@@ -456,6 +495,7 @@ bool stereo_vision::dataExec()
         if (fg_topview) {
             pointProjectTopView();
             blob(3000);
+            cuboid();
 
             if (fg_reproject)
                 pointProjectImage();
@@ -637,10 +677,12 @@ void stereo_vision::pointProjectTopView()
 
             // porject each 3D point onto a topview
             if (data[r][c].disp > 0) {
-                grid_row = 1.0 * log10(1.0 * data[r][c].Z / min_distance) / log10(1.0 + k);
-//                grid_col = 360.0 * img_col_half * atan((c / (double)(IMG_W / img_col) - img_col_half) / data[r][c].Z) / (view_angle * CV_PI) + img_col_half;
-//                grid_col = 1.0 * c * ratio_col; //**// old
-                grid_col = 1.0 * c / this->c;
+                grid_row = corrGridRow(data[r][c].Z);
+                grid_col = corrGridCol(c);
+//                grid_row = 1.0 * log10(1.0 * data[r][c].Z / min_distance) / log10(1.0 + k);
+////                grid_col = 360.0 * img_col_half * atan((c / (double)(IMG_W / img_col) - img_col_half) / data[r][c].Z) / (view_angle * CV_PI) + img_col_half;
+////                grid_col = 1.0 * c * ratio_col; //**// old
+//                grid_col = 1.0 * c / this->c;
 
                 // display each point on topview
                 if (fg_topview_plot_points)

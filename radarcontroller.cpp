@@ -20,6 +20,8 @@ RadarController::RadarController(float aim_angle) : TopView(1, 100, 20470, 102.3
 
     img_cols = 900;
 
+    createLUT();
+
     img_center = cv::Point(img_cols / 2, img_rows / 2);
 
     obj_rect = cv::Point(20, 40);
@@ -42,9 +44,45 @@ RadarController::~RadarController()
 {
     canClose(h);
 
+    delete[] LUT_grid_row;
+    delete[] LUT_grid_col;
+
     delete[] esr_obj;
 
     delete[] item;
+}
+
+void RadarController::createLUT()
+{
+    LUT_grid_row = new int[max_distance];
+    LUT_grid_col = new int[chord_length];
+
+    col_shift_LUT = 0.5 * chord_length;
+
+    for (int k = 0; k < max_distance; k++)
+        LUT_grid_row[k] = 1.0 * log10(1.0 * k / min_distance) / log10(1.0 + k);
+
+    for (int k = 0; k < chord_length; k++)
+        LUT_grid_col[k] = (1.0 * k) * img_col / chord_length;
+}
+
+int RadarController::corrGridRow(int k)
+{
+    int m = k > max_distance ? max_distance : k;
+    if (m <= 0)
+        return -1;
+    return LUT_grid_row[m];
+}
+
+int RadarController::corrGridCol(int k)
+{
+
+    int m = k + col_shift_LUT;
+    if (m > chord_length)
+        m = chord_length;
+    else if (m <= 0)
+        m = 0;
+    return LUT_grid_col[m];
 }
 
 bool RadarController::open()
@@ -334,8 +372,10 @@ void RadarController::pointProjectTopView()
     int grid_row, grid_col;
     for (int m = 0; m < OBJECT_NUM; m++) {
         if (esr_obj[m].status >= obj_status_filtered) {
-            grid_row = 1.0 * log10(100.0 * esr_obj[m].z / min_distance) / log10(1.0 + k);
-            grid_col = (100.0 * esr_obj[m].x + 0.5 * chord_length) * img_col / chord_length;
+            grid_row = corrGridRow(100.0 * esr_obj[m].z);
+            grid_col = corrGridCol(100.0 * esr_obj[m].x);
+//            grid_row = 1.0 * log10(100.0 * esr_obj[m].z / min_distance) / log10(1.0 + k);
+//            grid_col = (100.0 * esr_obj[m].x + 0.5 * chord_length) * img_col / chord_length;
             int grid_row_t = img_row - grid_row - 1;
             int grid_col_t = grid_col;
             // mark each point belongs to which cell

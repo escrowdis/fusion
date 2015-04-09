@@ -54,6 +54,8 @@ public:
 
     void dataExec();
 
+    bool fusedTopview() {return fg_topview;}
+
     void loadData();
 
     // status
@@ -101,6 +103,14 @@ public:
     cv::Mat img_radar_BG;
 
 private:
+    int* LUT_grid_row;
+    int* LUT_grid_col;
+
+    void createLUT();
+    int corrGridRow(int k);
+    int corrGridCol(int k);
+    int col_shift_LUT;
+
     void reset();
 
     const static long id_esr = 0x4F1;

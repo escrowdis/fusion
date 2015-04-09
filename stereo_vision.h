@@ -31,7 +31,7 @@ extern recording re;
 #define IMG_DIS_DISP_H 240
 
 namespace SV {
-enum STEREO_MATCH{
+enum STEREO_MATCH {
     SGBM,
     BM
 };
@@ -65,6 +65,8 @@ public:
     bool loadRemapFile(int cam_focal_length, double base_line);
 
     bool dataExec();
+
+    bool fusedTopview() {return fg_topview && fg_stereoMatch;}
 
     // RGB images for displaying
     cv::Mat img_L;
@@ -104,11 +106,15 @@ public:
     // data - stereo vision ========
     struct StereoData
     {
+        // IMAGE -------------
         short int disp;
+
         // World coordinate system (WCS)
         int X;
         int Y;
         int Z;
+
+        // GRIDMAP -----------
         std::pair<int, int> grid_id;    // located cell in topview
 
         StereoData() {
@@ -167,23 +173,23 @@ public:
 
     struct objInformation
     {
+        // GRIDMAP -----------
+        int pts_num;
+
         bool labeled;                   // filtered object
-
-        std::pair<int, int> tl;         // Top left (row, col)
-
-        std::pair<int, int> br;         // Bottom right (row, col)
-
-        std::pair<int, int> center;     // Center point of object in image (row, col)
-
-        float angle;                    // orientation degree. Middle is zero. (degree)
-
-        float range;                    // (cm)
 
         int avg_Z;                      // average depth
 
-        int pts_num;
-
         int closest_count;              // smaller number represents closer to vehicle
+
+        // IMAGE -------------
+        std::pair<int, int> tl;         // Top left (row, col)
+        std::pair<int, int> br;         // Bottom right (row, col)
+        std::pair<int, int> center;     // Center point of object in image (row, col)
+
+        float angle;                    // orientation degree. Middle is zero. (degree)
+        float range;                    // (cm)
+
 
         objInformation() {
             labeled = false;
@@ -207,9 +213,18 @@ public:
     void loadVideo();
 
 private:
+    int* LUT_grid_row;
+    int* LUT_grid_col;
+
+    void createLUT();
+    int corrGridRow(int k);
+    int corrGridCol(int k);
+
     void resetOpen(int device_index_L, int device_index_R);
 
     void camCapture();
+
+    bool dataIn();
 
     bool rectifyImage();
 
