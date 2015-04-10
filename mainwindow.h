@@ -247,6 +247,10 @@ private:
 
     // Recording ==============
     void inputType(int type);
+
+    void loadData(int record_type);
+
+    int sv_frame_count;
     // Recording ============== End
 
 signals:
@@ -309,7 +313,7 @@ private slots:
 
     void on_checkBox_do_depth_clicked(bool checked);
 
-    void svDisplay(cv::Mat *img_L, cv::Mat *img_R, cv::Mat *disp, cv::Mat *disp_pseudo, cv::Mat *topview, cv::Mat *img_detected, int detected_obj);
+    void svDisplay(cv::Mat *img_L, cv::Mat *img_R, cv::Mat *disp, cv::Mat *disp_pseudo, cv::Mat *topview, cv::Mat *img_detected, int detected_obj, int current_frame_count);
     // ======================== End
 
     // Stereo vision param ====

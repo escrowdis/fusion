@@ -514,7 +514,7 @@ bool stereo_vision::dataExec()
     updateDataFroDisplay();
 
     if (t.elapsed() > time_gap) {
-        emit updateGUI(&img_r_L, &img_r_R, &disp, &disp_pseudo, &topview, &img_detected, detected_obj);
+        emit updateGUI(&img_r_L, &img_r_R, &disp, &disp_pseudo, &topview, &img_detected, detected_obj, re.vr->current_frame_count);
         t.restart();
     }
     return true;
@@ -934,11 +934,4 @@ void stereo_vision::updateDataFroDisplay()
         objects_display[i].tl = objects[i].tl;
         lock_sv.unlock();
     }
-}
-
-void stereo_vision::loadVideo()
-{
-    re.setRecordType(RECORD_TYPE::VIDEO);
-    input_mode = SV::INPUT_SOURCE::VIDEO;
-    re.loadData();
 }

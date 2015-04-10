@@ -425,10 +425,3 @@ void RadarController::pointProjectTopView()
     }
 #endif
 }
-
-void RadarController::loadData()
-{
-    re.setRecordType(RECORD_TYPE::TXT);
-    input_mode = RECORD_TYPE::TXT;
-    re.loadData();
-}

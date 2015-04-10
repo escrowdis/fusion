@@ -1,6 +1,6 @@
 #include "videorecord.h"
 
-videoRecord::videoRecord()
+videoRecord::videoRecord(int img_h, int img_w)
 {
     fg_record = false;
 
@@ -9,7 +9,7 @@ videoRecord::videoRecord()
     fg_file_established = false;
 
     // default setting
-    defaultBasicInfo();
+    defaultBasicInfo(img_h, img_w);
 }
 
 videoRecord::~videoRecord()
@@ -32,21 +32,23 @@ void videoRecord::setPath(QString str, bool fg_str_is_file)
     }
 }
 
-void videoRecord::defaultBasicInfo()
+void videoRecord::defaultBasicInfo(int img_h, int img_w)
 {
-    std::pair<int, int> img_size = std::pair<int, int>(2 * 640, 480);   // (col, row)
     ex = cv::VideoWriter::fourcc('D', 'I', 'V', 'X');
     fps = 24;
-    s = cv::Size(img_size.first, img_size.second);
+    s = cv::Size(2 * img_w, img_h);
 }
 
-//void videoRecord::getBasicInfo(cv::VideoCapture *cap)
-//{
+void videoRecord::getBasicInfo(cv::VideoCapture *cap)
+{
+    ex = cv::VideoWriter::fourcc('D', 'I', 'V', 'X');
 //    ex = static_cast<int>(cap->get(cv::CAP_PROP_FOURCC));
-//    fps = cap->get(cv::CAP_PROP_FPS);
-//    s = cv::Size(2 * cap->get(cv::CAP_PROP_FRAME_WIDTH),
-//                          cap->get(cv::CAP_PROP_FRAME_HEIGHT));
-//}
+    fps = cap->get(cv::CAP_PROP_FPS);
+    s = cv::Size(cap->get(cv::CAP_PROP_FRAME_WIDTH),
+                          cap->get(cv::CAP_PROP_FRAME_HEIGHT));
+    frame_count = cap->get(cv::CAP_PROP_FRAME_COUNT);
+    current_frame_count = 0;
+}
 
 void videoRecord::createVideo()
 {
@@ -128,6 +130,8 @@ bool videoRecord::segmentTwoImages(cv::Mat *img_1, cv::Mat *img_2, cv::Size s)
         }
     }
 
+    current_frame_count++;
+
     return true;
 }
 
@@ -142,6 +146,8 @@ bool videoRecord::loadVideo(QString str, bool fg_str_is_file)
     if (!cap.isOpened())
         return false;
 
+    getBasicInfo(&cap);
+
 //    while (true) {
 //        cv::Mat img;
 //        cap>>img;
@@ -150,5 +156,6 @@ bool videoRecord::loadVideo(QString str, bool fg_str_is_file)
 //        cv::imshow("D", img);
 //        cv::waitKey(10);
 //    }
+
     return true;
 }

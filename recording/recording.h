@@ -22,13 +22,13 @@ enum RECORD_TYPE {
 class recording
 {
 public:
-    recording();
+    recording(int img_h, int img_w);
 
     ~recording();
 
     void setParentFolder(QString folder);
 
-    void setRecordType(RECORD_TYPE type);
+    void setRecordType(int record_type);
 
     //**// can't work 2015.04.06
 //    void setBasicInfo(cv::VideoCapture *cap);

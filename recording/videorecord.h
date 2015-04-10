@@ -10,14 +10,11 @@
 class videoRecord
 {
 public:
-    videoRecord();
+    videoRecord(int img_h, int img_w);
 
     ~videoRecord();
 
     bool fileExist() {return !file_path.isEmpty();}
-
-    //**// can't work 2015.04.06
-//    void getBasicInfo(cv::VideoCapture *cap);
 
     void setPath(QString str, bool fg_str_is_file);
 
@@ -39,8 +36,14 @@ public:
 
     cv::VideoCapture cap;
 
+    int frame_count;
+
+    int current_frame_count;
+
 private:
-    void defaultBasicInfo();
+    void defaultBasicInfo(int img_h, int img_w);
+
+    void getBasicInfo(cv::VideoCapture *cap);
 
     QString file_path;
 

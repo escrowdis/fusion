@@ -56,8 +56,6 @@ public:
 
     bool fusedTopview() {return fg_topview;}
 
-    void loadData();
-
     // status
     int input_mode;
 

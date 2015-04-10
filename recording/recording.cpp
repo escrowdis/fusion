@@ -1,12 +1,12 @@
 #include "recording.h"
 
-recording::recording()
+recording::recording(int img_h, int img_w)
 {
     fg_parent_existed = false;
 
     fg_folder_existed = false;
 
-    vr = new videoRecord();
+    vr = new videoRecord(img_h, img_w);
 
     tr = new textRecord();
 }
@@ -44,9 +44,9 @@ void recording::createFolder()
     fg_folder_existed = true;
 }
 
-void recording::setRecordType(RECORD_TYPE type)
+void recording::setRecordType(int record_type)
 {
-    record_type = type;
+    this->record_type = record_type;
 }
 
 //void recording::setBasicInfo(cv::VideoCapture *cap)

@@ -210,8 +210,6 @@ public:
     void updateDataFroDisplay();
     // ============================= End
 
-    void loadVideo();
-
 private:
     int* LUT_grid_row;
     int* LUT_grid_col;
@@ -322,7 +320,7 @@ private slots:
     // ============================== End
 
 signals:
-    void updateGUI(cv::Mat *img_L, cv::Mat *img_R, cv::Mat *disp, cv::Mat *disp_pseudo, cv::Mat *topview, cv::Mat *img_detected, int detected_obj);
+    void updateGUI(cv::Mat *img_L, cv::Mat *img_R, cv::Mat *disp, cv::Mat *disp_pseudo, cv::Mat *topview, cv::Mat *img_detected, int detected_obj, int current_frame_count);
 
     void updateForm(int mode, std::vector<int> params);
 

@@ -9,7 +9,7 @@ QReadWriteLock lock_radar;
 #include <QDir>
 QDir project_path;
 #include "recording/recording.h"
-recording re;
+recording re(IMG_H, IMG_W);
 
 int main(int argc, char *argv[])
 {

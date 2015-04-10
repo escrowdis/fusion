@@ -96,8 +96,9 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->label_cam_img_R->setStyleSheet("background-color:silver");
     ui->label_disp->setStyleSheet("background-color:silver");
     ui->label_sv_detected->setStyleSheet("background-color:silver");
+    ui->label_sv_frame_count->setVisible(false);
 
-    QObject::connect(sv, SIGNAL(updateGUI(cv::Mat *, cv::Mat *, cv::Mat *, cv::Mat *, cv::Mat *, cv::Mat *, int)), this, SLOT(svDisplay(cv::Mat *, cv::Mat *, cv::Mat *, cv::Mat *, cv::Mat *, cv::Mat *, int)));
+    QObject::connect(sv, SIGNAL(updateGUI(cv::Mat *, cv::Mat *, cv::Mat *, cv::Mat *, cv::Mat *, cv::Mat *, int, int)), this, SLOT(svDisplay(cv::Mat *, cv::Mat *, cv::Mat *, cv::Mat *, cv::Mat *, cv::Mat *, int, int)));
     QObject::connect(sv, SIGNAL(videoEnd(void)), this, SLOT(videoIsEnd(void)));
 
     on_checkBox_pseudo_color_clicked(ui->checkBox_pseudo_color->isChecked());
@@ -709,11 +710,12 @@ void MainWindow::camOpen()
     }
 }
 
-void MainWindow::svDisplay(cv::Mat *img_L, cv::Mat *img_R, cv::Mat *disp, cv::Mat *disp_pseudo, cv::Mat *topview, cv::Mat *img_detected, int detected_obj)
+void MainWindow::svDisplay(cv::Mat *img_L, cv::Mat *img_R, cv::Mat *disp, cv::Mat *disp_pseudo, cv::Mat *topview, cv::Mat *img_detected, int detected_obj, int current_frame_count)
 {
     ui->label_cam_img_L->setPixmap(QPixmap::fromImage(QImage::QImage(img_L->data, img_L->cols, img_L->rows, 3 * img_L->cols, QImage::Format_RGB888)).scaled(IMG_DIS_W, IMG_DIS_H));
     ui->label_cam_img_R->setPixmap(QPixmap::fromImage(QImage::QImage(img_R->data, img_R->cols, img_R->rows, 3 * img_R->cols, QImage::Format_RGB888)).scaled(IMG_DIS_W, IMG_DIS_H));
     ui->label_sv_detected_obj->setText(QString::number(detected_obj));
+    ui->label_sv_frame_count->setText(QString::number(current_frame_count) + " / " + QString::number(sv_frame_count) + " frames");
 
     if (ui->checkBox_do_depth->isChecked()) {    
         lock_sv.lockForRead();
@@ -761,6 +763,7 @@ void MainWindow::on_pushButton_cam_open_clicked()
 {
     camOpen();
     sv->input_mode = SV::INPUT_SOURCE::CAM;
+    ui->label_sv_frame_count->setVisible(false);
     on_pushButton_cam_step_clicked();
 }
 
@@ -1651,16 +1654,26 @@ void MainWindow::on_pushButton_all_record_clicked()
     }
 }
 
+void MainWindow::loadData(int record_type)
+{
+    re.setRecordType(record_type);
+    inputType(INPUT_TYPE::RECORDING);
+    re.loadData();
+    if (record_type == RECORD_TYPE::VIDEO || record_type == RECORD_TYPE::ALL) {
+        sv_frame_count = re.vr->frame_count;
+        ui->label_sv_frame_count->setText("0 / " + QString::number(sv_frame_count) + " frames");
+        ui->label_sv_frame_count->setVisible(true);
+    }
+}
+
 void MainWindow::on_pushButton_sv_load_data_clicked()
 {
-    sv->loadVideo();
-    inputType(INPUT_TYPE::RECORDING);
+    loadData(RECORD_TYPE::VIDEO);
 }
 
 void MainWindow::on_pushButton_radar_load_data_clicked()
 {
-    rc->loadData();
-    inputType(INPUT_TYPE::RECORDING);
+    loadData(RECORD_TYPE::TXT);
 }
 
 void MainWindow::on_pushButton_lrf_load_data_clicked()
@@ -1670,11 +1683,7 @@ void MainWindow::on_pushButton_lrf_load_data_clicked()
 
 void MainWindow::on_pushButton_all_load_data_clicked()
 {
-    re.setRecordType(RECORD_TYPE::ALL);
-    sv->input_mode = SV::INPUT_SOURCE::VIDEO;
-    rc->input_mode = RECORD_TYPE::TXT;
-    inputType(INPUT_TYPE::RECORDING);
-    re.loadData();
+    loadData(RECORD_TYPE::ALL);
 }
 
 void MainWindow::videoIsEnd()

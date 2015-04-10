@@ -1183,6 +1183,19 @@ parameters</string>
        <string>Detected image</string>
       </property>
      </widget>
+     <widget class="QLabel" name="label_sv_frame_count">
+      <property name="geometry">
+       <rect>
+        <x>480</x>
+        <y>520</y>
+        <width>190</width>
+        <height>16</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string/>
+      </property>
+     </widget>
      <zorder>label_top_view_bg</zorder>
      <zorder>label_top_view_sv</zorder>
      <zorder>label_disp</zorder>
@@ -1191,6 +1204,7 @@ parameters</string>
      <zorder>label_cam_img_R</zorder>
      <zorder>label_cam_img_L</zorder>
      <zorder>label_sv_detected</zorder>
+     <zorder>label_sv_frame_count</zorder>
     </widget>
     <widget class="QWidget" name="tab_6">
      <attribute name="title">
