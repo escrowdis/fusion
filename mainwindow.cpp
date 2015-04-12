@@ -816,7 +816,7 @@ void MainWindow::on_pushButton_cam_stop_clicked()
     fg_capturing = false;
     f_sv.setPaused(true);
 
-    while (!f_sv.isPaused()) {}
+    while (f_sv.isRunning()) {}
     threadCheck();
 }
 
@@ -1123,7 +1123,7 @@ void MainWindow::on_pushButton_lrf_stop_clicked()
     f_lrf.setPaused(true);
     f_lrf_buf.setPaused(true);
 
-    while (!(f_lrf.isPaused() && f_lrf_buf.isPaused())) {}
+    while (f_lrf.isRunning() && f_lrf_buf.isRunning()) {}
     lrf->stopRetrieve();
 
     threadCheck();
@@ -1488,7 +1488,7 @@ void MainWindow::on_pushButton_radar_bus_off_clicked()
 {
     fg_retrieving = false;
     f_radar.setPaused(true);
-    while (!f_radar.isPaused()) {}
+    while (f_radar.isRunning()) {}
 
     rc->busOff();
     threadCheck();
@@ -1692,8 +1692,6 @@ void MainWindow::videoIsEnd()
         return;
 
     on_pushButton_cam_stop_clicked();
-
-    while (f_sv.isRunning()) {}
 
     report("Video is end.");
 

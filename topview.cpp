@@ -16,7 +16,7 @@ TopView::TopView(int thresh_free_space, int min_distance, int max_distance,
 
     c = 6.4;
 
-    k = 0.02;
+    k = 0.025;
 
     this->thresh_free_space = thresh_free_space;
 
@@ -79,7 +79,8 @@ void TopView::changeParams(float view_angle, int chord_length)
 void TopView::pseudoColorTable()
 {
     // ==== Produce pseudo-color table
-    color_table = new QImage(max_distance - min_distance, 12, QImage::Format_RGB888) ;
+    int total_color = max_distance - min_distance + 1;
+    color_table = new QImage(total_color, 12, QImage::Format_RGB888) ;
 
     float hue_start_angle = 0.0;
     float hue_end_angle = 240.0;
@@ -87,7 +88,7 @@ void TopView::pseudoColorTable()
     float h = 0.0;
     float s = 1.0;
     float v = 255.0;
-    float step = (hue_end_angle - hue_start_angle) / (max_distance - min_distance);
+    float step = (hue_end_angle - hue_start_angle) / (total_color);
 
     float f;
     int hi, p, q, t;

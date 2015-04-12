@@ -676,7 +676,7 @@ void stereo_vision::pointProjectTopView()
             data[r][c].grid_id = std::pair<int, int>(-1, -1);
 
             // porject each 3D point onto a topview
-            if (data[r][c].disp > 0) {
+            if (data[r][c].Z >= min_distance && data[r][c].Z <= max_distance) {
                 grid_row = corrGridRow(data[r][c].Z);
                 grid_col = corrGridCol(c);
 //                grid_row = 1.0 * log10(1.0 * data[r][c].Z / min_distance) / log10(1.0 + k);
