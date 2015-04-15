@@ -845,7 +845,8 @@ void MainWindow::threadProcessing()
         if (fg_capturing && !f_sv.isRunning()) {
 //            sv->dataExec();
             f_sv = QtConcurrent::run(sv, &stereo_vision::dataExec);
-            ui->label_sv_proc->setText(QString::number(t_proc_sv.restart()));
+            ui->label_sv_proc->setText(QString::number(sv->t_p.elapsed()));
+            sv->fg_counting = false;
             qApp->processEvents();
         }
 
@@ -853,7 +854,7 @@ void MainWindow::threadProcessing()
         if (fg_acquiring && !f_lrf.isRunning()) {
 //            lrf->dataExec();
             f_lrf = QtConcurrent::run(lrf, &lrf_controller::dataExec);
-            ui->label_lrf_proc->setText(QString::number(t_proc_lrf.restart()));
+            ui->label_lrf_proc->setText(QString::number(lrf->t_p.elapsed()));
             qApp->processEvents();
         }
 
@@ -861,7 +862,7 @@ void MainWindow::threadProcessing()
         if (fg_buffering && lrf->bufNotFull() && !f_lrf_buf.isRunning()) {
 //            lrf->pushToBuf();
             f_lrf_buf = QtConcurrent::run(lrf, &lrf_controller::pushToBuf);
-            ui->label_lrf_buf_proc->setText(QString::number(t_proc_lrf_buf.restart()));
+            ui->label_lrf_buf_proc->setText(QString::number(lrf->t_p_buf.elapsed()));
             qApp->processEvents();
         }
 
@@ -869,7 +870,10 @@ void MainWindow::threadProcessing()
         if (fg_retrieving && !f_radar.isRunning()) {
 //            rc->dataExec();
             f_radar = QtConcurrent::run(rc, &RadarController::dataExec);
-            ui->label_radar_proc->setText(QString::number(t_proc_radar.restart()));
+            if (rc->fg_t_display) {
+                ui->label_radar_proc->setText(QString::number(rc->t_p.elapsed()));
+                rc->fg_counting = false;
+            }
             qApp->processEvents();
         }
 

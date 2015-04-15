@@ -472,6 +472,10 @@ bool stereo_vision::dataExec()
     qDebug()<<"run";
 #endif
 
+    if (!fg_counting) {
+        t_p.restart();
+        fg_counting = true;
+    }
     if (!dataIn())
         return false;
 

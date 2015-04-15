@@ -68,6 +68,9 @@ public:
 
     bool fusedTopview() {return fg_topview && fg_stereoMatch;}
 
+    QTime t_p;                          // process time of all exec.
+    bool fg_counting;
+
     // RGB images for displaying
     cv::Mat img_L;
     cv::Mat img_R;

@@ -127,6 +127,7 @@ void lrf_controller::stopRetrieve()
 
 void lrf_controller::pushToBuf()
 {
+    t_p_buf.restart();
     if (!serial->waitForReadyRead(10)) {
         return;
     }
@@ -219,6 +220,7 @@ void lrf_controller::reset()
 
 bool lrf_controller::dataExec()
 {
+    t_p.restart();
 //    reset();
     if (retrieveData(lrf_data)) {
         emit updateGUI(lrf_data, &display_lrf);

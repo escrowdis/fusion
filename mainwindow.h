@@ -60,8 +60,6 @@ public:
 private:
     Ui::MainWindow *ui;
 
-    QTime t_proc_sv, t_proc_lrf, t_proc_lrf_buf, t_proc_radar;
-
     void reportError(QString part, QString level, QString content);
 
     void report(QString);

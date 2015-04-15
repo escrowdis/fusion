@@ -56,6 +56,10 @@ public:
 
     bool fusedTopview() {return fg_topview;}
 
+    QTime t_p;                          // process time of all exec.
+    bool fg_counting;
+    bool fg_t_display;
+
     // status
     int input_mode;
 
@@ -110,6 +114,8 @@ private:
     int col_shift_LUT;
 
     void reset();
+
+    bool dataIn();
 
     const static long id_esr = 0x4F1;
     const static int dlc_esr = 8;

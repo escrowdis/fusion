@@ -158,18 +158,18 @@ void RadarController::busOff()
     stat = canClose(h);
 }
 
-void RadarController::dataExec()
+bool RadarController::dataIn()
 {
-    reset();
-
+    bin.clear();
     switch (input_mode) {
     case RADAR::INPUT_SOURCE::ESR:
         stat = canReadWait(h, &id, &can_data[0], &dlc, &flag, &time, 0xff);
         if (stat != canOK) {
             std::cout<<"read FAILED"<<std::endl;
-            return;
+            return false;
         }
 
+        b.reset();
         for (int i = 0; i < dlc; i++) {
             b = can_data[i];
             bin += b.to_string();
@@ -194,7 +194,24 @@ void RadarController::dataExec()
 
     retrievingData();
 
-    if (fg_data_in) {
+    if (id == 0x53F)
+        return true;
+    return false;
+}
+
+void RadarController::dataExec()
+{
+    if (!fg_counting) {
+        t_p.restart();
+        fg_counting = true;
+        fg_t_display = false;
+    }
+    bool fg_all_data_in = dataIn();
+
+    if (fg_all_data_in)
+        fg_t_display = true;
+
+    if (fg_all_data_in && fg_data_in) {
         pointDisplayFrontView();
 
         if (fg_topview)
@@ -205,6 +222,8 @@ void RadarController::dataExec()
 
             t.restart();
         }
+
+        reset();
     }
 }
 

@@ -6,6 +6,7 @@
 #include <iostream>
 #include <QString>
 #include <QBuffer>
+#include <QTime>
 
 // thread control
 #include <QReadWriteLock>
@@ -64,6 +65,8 @@ public:
 
     ~lrf_controller();
 
+    QTime t_p, t_p_buf;
+
     double *lrf_data;
 
     cv::Mat display_lrf;
@@ -105,7 +108,6 @@ public:
     }
 
 private:
-
     QSerialPort *serial;
 
     unsigned char data_raw[LENGTH_RAW_DATA_ONCE - LENGTH_HEADER_ONCE];
