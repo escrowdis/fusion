@@ -7,6 +7,7 @@
 #include <QFileDialog>
 #include <QDebug>
 
+#include <fstream>
 #include <iostream>
 
 class textRecord
@@ -28,11 +29,9 @@ public:
 
     bool fg_data_end;
 
-    QTextStream out;
+    std::fstream file;
 
-    QTextStream in;
-
-    QFile file;
+    int current_frame_count;
 
 private:
     void defaultBasicInfo();

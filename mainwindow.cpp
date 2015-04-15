@@ -715,7 +715,10 @@ void MainWindow::svDisplay(cv::Mat *img_L, cv::Mat *img_R, cv::Mat *disp, cv::Ma
     ui->label_cam_img_L->setPixmap(QPixmap::fromImage(QImage::QImage(img_L->data, img_L->cols, img_L->rows, 3 * img_L->cols, QImage::Format_RGB888)).scaled(IMG_DIS_W, IMG_DIS_H));
     ui->label_cam_img_R->setPixmap(QPixmap::fromImage(QImage::QImage(img_R->data, img_R->cols, img_R->rows, 3 * img_R->cols, QImage::Format_RGB888)).scaled(IMG_DIS_W, IMG_DIS_H));
     ui->label_sv_detected_obj->setText(QString::number(detected_obj));
-    ui->label_sv_frame_count->setText(QString::number(current_frame_count) + " / " + QString::number(sv_frame_count) + " frames");
+    if (sv->input_mode == SV::INPUT_SOURCE::VIDEO)
+        ui->label_sv_frame_count->setText(QString::number(current_frame_count) + " / " + QString::number(sv_frame_count) + " frames");
+    else if (sv->input_mode == SV::INPUT_SOURCE::CAM)
+        ui->label_sv_frame_count->setText(QString::number(current_frame_count) + " frames");
 
     if (ui->checkBox_do_depth->isChecked()) {    
         lock_sv.lockForRead();
@@ -1564,6 +1567,7 @@ void MainWindow::on_pushButton_stop_all_clicked()
 {
     on_pushButton_cam_stop_clicked();
     on_pushButton_radar_bus_off_clicked();
+    re.tr->file.close();
 }
 
 void MainWindow::on_actionShortcut_triggered()
@@ -1607,6 +1611,8 @@ void MainWindow::on_pushButton_sv_record_clicked()
     // record goes on
     if (!re.vr->fg_record) {
         ui->pushButton_sv_record->setIcon(QIcon(":/icon/record_on.png"));
+        ui->label_sv_frame_count->setText("0");
+        ui->label_sv_frame_count->setVisible(true);
         re.start(RECORD_TYPE::VIDEO);
     }
     // record goes off
@@ -1614,6 +1620,7 @@ void MainWindow::on_pushButton_sv_record_clicked()
         ui->pushButton_sv_record->setIcon(QIcon(":/icon/record_off.png"));
         while (f_sv.isRunning()) {}
         re.stop();
+        ui->label_sv_frame_count->setVisible(false);
     }
 }
 
@@ -1646,6 +1653,8 @@ void MainWindow::on_pushButton_all_record_clicked()
         if (fg_retrieving)
             ui->pushButton_radar_record->setIcon(QIcon(":/icon/record_on.png"));
         ui->pushButton_all_record->setIcon(QIcon(":/icon/all_record_on.png"));
+        ui->label_sv_frame_count->setText("0");
+        ui->label_sv_frame_count->setVisible(true);
         re.start(RECORD_TYPE::ALL);
     }
     // record goes off
@@ -1653,8 +1662,9 @@ void MainWindow::on_pushButton_all_record_clicked()
         ui->pushButton_sv_record->setIcon(QIcon(":/icon/record_off.png"));
         ui->pushButton_radar_record->setIcon(QIcon(":/icon/record_off.png"));
         ui->pushButton_all_record->setIcon(QIcon(":/icon/all_record_off.png"));
-        while (f_radar.isRunning() && f_sv.isRunning()) {}
+        while (f_radar.isRunning() || f_sv.isRunning()) {}
         re.stop();
+        ui->label_sv_frame_count->setVisible(false);
     }
 }
 
@@ -1662,6 +1672,8 @@ void MainWindow::loadData(int record_type)
 {
     re.setRecordType(record_type);
     inputType(INPUT_TYPE::RECORDING);
+    re.vr->fg_data_end = false;
+    re.tr->fg_data_end = false;
     re.loadData();
     if (record_type == RECORD_TYPE::VIDEO || record_type == RECORD_TYPE::ALL) {
         sv_frame_count = re.vr->frame_count;
@@ -1713,6 +1725,7 @@ void MainWindow::dataIsEnd()
 
     report("Data is end.");
 
+    re.tr->file.close();
     re.tr->fg_data_end = true;
 }
 

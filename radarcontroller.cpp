@@ -174,21 +174,53 @@ bool RadarController::dataIn()
             b = can_data[i];
             bin += b.to_string();
         }
+
+        if (re.tr->fg_record) {
+            std::string text;
+            std::string id__;
+            std::stringstream strstream, strstream_1;
+            strstream << id;
+            id__ = strstream.str();
+            std::string frame_record__;
+            if (re.vr->fg_frame_record) {
+                strstream_1 << (int)(re.vr->current_frame_count);
+            }
+            else {
+                strstream_1 << "null";
+            }
+            frame_record__ = strstream_1.str();
+
+            text.append(frame_record__);
+            text.append(",");
+            text.append(id__);
+            text.append(",");
+            text.append(bin);
+            re.recordData(text);
+        }
         break;
     case RADAR::INPUT_SOURCE::TXT:
+        // For synchronization replay
+        if (re.vr->current_frame_count < re.tr->current_frame_count)
+            return false;
+//        std::cout<<re.vr->current_frame_count<<"\t"<<re.tr->current_frame_count<<std::endl;
+
         if (!fg_data_in)
             fg_data_in = true;
-        if (!re.tr->in.atEnd()) {
-            QString text, text_id, text_bin;
-            text = re.tr->file.readLine();
-            text_id = text.section(" ", 0, 0);
-            text_bin = text.section(" ", -1, -1);
-            std::string id__ = text_id.toStdString();
-            this->id = std::atol(id__.c_str());
+        std::string text_raw;
+        QString text, text_frame, text_id, text_bin;
+        if (re.tr->file >> text_raw) {
+            text = QString::fromStdString(text_raw);
+            text_frame = text.section(",", 0, 0);
+            text_id = text.section(",", 1, 1);
+            text_bin = text.section(",", 2, 2);
+            this->id = std::atol(text_id.toStdString().c_str());
             bin = text_bin.toStdString();
+            // For synchronization replay
+            re.tr->current_frame_count = text_frame.toInt();
         }
         else
             emit dataEnd();
+
         break;
     }
 
@@ -229,18 +261,6 @@ void RadarController::dataExec()
 
 void RadarController::retrievingData()
 {
-    if (re.tr->fg_record) {
-        std::string text;
-        std::string id__;
-        std::stringstream strstream;
-        strstream << id;
-        id__ = strstream.str();
-        text.append(id__);
-        text.append(" ");
-        text.append(bin);
-        re.recordData(text);
-    }
-
     if (fg_data_in) {
         int _id;
         if (id >= 0x500 && id <= 0x53F) {

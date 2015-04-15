@@ -8,6 +8,8 @@ videoRecord::videoRecord(int img_h, int img_w)
 
     fg_file_established = false;
 
+    fg_frame_record = false;
+
     // default setting
     defaultBasicInfo(img_h, img_w);
 }
@@ -47,7 +49,6 @@ void videoRecord::getBasicInfo(cv::VideoCapture *cap)
     s = cv::Size(cap->get(cv::CAP_PROP_FRAME_WIDTH),
                           cap->get(cv::CAP_PROP_FRAME_HEIGHT));
     frame_count = cap->get(cv::CAP_PROP_FRAME_COUNT);
-    current_frame_count = 0;
 }
 
 void videoRecord::createVideo()
@@ -55,6 +56,7 @@ void videoRecord::createVideo()
     if (!fg_file_established) {
         if (!writer.isOpened()) {
             writer.open(file_path.toStdString(), ex, fps, s, true);
+            fg_frame_record = true;
         }
 
         fg_file_established = true;
@@ -63,8 +65,10 @@ void videoRecord::createVideo()
 
 bool videoRecord::record(cv::Mat img)
 {
-    if (!fg_file_established)
+    if (!fg_file_established) {
         createVideo();
+        current_frame_count = 0;
+    }
 
     if (fg_record) {
         if (!writer.isOpened())
@@ -78,6 +82,7 @@ bool videoRecord::record(cv::Mat img)
 void videoRecord::stop()
 {
     fg_file_established = false;
+    fg_frame_record = false;
     fg_record = false;
     writer.release();
     cap.release();
@@ -130,8 +135,6 @@ bool videoRecord::segmentTwoImages(cv::Mat *img_1, cv::Mat *img_2, cv::Size s)
         }
     }
 
-    current_frame_count++;
-
     return true;
 }
 
@@ -146,16 +149,8 @@ bool videoRecord::loadVideo(QString str, bool fg_str_is_file)
     if (!cap.isOpened())
         return false;
 
+    current_frame_count = 0;
     getBasicInfo(&cap);
-
-//    while (true) {
-//        cv::Mat img;
-//        cap>>img;
-//        if(img.empty())
-//            break;
-//        cv::imshow("D", img);
-//        cv::waitKey(10);
-//    }
 
     return true;
 }

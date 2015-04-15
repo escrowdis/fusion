@@ -38,7 +38,9 @@ public:
 
     int frame_count;
 
-    int current_frame_count;
+    int current_frame_count;        // start from 0
+
+    bool fg_frame_record;
 
 private:
     void defaultBasicInfo(int img_h, int img_w);

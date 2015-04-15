@@ -28,10 +28,7 @@ void textRecord::setPath(QString str, bool fg_str_is_file)
 
 void textRecord::createText()
 {
-    file.setFileName(file_path);
-    file.open(QIODevice::WriteOnly | QIODevice::Text);
-//    if(!file.isOpen())
-    out.setDevice(&file);
+    file.open(file_path.toStdString(), std::fstream::out | std::fstream::app);
 
     fg_file_established = true;
 //        return;
@@ -43,10 +40,12 @@ bool textRecord::record(std::string data)
         createText();
 
     if (fg_record) {
-        if (out.status() == QTextStream::WriteFailed)
+        if (!file) {
+            std::cout<<"Failed to open txt file for writing."<<std::endl;
             return false;
-        out << QString::fromStdString(data);
-        out << "\n";
+        }
+        file << data;
+        file << "\n";
         return true;
     }
 
@@ -58,13 +57,8 @@ void textRecord::stop()
     fg_file_established = false;
     fg_record = false;
 
-    file.flush();
-    file.reset();
     file.close();
-    out.flush();
-    out.reset();
-    in.flush();
-    in.reset();
+    file.flush();
 }
 
 bool textRecord::loadText(QString str, bool fg_str_is_file)
@@ -73,16 +67,11 @@ bool textRecord::loadText(QString str, bool fg_str_is_file)
 
     if (file_path.isEmpty())
         return false;
-    file.setFileName(file_path);
-    file.open(QIODevice::ReadOnly | QIODevice::Text);
-    if(!file.isOpen())
+    file.open(file_path.toStdString());
+    if(!file)
         return false;
-    in.setDevice(&file);
-//    qDebug()<<"1";
-//    while(!in.atEnd()) {
-//        QString text = file.readLine();
-//        std::cout<<text.toStdString()<<std::endl;
-//    }
+
+    current_frame_count = 0;
 
     return true;
 }

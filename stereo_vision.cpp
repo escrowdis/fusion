@@ -444,8 +444,17 @@ bool stereo_vision::dataIn()
     // camera capturing
     case SV::INPUT_SOURCE::CAM:
         camCapture();
+
+        if (re.vr->fg_record) {
+            cv::Mat img_merge = cv::Mat(IMG_H, 2 * IMG_W, CV_8UC3);
+            re.vr->combineTwoImages(&img_merge, img_L, img_R, cv::Size(img_L.cols, img_L.rows));
+            re.recordData(img_merge);
+        }
         break;
     case SV::INPUT_SOURCE::VIDEO:
+        // For synchronization replay
+        if (re.tr->current_frame_count < re.vr->current_frame_count)
+            return false;
         if (!re.vr->segmentTwoImages(&img_L, &img_R, cv::Size(IMG_W, IMG_H))) {
             emit videoEnd();
             return false;
@@ -457,11 +466,7 @@ bool stereo_vision::dataIn()
         break;
     }
 
-    if (re.vr->fg_record) {
-        cv::Mat img_merge = cv::Mat(IMG_H, 2 * IMG_W, CV_8UC3);
-        re.vr->combineTwoImages(&img_merge, img_L, img_R, cv::Size(img_L.cols, img_L.rows));
-        re.recordData(img_merge);
-    }
+    re.vr->current_frame_count++;
 
     return true;
 }
