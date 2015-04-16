@@ -117,7 +117,6 @@ bool videoRecord::segmentTwoImages(cv::Mat *img_1, cv::Mat *img_2, cv::Size s)
     cap >> img_merge;
     if (img_merge.empty())
         return false;
-
     for (int r = 0 ; r < s.height; r++) {
         cv::Vec3b *pixel_1, *pixel_2;
         cv::Vec3b pixel;

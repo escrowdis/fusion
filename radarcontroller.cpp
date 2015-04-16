@@ -216,7 +216,10 @@ bool RadarController::dataIn()
             this->id = std::atol(text_id.toStdString().c_str());
             bin = text_bin.toStdString();
             // For synchronization replay
-            re.tr->current_frame_count = text_frame.toInt();
+            if (text_frame == "null")
+                re.tr->current_frame_count = -1;
+            else
+                re.tr->current_frame_count = text_frame.toInt();
         }
         else
             emit dataEnd();

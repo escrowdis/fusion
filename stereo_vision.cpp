@@ -453,8 +453,10 @@ bool stereo_vision::dataIn()
         break;
     case SV::INPUT_SOURCE::VIDEO:
         // For synchronization replay
-        if (re.tr->current_frame_count < re.vr->current_frame_count)
-            return false;
+        if (re.tr->current_frame_count < re.vr->current_frame_count) {
+            if (!re.tr->fg_data_end)
+                return false;
+        }
         if (!re.vr->segmentTwoImages(&img_L, &img_R, cv::Size(IMG_W, IMG_H))) {
             emit videoEnd();
             return false;
