@@ -156,8 +156,9 @@ MainWindow::MainWindow(QWidget *parent) :
     // ========================================= End
 
     // mouse control ===========================
-//    QObject::connect(ui->label_cam_img_L, SIGNAL(mXY(int, int)), this, SLOT(mouseXY(int, int)));
+    QObject::connect(ui->label_cam_img_L, SIGNAL(mXY(int, int)), this, SLOT(mouseXY(int, int)));
     QObject::connect(ui->label_disp, SIGNAL(mXY(int, int)), this, SLOT(mouseXY(int, int)));
+    QObject::connect(ui->label_sv_detected, SIGNAL(mXY(int, int)), this, SLOT(mouseXY(int, int)));
     // ========================================= End
 
     re.setParentFolder("data");
@@ -252,7 +253,7 @@ void MainWindow::mouseXY(int x, int y)
     lock_sv.lockForRead();
     mouse_info.sprintf("(x,y) = (%d,%d), Disp. = %d, (X,Y,Z) = (%d,%d,%d)",
                        xx, yy, sv->data[yy][xx].disp,
-                       -1, -1, sv->data[yy][xx].Z); //**// real X, Y, Z
+                       sv->data[yy][xx].X, sv->data[yy][xx].Y, sv->data[yy][xx].Z); //**// real X, Y, Z
     lock_sv.unlock();
     ui->label_depth_info->setText(mouse_info);
 }
@@ -298,8 +299,10 @@ void MainWindow::paramRead()
     ui->comboBox_cam_device_index_R->setCurrentIndex((int) n["port_R"]);
     fin_cam_param->cam_focal_length = (int) n["cam_focal_length"];
     fin_cam_param->base_line = (double) n["base_line"];
+    fin_cam_param->rig_height = (double) n["rig_height"];
     fin_cam_param->focal_length = (double) n["focal_length"];
     ui->comboBox_camera_focal_length->setCurrentIndex(fin_cam_param->cam_focal_length);
+    ui->label_sv_rig_height->setText(QString::number(fin_cam_param->rig_height));
     ui->lineEdit_base_line->setText(QString::number(fin_cam_param->base_line));
     ui->label_sv_focal_length->setText(QString::number(fin_cam_param->focal_length));
 
@@ -355,6 +358,7 @@ void MainWindow::paramWrite()
     fs << "port_R" << ui->comboBox_cam_device_index_R->currentIndex();
     fs << "cam_focal_length" << ui->comboBox_camera_focal_length->currentIndex();
     fs << "focal_length" << sv->cam_param->focal_length;
+    fs << "rig_height" << sv->cam_param->rig_height;
     fs << "base_line" << ui->lineEdit_base_line->text().toDouble();
     fs << "}";
 
@@ -409,9 +413,10 @@ void MainWindow::initialFusedTopView()
 
     ratio = 1.0 * detection_range_pixel / sv->max_distance;
 
-    vehicle.length = 400;
+    // Same as TOYOTA Camry
+    vehicle.length = 485;
 
-    vehicle.width = 180;
+    vehicle.width = 183;
 
     // find max & min detection range in all sensors, so this function shall be called after initialization of all sensors
     max_detection_range = rc->max_distance;
@@ -488,9 +493,9 @@ void MainWindow::updateFusedTopView()
     ui->label_fusion->setPixmap(QPixmap::fromImage(QImage::QImage(fused_topview.data, fused_topview.cols, fused_topview.rows, QImage::Format_RGBA8888)));
 
     // sensor information
-    sensors[0].pos = cv::Point(0, vehicle.length * ratio / 2);
+    sensors[0].pos = cv::Point(0, 75 * ratio);
 
-    sensors[1].pos = cv::Point(0, vehicle.length * ratio / 2);
+    sensors[1].pos = cv::Point(0, vehicle.length / 2 * ratio);
 }
 
 void MainWindow::zoomOutFusedTopView()
@@ -533,6 +538,10 @@ void MainWindow::wheelEvent(QWheelEvent *ev)
 
     updateFusedTopView();
 }
+void MainWindow::dataFused()
+{
+    drawFusedTopView(sv->objects_display, rc->esr_obj);
+}
 
 void MainWindow::drawFusedTopView(stereo_vision::objInformation *d_sv, RadarController::ESR_track_object_info *d_radar)
 {
@@ -541,7 +550,7 @@ void MainWindow::drawFusedTopView(stereo_vision::objInformation *d_sv, RadarCont
     std::string tag;
     int device = 0;
     int range_precision = 3;
-    if (ui->checkBox_fusion_sv->isChecked() && fg_capturing) {
+    if (ui->checkBox_fusion_sv->isChecked() && fg_capturing && sv->fusedTopview()) {
         for (int k = 0; k < sv->obj_nums; k++) {
             if (d_sv[k].labeled) {
                 cv::Point plot_pt;
@@ -554,7 +563,7 @@ void MainWindow::drawFusedTopView(stereo_vision::objInformation *d_sv, RadarCont
     }
 
     device = 1;
-    if (ui->checkBox_fusion_radar->isChecked() && fg_retrieving) {
+    if (ui->checkBox_fusion_radar->isChecked() && fg_retrieving && rc->fusedTopview()) {
         for (int m = 0; m < 64; m++) {
             if (d_radar[m].status >= rc->obj_status_filtered) {
                 cv::Point plot_pt;
@@ -569,10 +578,15 @@ void MainWindow::drawFusedTopView(stereo_vision::objInformation *d_sv, RadarCont
     ui->label_fusion->setPixmap(QPixmap::fromImage(QImage::QImage(fused_topview.data, fused_topview.cols, fused_topview.rows, QImage::Format_RGBA8888)));
 }
 
-void MainWindow::pointTransformTopView(cv::Point sensor_pos, float range, float angle, cv::Point *output)
+float MainWindow::pointTransformTopView(cv::Point sensor_pos, float range, float angle, cv::Point *output)
 {
-    output->x = vehicle.VCP.x + (range * sin(angle * CV_PI / 180.0) * ratio + sensor_pos.x);
-    output->y = vehicle.VCP.y - (range * cos(angle * CV_PI / 180.0) * ratio + sensor_pos.y);
+    float x_tmp, y_tmp; // (cm)
+    x_tmp = 100.0 * range * sin(angle * CV_PI / 180.0);
+    y_tmp = 100.0 * range * cos(angle * CV_PI / 180.0);
+    output->x = vehicle.VCP.x + (x_tmp * ratio + sensor_pos.x);
+    output->y = vehicle.VCP.y - (y_tmp * ratio + sensor_pos.y);
+
+    return sqrt(pow((double)(x_tmp + sensor_pos.x), 2) + pow((double)(y_tmp + sensor_pos.y), 2));
 }
 
 void MainWindow::radarDisplayTopViewBG()
@@ -670,9 +684,10 @@ void MainWindow::lrfDisplay(double *lrf_data, cv::Mat *display_lrf)
 
 void MainWindow::retrieveMatchParam()
 {
-    sv->cam_param->cam_focal_length   = fin_cam_param->cam_focal_length;
-    sv->cam_param->base_line          = fin_cam_param->base_line;
-    sv->cam_param->focal_length       = fin_cam_param->focal_length;
+    sv->cam_param->cam_focal_length     = fin_cam_param->cam_focal_length;
+    sv->cam_param->base_line            = fin_cam_param->base_line;
+    sv->cam_param->focal_length         = fin_cam_param->focal_length;
+    sv->cam_param->rig_height           = fin_cam_param->rig_height;
 
     sv->param_sgbm->pre_filter_cap      = fin_SGBM->pre_filter_cap;
     sv->param_sgbm->SAD_window_size     = fin_SGBM->SAD_window_size;
@@ -848,9 +863,10 @@ void MainWindow::threadProcessing()
         if (fg_capturing && !f_sv.isRunning()) {
 //            sv->dataExec();
             f_sv = QtConcurrent::run(sv, &stereo_vision::dataExec);
-            ui->label_sv_proc->setText(QString::number(sv->t_p.elapsed()));
-            sv->fg_counting = false;
-            qApp->processEvents();
+            if (sv->fg_counting) {
+                ui->label_sv_proc->setText(QString::number(sv->t_p.elapsed()));
+                sv->fg_counting = false;
+            }
         }
 
         // lrf
@@ -858,7 +874,6 @@ void MainWindow::threadProcessing()
 //            lrf->dataExec();
             f_lrf = QtConcurrent::run(lrf, &lrf_controller::dataExec);
             ui->label_lrf_proc->setText(QString::number(lrf->t_p.elapsed()));
-            qApp->processEvents();
         }
 
         // lrf buffer
@@ -866,7 +881,6 @@ void MainWindow::threadProcessing()
 //            lrf->pushToBuf();
             f_lrf_buf = QtConcurrent::run(lrf, &lrf_controller::pushToBuf);
             ui->label_lrf_buf_proc->setText(QString::number(lrf->t_p_buf.elapsed()));
-            qApp->processEvents();
         }
 
         // Radar ESR
@@ -877,12 +891,13 @@ void MainWindow::threadProcessing()
                 ui->label_radar_proc->setText(QString::number(rc->t_p.elapsed()));
                 rc->fg_counting = false;
             }
-            qApp->processEvents();
+        }
+        if (!f_fused.isRunning()) {
+            f_fused = QtConcurrent::run(this, &MainWindow::dataFused);
         }
 
-        drawFusedTopView(sv->objects_display, rc->esr_obj);
-
-        sync.waitForFinished();
+        qApp->processEvents();
+//        sync.waitForFinished();
     }
 
     sync.setCancelOnWait(true);
@@ -906,7 +921,8 @@ void MainWindow::on_checkBox_do_calibration_clicked(bool checked)
 void MainWindow::on_checkBox_do_depth_clicked(bool checked)
 {
     if (checked) {
-        sv->cam_param->param_r = sv->cam_param->focal_length * sv->cam_param->base_line;
+        // Though disparity is scaled by 16, GUI takes scaled pixels. If not, the topview looks weird.
+        sv->cam_param->param_r = sv->cam_param->focal_length * sv->cam_param->base_line * 16.0;
         ui->checkBox_pseudo_color->setEnabled(true);
         ui->checkBox_sv_topview->setEnabled(true);
         ui->checkBox_sv_reproject->setEnabled(true);
@@ -946,8 +962,10 @@ void MainWindow::on_checkBox_topview_plot_points_clicked(bool checked)
 
 void MainWindow::on_pushButton_camera_calibration_clicked()
 {
-    if (fg_form_calib_alloc)
+    if (fg_form_calib_alloc) {
+        form_calib->raise();
         return;
+    }
     form_calib = new calibrationForm();
     form_calib->move(1500, 500);
     fg_form_calib_alloc = true;
@@ -1017,8 +1035,10 @@ void MainWindow::on_radioButton_SGBM_clicked()
 
 void MainWindow::on_pushButton_stereo_match_param_clicked()
 {
-    if (fg_form_smp_alloc)
+    if (fg_form_smp_alloc) {
+        form_smp->raise();
         return;
+    }
     form_smp = new stereoMatchParamForm(0, sv->match_mode);
     form_smp->move(1500, 100);
     fg_form_smp_alloc = true;
@@ -1138,6 +1158,12 @@ void MainWindow::on_pushButton_lrf_stop_clicked()
 #ifdef debug_info_main
     qDebug()<<"stop done";
 #endif
+}
+
+void MainWindow::on_lineEdit_sv_rig_height_returnPressed()
+{
+    sv->cam_param->rig_height = ui->lineEdit_sv_rig_height->text().toDouble();
+    ui->label_sv_rig_height->setText(ui->lineEdit_sv_rig_height->text());
 }
 
 void MainWindow::on_lineEdit_sv_focal_length_returnPressed()
@@ -1543,11 +1569,14 @@ void MainWindow::on_pushButton_start_all_clicked()
     if (sv->input_mode == SV::INPUT_SOURCE::CAM && rc->input_mode == RADAR::INPUT_SOURCE::ESR) {
         inputType(INPUT_TYPE::DEVICE);
 
-        on_pushButton_cam_open_clicked();
+        if (!fg_capturing)
+            on_pushButton_cam_open_clicked();
 
-        on_pushButton_radar_open_clicked();
-        rc->busOn();
-        on_pushButton_radar_write_clicked();
+        if (!fg_retrieving) {
+            on_pushButton_radar_open_clicked();
+            rc->busOn();
+            on_pushButton_radar_write_clicked();
+        }
     }
     else
         inputType(INPUT_TYPE::RECORDING);
@@ -1555,10 +1584,14 @@ void MainWindow::on_pushButton_start_all_clicked()
     if (svWarning())
         return;
 
-    fg_capturing = true;
-    f_sv.setPaused(false);
-    fg_retrieving = true;
-    f_radar.setPaused(false);
+    if (!fg_capturing) {
+        fg_capturing = true;
+        f_sv.setPaused(false);
+    }
+    if (!fg_retrieving) {
+        fg_retrieving = true;
+        f_radar.setPaused(false);
+    }
 
     exec();
 }
@@ -1708,7 +1741,6 @@ void MainWindow::videoIsEnd()
         return;
 
     on_pushButton_cam_stop_clicked();
-
     report("Video is end.");
 
     re.vr->fg_data_end = true;
@@ -1720,8 +1752,6 @@ void MainWindow::dataIsEnd()
         return;
 
     on_pushButton_radar_bus_off_clicked();
-
-    while (f_radar.isRunning()) {}
 
     report("Data is end.");
 
@@ -1754,3 +1784,4 @@ void MainWindow::on_radioButton_input_recording_clicked()
 {
     inputType(INPUT_TYPE::RECORDING);
 }
+

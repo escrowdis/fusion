@@ -25,6 +25,8 @@ extern recording re;
 
 #define IMG_W 640
 #define IMG_H 480
+#define IMG_W_HALF 320
+#define IMG_H_HALF 240
 #define IMG_DIS_W 320
 #define IMG_DIS_H 240
 #define IMG_DIS_DISP_W 320
@@ -103,6 +105,7 @@ public:
         double focal_length;
         int cam_focal_length;
         double base_line;
+        double rig_height;
     };
     camParam* cam_param;
 
@@ -183,6 +186,8 @@ public:
 
         int avg_Z;                      // average depth
 
+        int avg_X;
+
         int closest_count;              // smaller number represents closer to vehicle
 
         // IMAGE -------------
@@ -193,7 +198,6 @@ public:
         float angle;                    // orientation degree. Middle is zero. (degree)
         float range;                    // (cm)
 
-
         objInformation() {
             labeled = false;
             tl = std::pair<int, int>(-1, -1);
@@ -202,6 +206,7 @@ public:
             angle = 0.0;
             range = 0.0;
             avg_Z = 0;
+            avg_X = 0;
             pts_num = 0;
             closest_count = 0;
         }

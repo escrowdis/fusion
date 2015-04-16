@@ -27,9 +27,9 @@ public:
 
     cv::Point pointT(cv::Point src);    // transformed point from grid map to topview for display
 
-    int min_distance;
+    int min_distance;                   // (cm)
 
-    int max_distance;
+    int max_distance;                   // (cm)
 
     float c;                            // ratio of image to grid_map (the number of adjacent image columns grouped into a polar slice)
 
@@ -76,10 +76,15 @@ protected:
 
         int avg_Z;                      // average depth of this cell
 
+        int avg_X;
+
+        cv::Rect rect;
+
         blobNode() {
             obj_label = -1;
             pts_num = 0;
             avg_Z = 0;
+            avg_X = 0;
         }
     };
 

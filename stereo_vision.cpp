@@ -80,11 +80,11 @@ void stereo_vision::createLUT()
     LUT_grid_row = new int[max_distance + 1];
     LUT_grid_col = new int[IMG_W];
 
-    for (int k = 0; k < max_distance + 1; k++)
-        LUT_grid_row[k] = 1.0 * log10(1.0 * k / min_distance) / log10(1.0 + this->k);
+    for (int m = 0; m < max_distance + 1; m++)
+        LUT_grid_row[m] = 1.0 * log10(1.0 * m / (1.0 * min_distance)) / log10(1.0 + k);
 
-    for (int k = 0; k < IMG_W; k++)
-        LUT_grid_col[k] = 1.0 * k / c;
+    for (int m = 0; m < IMG_W; m++)
+        LUT_grid_col[m] = 1.0 * m / c;
 }
 
 int stereo_vision::corrGridRow(int k)
@@ -394,10 +394,11 @@ void stereo_vision::depthCalculation()
             else if (c < param_bm->num_of_disp / 2 && input_mode == SV::STEREO_MATCH::BM)
                 continue;
             // Depth calculation
-            // Though disparity is scaled by 16, GUI takes scaled pixels. If not, the topview looks weird.
             data[r][c].disp = ptr_raw[c];
             if (data[r][c].disp > 0) {
-                data[r][c].Z = cam_param->param_r / (data[r][c].disp / 16.0);
+                data[r][c].Z = cam_param->param_r / data[r][c].disp;
+                data[r][c].X = (c - IMG_W_HALF) * data[r][c].Z / cam_param->focal_length;
+                data[r][c].Y = (IMG_H_HALF - r) * data[r][c].Z / cam_param->focal_length + cam_param->rig_height;
 
                 // pseudo color transform
                 if (fg_pseudo) {
@@ -483,8 +484,11 @@ bool stereo_vision::dataExec()
         t_p.restart();
         fg_counting = true;
     }
-    if (!dataIn())
+
+    if (!dataIn()) {
+        fg_counting = false;
         return false;
+    }
 
     // camera calibration
     if (fg_calib) {
@@ -506,7 +510,7 @@ bool stereo_vision::dataExec()
         if (fg_topview) {
             pointProjectTopView();
             blob(3000);
-            cuboid();
+//            cuboid();
 
             if (fg_reproject)
                 pointProjectImage();
@@ -711,6 +715,7 @@ void stereo_vision::pointProjectTopView()
                     grid_map[grid_row_t][grid_col_t].pts_num++;
                     // average the depth
                     grid_map[grid_row_t][grid_col_t].avg_Z += 1.0 * (data[r][c].Z - grid_map[grid_row_t][grid_col_t].avg_Z) / grid_map[grid_row_t][grid_col_t].pts_num;
+                    grid_map[grid_row_t][grid_col_t].avg_X += 1.0 * (data[r][c].X - grid_map[grid_row_t][grid_col_t].avg_X) / grid_map[grid_row_t][grid_col_t].pts_num;
                     // label the point to the belonging cell
                     data[r][c].grid_id = std::pair<int, int>(grid_row_t, grid_col_t);
                     lock_sv.unlock();
@@ -732,6 +737,7 @@ void stereo_vision::resetBlob()
         objects[i].angle = 0.0;
         objects[i].range = 0.0;
         objects[i].avg_Z = 0;
+        objects[i].avg_X = 0;
         objects[i].pts_num = 0;
         objects[i].closest_count = 0;
     }
@@ -761,6 +767,7 @@ void stereo_vision::blob(int thresh_pts_num)
                 grid_map[r][c].obj_label = cur_label;
                 objects[cur_label].pts_num += grid_map[r][c].pts_num;
                 objects[cur_label].avg_Z += 1.0 * (grid_map[r][c].avg_Z - objects[cur_label].avg_Z) / count;
+                objects[cur_label].avg_X += 1.0 * (grid_map[r][c].avg_X - objects[cur_label].avg_X) / count;
                 lock_sv.unlock();
 
                 while (!neighbors.empty()) {
@@ -785,6 +792,7 @@ void stereo_vision::blob(int thresh_pts_num)
                                 grid_map[r_now][c_now].obj_label = cur_label;
                                 objects[cur_label].pts_num += grid_map[r_now][c_now].pts_num;
                                 objects[cur_label].avg_Z += 1.0 * (grid_map[r][c].avg_Z - objects[cur_label].avg_Z) / count;
+                                objects[cur_label].avg_X += 1.0 * (grid_map[r][c].avg_X - objects[cur_label].avg_X) / count;
                                 lock_sv.unlock();
                             }
                         }
@@ -920,7 +928,7 @@ void stereo_vision::pointProjectImage()
             // find center of rect
             objects[i].center = std::pair<int, int>(0.5 * (objects[i].tl.first + objects[i].br.first), 0.5 * (objects[i].tl.second + objects[i].br.second));
             objects[i].angle = atan(1.0 * (objects[i].center.second - 0.5 * IMG_W) / objects[i].avg_Z) * 180.0 / CV_PI;
-            objects[i].range = sqrt(pow((double)(objects[i].avg_Z), 2) + pow((double)(objects[i].center.second - IMG_W / 2), 2));
+            objects[i].range = sqrt(pow((double)(objects[i].avg_Z), 2) + pow((double)(objects[i].avg_X), 2));
 
             cv::rectangle(img_detected, cv::Rect(objects[i].tl.second, objects[i].tl.first, objects[i].br.second - objects[i].tl.second, objects[i].br.first - objects[i].tl.first),
                           cv::Scalar(ptr_color[3 * tag + 0], ptr_color[3 * tag + 1], ptr_color[3 * tag + 2]), thick_obj_rect, 8, 0);
@@ -936,6 +944,7 @@ void stereo_vision::updateDataFroDisplay()
         lock_sv.lockForRead();
         objects_display[i].angle = objects[i].angle;
         objects_display[i].avg_Z = objects[i].avg_Z;
+        objects_display[i].avg_X = objects[i].avg_X;
         objects_display[i].br = objects[i].br;
         objects_display[i].center = objects[i].center;
         objects_display[i].closest_count = objects[i].closest_count;

@@ -4,6 +4,7 @@ stereoVision:
    port_R: 1
    cam_focal_length: 0
    focal_length: 2943.
+   rig_height: 110.
    base_line: 15.
 topView:
    row_interval: 12

@@ -290,6 +290,7 @@ void TopView::resetTopView()
             grid_map[r][c].obj_label = -1;
             grid_map[r][c].pts_num = 0;
             grid_map[r][c].avg_Z = 0;
+            grid_map[r][c].avg_X = 0;
         }
 
     // data mark is reset in objectProjectTopView

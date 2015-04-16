@@ -157,7 +157,7 @@ private:
 
     // information of objects detected by different sensors on fused topview
     struct sensorInformation {
-        cv::Point pos;                              // sensor's position based on the vehicle view
+        cv::Point pos;                              // sensor's position based on the vehicle view (cm)
 
         cv::Scalar color;                           // sensor's color on the topview
 
@@ -196,7 +196,10 @@ private:
 
     void drawFusedTopView(stereo_vision::objInformation *d_sv, RadarController::ESR_track_object_info *d_radar);
 
-    void pointTransformTopView(cv::Point sensor_pos, float range, float angle, cv::Point *output);
+    float pointTransformTopView(cv::Point sensor_pos, float range, float angle, cv::Point *output);
+    float pointTransformTopView(cv::Point sensor_pos, float range, float angle, cv::Point *output, cv::Rect rect_in, cv::Rect *rect);
+
+    void dataFused();
 
     int gap = 500;
 
@@ -404,6 +407,7 @@ private slots:
     void on_radioButton_input_device_clicked();
     void on_radioButton_input_recording_clicked();
     // Recording ============== End
+    void on_lineEdit_sv_rig_height_returnPressed();
 };
 
 // Mouse control ==========
