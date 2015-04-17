@@ -92,9 +92,9 @@ bool RadarController::open()
     h = canOpenChannel(0, canOPEN_NO_INIT_ACCESS);
     stat = canRequestBusStatistics(h);
     if (stat != canOK) {
-//        char msg[OBJECT_NUM];
-//        stat = canGetErrorText(stat, &msg[0], sizeof(msg));
-//        std::cout<<"ERR"<<std::endl;
+        char msg[OBJECT_NUM];
+        stat = canGetErrorText(stat, &msg[0], sizeof(msg));
+        std::cout<<"ERR"<<std::endl;
         return false;
     }
 
@@ -139,6 +139,7 @@ void RadarController::busOn()
         return;
     switch (input_mode) {
     case RADAR::INPUT_SOURCE::ESR:
+        h = canOpenChannel(0, canOPEN_NO_INIT_ACCESS);
         stat = canBusOn(h);
 
         if (stat == canOK)
@@ -200,7 +201,7 @@ bool RadarController::dataIn()
         break;
     case RADAR::INPUT_SOURCE::TXT:
         // For synchronization replay
-        if (re.vr->current_frame_count < re.tr->current_frame_count)
+        if (!re.vr->fg_data_end && re.vr->current_frame_count < re.tr->current_frame_count)
             return false;
 //        std::cout<<re.vr->current_frame_count<<"\t"<<re.tr->current_frame_count<<std::endl;
 
@@ -223,7 +224,6 @@ bool RadarController::dataIn()
         }
         else
             emit dataEnd();
-
         break;
     }
 
@@ -236,23 +236,17 @@ bool RadarController::dataIn()
 
 void RadarController::dataExec()
 {
-    if (!fg_counting) {
-        t_p.restart();
-        fg_counting = true;
-        fg_t_display = false;
-    }
     bool fg_all_data_in = dataIn();
 
-    if (fg_all_data_in)
-        fg_t_display = true;
-
     if (fg_all_data_in && fg_data_in) {
+
         pointDisplayFrontView();
 
         if (fg_topview)
             pointProjectTopView();
 
         if (t.elapsed() > time_gap) {
+            time_proc = t_p.restart();
             emit updateGUI(detected_obj, &img_radar, &topview);
 
             t.restart();

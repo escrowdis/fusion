@@ -70,8 +70,7 @@ public:
 
     bool fusedTopview() {return fg_topview && fg_stereoMatch;}
 
-    QTime t_p;                          // process time of all exec.
-    bool fg_counting;
+    int time_proc;
 
     // RGB images for displaying
     cv::Mat img_L;
@@ -115,7 +114,7 @@ public:
         // IMAGE -------------
         short int disp;
 
-        // World coordinate system (WCS)
+        // World coordinate system (WCS) (cm)
         int X;
         int Y;
         int Z;
@@ -237,6 +236,8 @@ private:
     void depthCalculation();
 
     void stereoMatch();
+
+    QTime t_p;                          // process time of all exec.
 
     // status
     bool fg_cam_L, fg_cam_R;            // open or not

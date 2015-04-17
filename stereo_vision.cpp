@@ -454,9 +454,8 @@ bool stereo_vision::dataIn()
         break;
     case SV::INPUT_SOURCE::VIDEO:
         // For synchronization replay
-        if (re.tr->current_frame_count < re.vr->current_frame_count) {
-            if (!re.tr->fg_data_end)
-                return false;
+        if (!re.tr->fg_data_end && re.tr->current_frame_count < re.vr->current_frame_count) {
+            return false;
         }
         if (!re.vr->segmentTwoImages(&img_L, &img_R, cv::Size(IMG_W, IMG_H))) {
             emit videoEnd();
@@ -480,13 +479,7 @@ bool stereo_vision::dataExec()
     qDebug()<<"run";
 #endif
 
-    if (!fg_counting) {
-        t_p.restart();
-        fg_counting = true;
-    }
-
     if (!dataIn()) {
-        fg_counting = false;
         return false;
     }
 
@@ -531,7 +524,9 @@ bool stereo_vision::dataExec()
     if (t.elapsed() > time_gap) {
         emit updateGUI(&img_r_L, &img_r_R, &disp, &disp_pseudo, &topview, &img_detected, detected_obj, re.vr->current_frame_count);
         t.restart();
+        time_proc = t_p.restart();
     }
+
     return true;
 }
 
@@ -716,6 +711,7 @@ void stereo_vision::pointProjectTopView()
                     // average the depth
                     grid_map[grid_row_t][grid_col_t].avg_Z += 1.0 * (data[r][c].Z - grid_map[grid_row_t][grid_col_t].avg_Z) / grid_map[grid_row_t][grid_col_t].pts_num;
                     grid_map[grid_row_t][grid_col_t].avg_X += 1.0 * (data[r][c].X - grid_map[grid_row_t][grid_col_t].avg_X) / grid_map[grid_row_t][grid_col_t].pts_num;
+
                     // label the point to the belonging cell
                     data[r][c].grid_id = std::pair<int, int>(grid_row_t, grid_col_t);
                     lock_sv.unlock();
@@ -768,6 +764,7 @@ void stereo_vision::blob(int thresh_pts_num)
                 objects[cur_label].pts_num += grid_map[r][c].pts_num;
                 objects[cur_label].avg_Z += 1.0 * (grid_map[r][c].avg_Z - objects[cur_label].avg_Z) / count;
                 objects[cur_label].avg_X += 1.0 * (grid_map[r][c].avg_X - objects[cur_label].avg_X) / count;
+
                 lock_sv.unlock();
 
                 while (!neighbors.empty()) {

@@ -56,12 +56,10 @@ public:
 
     bool fusedTopview() {return fg_topview;}
 
-    QTime t_p;                          // process time of all exec.
-    bool fg_counting;
-    bool fg_t_display;
+    int time_proc;
 
     // status
-    int input_mode;
+    int input_mode;                     // process time of all exec.
 
     // tableView used
     QStandardItem* item;
@@ -116,6 +114,8 @@ private:
     void reset();
 
     bool dataIn();
+
+    QTime t_p;                          // process time of all exec.
 
     const static long id_esr = 0x4F1;
     const static int dlc_esr = 8;

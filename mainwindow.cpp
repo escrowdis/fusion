@@ -142,7 +142,7 @@ MainWindow::MainWindow(QWidget *parent) :
     f_lrf.setPaused(true);
     f_lrf_buf.setPaused(true);
     f_radar.setPaused(true);
-    f_fused.setPaused(true);
+//    f_fused.setPaused(true);
     sync.addFuture(f_sv);
     sync.addFuture(f_lrf);
     sync.addFuture(f_lrf_buf);
@@ -576,6 +576,9 @@ void MainWindow::drawFusedTopView(stereo_vision::objInformation *d_sv, RadarCont
     }
 
     ui->label_fusion->setPixmap(QPixmap::fromImage(QImage::QImage(fused_topview.data, fused_topview.cols, fused_topview.rows, QImage::Format_RGBA8888)));
+
+    ui->label_fusion->update();
+    qApp->processEvents();
 }
 
 float MainWindow::pointTransformTopView(cv::Point sensor_pos, float range, float angle, cv::Point *output)
@@ -680,6 +683,13 @@ void MainWindow::lrfDisplay(double *lrf_data, cv::Mat *display_lrf)
             fg_lrf_record = false;
         }
     }
+    ui->label_lrf_buf_proc->setText(QString::number(lrf->time_proc_buf));
+    ui->label_lrf_proc->setText(QString::number(lrf->time_proc));
+
+    ui->label_lrf_data->update();
+    ui->label_lrf_buf_proc->update();
+    ui->label_lrf_proc->update();
+    qApp->processEvents();
 }
 
 void MainWindow::retrieveMatchParam()
@@ -737,10 +747,12 @@ void MainWindow::svDisplay(cv::Mat *img_L, cv::Mat *img_R, cv::Mat *disp, cv::Ma
 
     if (ui->checkBox_do_depth->isChecked()) {    
         lock_sv.lockForRead();
-        if (ui->checkBox_pseudo_color->isChecked())
+        if (ui->checkBox_pseudo_color->isChecked()) {
             ui->label_disp->setPixmap(QPixmap::fromImage(QImage::QImage(disp_pseudo->data, disp_pseudo->cols, disp_pseudo->rows, QImage::Format_RGB888)).scaled(IMG_DIS_DISP_W, IMG_DIS_DISP_H));
-        else
+        }
+        else {
             ui->label_disp->setPixmap(QPixmap::fromImage(QImage::QImage(disp->data, disp->cols, disp->rows, disp->cols, QImage::Format_Indexed8)).scaled(IMG_DIS_DISP_W, IMG_DIS_DISP_H));
+        }
 
         // update topview
         if (ui->checkBox_sv_topview->isChecked()) {
@@ -749,6 +761,17 @@ void MainWindow::svDisplay(cv::Mat *img_L, cv::Mat *img_R, cv::Mat *disp, cv::Ma
         }
         lock_sv.unlock();
     }
+    ui->label_sv_proc->setText(QString::number(sv->time_proc));
+
+    ui->label_cam_img_L->update();
+    ui->label_cam_img_R->update();
+    ui->label_sv_detected_obj->update();
+    ui->label_sv_frame_count->update();
+    ui->label_disp->update();
+    ui->label_top_view_sv->update();
+    ui->label_sv_detected->update();
+    ui->label_sv_proc->update();
+    qApp->processEvents();
 }
 
 void MainWindow::on_checkBox_sv_topview_clicked(bool checked)
@@ -863,39 +886,30 @@ void MainWindow::threadProcessing()
         if (fg_capturing && !f_sv.isRunning()) {
 //            sv->dataExec();
             f_sv = QtConcurrent::run(sv, &stereo_vision::dataExec);
-            if (sv->fg_counting) {
-                ui->label_sv_proc->setText(QString::number(sv->t_p.elapsed()));
-                sv->fg_counting = false;
-            }
         }
 
         // lrf
         if (fg_acquiring && !f_lrf.isRunning()) {
 //            lrf->dataExec();
             f_lrf = QtConcurrent::run(lrf, &lrf_controller::dataExec);
-            ui->label_lrf_proc->setText(QString::number(lrf->t_p.elapsed()));
         }
 
         // lrf buffer
         if (fg_buffering && lrf->bufNotFull() && !f_lrf_buf.isRunning()) {
 //            lrf->pushToBuf();
             f_lrf_buf = QtConcurrent::run(lrf, &lrf_controller::pushToBuf);
-            ui->label_lrf_buf_proc->setText(QString::number(lrf->t_p_buf.elapsed()));
         }
 
         // Radar ESR
         if (fg_retrieving && !f_radar.isRunning()) {
 //            rc->dataExec();
             f_radar = QtConcurrent::run(rc, &RadarController::dataExec);
-            if (rc->fg_t_display) {
-                ui->label_radar_proc->setText(QString::number(rc->t_p.elapsed()));
-                rc->fg_counting = false;
-            }
         }
         if (!f_fused.isRunning()) {
             f_fused = QtConcurrent::run(this, &MainWindow::dataFused);
         }
 
+        qApp->sendPostedEvents();
         qApp->processEvents();
 //        sync.waitForFinished();
     }
@@ -1540,6 +1554,15 @@ void MainWindow::radarDisplay(int detected_obj, cv::Mat *img, cv::Mat *topview)
         ui->label_top_view_radar_long->setPixmap(QPixmap::fromImage(QImage::QImage(topview->data, topview->cols, topview->rows, QImage::Format_RGBA8888)).scaled(900, 600));
         lock_radar.unlock();
     }
+
+    // computing time
+    ui->label_radar_proc->setText(QString::number(rc->time_proc));
+
+    ui->label_radar_detected_obj->update();
+    ui->label_radar_data->update();
+    ui->label_top_view_radar_long->update();
+    ui->label_radar_proc->update();
+    qApp->processEvents();
 }
 
 void MainWindow::on_checkBox_radar_topview_clicked(bool checked)

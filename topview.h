@@ -31,6 +31,8 @@ public:
 
     int max_distance;                   // (cm)
 
+    float view_angle;                   // the view angle (degree)
+
     float c;                            // ratio of image to grid_map (the number of adjacent image columns grouped into a polar slice)
 
     cv::Mat topview;                    // topview on label
@@ -93,8 +95,6 @@ protected:
     cv::Point** img_grid;               // topview background cell points
 
     float k;                            // length of interval
-
-    float view_angle;                   // the view angle
 
     int chord_length;                   // the chord length of stereo vision
 

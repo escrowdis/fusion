@@ -127,7 +127,6 @@ void lrf_controller::stopRetrieve()
 
 void lrf_controller::pushToBuf()
 {
-    t_p_buf.restart();
     if (!serial->waitForReadyRead(10)) {
         return;
     }
@@ -151,6 +150,7 @@ void lrf_controller::pushToBuf()
     else
         qDebug()<<"serial: no data";
 #endif
+    time_proc_buf = t_p_buf.restart();
 }
 
 void lrf_controller::setMode()
@@ -220,10 +220,11 @@ void lrf_controller::reset()
 
 bool lrf_controller::dataExec()
 {
-    t_p.restart();
 //    reset();
     if (retrieveData(lrf_data)) {
+        time_proc = t_p.restart();
         emit updateGUI(lrf_data, &display_lrf);
+
         return true;
     }
     else

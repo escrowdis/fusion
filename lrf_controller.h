@@ -65,7 +65,7 @@ public:
 
     ~lrf_controller();
 
-    QTime t_p, t_p_buf;
+    int time_proc, time_proc_buf;
 
     double *lrf_data;
 
@@ -115,6 +115,8 @@ private:
     QSerialPort::BaudRate baudRate;
 
     int mode;
+
+    QTime t_p, t_p_buf;             // process time of all exec.
 
     QByteArray *buf;
 
