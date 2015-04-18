@@ -98,7 +98,7 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->label_sv_detected->setStyleSheet("background-color:silver");
     ui->label_sv_frame_count->setVisible(false);
 
-    QObject::connect(sv, SIGNAL(updateGUI(cv::Mat *, cv::Mat *, cv::Mat *, cv::Mat *, cv::Mat *, cv::Mat *, int, int)), this, SLOT(svDisplay(cv::Mat *, cv::Mat *, cv::Mat *, cv::Mat *, cv::Mat *, cv::Mat *, int, int)));
+    QObject::connect(sv, SIGNAL(updateGUI(cv::Mat *, cv::Mat *, cv::Mat *, cv::Mat *, cv::Mat *, cv::Mat *, cv::Mat *, int, int)), this, SLOT(svDisplay(cv::Mat *, cv::Mat *, cv::Mat *, cv::Mat *, cv::Mat *, cv::Mat *, cv::Mat *, int, int)));
     QObject::connect(sv, SIGNAL(videoEnd(void)), this, SLOT(videoIsEnd(void)));
 
     on_checkBox_pseudo_color_clicked(ui->checkBox_pseudo_color->isChecked());
@@ -413,10 +413,12 @@ void MainWindow::initialFusedTopView()
 
     ratio = 1.0 * detection_range_pixel / sv->max_distance;
 
-    // Same as TOYOTA Camry
-    vehicle.length = 485;
+    // use cart as default
+    vehicle.width = 43;
 
-    vehicle.width = 183;
+    vehicle.length = 43;
+
+    vehicle.head_pos = vehicle.length / 2;
 
     // find max & min detection range in all sensors, so this function shall be called after initialization of all sensors
     max_detection_range = rc->max_distance;
@@ -438,8 +440,20 @@ void MainWindow::initialFusedTopView()
     // sv
     sensors[0].color = cv::Scalar(255, 0, 0, 255);
 
+    sensors[0].color_fov = cv::Scalar(200, 200, 200, 255);
+
+    sensors[0].angle = sv->view_angle * 0.5 * CV_PI / 180.0;
+
+    sensors[0].pos = cv::Point(0, 51);
+
     // radar
     sensors[1].color = cv::Scalar(0, 0, 255, 255);
+
+    sensors[1].color_fov = cv::Scalar(200, 200, 200, 255);
+
+    sensors[1].angle = rc->view_angle * 0.5 * CV_PI / 180.0;
+
+    sensors[1].pos = cv::Point(0, vehicle.head_pos);
 
     // object's label color
     QColor pic_color_sv = QColor(sensors[0].color[0], sensors[0].color[1], sensors[0].color[2]);
@@ -476,6 +490,34 @@ void MainWindow::updateFusedTopView()
     // max detection range [now]
     cv::putText(fused_topview_BG, QString::number((int)detection_range).toStdString() + " cm", cv::Point(vehicle.VCP.x + 0.65 * detection_range_pixel, vehicle.VCP.y  - 0.8 * detection_range_pixel), cv::FONT_HERSHEY_COMPLEX_SMALL, 1, rc->color_line, 1);
 
+    // sensor information
+    sensors[0].pos_pixel = cv::Point(sensors[0].pos.x * ratio, sensors[0].pos.y * ratio);
+
+    sensors[1].pos_pixel = cv::Point(sensors[1].pos.x * ratio, sensors[1].pos.y * ratio);
+
+    // FOV - Stereo vision
+    cv::Point sensor_pos;
+    cv::Point pos_fov_r, pos_fov_l;
+    int shift_x, shift_y;
+    int device = 0;
+    sensor_pos = cv::Point(vehicle.VCP.x + sensors[device].pos_pixel.x, vehicle.VCP.y - sensors[device].pos_pixel.y);
+    shift_x = detection_range_pixel * sin(sensors[device].angle);
+    shift_y = detection_range_pixel * cos(sensors[device].angle);
+    pos_fov_r = cv::Point(sensor_pos.x + shift_x, sensor_pos.y - shift_y);
+    pos_fov_l = cv::Point(sensor_pos.x - shift_x, sensor_pos.y - shift_y);
+    cv::line(fused_topview_BG, sensor_pos, pos_fov_r, sensors[device].color_fov, 1, 8, 0);
+    cv::line(fused_topview_BG, sensor_pos, pos_fov_l, sensors[device].color_fov, 1, 8, 0);
+
+    // FOV - ESR
+    device = 1;
+    sensor_pos = cv::Point(vehicle.VCP.x + sensors[device].pos_pixel.x, vehicle.VCP.y - sensors[device].pos_pixel.y);
+    shift_x = detection_range_pixel * sin(sensors[device].angle);
+    shift_y = detection_range_pixel * cos(sensors[device].angle);
+    pos_fov_r = cv::Point(sensor_pos.x + shift_x, sensor_pos.y - shift_y);
+    pos_fov_l = cv::Point(sensor_pos.x - shift_x, sensor_pos.y - shift_y);
+    cv::line(fused_topview_BG, sensor_pos, pos_fov_r, sensors[device].color_fov, 1, 8, 0);
+    cv::line(fused_topview_BG, sensor_pos, pos_fov_l, sensors[device].color_fov, 1, 8, 0);
+
     // 30 m
     float distance = sv->max_distance * ratio;
     if (distance <= detection_range_pixel)
@@ -491,11 +533,48 @@ void MainWindow::updateFusedTopView()
 
     ui->label_fusion_BG->setPixmap(QPixmap::fromImage(QImage::QImage(fused_topview_BG.data, fused_topview_BG.cols, fused_topview_BG.rows, QImage::Format_RGBA8888)));
     ui->label_fusion->setPixmap(QPixmap::fromImage(QImage::QImage(fused_topview.data, fused_topview.cols, fused_topview.rows, QImage::Format_RGBA8888)));
+}
 
-    // sensor information
-    sensors[0].pos = cv::Point(0, 75 * ratio);
+void MainWindow::on_radioButton_vehicle_cart_clicked()
+{
+    // choose cart
+    vehicle.width = 43;
 
-    sensors[1].pos = cv::Point(0, vehicle.length / 2 * ratio);
+    vehicle.length = 43;
+
+    vehicle.head_pos = vehicle.length / 2;
+
+    // find max & min detection range in all sensors, so this function shall be called after initialization of all sensors
+    max_detection_range = rc->max_distance;
+
+    min_detection_range = rc->min_distance + sqrt(pow(0.5 * vehicle.length, 2) + pow(0.5 * vehicle.width, 2));
+
+    sensors[0].pos = cv::Point(0, 51);
+
+    sensors[1].pos = cv::Point(0, vehicle.head_pos);
+
+    updateFusedTopView();
+}
+
+void MainWindow::on_radioButton_vehicle_car_clicked()
+{
+    // choose car: TOYOTA Camry
+    vehicle.width = 183;
+
+    vehicle.length = 485;
+
+    vehicle.head_pos = vehicle.length / 2;
+
+    // find max & min detection range in all sensors, so this function shall be called after initialization of all sensors
+    max_detection_range = rc->max_distance;
+
+    min_detection_range = rc->min_distance + sqrt(pow(0.5 * vehicle.length, 2) + pow(0.5 * vehicle.width, 2));
+
+    sensors[0].pos = cv::Point(0, 75);
+
+    sensors[1].pos = cv::Point(0, vehicle.head_pos);
+
+    updateFusedTopView();
 }
 
 void MainWindow::zoomOutFusedTopView()
@@ -538,6 +617,7 @@ void MainWindow::wheelEvent(QWheelEvent *ev)
 
     updateFusedTopView();
 }
+
 void MainWindow::dataFused()
 {
     drawFusedTopView(sv->objects_display, rc->esr_obj);
@@ -551,12 +631,30 @@ void MainWindow::drawFusedTopView(stereo_vision::objInformation *d_sv, RadarCont
     int device = 0;
     int range_precision = 3;
     if (ui->checkBox_fusion_sv->isChecked() && fg_capturing && sv->fusedTopview()) {
+        // every pixel
+        if (ui->checkBox_fused_sv_plot_every_pixel->isChecked()) {
+            for (int r = 0; r < IMG_H; r++) {
+                for (int c = 0; c < IMG_W; c++) {
+                    if (sv->data[r][c].disp > 0) {
+                        cv::Point plot_pt;
+                        float range, angle;
+                        range = sqrt(pow((double)(sv->data[r][c].Z), 2) + pow((double)(sv->data[r][c].X), 2));
+                        angle = atan(1.0 * sv->data[r][c].X / (1.0 * sv->data[r][c].Z)) * 180.0 / CV_PI;
+                        pointTransformTopView(sensors[device].pos_pixel, range, angle, &plot_pt);
+                        cv::circle(fused_topview, plot_pt, 1, cv::Scalar(255, 0, 0, 100), -1, 8, 0);
+                    }
+                }
+            }
+        }
+        // objects
         for (int k = 0; k < sv->obj_nums; k++) {
             if (d_sv[k].labeled) {
                 cv::Point plot_pt;
-                tag = QString::number(k).toStdString() + ", " + QString::number(d_sv[k].range / 100, 'g', range_precision).toStdString();
-                pointTransformTopView(sensors[device].pos, d_sv[k].range, d_sv[k].angle, &plot_pt);
+                cv::Rect rect;
+                float range_world = pointTransformTopView(sensors[device].pos_pixel, d_sv[k].range, d_sv[k].angle, &plot_pt, d_sv[k].rect, &rect);
                 cv::circle(fused_topview, plot_pt, thickness, cv::Scalar(255, 0, 0, 255), -1, 8, 0);
+                cv::rectangle(fused_topview, rect, cv::Scalar(255, 255, 0, 255), 1, 8, 0);
+                tag = QString::number(k).toStdString() + ", " + QString::number(range_world / 100, 'g', range_precision).toStdString();
                 cv::putText(fused_topview, tag, plot_pt, font, font_size, sensors[device].color, font_thickness);
             }
         }
@@ -567,9 +665,9 @@ void MainWindow::drawFusedTopView(stereo_vision::objInformation *d_sv, RadarCont
         for (int m = 0; m < 64; m++) {
             if (d_radar[m].status >= rc->obj_status_filtered) {
                 cv::Point plot_pt;
-                tag = QString::number(m).toStdString() + ", " + QString::number(d_radar[m].range, 'g', range_precision).toStdString();
-                pointTransformTopView(sensors[device].pos, 100 * d_radar[m].range, d_radar[m].angle + rc->aim_angle, &plot_pt);
+                float range_world = pointTransformTopView(sensors[device].pos_pixel, 100 * d_radar[m].range, d_radar[m].angle + rc->aim_angle, &plot_pt);
                 cv::circle(fused_topview, plot_pt, thickness, cv::Scalar(0, 0, 255, 255), -1, 8, 0);
+                tag = QString::number(m).toStdString() + ", " + QString::number(range_world / 100, 'g', range_precision).toStdString();
                 cv::putText(fused_topview, tag, plot_pt, font, font_size, sensors[device].color, font_thickness);
             }
         }
@@ -584,12 +682,32 @@ void MainWindow::drawFusedTopView(stereo_vision::objInformation *d_sv, RadarCont
 float MainWindow::pointTransformTopView(cv::Point sensor_pos, float range, float angle, cv::Point *output)
 {
     float x_tmp, y_tmp; // (cm)
-    x_tmp = 100.0 * range * sin(angle * CV_PI / 180.0);
-    y_tmp = 100.0 * range * cos(angle * CV_PI / 180.0);
+    x_tmp = range * sin(angle * CV_PI / 180.0);
+    y_tmp = range * cos(angle * CV_PI / 180.0);
     output->x = vehicle.VCP.x + (x_tmp * ratio + sensor_pos.x);
     output->y = vehicle.VCP.y - (y_tmp * ratio + sensor_pos.y);
 
-    return sqrt(pow((double)(x_tmp + sensor_pos.x), 2) + pow((double)(y_tmp + sensor_pos.y), 2));
+    return sqrt(pow((double)(x_tmp + sensor_pos.x / ratio), 2) + pow((double)(y_tmp + sensor_pos.y / ratio - vehicle.head_pos), 2));
+}
+
+float MainWindow::pointTransformTopView(cv::Point sensor_pos, float range, float angle, cv::Point *output, cv::Rect rect_in, cv::Rect *rect)
+{
+    float x_tmp, y_tmp; // (cm)
+    x_tmp = range * sin(angle * CV_PI / 180.0);
+    y_tmp = range * cos(angle * CV_PI / 180.0);
+    output->x = vehicle.VCP.x + (x_tmp * ratio + sensor_pos.x);
+    output->y = vehicle.VCP.y - (y_tmp * ratio + sensor_pos.y);
+    rect->x = vehicle.VCP.x + (rect_in.br().x * ratio + sensor_pos.x);
+    rect->y = vehicle.VCP.y - (rect_in.br().y * ratio + sensor_pos.y);
+    rect->x = rect->br().x;
+    rect->y = rect->br().y;
+    rect->width = rect_in.width * ratio;
+    rect->height = rect_in.height * ratio;
+
+//    std::cout<<rect->br().x<<"\t"<<rect->br().y<<"\t"<<rect->width<<"\t"<<rect->height<<"\t\t"<<
+//            rect_in.br().x<<"\t"<<rect_in.br().y<<"\t"<<rect_in.width<<"\t"<<rect_in.height<<std::endl;
+
+    return sqrt(pow((double)(x_tmp + sensor_pos.x / ratio), 2) + pow((double)(y_tmp + sensor_pos.y / ratio - vehicle.head_pos), 2));
 }
 
 void MainWindow::radarDisplayTopViewBG()
@@ -735,7 +853,7 @@ void MainWindow::camOpen()
     }
 }
 
-void MainWindow::svDisplay(cv::Mat *img_L, cv::Mat *img_R, cv::Mat *disp, cv::Mat *disp_pseudo, cv::Mat *topview, cv::Mat *img_detected, int detected_obj, int current_frame_count)
+void MainWindow::svDisplay(cv::Mat *img_L, cv::Mat *img_R, cv::Mat *disp, cv::Mat *disp_pseudo, cv::Mat *topview, cv::Mat *img_detected, cv::Mat *img_detected_display, int detected_obj, int current_frame_count)
 {
     ui->label_cam_img_L->setPixmap(QPixmap::fromImage(QImage::QImage(img_L->data, img_L->cols, img_L->rows, 3 * img_L->cols, QImage::Format_RGB888)).scaled(IMG_DIS_W, IMG_DIS_H));
     ui->label_cam_img_R->setPixmap(QPixmap::fromImage(QImage::QImage(img_R->data, img_R->cols, img_R->rows, 3 * img_R->cols, QImage::Format_RGB888)).scaled(IMG_DIS_W, IMG_DIS_H));
@@ -758,6 +876,7 @@ void MainWindow::svDisplay(cv::Mat *img_L, cv::Mat *img_R, cv::Mat *disp, cv::Ma
         if (ui->checkBox_sv_topview->isChecked()) {
             ui->label_top_view_sv->setPixmap(QPixmap::fromImage(QImage::QImage(topview->data, topview->cols, topview->rows, QImage::Format_RGBA8888)).scaled(270, 750));
             ui->label_sv_detected->setPixmap(QPixmap::fromImage(QImage::QImage(img_detected->data, img_detected->cols, img_detected->rows, QImage::Format_RGB888)).scaled(IMG_DIS_W, IMG_DIS_H));
+            ui->label_sv_detected_display->setPixmap(QPixmap::fromImage(QImage::QImage(img_detected_display->data, img_detected_display->cols, img_detected_display->rows, QImage::Format_RGB888)).scaled(IMG_DIS_W, IMG_DIS_H));
         }
         lock_sv.unlock();
     }
@@ -770,6 +889,7 @@ void MainWindow::svDisplay(cv::Mat *img_L, cv::Mat *img_R, cv::Mat *disp, cv::Ma
     ui->label_disp->update();
     ui->label_top_view_sv->update();
     ui->label_sv_detected->update();
+    ui->label_sv_detected_display->update();
     ui->label_sv_proc->update();
     qApp->processEvents();
 }
@@ -1623,7 +1743,7 @@ void MainWindow::on_pushButton_stop_all_clicked()
 {
     on_pushButton_cam_stop_clicked();
     on_pushButton_radar_bus_off_clicked();
-    re.tr->file.close();
+//    re.tr->file.close();
 }
 
 void MainWindow::on_actionShortcut_triggered()
@@ -1807,4 +1927,3 @@ void MainWindow::on_radioButton_input_recording_clicked()
 {
     inputType(INPUT_TYPE::RECORDING);
 }
-

@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>1415</width>
-    <height>908</height>
+    <height>927</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -18,9 +18,9 @@
     <property name="geometry">
      <rect>
       <x>20</x>
-      <y>30</y>
+      <y>20</y>
       <width>341</width>
-      <height>411</height>
+      <height>421</height>
      </rect>
     </property>
     <property name="currentIndex">
@@ -439,7 +439,7 @@ parameters</string>
       <property name="geometry">
        <rect>
         <x>20</x>
-        <y>190</y>
+        <y>180</y>
         <width>201</width>
         <height>81</height>
        </rect>
@@ -500,8 +500,8 @@ parameters</string>
      <widget class="QWidget" name="gridLayoutWidget_10">
       <property name="geometry">
        <rect>
-        <x>10</x>
-        <y>280</y>
+        <x>20</x>
+        <y>300</y>
         <width>111</width>
         <height>88</height>
        </rect>
@@ -564,7 +564,7 @@ parameters</string>
        </item>
       </layout>
      </widget>
-     <widget class="QWidget" name="">
+     <widget class="QWidget" name="layoutWidget">
       <property name="geometry">
        <rect>
         <x>20</x>
@@ -939,12 +939,30 @@ parameters</string>
       <x>370</x>
       <y>20</y>
       <width>1041</width>
-      <height>831</height>
+      <height>851</height>
      </rect>
     </property>
     <property name="currentIndex">
-     <number>0</number>
+     <number>3</number>
     </property>
+    <widget class="QWidget" name="tab_7">
+     <attribute name="title">
+      <string>LRF data</string>
+     </attribute>
+     <widget class="QLabel" name="label_lrf_data">
+      <property name="geometry">
+       <rect>
+        <x>40</x>
+        <y>40</y>
+        <width>640</width>
+        <height>480</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Laser rangefinder</string>
+      </property>
+     </widget>
+    </widget>
     <widget class="QWidget" name="tab_5">
      <attribute name="title">
       <string>Topview - SV</string>
@@ -1156,24 +1174,6 @@ parameters</string>
      <zorder>label_top_view_radar_long</zorder>
      <zorder>tableView_radar</zorder>
     </widget>
-    <widget class="QWidget" name="tab_7">
-     <attribute name="title">
-      <string>LRF data</string>
-     </attribute>
-     <widget class="QLabel" name="label_lrf_data">
-      <property name="geometry">
-       <rect>
-        <x>40</x>
-        <y>40</y>
-        <width>640</width>
-        <height>480</height>
-       </rect>
-      </property>
-      <property name="text">
-       <string>Laser rangefinder</string>
-      </property>
-     </widget>
-    </widget>
     <widget class="QWidget" name="tab_8">
      <attribute name="title">
       <string>Topview - Fusion</string>
@@ -1181,8 +1181,8 @@ parameters</string>
      <widget class="QLabel" name="label_fusion_BG">
       <property name="geometry">
        <rect>
-        <x>20</x>
-        <y>60</y>
+        <x>10</x>
+        <y>10</y>
         <width>640</width>
         <height>640</height>
        </rect>
@@ -1194,8 +1194,8 @@ parameters</string>
      <widget class="QLabel" name="label_fusion">
       <property name="geometry">
        <rect>
-        <x>20</x>
-        <y>60</y>
+        <x>10</x>
+        <y>10</y>
         <width>640</width>
         <height>640</height>
        </rect>
@@ -1263,9 +1263,37 @@ parameters</string>
        </item>
       </layout>
      </widget>
+     <widget class="QCheckBox" name="checkBox_fused_sv_plot_every_pixel">
+      <property name="geometry">
+       <rect>
+        <x>820</x>
+        <y>100</y>
+        <width>109</width>
+        <height>16</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Plot every pixel</string>
+      </property>
+     </widget>
+     <widget class="MouseLabel" name="label_sv_detected_display">
+      <property name="geometry">
+       <rect>
+        <x>690</x>
+        <y>160</y>
+        <width>320</width>
+        <height>240</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Detected image</string>
+      </property>
+     </widget>
      <zorder>layoutWidget</zorder>
      <zorder>label_fusion_BG</zorder>
      <zorder>label_fusion</zorder>
+     <zorder>checkBox_fused_sv_plot_every_pixel</zorder>
+     <zorder>label_sv_detected_display</zorder>
     </widget>
    </widget>
    <widget class="QWidget" name="layoutWidget">
@@ -1801,6 +1829,36 @@ parameters</string>
       </widget>
      </item>
     </layout>
+   </widget>
+   <widget class="QWidget" name="">
+    <property name="geometry">
+     <rect>
+      <x>230</x>
+      <y>10</y>
+      <width>111</width>
+      <height>18</height>
+     </rect>
+    </property>
+    <layout class="QGridLayout" name="gridLayout_22">
+     <item row="0" column="0">
+      <widget class="QRadioButton" name="radioButton_vehicle_cart">
+       <property name="text">
+        <string>Cart</string>
+       </property>
+       <property name="checked">
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="1">
+      <widget class="QRadioButton" name="radioButton_vehicle_car">
+       <property name="text">
+        <string>Car</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
+    <zorder>radioButton_vehicle_car</zorder>
    </widget>
   </widget>
   <widget class="QMenuBar" name="menuBar">

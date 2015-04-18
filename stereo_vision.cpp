@@ -522,7 +522,7 @@ bool stereo_vision::dataExec()
     updateDataFroDisplay();
 
     if (t.elapsed() > time_gap) {
-        emit updateGUI(&img_r_L, &img_r_R, &disp, &disp_pseudo, &topview, &img_detected, detected_obj, re.vr->current_frame_count);
+        emit updateGUI(&img_r_L, &img_r_R, &disp, &disp_pseudo, &topview, &img_detected, &img_detected_display, detected_obj, re.vr->current_frame_count);
         t.restart();
         time_proc = t_p.restart();
     }
@@ -864,6 +864,7 @@ void stereo_vision::pointProjectImage()
     // remap a blob objects from topview to label
     lock_sv.lockForWrite();
     img_detected.setTo(0);
+    img_detected_display = img_r_L.clone();
     lock_sv.unlock();
     for (int r = 0; r < IMG_H; r++) {
         uchar *ptr_o = img_r_L.ptr<uchar>(r);
@@ -924,12 +925,15 @@ void stereo_vision::pointProjectImage()
         if (objects[i].labeled && objects[i].br != std::pair<int, int>(-1, -1) && objects[i].tl != std::pair<int, int>(-1, -1)) {
             // find center of rect
             objects[i].center = std::pair<int, int>(0.5 * (objects[i].tl.first + objects[i].br.first), 0.5 * (objects[i].tl.second + objects[i].br.second));
-            objects[i].angle = atan(1.0 * (objects[i].center.second - 0.5 * IMG_W) / objects[i].avg_Z) * 180.0 / CV_PI;
+            objects[i].angle = atan(1.0 * (objects[i].avg_X) / objects[i].avg_Z) * 180.0 / CV_PI;
             objects[i].range = sqrt(pow((double)(objects[i].avg_Z), 2) + pow((double)(objects[i].avg_X), 2));
 
             cv::rectangle(img_detected, cv::Rect(objects[i].tl.second, objects[i].tl.first, objects[i].br.second - objects[i].tl.second, objects[i].br.first - objects[i].tl.first),
                           cv::Scalar(ptr_color[3 * tag + 0], ptr_color[3 * tag + 1], ptr_color[3 * tag + 2]), thick_obj_rect, 8, 0);
             cv::circle(img_detected, cv::Point(objects[i].center.second, objects[i].center.first), radius_obj_point, cv::Scalar(0, 255, 0), -1, 8, 0);
+            cv::rectangle(img_detected_display, cv::Rect(objects[i].tl.second, objects[i].tl.first, objects[i].br.second - objects[i].tl.second, objects[i].br.first - objects[i].tl.first),
+                          cv::Scalar(ptr_color[3 * tag + 0], ptr_color[3 * tag + 1], ptr_color[3 * tag + 2]), thick_obj_rect, 8, 0);
+            cv::circle(img_detected_display, cv::Point(objects[i].center.second, objects[i].center.first), radius_obj_point, cv::Scalar(0, 255, 0), -1, 8, 0);
         }
         lock_sv.unlock();
     }
@@ -949,6 +953,7 @@ void stereo_vision::updateDataFroDisplay()
         objects_display[i].pts_num = objects[i].pts_num;
         objects_display[i].range = objects[i].range;
         objects_display[i].tl = objects[i].tl;
+        objects_display[i].rect = objects[i].rect;
         lock_sv.unlock();
     }
 }

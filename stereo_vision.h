@@ -82,6 +82,7 @@ public:
 
     // blob objects image
     cv::Mat img_detected;
+    cv::Mat img_detected_display;
 
     // status
     int input_mode;
@@ -196,6 +197,9 @@ public:
 
         float angle;                    // orientation degree. Middle is zero. (degree)
         float range;                    // (cm)
+
+        // TOPVIEW -----------
+        cv::Rect rect;
 
         objInformation() {
             labeled = false;
@@ -329,7 +333,7 @@ private slots:
     // ============================== End
 
 signals:
-    void updateGUI(cv::Mat *img_L, cv::Mat *img_R, cv::Mat *disp, cv::Mat *disp_pseudo, cv::Mat *topview, cv::Mat *img_detected, int detected_obj, int current_frame_count);
+    void updateGUI(cv::Mat *img_L, cv::Mat *img_R, cv::Mat *disp, cv::Mat *disp_pseudo, cv::Mat *topview, cv::Mat *img_detected, cv::Mat *img_detected_display, int detected_obj, int current_frame_count);
 
     void updateForm(int mode, std::vector<int> params);
 

@@ -157,14 +157,23 @@ private:
 
     // information of objects detected by different sensors on fused topview
     struct sensorInformation {
-        cv::Point pos;                              // sensor's position based on the vehicle view (cm)
+        cv::Point pos;                              // sensor's position based on the center of vehicle
+                                                    // (pixel) forward is x+, lateral right is y+.
+
+        cv::Point pos_pixel;
 
         cv::Scalar color;                           // sensor's color on the topview
+
+        float angle;                                // the half fov for displaying (deg)
+
+        cv::Scalar color_fov;
 
         sensorInformation() {
             pos = cv::Point(-1, -1);
 
             color = cv::Scalar(0, 0, 0);
+
+            angle = -1.0;
         }
     };
 
@@ -179,7 +188,9 @@ private:
 
         int width;                                  // average vehicle's size (cm)
 
-        int length;
+        int length;                                 // (cm)
+
+        int head_pos;                               // (cm)
 
         cv::Rect rect;
 
@@ -314,7 +325,7 @@ private slots:
 
     void on_checkBox_do_depth_clicked(bool checked);
 
-    void svDisplay(cv::Mat *img_L, cv::Mat *img_R, cv::Mat *disp, cv::Mat *disp_pseudo, cv::Mat *topview, cv::Mat *img_detected, int detected_obj, int current_frame_count);
+    void svDisplay(cv::Mat *img_L, cv::Mat *img_R, cv::Mat *disp, cv::Mat *disp_pseudo, cv::Mat *topview, cv::Mat *img_detected, cv::Mat *img_detected_display, int detected_obj, int current_frame_count);
     // ======================== End
 
     // Stereo vision param ====
@@ -408,6 +419,8 @@ private slots:
     void on_radioButton_input_recording_clicked();
     // Recording ============== End
     void on_lineEdit_sv_rig_height_returnPressed();
+    void on_radioButton_vehicle_cart_clicked();
+    void on_radioButton_vehicle_car_clicked();
 };
 
 // Mouse control ==========

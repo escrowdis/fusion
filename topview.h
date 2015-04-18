@@ -72,6 +72,7 @@ protected:
 
     struct blobNode
     {
+        // GRIDMAP -----------
         int pts_num;                    // pixels in the cell
 
         int obj_label;                  // object label number
@@ -79,8 +80,6 @@ protected:
         int avg_Z;                      // average depth of this cell
 
         int avg_X;
-
-        cv::Rect rect;
 
         blobNode() {
             obj_label = -1;
