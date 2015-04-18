@@ -615,6 +615,19 @@ parameters</string>
        </item>
       </layout>
      </widget>
+     <widget class="QCheckBox" name="checkBox_sv_ground_filter">
+      <property name="geometry">
+       <rect>
+        <x>230</x>
+        <y>360</y>
+        <width>91</width>
+        <height>16</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Ground filter</string>
+      </property>
+     </widget>
     </widget>
     <widget class="QWidget" name="tab_4">
      <attribute name="title">

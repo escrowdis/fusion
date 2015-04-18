@@ -32,6 +32,8 @@ extern recording re;
 #define IMG_DIS_DISP_W 320
 #define IMG_DIS_DISP_H 240
 
+#define GROUND_RANGE 20
+
 namespace SV {
 enum STEREO_MATCH {
     SGBM,
@@ -133,6 +135,15 @@ public:
     };
 
     StereoData** data;
+
+    // ground filtering
+    int* ground_filter;                 // the amount of pixel within pixels' range
+
+    float ground_mean;                  // mean of ground_filter_id
+
+    int thresh_ground_filter;           // SD of ground_filter[]
+
+    bool fg_ground_filter;
     // ============================= End
 
     // Stereo match params (SMP) ===

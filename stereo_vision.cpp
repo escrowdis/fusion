@@ -12,6 +12,7 @@ stereo_vision::stereo_vision() : TopView(20, 200, 3000, 19.8, 1080, 750, 270, 12
     fg_stereoMatch = false;
     fg_reproject = false;
     fg_topview_plot_points = false;
+    fg_ground_filter = false;
 
     // blob
     obj_nums = 256;
@@ -31,6 +32,8 @@ stereo_vision::stereo_vision() : TopView(20, 200, 3000, 19.8, 1080, 750, 270, 12
     for (int r = 0; r < IMG_H; r++) {
         data[r] = new StereoData[IMG_W];
     }
+
+    ground_filter = new int[2 * GROUND_RANGE + 1];
 
     createLUT();
 
@@ -63,6 +66,8 @@ stereo_vision::~stereo_vision()
         delete[] data[i];
     }
     delete[] data;
+
+    delete[] ground_filter;
 
     delete[] objects;
     delete[] objects_display;
@@ -383,6 +388,9 @@ void stereo_vision::depthCalculation()
         disp_pseudo.setTo(0);
     uchar* ptr_color = color_table->scanLine(0);
 
+    for (int k = 0; k < 2 * GROUND_RANGE + 1; k++)
+        ground_filter[k] = 0;
+
     lock_sv.lockForWrite();
     for (int r = 0; r < IMG_H; r++) {
         short int* ptr_raw = (short int*) (disp_raw.data + r * disp_raw.step);
@@ -399,6 +407,8 @@ void stereo_vision::depthCalculation()
                 data[r][c].Z = cam_param->param_r / data[r][c].disp;
                 data[r][c].X = (c - IMG_W_HALF) * data[r][c].Z / cam_param->focal_length;
                 data[r][c].Y = (IMG_H_HALF - r) * data[r][c].Z / cam_param->focal_length + cam_param->rig_height;
+                if (data[r][c].Y <= GROUND_RANGE && data[r][c].Y >= -1 * GROUND_RANGE)
+                    ground_filter[data[r][c].Y + GROUND_RANGE]++;
 
                 // pseudo color transform
                 if (fg_pseudo) {
@@ -428,6 +438,8 @@ void stereo_vision::depthCalculation()
             // unmatched
             else {
                 data[r][c].Z = -1;
+                data[r][c].X = -1;
+                data[r][c].Y = -1;
                 ptr[3 * c + 0] = 100;
                 ptr[3 * c + 1] = 100;
                 ptr[3 * c + 2] = 100;
@@ -435,6 +447,29 @@ void stereo_vision::depthCalculation()
             }
         }
         //            std::cout<<std::endl;
+    }
+
+    // ground mean computation
+    if (fg_ground_filter) {
+        ground_mean = 0.0;
+        float ground_count_sd = 0.0;
+        int ground_count = 0;
+        int total_range = 2 * GROUND_RANGE + 1;
+        for (int k = 0; k < total_range; k++)
+            ground_count += ground_filter[k];
+        int ground_count_mean = 1.0 * ground_count / total_range;
+        for (int k = 0; k < total_range; k++) {
+#ifdef debug_info_sv_ground_filter
+            std::cout<<k - GROUND_RANGE<<" "<<ground_filter[k]<<"\t";
+#endif
+            ground_mean += 1.0 * k * ground_filter[k] / ground_count;
+            ground_count_sd += pow((double)(ground_filter[k] - ground_count_mean), 2);
+        }
+        thresh_ground_filter = sqrt(1.0 * ground_count_sd / (total_range - 1));
+#ifdef debug_info_sv_ground_filter
+        std::cout<<std::endl<<ground_mean<<"\t"<<thresh_ground_filter<<std::endl;
+        std::cout<<"filter range "<<(ground_filter[(int)(ground_mean)] - 2 * thresh_ground_filter)<<"\t"<<(ground_filter[(int)(ground_mean)] + 2 * thresh_ground_filter)<<std::endl;
+#endif
     }
     lock_sv.unlock();
 }
@@ -687,6 +722,12 @@ void stereo_vision::pointProjectTopView()
 
             // porject each 3D point onto a topview
             if (data[r][c].Z >= min_distance && data[r][c].Z <= max_distance) {
+                if (fg_ground_filter &&
+                        data[r][c].Y <= GROUND_RANGE && data[r][c].Y >= -1 * GROUND_RANGE &&
+                        ground_filter[data[r][c].Y + GROUND_RANGE] >= (ground_filter[(int)(ground_mean)] - 3 * thresh_ground_filter) &&
+                        ground_filter[data[r][c].Y + GROUND_RANGE] <= (ground_filter[(int)(ground_mean)] + 3 * thresh_ground_filter))
+                    continue;
+
                 grid_row = corrGridRow(data[r][c].Z);
                 grid_col = corrGridCol(c);
 //                grid_row = 1.0 * log10(1.0 * data[r][c].Z / min_distance) / log10(1.0 + k);

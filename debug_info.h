@@ -12,6 +12,7 @@
 //#define debug_info_sv_data
 //#define debug_info_sv_blob_data
 //#define debug_info_sv_topview
+//#define debug_info_sv_ground_filter
 //#define debug_info_cc
 
 #endif // DEBUG_INFO_H

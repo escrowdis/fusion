@@ -1927,3 +1927,11 @@ void MainWindow::on_radioButton_input_recording_clicked()
 {
     inputType(INPUT_TYPE::RECORDING);
 }
+
+void MainWindow::on_checkBox_sv_ground_filter_clicked(bool checked)
+{
+    if (checked)
+        sv->fg_ground_filter = true;
+    else
+        sv->fg_ground_filter = false;
+}
