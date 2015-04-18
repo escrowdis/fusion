@@ -67,6 +67,8 @@ bool textRecord::loadText(QString str, bool fg_str_is_file)
 
     if (file_path.isEmpty())
         return false;
+    if (file.is_open())
+        file.close();
     file.open(file_path.toStdString());
     if(!file)
         return false;
