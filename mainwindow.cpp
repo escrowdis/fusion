@@ -433,7 +433,7 @@ void MainWindow::initialFusedTopView()
     sensors = new sensorInformation[3];
 
     thickness = 2;
-    font = cv::FONT_HERSHEY_SIMPLEX;
+    font = cv::FONT_HERSHEY_PLAIN;
     font_size = 1;
     font_thickness = 1;
 
@@ -549,7 +549,7 @@ void MainWindow::on_radioButton_vehicle_cart_clicked()
 
     min_detection_range = rc->min_distance + sqrt(pow(0.5 * vehicle.length, 2) + pow(0.5 * vehicle.width, 2));
 
-    sensors[0].pos = cv::Point(0, 51);
+    sensors[0].pos = cv::Point(0, 29.5);
 
     sensors[1].pos = cv::Point(0, vehicle.head_pos);
 
@@ -633,6 +633,8 @@ void MainWindow::drawFusedTopView(stereo_vision::objInformation *d_sv, RadarCont
     if (ui->checkBox_fusion_sv->isChecked() && fg_capturing && sv->fusedTopview()) {
         // every pixel
         if (ui->checkBox_fused_sv_plot_every_pixel->isChecked()) {
+            cv::Scalar color_pixel = sensors[device].color;
+            color_pixel[3] = 100;
             for (int r = 0; r < IMG_H; r++) {
                 for (int c = 0; c < IMG_W; c++) {
                     if (sv->data[r][c].disp > 0) {
@@ -641,7 +643,7 @@ void MainWindow::drawFusedTopView(stereo_vision::objInformation *d_sv, RadarCont
                         range = sqrt(pow((double)(sv->data[r][c].Z), 2) + pow((double)(sv->data[r][c].X), 2));
                         angle = atan(1.0 * sv->data[r][c].X / (1.0 * sv->data[r][c].Z)) * 180.0 / CV_PI;
                         pointTransformTopView(sensors[device].pos_pixel, range, angle, &plot_pt);
-                        cv::circle(fused_topview, plot_pt, 1, cv::Scalar(255, 0, 0, 100), -1, 8, 0);
+                        cv::circle(fused_topview, plot_pt, 1, color_pixel, -1, 8, 0);
                     }
                 }
             }
@@ -652,7 +654,7 @@ void MainWindow::drawFusedTopView(stereo_vision::objInformation *d_sv, RadarCont
                 cv::Point plot_pt;
                 cv::Rect rect;
                 float range_world = pointTransformTopView(sensors[device].pos_pixel, d_sv[k].range, d_sv[k].angle, &plot_pt, d_sv[k].rect, &rect);
-                cv::circle(fused_topview, plot_pt, thickness, cv::Scalar(255, 0, 0, 255), -1, 8, 0);
+                cv::circle(fused_topview, plot_pt, thickness, sensors[device].color, -1, 8, 0);
                 cv::rectangle(fused_topview, rect, cv::Scalar(255, 255, 0, 255), 1, 8, 0);
                 tag = QString::number(k).toStdString() + ", " + QString::number(range_world / 100, 'g', range_precision).toStdString();
                 cv::putText(fused_topview, tag, plot_pt, font, font_size, sensors[device].color, font_thickness);
@@ -666,9 +668,9 @@ void MainWindow::drawFusedTopView(stereo_vision::objInformation *d_sv, RadarCont
             if (d_radar[m].status >= rc->obj_status_filtered) {
                 cv::Point plot_pt;
                 float range_world = pointTransformTopView(sensors[device].pos_pixel, 100 * d_radar[m].range, d_radar[m].angle + rc->aim_angle, &plot_pt);
-                cv::circle(fused_topview, plot_pt, thickness, cv::Scalar(0, 0, 255, 255), -1, 8, 0);
+                cv::circle(fused_topview, plot_pt, thickness, sensors[device].color, -1, 8, 0);
                 tag = QString::number(m).toStdString() + ", " + QString::number(range_world / 100, 'g', range_precision).toStdString();
-                cv::putText(fused_topview, tag, plot_pt, font, font_size, sensors[device].color, font_thickness);
+                cv::putText(fused_topview, tag, cv::Point(plot_pt.x, plot_pt.y + 15), font, font_size, sensors[device].color, font_thickness);
             }
         }
     }
