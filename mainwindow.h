@@ -60,6 +60,8 @@ public:
 private:
     Ui::MainWindow *ui;
 
+    QLabel *label_file_loaded;
+
     void reportError(QString part, QString level, QString content);
 
     void report(QString);

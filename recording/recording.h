@@ -36,7 +36,7 @@ public:
     bool recordData(cv::Mat img);
     bool recordData(std::string data);
 
-    bool loadData();
+    QString loadData();
 
     void start(RECORD_TYPE type);
 

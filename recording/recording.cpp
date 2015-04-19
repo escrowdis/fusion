@@ -76,32 +76,36 @@ bool recording::recordData(std::string data)
     return tr->record(data);
 }
 
-bool recording::loadData()
+QString recording::loadData()
 {
     QString data_name, data_dir;
     switch (record_type) {
     case RECORD_TYPE::VIDEO:
         data_name = QFileDialog::getOpenFileName(0, "data file", 0, QFileDialog::tr("Video file (*.avi)"));
         if (data_name.isEmpty())
-            return false;
+            return "";
         vr->loadVideo(data_name, true);
+
+        return data_name;
         break;
     case RECORD_TYPE::TXT:
         data_name = QFileDialog::getOpenFileName(0, "data file", 0, QFileDialog::tr("Text file (*.txt)"));
         if (data_name.isEmpty())
-            return false;
+            return "";
         tr->loadText(data_name, true);
+
+        return data_name;
         break;
     case RECORD_TYPE::ALL:
         data_dir = QFileDialog::getExistingDirectory(0, "data folder", 0, QFileDialog::ShowDirsOnly);
         if (data_dir.isEmpty())
-            return false;
+            return "";
         vr->loadVideo(data_dir, false);
         tr->loadText(data_dir, false);
+
+        return data_dir;
         break;
     }
-
-    return true;
 }
 
 void recording::start(RECORD_TYPE type)

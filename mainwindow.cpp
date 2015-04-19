@@ -38,6 +38,10 @@ MainWindow::MainWindow(QWidget *parent) :
 
     ui->setupUi(this);
 
+    // Recording
+    label_file_loaded = new QLabel();
+    ui->statusBar->addWidget(label_file_loaded);
+
     // LRF
     // COM port
     for (int i = 1; i <= 20; i++)
@@ -185,6 +189,7 @@ MainWindow::~MainWindow()
     delete lrf;
     delete sv;
     delete[] sensors;
+    delete label_file_loaded;
     delete ui;
 }
 
@@ -1852,12 +1857,14 @@ void MainWindow::loadData(int record_type)
     inputType(INPUT_TYPE::RECORDING);
     re.vr->fg_data_end = false;
     re.tr->fg_data_end = false;
-    re.loadData();
+    QString file_loaded = re.loadData();
     if (record_type == RECORD_TYPE::VIDEO || record_type == RECORD_TYPE::ALL) {
         sv_frame_count = re.vr->frame_count;
         ui->label_sv_frame_count->setText("0 / " + QString::number(sv_frame_count) + " frames");
         ui->label_sv_frame_count->setVisible(true);
     }
+
+    label_file_loaded->setText(file_loaded);
 }
 
 void MainWindow::on_pushButton_sv_load_data_clicked()
