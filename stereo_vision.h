@@ -19,6 +19,10 @@ extern recording re;
 #include <stack>
 
 #include <opencv2/opencv.hpp>
+#ifdef opencv_cuda
+#include "opencv2/cudastereo.hpp"
+#endif
+
 
 // topview
 #include "topview.h"
@@ -279,8 +283,16 @@ private:
     cv::Rect calibROI[2];
 
     // correspondence matching method
+#ifdef opencv_cuda
+    cv::Ptr<cv::cuda::StereoBM> bm;
+
+    cv::cuda::GpuMat d_L;
+    cv::cuda::GpuMat d_R;
+    cv::cuda::GpuMat d_disp;
+#else
     cv::Ptr<cv::StereoSGBM> sgbm;
     cv::Ptr<cv::StereoBM> bm;
+#endif
     int cn;
 
     void updateFormParams();
@@ -327,6 +339,7 @@ private slots:
     void change_bm_speckle_range(int value);
     // ============================== End
 
+#ifndef opencv_cuda
     // SGBM =========================
     void change_sgbm_pre_filter_cap(int value);
 
@@ -342,6 +355,7 @@ private slots:
 
     void change_sgbm_speckle_range(int value);
     // ============================== End
+#endif
 
 signals:
     void updateGUI(cv::Mat *img_L, cv::Mat *img_R, cv::Mat *disp, cv::Mat *disp_pseudo, cv::Mat *topview, cv::Mat *img_detected, cv::Mat *img_detected_display, int detected_obj, int current_frame_count);

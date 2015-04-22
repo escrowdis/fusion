@@ -44,8 +44,12 @@ stereo_vision::stereo_vision() : TopView(20, 200, 3000, 19.8, 1080, 750, 270, 12
     img_L = cv::Mat::zeros(IMG_H, IMG_W, CV_8UC3);
     img_R = cv::Mat::zeros(IMG_H, IMG_W, CV_8UC3);
     disp_pseudo = cv::Mat::zeros(IMG_H, IMG_W, CV_8UC3);
+#ifdef opencv_cuda
+    bm = cv::cuda::createStereoBM(16, 9);
+#else
     bm = cv::createStereoBM(16, 9);
     sgbm = cv::createStereoSGBM(0, 16, 3);
+#endif
     img_detected = cv::Mat::zeros(IMG_H, IMG_W, CV_8UC3);
 
     match_mode = SV::STEREO_MATCH::SGBM;
@@ -76,7 +80,9 @@ stereo_vision::~stereo_vision()
     delete[] LUT_grid_col;
 
     close();
+#ifndef opencv_cuda
     sgbm.release();
+#endif
     bm.release();
 }
 
@@ -194,6 +200,7 @@ void stereo_vision::matchParamInitialize(int cur_mode)
         bm->setSpeckleRange(32);
         bm->setDisp12MaxDiff(1);
         break;
+#ifndef opencv_cuda
     case SV::STEREO_MATCH::SGBM:
         SAD_window_size = 0; // odd number, usually from 3 to 11
         number_disparity = number_disparity > 0 ? number_disparity : ((IMG_W / 8) + 15) & -16;
@@ -215,6 +222,7 @@ void stereo_vision::matchParamInitialize(int cur_mode)
         sgbm->setDisp12MaxDiff(1);
         sgbm->setMode(cv::StereoSGBM::MODE_SGBM);
         break;
+#endif
     }
 
     match_mode = cur_mode;
@@ -243,6 +251,7 @@ void stereo_vision::updateParamsSmp()
         bm->setSpeckleWindowSize(param_bm->speckle_window_size);
         bm->setSpeckleRange(param_bm->speckle_range);
         break;
+#ifndef opencv_cuda
     case SV::STEREO_MATCH::SGBM:
         sgbm->setPreFilterCap(param_sgbm->pre_filter_cap);
         sgbm->setBlockSize(param_sgbm->SAD_window_size);
@@ -252,6 +261,7 @@ void stereo_vision::updateParamsSmp()
         sgbm->setSpeckleWindowSize(param_sgbm->speckle_window_size);
         sgbm->setSpeckleRange(param_sgbm->speckle_range);
         break;
+#endif
     }
 }
 
@@ -270,6 +280,7 @@ void stereo_vision::updateFormParams()
         match_param.push_back(bm->getSpeckleWindowSize());
         match_param.push_back(bm->getSpeckleRange());
         break;
+#ifndef opencv_cuda
     case SV::STEREO_MATCH::SGBM:
         match_param.push_back(sgbm->getPreFilterCap());
         match_param.push_back(sgbm->getBlockSize());
@@ -279,6 +290,7 @@ void stereo_vision::updateFormParams()
         match_param.push_back(sgbm->getSpeckleWindowSize());
         match_param.push_back(sgbm->getSpeckleRange());
         break;
+#endif
     }
 
     emit updateForm(match_mode, match_param);
@@ -370,11 +382,17 @@ void stereo_vision::stereoMatch()
 
     cv::GaussianBlur(img_match_L, img_match_L, cv::Size(7, 7), 0, 0);
     cv::GaussianBlur(img_match_R, img_match_R, cv::Size(7, 7), 0, 0);
-
+#ifdef opencv_cuda
+    d_L.upload(img_match_L);
+    d_R.upload(img_match_R);
+    bm->compute(d_L, d_R, d_disp);
+    d_disp.download(disp_raw);
+#else
     if (match_mode == SV::STEREO_MATCH::BM)
         bm->compute(img_match_L, img_match_R, disp_raw);
     else if (match_mode == SV::STEREO_MATCH::SGBM)
         sgbm->compute(img_match_L, img_match_R, disp_raw);
+#endif
 
     disp_raw.convertTo(disp, CV_8UC1);
 
@@ -646,6 +664,7 @@ void stereo_vision::change_bm_speckle_range(int value)
 #endif
 }
 
+#ifndef opencv_cuda
 void stereo_vision::change_sgbm_pre_filter_cap(int value)
 {
     sgbm->setPreFilterCap(value);
@@ -710,7 +729,7 @@ void stereo_vision::change_sgbm_speckle_range(int value)
     qDebug()<<sgbm->getSpeckleRange();
 #endif
 }
-
+#endif
 void stereo_vision::pointProjectTopView()
 {
     resetTopView();
