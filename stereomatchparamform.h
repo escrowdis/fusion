@@ -4,7 +4,7 @@
 #include <QWidget>
 
 #include "debug_info.h"
-#include <stereo_vision.h>
+#include "stereo_vision.h"
 
 namespace Ui {
 class stereoMatchParamForm;
