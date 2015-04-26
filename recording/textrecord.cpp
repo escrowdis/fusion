@@ -4,6 +4,8 @@ textRecord::textRecord()
 {
     fg_record = false;
 
+    fg_loaded = false;
+
     fg_data_end = false;
 
     fg_file_established = false;
@@ -56,6 +58,7 @@ void textRecord::stop()
 {
     fg_file_established = false;
     fg_record = false;
+    fg_loaded = false;
 
     file.close();
     file.flush();
@@ -65,15 +68,20 @@ bool textRecord::loadText(QString str, bool fg_str_is_file)
 {
     setPath(str, fg_str_is_file);
 
-    if (file_path.isEmpty())
-        return false;
+    if (file_path.isEmpty()) {
+        fg_loaded = false;
+        return fg_loaded;
+    }
     if (file.is_open())
         file.close();
     file.open(file_path.toStdString());
-    if(!file)
-        return false;
+    if(!file) {
+        fg_loaded = false;
+        return fg_loaded;
+    }
 
     current_frame_count = 0;
 
-    return true;
+    fg_loaded = true;
+    return fg_loaded;
 }

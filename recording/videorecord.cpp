@@ -4,6 +4,8 @@ videoRecord::videoRecord(int img_h, int img_w)
 {
     fg_record = false;
 
+    fg_loaded = false;
+
     fg_data_end = false;
 
     fg_file_established = false;
@@ -84,6 +86,7 @@ void videoRecord::stop()
     fg_file_established = false;
     fg_frame_record = false;
     fg_record = false;
+    fg_loaded = false;
     writer.release();
     cap.release();
 }
@@ -141,15 +144,20 @@ bool videoRecord::loadVideo(QString str, bool fg_str_is_file)
 {
     setPath(str, fg_str_is_file);
 //    file_path = QFileDialog::getOpenFileName(0, "Load video", save_path, "Video files (*.avi)");
-    if (file_path.isEmpty())
-        return false;
+    if (file_path.isEmpty()) {
+        fg_loaded = false;
+        return fg_loaded;
+    }
 
     cap.open(file_path.toStdString());
-    if (!cap.isOpened())
-        return false;
+    if (!cap.isOpened()) {
+        fg_loaded = false;
+        return fg_loaded;
+    }
 
     current_frame_count = 0;
     getBasicInfo(&cap);
 
-    return true;
+    fg_loaded = true;
+    return fg_loaded;
 }

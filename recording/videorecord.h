@@ -30,6 +30,8 @@ public:
 
     bool fg_record;
 
+    bool fg_loaded;
+
     bool fg_data_end;
 
     cv::VideoWriter writer;
