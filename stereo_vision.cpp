@@ -83,6 +83,9 @@ stereo_vision::~stereo_vision()
     delete[] LUT_grid_row;
     delete[] LUT_grid_col;
 
+    delete[] LUT_depth;
+    delete[] LUT_img_col;
+
     close();
 #ifndef opencv_cuda
     sgbm.release();
@@ -100,6 +103,15 @@ void stereo_vision::createLUT()
 
     for (int m = 0; m < IMG_W; m++)
         LUT_grid_col[m] = 1.0 * m / c;
+
+    LUT_depth = new int[img_row];
+    LUT_img_col = new int[img_col];
+
+    for (int m = 0; m < img_row; m++)
+        LUT_depth[m] = 1.0 * min_distance * pow((double)(1.0 + k), m);
+
+    for (int n = 0; n < img_col; n++)
+        LUT_img_col[n] = 1.0 * n * c;
 }
 
 int stereo_vision::corrGridRow(int k)
@@ -818,6 +830,8 @@ void stereo_vision::resetBlob()
         objects[i].avg_X = 0;
         objects[i].pts_num = 0;
         objects[i].closest_count = 0;
+        objects[i].rect_tl = cv::Point(img_col, img_row);
+        objects[i].rect_br = cv::Point(0, 0);
     }
 }
 
@@ -918,7 +932,8 @@ void stereo_vision::blob(int thresh_pts_num)
     for (int r = 0; r < img_row; r++) {
         for (int c = 0; c < img_col; c++) {
             // filtering
-            if (grid_map[r][c].obj_label >= 0 && objects[grid_map[r][c].obj_label].labeled) {
+            int grid_obj_label = grid_map[r][c].obj_label;
+            if (grid_obj_label >= 0 && objects[grid_obj_label].labeled) {
                 // plot points onto topview
                 int row = img_row - r - gap > 0 ? img_row - r - gap : 0;
                 int row_1 = img_row - (r + 1) + gap <= img_row ? img_row - (r + 1) + gap : img_row;
@@ -930,15 +945,118 @@ void stereo_vision::blob(int thresh_pts_num)
                 pts[2] = pointT(img_grid[row_1][col_1]);
                 pts[3] = pointT(img_grid[row][col_1]);
 
-//                p = 256.0 / (1.0 * obj_nums) * grid_map[r][c].obj_label * (max_distance - min_distance);
+//                p = 256.0 / (1.0 * obj_nums) * grid_obj_label * (max_distance - min_distance);
                 p = (max_distance - 0.5 * (img_grid[row][col].y + img_grid[row_1][col].y)) - min_distance;
 
                 cv::fillConvexPoly(topview, pts, thick_polygon, cv::Scalar(ptr_color[3 * p + 0], ptr_color[3 * p + 1], ptr_color[3 * p + 2], 255), 8, 0);
+
+                // find rect of object in topview
+                if (objects[grid_obj_label].rect_tl.x > c) objects[grid_obj_label].rect_tl.x = c;
+                if (objects[grid_obj_label].rect_tl.y > r) objects[grid_obj_label].rect_tl.y = r;
+                if (objects[grid_obj_label].rect_br.x < c) objects[grid_obj_label].rect_br.x = c;
+                if (objects[grid_obj_label].rect_br.y < r) objects[grid_obj_label].rect_br.y = r;
             }
         }
     }
 
+    for (int k = 0 ; k < obj_nums; k++) {
+//        (c - IMG_W_HALF) * data[r][c].Z / cam_param->focal_length;
+        int tl_depth = LUT_depth[img_row - objects[k].rect_tl.y - 1];
+        int br_depth = LUT_depth[img_row - objects[k].rect_br.y - 1];
+        int tl_x = (LUT_img_col[objects[k].rect_tl.x] - IMG_W_HALF) * tl_depth / cam_param->focal_length;
+        int br_x = (LUT_img_col[objects[k].rect_br.x] - IMG_W_HALF) * tl_depth / cam_param->focal_length;;
+        cv::Point rect_tl = cv::Point(tl_x, tl_depth);
+        cv::Point rect_br = cv::Point(br_x, br_depth);
+        objects[k].rect = cv::Rect(rect_tl.x, rect_tl.y, rect_br.x - rect_tl.x, abs(rect_br.y - rect_tl.y));
+    }
+
     // find the boundary of objects [merge into stereo_vision::pointProjectImage]
+}
+
+void stereo_vision::cuboid()
+{
+    cv::Mat topview_b = cv::Mat::zeros(topview.rows, topview.cols, CV_8UC1);
+    cv::Vec4b pt_raw;
+    uchar *pt;
+    for (int r = 0; r < topview.rows; r++) {
+        for (int c = 0; c < topview.cols; c++) {
+            pt_raw = topview.at<cv::Vec4b>(r ,c);
+            pt = &topview_b.at<uchar>(r, c);
+
+            if (pt_raw.val[0] != 0 || pt_raw.val[1] != 0 && pt_raw.val[2] != 0)
+                *pt = 255;
+        }
+    }
+
+    std::vector<std::vector<cv::Point> > contours;
+    std::vector<cv::Vec4i> hierarchy;
+
+    cv::findContours(topview_b, contours, hierarchy, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_SIMPLE, cv::Point(0, 0));
+    std::vector<cv::RotatedRect> minRect(contours.size());
+    for( int i = 0; i < contours.size(); i++ ) {
+        minRect[i] = cv::minAreaRect( cv::Mat(contours[i]));
+    }
+
+    cv::RNG rng(12345);
+    cv::Mat drawing = cv::Mat::zeros( topview_b.size(), CV_8UC3 );
+    cv::Rect rect;
+    for( int i = 0; i< contours.size(); i++ )
+    {
+        cv::Scalar color = cv::Scalar( rng.uniform(0, 255), rng.uniform(0,255), rng.uniform(0,255) );
+        // contour
+//        cv::drawContours( drawing, contours, i, color, 1, 8, std::vector<cv::Vec4i>(), 0, cv::Point() );
+
+        // bounding rect
+        rect = cv::boundingRect(contours[i]);
+        // rotated rectangle
+        cv::Point2f rect_points[4]; minRect[i].points( rect_points );
+
+        for (int k = 0; k < obj_nums; k++) {
+            if (!objects[k].labeled)
+                continue;
+            int d_obj = LUT_grid_row[objects[k].avg_Z];
+            int x_obj = LUT_grid_col[objects[k].avg_X + IMG_W_HALF];
+            int d_rect_close = rect.br().y;
+            int d_rect_far = rect.tl().y;
+            std::cout<<d_obj<<" "<<x_obj<<"\t"<<d_rect_close<<" "<<d_rect_far<<std::endl;
+            if (d_obj >= d_rect_far && d_obj <= d_rect_close) {
+                // bounding rect
+                cv::circle(drawing, cv::Point(x_obj, d_obj), 3, color, -1, 8, 0);
+                cv::rectangle(drawing, rect, color, 1, 8, 0);
+            }
+        }
+
+        // bounding rect
+        cv::rectangle(drawing, rect, color, 1, 8, 0);
+        cv::rectangle(topview, rect, cv::Scalar(color[2], color[1], color[0], 255), 1, 8, 0);
+
+        // rotated rectangle
+        for( int j = 0; j < 4; j++ ) {
+            cv::line(drawing, rect_points[j], rect_points[(j+1)%4], color, 1, 8 );
+//            cv::line(topview, rect_points[j], rect_points[(j+1)%4], color, 2, 8 );
+        }
+
+        for (int k = 0; k < obj_nums; k++) {
+            if (!objects[k].labeled)
+                continue;
+            int d_obj = LUT_grid_row[objects[k].avg_Z];
+            int d_rect_close = rect.br().y;
+            int d_rect_far = rect.tl().y;
+            if (d_obj >= d_rect_far && d_obj <= d_rect_close) {
+                int br_y, tl_y;
+                for (int p = 0; p < max_distance + 1; p++) {
+                    if (rect.br().y == LUT_grid_row[p])
+                        br_y = p;
+                    if (rect.tl().y == LUT_grid_row[p])
+                        tl_y = p;
+                }
+                objects[k].rect = cv::Rect(rect.br().x * c, br_y, abs(rect.br().x - rect.tl().x) * c, abs(br_y - tl_y));
+                break;
+            }
+        }
+    }
+
+    imshow( "Contours", drawing );
 }
 
 void stereo_vision::pointProjectImage()

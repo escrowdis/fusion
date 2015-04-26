@@ -1,10 +1,10 @@
 %YAML:1.0
 stereoVision:
-   port_L: 0
-   port_R: 1
+   port_L: 1
+   port_R: 0
    cam_focal_length: 0
-   focal_length: 2943.
-   rig_height: 110.
+   focal_length: 2143.
+   rig_height: 100.
    base_line: 15.
 topView:
    row_interval: 12
@@ -26,11 +26,11 @@ stereoParamSGBM:
    speckle_range: 15
 stereoParamBM:
    pre_filter_size: 63
-   pre_filter_cap: 5
+   pre_filter_cap: 11
    SAD_window_size: 39
    min_disp: 0
-   num_of_disp: 128
+   num_of_disp: 64
    texture_thresh: 16
-   uniquenese_ratio: 4
+   uniquenese_ratio: 5
    speckle_window_size: 41
    speckle_range: 11

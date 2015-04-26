@@ -670,6 +670,51 @@ void MainWindow::drawFusedTopView(stereo_vision::objInformation *d_sv, RadarCont
                 cv::rectangle(fused_topview, rect, cv::Scalar(255, 255, 0, 255), 1, 8, 0);
                 tag = QString::number(k).toStdString() + ", " + QString::number(range_world / 100, 'g', range_precision).toStdString();
                 cv::putText(fused_topview, tag, plot_pt, font, font_size, sensors[device].color, font_thickness);
+
+
+                // Fusion ================================
+                double U_D = 500;    // max distance error (cm)
+                double R_sv = U_D * range_world / sv->max_distance;  // (cm)
+                int closest_radar_id = -1;
+                double closest_radar_distance = 10000000.0;
+                double sv_x = d_sv[k].range * sin(d_sv[k].angle * CV_PI / 180.0) + sensors[0].pos.x;
+                double sv_y = d_sv[k].range * cos(d_sv[k].angle * CV_PI / 180.0) + sensors[0].pos.y - vehicle.head_pos;
+                double radar_min_x;
+                double radar_min_y;
+//                std::cout<<"SV: "<<sv_x<<" "<<sv_y<<std::endl;
+                if (ui->checkBox_fusion_radar->isChecked() && fg_retrieving && rc->fusedTopview()) {
+                    for (int m = 0 ; m < 64; m++) {
+                        if (d_radar[m].status >= rc->obj_status_filtered) {
+                            double radar_x = 100.0 * d_radar[m].range * sin(d_radar[m].angle * CV_PI / 180.0) + sensors[1].pos.x;
+                            double radar_y = 100.0 * d_radar[m].range * cos(d_radar[m].angle * CV_PI / 180.0) + sensors[1].pos.y - vehicle.head_pos;
+                            double deviation = sqrt(pow((double)(radar_x - sv_x), 2) + pow((double)(radar_y - sv_y), 2));
+//                            std::cout<<deviation<<" "<<closest_radar_distance<<" "<<R_sv<<std::endl;
+//                            std::cout<<"RADAR: "<<radar_x<<" "<<radar_y<<std::endl;
+                            if (deviation < closest_radar_distance && deviation < R_sv) {
+                                closest_radar_id = m;
+                                closest_radar_distance = deviation;
+                                radar_min_x = radar_x;
+                                radar_min_y = radar_y;
+                            }
+//                            std::cout<<"dist. "<<sv_x<<" "<<sv_y<<"\t"<<radar_x<<" "<<radar_y<<std::endl;
+                        }
+                    }
+
+                    if (closest_radar_id != -1) {
+                        cv::Point2d fused_pos;
+                        float ratio_radar = 0.9;
+                        float ratio_sv = 0.1;
+                        double fused_x = vehicle.VCP.x + (ratio_radar * radar_min_x + ratio_sv * sv_x) * ratio;
+                        double fused_y = vehicle.VCP.y - (ratio_radar * radar_min_y + ratio_sv * sv_y) * ratio;
+                        double range = sqrt(pow((double)(0.1 * (sv_x + sensors[0].pos.x) + 0.9 * (radar_min_x + sensors[0].pos.x)), 2) +
+                                            pow((double)(0.1 * (sv_y + sensors[1].pos.y) + 0.9 * (radar_min_y + sensors[1].pos.y) - vehicle.head_pos), 2));
+                        fused_pos = cv::Point2d(fused_x, fused_y);
+                        cv::circle(fused_topview, cv::Point(fused_pos), thickness + 2, cv::Scalar(139, 0, 139, 255), -1, 8, 0);
+                        tag = QString::number(range / 100, 'g', range_precision).toStdString();
+                        cv::putText(fused_topview, tag, cv::Point(plot_pt.x - 50, plot_pt.y), font, font_size, cv::Scalar(139, 0, 139, 255), font_thickness);
+                        std::cout<<k<<" "<<closest_radar_id<<"\t"<<range<<std::endl;
+                    }
+                }
             }
         }
     }
@@ -711,15 +756,12 @@ float MainWindow::pointTransformTopView(cv::Point sensor_pos, float range, float
     y_tmp = range * cos(angle * CV_PI / 180.0);
     output->x = vehicle.VCP.x + (x_tmp * ratio + sensor_pos.x);
     output->y = vehicle.VCP.y - (y_tmp * ratio + sensor_pos.y);
-    rect->x = vehicle.VCP.x + (rect_in.br().x * ratio + sensor_pos.x);
-    rect->y = vehicle.VCP.y - (rect_in.br().y * ratio + sensor_pos.y);
-    rect->x = rect->br().x;
-    rect->y = rect->br().y;
-    rect->width = rect_in.width * ratio;
-    rect->height = rect_in.height * ratio;
+    *rect = cv::Rect(vehicle.VCP.x + ((rect_in.tl().x) * ratio + sensor_pos.x),
+                     vehicle.VCP.y - (rect_in.tl().y * ratio + sensor_pos.y),
+                     (rect_in.br().x - rect_in.tl().x) * ratio, abs(rect_in.br().y - rect_in.tl().y) * ratio);
 
-//    std::cout<<rect->br().x<<"\t"<<rect->br().y<<"\t"<<rect->width<<"\t"<<rect->height<<"\t\t"<<
-//            rect_in.br().x<<"\t"<<rect_in.br().y<<"\t"<<rect_in.width<<"\t"<<rect_in.height<<std::endl;
+//    std::cout<<rect->tl().x<<"\t"<<rect->tl().y<<"\t"<<rect->width<<"\t"<<rect->height<<"\t\t"<<
+//            rect_in.tl().x<<"\t"<<rect_in.tl().y<<"\t"<<rect_in.width<<"\t"<<rect_in.height<<std::endl;
 
     return sqrt(pow((double)(x_tmp + sensor_pos.x / ratio), 2) + pow((double)(y_tmp + sensor_pos.y / ratio - vehicle.head_pos), 2));
 }

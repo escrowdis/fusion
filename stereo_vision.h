@@ -215,6 +215,7 @@ public:
 
         // TOPVIEW -----------
         cv::Rect rect;
+        cv::Point rect_tl, rect_br;
 
         objInformation() {
             labeled = false;
@@ -237,8 +238,10 @@ public:
     // ============================= End
 
 private:
-    int* LUT_grid_row;
-    int* LUT_grid_col;
+    int* LUT_grid_row;                  // depth -> grid map row
+    int* LUT_grid_col;                  // image col -> grid map col
+    int* LUT_depth;                     // grid map row -> depth
+    int* LUT_img_col;                   // grid map col -> image col
 
     void createLUT();
     int corrGridRow(int k);
@@ -310,6 +313,8 @@ private:
     void resetBlob();
 
     void blob(int thresh_pts_num);
+
+    void cuboid();
     // ============================= End
 
     // Topview =====================
