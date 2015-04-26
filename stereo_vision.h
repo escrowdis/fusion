@@ -339,7 +339,6 @@ private slots:
     void change_bm_speckle_range(int value);
     // ============================== End
 
-#ifndef opencv_cuda
     // SGBM =========================
     void change_sgbm_pre_filter_cap(int value);
 
@@ -355,7 +354,6 @@ private slots:
 
     void change_sgbm_speckle_range(int value);
     // ============================== End
-#endif
 
 signals:
     void updateGUI(cv::Mat *img_L, cv::Mat *img_R, cv::Mat *disp, cv::Mat *disp_pseudo, cv::Mat *topview, cv::Mat *img_detected, cv::Mat *img_detected_display, int detected_obj, int current_frame_count);

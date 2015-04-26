@@ -90,6 +90,13 @@ MainWindow::MainWindow(QWidget *parent) :
     // Laser range finder ====================== End
 
     // Stereo vision ===========================
+#ifdef opencv_cuda
+    ui->radioButton_SGBM->setEnabled(false);
+    ui->radioButton_BM->setChecked(true);
+#else
+    ui->radioButton_SGBM->setEnabled(true);
+    ui->radioButton_SGBM->setChecked(true);
+#endif
 
     // Initialization
     sv = new stereo_vision();
@@ -176,8 +183,8 @@ MainWindow::~MainWindow()
 
     // If close mainwindow without clicking stop button since the camera has been opened.
     fg_running = false;
-//    QMessageBox::StandardButton reply = QMessageBox::question(0, "New change", "Parameters were changed, save the new ones?", QMessageBox::Yes | QMessageBox::No);
-//    if (reply == QMessageBox::Yes)
+    QMessageBox::StandardButton reply = QMessageBox::question(0, "New change", "Parameters were changed, save the new ones?", QMessageBox::Yes | QMessageBox::No);
+    if (reply == QMessageBox::Yes)
         paramWrite();
     delete fin_cam_param;
     delete fin_SGBM;
@@ -1361,7 +1368,7 @@ void MainWindow::on_pushButton_lrf_record_stop_clicked()
 
 void MainWindow::on_pushButton_sv_read_images_clicked()
 {
-    QStringList imgs_path = QFileDialog::getOpenFileNames(0, "Load images. Choose left and right sequentially.", ".", tr("Image files (*.jpg)"));
+    QStringList imgs_path = QFileDialog::getOpenFileNames(0, "Load images. Choose left and right sequentially.", ".", tr("Image files (*.jpg, *.png)"));
     if (imgs_path.empty())
         return;
     sv->input_mode = SV::INPUT_SOURCE::IMG;

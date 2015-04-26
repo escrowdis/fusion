@@ -52,7 +52,11 @@ stereo_vision::stereo_vision() : TopView(20, 200, 3000, 19.8, 1080, 750, 270, 12
 #endif
     img_detected = cv::Mat::zeros(IMG_H, IMG_W, CV_8UC3);
 
+#ifdef opencv_cuda
+    match_mode = SV::STEREO_MATCH::BM;
+#else
     match_mode = SV::STEREO_MATCH::SGBM;
+#endif
 
     matchParamInitialize(match_mode);
 
@@ -411,7 +415,12 @@ void stereo_vision::depthCalculation()
 
     lock_sv.lockForWrite();
     for (int r = 0; r < IMG_H; r++) {
+#ifdef opencv_cuda
+        uchar* ptr_raw = (uchar*) (disp_raw.data + r * disp_raw.step);
+#else
         short int* ptr_raw = (short int*) (disp_raw.data + r * disp_raw.step);
+#endif
+
         uchar* ptr = (uchar*) (disp_pseudo.data + r * disp_pseudo.step);
         for (int c = 0; c < IMG_W; c++) {
             // non-overlapping part
@@ -664,18 +673,20 @@ void stereo_vision::change_bm_speckle_range(int value)
 #endif
 }
 
-#ifndef opencv_cuda
 void stereo_vision::change_sgbm_pre_filter_cap(int value)
 {
+#ifndef opencv_cuda
     sgbm->setPreFilterCap(value);
     param_sgbm->pre_filter_cap = value;
 #ifdef debug_info_sv_param
     qDebug()<<sgbm->getPreFilterCap();
 #endif
+#endif
 }
 
 void stereo_vision::change_sgbm_sad_window_size(int value)
 {
+#ifndef opencv_cuda
     sgbm->setBlockSize(value);
     sgbm->setP1(8 * cn * value * value);
     sgbm->setP2(32 * cn * value * value);
@@ -683,53 +694,64 @@ void stereo_vision::change_sgbm_sad_window_size(int value)
 #ifdef debug_info_sv_param
     qDebug()<<sgbm->getBlockSize();
 #endif
+#endif
 }
 
 void stereo_vision::change_sgbm_min_disp(int value)
 {
+#ifndef opencv_cuda
     sgbm->setMinDisparity(value);
     param_sgbm->min_disp = value;
 #ifdef debug_info_sv_param
     qDebug()<<sgbm->getMinDisparity();
 #endif
+#endif
 }
 
 void stereo_vision::change_sgbm_num_of_disp(int value)
 {
+#ifndef opencv_cuda
     sgbm->setNumDisparities(value);
     param_sgbm->num_of_disp = value;
 #ifdef debug_info_sv_param
     qDebug()<<sgbm->getNumDisparities();
 #endif
+#endif
 }
 
 void stereo_vision::change_sgbm_uniqueness_ratio(int value)
 {
+#ifndef opencv_cuda
     sgbm->setUniquenessRatio(value);
     param_sgbm->uniquenese_ratio = value;
 #ifdef debug_info_sv_param
     qDebug()<<sgbm->getUniquenessRatio();
 #endif
+#endif
 }
 
 void stereo_vision::change_sgbm_speckle_window_size(int value)
 {
+#ifndef opencv_cuda
     sgbm->setSpeckleWindowSize(value);
     param_sgbm->speckle_window_size = value;
 #ifdef debug_info_sv_param
     qDebug()<<sgbm->getSpeckleWindowSize();
 #endif
+#endif
 }
 
 void stereo_vision::change_sgbm_speckle_range(int value)
 {
+#ifndef opencv_cuda
     sgbm->setSpeckleRange(value);
     param_sgbm->speckle_range = value;
 #ifdef debug_info_sv_param
     qDebug()<<sgbm->getSpeckleRange();
 #endif
-}
 #endif
+}
+
 void stereo_vision::pointProjectTopView()
 {
     resetTopView();

@@ -46,6 +46,7 @@ void stereoMatchParamForm::updateParams(int cur_mode, std::vector<int> param)
         ui->horizontalSlider_bm_speckle_range->setValue(param[8]);
         fg_bm_changed = true;
         break;
+#ifndef opencv_cuda
     case SV::STEREO_MATCH::SGBM:
         if (fg_sgbm_changed)
             break;
@@ -58,6 +59,7 @@ void stereoMatchParamForm::updateParams(int cur_mode, std::vector<int> param)
         ui->horizontalSlider_sgbm_speckle_range->setValue(param[6]);
         fg_sgbm_changed = true;
         break;
+#endif
     }
 
     stereoMatchParamForm::repaint();
@@ -118,7 +120,7 @@ void stereoMatchParamForm::on_horizontalSlider_bm_speckle_range_valueChanged(int
 {
     emit send_bm_speckle_range(value);
 }
-#ifndef opencv_cuda
+
 void stereoMatchParamForm::on_horizontalSlider_sgbm_pre_filter_cap_valueChanged(int value)
 {
     emit send_sgbm_pre_filter_cap(value);
@@ -160,5 +162,4 @@ void stereoMatchParamForm::on_horizontalSlider_sgbm_speckle_range_valueChanged(i
 {
     emit send_sgbm_speckle_range(value);
 }
-#endif
 
