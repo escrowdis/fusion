@@ -67,10 +67,8 @@ void stereoMatchParamForm::updateParams(int cur_mode, std::vector<int> param)
 
 void stereoMatchParamForm::on_horizontalSlider_bm_pre_filter_size_valueChanged(int value)
 {
-    if (value % 2 == 0) {
+    if (value % 2 == 0)
         value++;
-        ui->horizontalSlider_bm_pre_filter_size->setValue(value);
-    }
     emit send_bm_pre_filter_size(value);
 }
 
@@ -81,10 +79,8 @@ void stereoMatchParamForm::on_horizontalSlider_bm_pre_filter_cap_valueChanged(in
 
 void stereoMatchParamForm::on_horizontalSlider_bm_sad_window_size_valueChanged(int value)
 {
-    if (value % 2 == 0) {
+    if (value % 2 == 0)
         value++;
-        ui->horizontalSlider_bm_sad_window_size->setValue(value);
-    }
     emit send_bm_sad_window_size(value);
 }
 
@@ -97,7 +93,6 @@ void stereoMatchParamForm::on_horizontalSlider_bm_num_of_disp_valueChanged(int v
 {
     if (value % 16 != 0)
         value += (16 - value % 16);
-    ui->horizontalSlider_bm_num_of_disp->setValue(value);
     emit send_bm_num_of_disp(value);
 }
 
@@ -128,10 +123,8 @@ void stereoMatchParamForm::on_horizontalSlider_sgbm_pre_filter_cap_valueChanged(
 
 void stereoMatchParamForm::on_horizontalSlider_sgbm_sad_window_size_valueChanged(int value)
 {
-    if (value % 2 == 0) {
+    if (value % 2 == 0)
         value++;
-        ui->horizontalSlider_sgbm_sad_window_size->setValue(value);
-    }
     emit send_sgbm_sad_window_size(value);
 }
 
@@ -144,7 +137,6 @@ void stereoMatchParamForm::on_horizontalSlider_sgbm_num_of_disp_valueChanged(int
 {
     if (value % 16 != 0)
         value += (16 - value % 16);
-    ui->horizontalSlider_sgbm_num_of_disp->setValue(value);
     emit send_sgbm_num_of_disp(value);
 }
 

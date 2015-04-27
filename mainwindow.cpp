@@ -183,9 +183,7 @@ MainWindow::~MainWindow()
 
     // If close mainwindow without clicking stop button since the camera has been opened.
     fg_running = false;
-    QMessageBox::StandardButton reply = QMessageBox::question(0, "New change", "Parameters were changed, save the new ones?", QMessageBox::Yes | QMessageBox::No);
-    if (reply == QMessageBox::Yes)
-        paramWrite();
+    paramUpdate();
     delete fin_cam_param;
     delete fin_SGBM;
     delete fin_BM;
@@ -416,6 +414,30 @@ void MainWindow::paramWrite()
     fs.release();
 }
 
+void MainWindow::paramUpdate()
+{
+    if (fin_SGBM->pre_filter_cap    != sv->param_sgbm->pre_filter_cap ||
+    fin_SGBM->SAD_window_size       != sv->param_sgbm->SAD_window_size ||
+    fin_SGBM->min_disp              != sv->param_sgbm->min_disp ||
+    fin_SGBM->num_of_disp           != sv->param_sgbm->num_of_disp ||
+    fin_SGBM->uniquenese_ratio      != sv->param_sgbm->uniquenese_ratio ||
+    fin_SGBM->speckle_window_size   != sv->param_sgbm->speckle_window_size ||
+    fin_SGBM->speckle_range         != sv->param_sgbm->speckle_range ||
+    fin_BM->pre_filter_size         != sv->param_bm->pre_filter_size ||
+    fin_BM->pre_filter_cap          != sv->param_bm->pre_filter_cap ||
+    fin_BM->SAD_window_size         != sv->param_bm->SAD_window_size ||
+    fin_BM->min_disp                != sv->param_bm->min_disp ||
+    fin_BM->num_of_disp             != sv->param_bm->num_of_disp ||
+    fin_BM->texture_thresh          != sv->param_bm->texture_thresh ||
+    fin_BM->uniquenese_ratio        != sv->param_bm->uniquenese_ratio ||
+    fin_BM->speckle_window_size     != sv->param_bm->speckle_window_size ||
+    fin_BM->speckle_range           != sv->param_bm->speckle_range) {
+        QMessageBox::StandardButton reply = QMessageBox::question(0, "New change", "Parameters were changed, save the new ones?", QMessageBox::Yes | QMessageBox::No);
+        if (reply == QMessageBox::Yes)
+            paramWrite();
+    }
+}
+
 void MainWindow::initialFusedTopView()
 {
     // vehicle & fused topview information
@@ -620,10 +642,10 @@ void MainWindow::wheelEvent(QWheelEvent *ev)
     // vertical middle button
     if (ev->orientation() == Qt::Vertical) {
         if (ev->delta() > 0) {
-            zoomOutFusedTopView();
+            zoomInFusedTopView();
         }
         if (ev->delta() < 0) {
-            zoomInFusedTopView();
+            zoomOutFusedTopView();
         }
     }
 

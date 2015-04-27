@@ -78,8 +78,11 @@ private:
 
     void paramRead();                   // read params from basic_param.yml
 
-    void readFromTxt(QString file_name, cv::Mat *output);   // read image data from text
     void paramWrite();
+
+    void paramUpdate();
+
+    void readFromTxt(QString file_name, cv::Mat *output);   // read image data from text
     // ======================== End
 
     // Radar ESR ==============
