@@ -565,8 +565,8 @@ void MainWindow::updateFusedTopView()
     // vehicle
     cv::rectangle(fused_topview_BG, vehicle.rect, vehicle.color, -1, 8, 0);
 
-    ui->label_fusion_BG->setPixmap(QPixmap::fromImage(QImage::QImage(fused_topview_BG.data, fused_topview_BG.cols, fused_topview_BG.rows, QImage::Format_RGBA8888)));
-    ui->label_fusion->setPixmap(QPixmap::fromImage(QImage::QImage(fused_topview.data, fused_topview.cols, fused_topview.rows, QImage::Format_RGBA8888)));
+    ui->label_fusion_BG->setPixmap(QPixmap::fromImage(QImage::QImage(fused_topview_BG.data, fused_topview_BG.cols, fused_topview_BG.rows, fused_topview_BG.step, QImage::Format_RGBA8888)));
+    ui->label_fusion->setPixmap(QPixmap::fromImage(QImage::QImage(fused_topview.data, fused_topview.cols, fused_topview.rows, fused_topview.step, QImage::Format_RGBA8888)));
 }
 
 void MainWindow::on_radioButton_vehicle_cart_clicked()
@@ -754,7 +754,7 @@ void MainWindow::drawFusedTopView(stereo_vision::objInformation *d_sv, RadarCont
         }
     }
 
-    ui->label_fusion->setPixmap(QPixmap::fromImage(QImage::QImage(fused_topview.data, fused_topview.cols, fused_topview.rows, QImage::Format_RGBA8888)));
+    ui->label_fusion->setPixmap(QPixmap::fromImage(QImage::QImage(fused_topview.data, fused_topview.cols, fused_topview.rows, fused_topview.step, QImage::Format_RGBA8888)));
 
     ui->label_fusion->update();
     qApp->processEvents();
@@ -792,9 +792,9 @@ void MainWindow::radarDisplayTopViewBG()
 {
     if (rc->isInitializedTopView()) {
         rc->drawTopViewLines(ui->spinBox_radar_topview_r->value(), ui->spinBox_radar_topview_c->value(), false);
-        ui->label_top_view_radar_long_BG->setPixmap(QPixmap::fromImage(QImage::QImage(rc->topview_BG.data, rc->topview_BG.cols, rc->topview_BG.rows, QImage::Format_RGBA8888)).scaled(900, 600));
+        ui->label_top_view_radar_long_BG->setPixmap(QPixmap::fromImage(QImage::QImage(rc->topview_BG.data, rc->topview_BG.cols, rc->topview_BG.rows, rc->topview_BG.step, QImage::Format_RGBA8888)).scaled(900, 600));
 
-        ui->label_radar_data_BG->setPixmap(QPixmap::fromImage(QImage::QImage(rc->img_radar_BG.data, rc->img_radar_BG.cols, rc->img_radar_BG.rows, QImage::Format_RGB888)));
+        ui->label_radar_data_BG->setPixmap(QPixmap::fromImage(QImage::QImage(rc->img_radar_BG.data, rc->img_radar_BG.cols, rc->img_radar_BG.rows, rc->img_radar_BG.step, QImage::Format_RGB888)));
     }
 //    cv::imshow("rc", rc->topview_BG);
 }
@@ -813,7 +813,7 @@ void MainWindow::svDisplayTopViewBG()
 {
     if (sv->isInitializedTopView()) {
         sv->drawTopViewLines(ui->spinBox_topview_r->value(), ui->spinBox_topview_c->value(), true);
-        ui->label_top_view_bg->setPixmap(QPixmap::fromImage(QImage::QImage(sv->topview_BG.data, sv->topview_BG.cols, sv->topview_BG.rows, QImage::Format_RGBA8888)).scaled(270, 750));
+        ui->label_top_view_bg->setPixmap(QPixmap::fromImage(QImage::QImage(sv->topview_BG.data, sv->topview_BG.cols, sv->topview_BG.rows, sv->topview_BG.step, QImage::Format_RGBA8888)).scaled(270, 750));
     }
 }
 
@@ -862,7 +862,7 @@ void MainWindow::lrfDisplay(double *lrf_data, cv::Mat *display_lrf)
         angle += RESOLUTION;
     }
 
-    ui->label_lrf_data->setPixmap(QPixmap::fromImage(QImage::QImage(display_lrf->data, display_lrf->cols, display_lrf->rows, 3 * display_lrf->cols, QImage::Format_RGB888)).scaled(IMG_DIS_W, IMG_DIS_H));
+    ui->label_lrf_data->setPixmap(QPixmap::fromImage(QImage::QImage(display_lrf->data, display_lrf->cols, display_lrf->rows, display_lrf->step, QImage::Format_RGB888)).scaled(IMG_DIS_W, IMG_DIS_H));
     lock_lrf.unlock();
 //    cv::imshow("image", display_lrf);
     cv::waitKey(10);
@@ -933,8 +933,8 @@ void MainWindow::camOpen()
 
 void MainWindow::svDisplay(cv::Mat *img_L, cv::Mat *img_R, cv::Mat *disp, cv::Mat *disp_pseudo, cv::Mat *topview, cv::Mat *img_detected, cv::Mat *img_detected_display, int detected_obj, int current_frame_count)
 {
-    ui->label_cam_img_L->setPixmap(QPixmap::fromImage(QImage::QImage(img_L->data, img_L->cols, img_L->rows, 3 * img_L->cols, QImage::Format_RGB888)).scaled(IMG_DIS_W, IMG_DIS_H));
-    ui->label_cam_img_R->setPixmap(QPixmap::fromImage(QImage::QImage(img_R->data, img_R->cols, img_R->rows, 3 * img_R->cols, QImage::Format_RGB888)).scaled(IMG_DIS_W, IMG_DIS_H));
+    ui->label_cam_img_L->setPixmap(QPixmap::fromImage(QImage::QImage(img_L->data, img_L->cols, img_L->rows, img_L->step, QImage::Format_RGB888)).scaled(IMG_DIS_W, IMG_DIS_H));
+    ui->label_cam_img_R->setPixmap(QPixmap::fromImage(QImage::QImage(img_R->data, img_R->cols, img_R->rows, img_R->step, QImage::Format_RGB888)).scaled(IMG_DIS_W, IMG_DIS_H));
     ui->label_sv_detected_obj->setText(QString::number(detected_obj));
     if (sv->input_mode == SV::INPUT_SOURCE::VIDEO)
         ui->label_sv_frame_count->setText(QString::number(current_frame_count) + " / " + QString::number(sv_frame_count) + " frames");
@@ -944,17 +944,17 @@ void MainWindow::svDisplay(cv::Mat *img_L, cv::Mat *img_R, cv::Mat *disp, cv::Ma
     if (ui->checkBox_do_depth->isChecked()) {    
         lock_sv.lockForRead();
         if (ui->checkBox_pseudo_color->isChecked()) {
-            ui->label_disp->setPixmap(QPixmap::fromImage(QImage::QImage(disp_pseudo->data, disp_pseudo->cols, disp_pseudo->rows, QImage::Format_RGB888)).scaled(IMG_DIS_DISP_W, IMG_DIS_DISP_H));
+            ui->label_disp->setPixmap(QPixmap::fromImage(QImage::QImage(disp_pseudo->data, disp_pseudo->cols, disp_pseudo->rows, disp_pseudo->step, QImage::Format_RGB888)).scaled(IMG_DIS_DISP_W, IMG_DIS_DISP_H));
         }
         else {
-            ui->label_disp->setPixmap(QPixmap::fromImage(QImage::QImage(disp->data, disp->cols, disp->rows, disp->cols, QImage::Format_Indexed8)).scaled(IMG_DIS_DISP_W, IMG_DIS_DISP_H));
+            ui->label_disp->setPixmap(QPixmap::fromImage(QImage::QImage(disp->data, disp->cols, disp->rows, disp->step, QImage::Format_Indexed8)).scaled(IMG_DIS_DISP_W, IMG_DIS_DISP_H));
         }
 
         // update topview
         if (ui->checkBox_sv_topview->isChecked()) {
-            ui->label_top_view_sv->setPixmap(QPixmap::fromImage(QImage::QImage(topview->data, topview->cols, topview->rows, QImage::Format_RGBA8888)).scaled(270, 750));
-            ui->label_sv_detected->setPixmap(QPixmap::fromImage(QImage::QImage(img_detected->data, img_detected->cols, img_detected->rows, QImage::Format_RGB888)).scaled(IMG_DIS_W, IMG_DIS_H));
-            ui->label_sv_detected_display->setPixmap(QPixmap::fromImage(QImage::QImage(img_detected_display->data, img_detected_display->cols, img_detected_display->rows, QImage::Format_RGB888)).scaled(IMG_DIS_W, IMG_DIS_H));
+            ui->label_top_view_sv->setPixmap(QPixmap::fromImage(QImage::QImage(topview->data, topview->cols, topview->rows, topview->step, QImage::Format_RGBA8888)).scaled(270, 750));
+            ui->label_sv_detected->setPixmap(QPixmap::fromImage(QImage::QImage(img_detected->data, img_detected->cols, img_detected->rows, img_detected->step, QImage::Format_RGB888)).scaled(IMG_DIS_W, IMG_DIS_H));
+            ui->label_sv_detected_display->setPixmap(QPixmap::fromImage(QImage::QImage(img_detected_display->data, img_detected_display->cols, img_detected_display->rows, img_detected_display->step, QImage::Format_RGB888)).scaled(IMG_DIS_W, IMG_DIS_H));
         }
         lock_sv.unlock();
     }
@@ -995,7 +995,7 @@ void MainWindow::on_checkBox_sv_topview_clicked(bool checked)
                 sv->topview.at<cv::Vec4b>(r, c)[3] = 0;
         }
     }
-    ui->label_top_view_sv->setPixmap(QPixmap::fromImage(QImage::QImage(sv->topview.data, sv->topview.cols, sv->topview.rows, QImage::Format_RGBA8888)).scaled(270, 750));
+    ui->label_top_view_sv->setPixmap(QPixmap::fromImage(QImage::QImage(sv->topview.data, sv->topview.cols, sv->topview.rows, sv->topview.step, QImage::Format_RGBA8888)).scaled(270, 750));
 }
 
 void MainWindow::on_pushButton_cam_open_clicked()
@@ -1134,7 +1134,10 @@ void MainWindow::on_checkBox_do_depth_clicked(bool checked)
 {
     if (checked) {
         // Though disparity is scaled by 16, GUI takes scaled pixels. If not, the topview looks weird.
-        sv->cam_param->param_r = sv->cam_param->focal_length * sv->cam_param->base_line * 16.0;
+        sv->cam_param->param_r = sv->cam_param->focal_length * sv->cam_param->base_line;
+#ifndef opencv_cuda
+         sv->cam_param->param_r *= 16.0;
+#endif
         ui->checkBox_pseudo_color->setEnabled(true);
         ui->checkBox_sv_topview->setEnabled(true);
         ui->checkBox_sv_reproject->setEnabled(true);
@@ -1260,22 +1263,22 @@ void MainWindow::on_pushButton_stereo_match_param_clicked()
     QObject::connect(sv, SIGNAL(updateForm(int, std::vector<int>)), form_smp, SLOT(updateParams(int, std::vector<int>)));
 
     // params connection
-    QObject::connect(form_smp, SIGNAL(send_bm_pre_filter_size(int)), sv, SLOT(change_bm_pre_filter_size(int)));
-    QObject::connect(form_smp, SIGNAL(send_bm_pre_filter_cap(int)), sv, SLOT(change_bm_pre_filter_cap(int)));
-    QObject::connect(form_smp, SIGNAL(send_bm_sad_window_size(int)), sv, SLOT(change_bm_sad_window_size(int)));
-    QObject::connect(form_smp, SIGNAL(send_bm_min_disp(int)), sv, SLOT(change_bm_min_disp(int)));
-    QObject::connect(form_smp, SIGNAL(send_bm_num_of_disp(int)), sv, SLOT(change_bm_num_of_disp(int)));
-    QObject::connect(form_smp, SIGNAL(send_bm_texture_thresh(int)), sv, SLOT(change_bm_texture_thresh(int)));
-    QObject::connect(form_smp, SIGNAL(send_bm_uniqueness_ratio(int)), sv, SLOT(change_bm_uniqueness_ratio(int)));
-    QObject::connect(form_smp, SIGNAL(send_bm_speckle_window_size(int)), sv, SLOT(change_bm_speckle_window_size(int)));
-    QObject::connect(form_smp, SIGNAL(send_bm_speckle_range(int)), sv, SLOT(change_bm_speckle_range(int)));
-    QObject::connect(form_smp, SIGNAL(send_sgbm_pre_filter_cap(int)), sv, SLOT(change_sgbm_pre_filter_cap(int)));
-    QObject::connect(form_smp, SIGNAL(send_sgbm_sad_window_size(int)), sv, SLOT(change_sgbm_sad_window_size(int)));
-    QObject::connect(form_smp, SIGNAL(send_sgbm_min_disp(int)), sv, SLOT(change_sgbm_min_disp(int)));
-    QObject::connect(form_smp, SIGNAL(send_sgbm_num_of_disp(int)), sv, SLOT(change_sgbm_num_of_disp(int)));
-    QObject::connect(form_smp, SIGNAL(send_sgbm_uniqueness_ratio(int)), sv, SLOT(change_sgbm_uniqueness_ratio(int)));
-    QObject::connect(form_smp, SIGNAL(send_sgbm_speckle_window_size(int)), sv, SLOT(change_sgbm_speckle_window_size(int)));
-    QObject::connect(form_smp, SIGNAL(send_sgbm_speckle_range(int)), sv, SLOT(change_sgbm_speckle_range(int)));
+    QObject::connect(form_smp, SIGNAL(send_bm_pre_filter_size(int)),        sv, SLOT(change_bm_pre_filter_size(int)));
+    QObject::connect(form_smp, SIGNAL(send_bm_pre_filter_cap(int)),         sv, SLOT(change_bm_pre_filter_cap(int)));
+    QObject::connect(form_smp, SIGNAL(send_bm_sad_window_size(int)),        sv, SLOT(change_bm_sad_window_size(int)));
+    QObject::connect(form_smp, SIGNAL(send_bm_min_disp(int)),               sv, SLOT(change_bm_min_disp(int)));
+    QObject::connect(form_smp, SIGNAL(send_bm_num_of_disp(int)),            sv, SLOT(change_bm_num_of_disp(int)));
+    QObject::connect(form_smp, SIGNAL(send_bm_texture_thresh(int)),         sv, SLOT(change_bm_texture_thresh(int)));
+    QObject::connect(form_smp, SIGNAL(send_bm_uniqueness_ratio(int)),       sv, SLOT(change_bm_uniqueness_ratio(int)));
+    QObject::connect(form_smp, SIGNAL(send_bm_speckle_window_size(int)),    sv, SLOT(change_bm_speckle_window_size(int)));
+    QObject::connect(form_smp, SIGNAL(send_bm_speckle_range(int)),          sv, SLOT(change_bm_speckle_range(int)));
+    QObject::connect(form_smp, SIGNAL(send_sgbm_pre_filter_cap(int)),       sv, SLOT(change_sgbm_pre_filter_cap(int)));
+    QObject::connect(form_smp, SIGNAL(send_sgbm_sad_window_size(int)),      sv, SLOT(change_sgbm_sad_window_size(int)));
+    QObject::connect(form_smp, SIGNAL(send_sgbm_min_disp(int)),             sv, SLOT(change_sgbm_min_disp(int)));
+    QObject::connect(form_smp, SIGNAL(send_sgbm_num_of_disp(int)),          sv, SLOT(change_sgbm_num_of_disp(int)));
+    QObject::connect(form_smp, SIGNAL(send_sgbm_uniqueness_ratio(int)),     sv, SLOT(change_sgbm_uniqueness_ratio(int)));
+    QObject::connect(form_smp, SIGNAL(send_sgbm_speckle_window_size(int)),  sv, SLOT(change_sgbm_speckle_window_size(int)));
+    QObject::connect(form_smp, SIGNAL(send_sgbm_speckle_range(int)),        sv, SLOT(change_sgbm_speckle_range(int)));
 
     sv->modeChange(sv->match_mode, fg_form_smp_alloc);
 
@@ -1288,22 +1291,22 @@ void MainWindow::closeFormSmp(void)
     QObject::disconnect(sv, SIGNAL(updateForm(int, std::vector<int>)), form_smp, SLOT(updateParams(int, std::vector<int>)));
 
     // params connection
-    QObject::disconnect(form_smp, SIGNAL(send_bm_pre_filter_size(int)), sv, SLOT(change_bm_pre_filter_size(int)));
-    QObject::disconnect(form_smp, SIGNAL(send_bm_pre_filter_cap(int)), sv, SLOT(change_bm_pre_filter_cap(int)));
-    QObject::disconnect(form_smp, SIGNAL(send_bm_sad_window_size(int)), sv, SLOT(change_bm_sad_window_size(int)));
-    QObject::disconnect(form_smp, SIGNAL(send_bm_min_disp(int)), sv, SLOT(change_bm_min_disp(int)));
-    QObject::disconnect(form_smp, SIGNAL(send_bm_num_of_disp(int)), sv, SLOT(change_bm_num_of_disp(int)));
-    QObject::disconnect(form_smp, SIGNAL(send_bm_texture_thresh(int)), sv, SLOT(change_bm_texture_thresh(int)));
-    QObject::disconnect(form_smp, SIGNAL(send_bm_uniqueness_ratio(int)), sv, SLOT(change_bm_uniqueness_ratio(int)));
-    QObject::disconnect(form_smp, SIGNAL(send_bm_speckle_window_size(int)), sv, SLOT(change_bm_speckle_window_size(int)));
-    QObject::disconnect(form_smp, SIGNAL(send_bm_speckle_range(int)), sv, SLOT(change_bm_speckle_range(int)));
-    QObject::disconnect(form_smp, SIGNAL(send_sgbm_pre_filter_cap(int)), sv, SLOT(change_sgbm_pre_filter_cap(int)));
-    QObject::disconnect(form_smp, SIGNAL(send_sgbm_sad_window_size(int)), sv, SLOT(change_sgbm_sad_window_size(int)));
-    QObject::disconnect(form_smp, SIGNAL(send_sgbm_min_disp(int)), sv, SLOT(change_sgbm_min_disp(int)));
-    QObject::disconnect(form_smp, SIGNAL(send_sgbm_num_of_disp(int)), sv, SLOT(change_sgbm_num_of_disp(int)));
-    QObject::disconnect(form_smp, SIGNAL(send_sgbm_uniqueness_ratio(int)), sv, SLOT(change_sgbm_uniqueness_ratio(int)));
-    QObject::disconnect(form_smp, SIGNAL(send_sgbm_speckle_window_size(int)), sv, SLOT(change_sgbm_speckle_window_size(int)));
-    QObject::disconnect(form_smp, SIGNAL(send_sgbm_speckle_range(int)), sv, SLOT(change_sgbm_speckle_range(int)));
+    QObject::disconnect(form_smp, SIGNAL(send_bm_pre_filter_size(int)),        sv, SLOT(change_bm_pre_filter_size(int)));
+    QObject::disconnect(form_smp, SIGNAL(send_bm_pre_filter_cap(int)),         sv, SLOT(change_bm_pre_filter_cap(int)));
+    QObject::disconnect(form_smp, SIGNAL(send_bm_sad_window_size(int)),        sv, SLOT(change_bm_sad_window_size(int)));
+    QObject::disconnect(form_smp, SIGNAL(send_bm_min_disp(int)),               sv, SLOT(change_bm_min_disp(int)));
+    QObject::disconnect(form_smp, SIGNAL(send_bm_num_of_disp(int)),            sv, SLOT(change_bm_num_of_disp(int)));
+    QObject::disconnect(form_smp, SIGNAL(send_bm_texture_thresh(int)),         sv, SLOT(change_bm_texture_thresh(int)));
+    QObject::disconnect(form_smp, SIGNAL(send_bm_uniqueness_ratio(int)),       sv, SLOT(change_bm_uniqueness_ratio(int)));
+    QObject::disconnect(form_smp, SIGNAL(send_bm_speckle_window_size(int)),    sv, SLOT(change_bm_speckle_window_size(int)));
+    QObject::disconnect(form_smp, SIGNAL(send_bm_speckle_range(int)),          sv, SLOT(change_bm_speckle_range(int)));
+    QObject::disconnect(form_smp, SIGNAL(send_sgbm_pre_filter_cap(int)),       sv, SLOT(change_sgbm_pre_filter_cap(int)));
+    QObject::disconnect(form_smp, SIGNAL(send_sgbm_sad_window_size(int)),      sv, SLOT(change_sgbm_sad_window_size(int)));
+    QObject::disconnect(form_smp, SIGNAL(send_sgbm_min_disp(int)),             sv, SLOT(change_sgbm_min_disp(int)));
+    QObject::disconnect(form_smp, SIGNAL(send_sgbm_num_of_disp(int)),          sv, SLOT(change_sgbm_num_of_disp(int)));
+    QObject::disconnect(form_smp, SIGNAL(send_sgbm_uniqueness_ratio(int)),     sv, SLOT(change_sgbm_uniqueness_ratio(int)));
+    QObject::disconnect(form_smp, SIGNAL(send_sgbm_speckle_window_size(int)),  sv, SLOT(change_sgbm_speckle_window_size(int)));
+    QObject::disconnect(form_smp, SIGNAL(send_sgbm_speckle_range(int)),        sv, SLOT(change_sgbm_speckle_range(int)));
 
     delete form_smp;
     fg_form_smp_alloc = false;
@@ -1439,6 +1442,13 @@ void MainWindow::on_pushButton_sv_read_images_clicked()
 
     sv->img_L = cv::imread(imgs_path[0].toStdString());
     sv->img_R = cv::imread(imgs_path[1].toStdString());
+    cv::Size2f ratio;
+    ratio.width = 1.0 * IMG_W / sv->img_L.cols;
+    ratio.height = 1.0 * IMG_H / sv->img_L.rows;
+    double ratio_zoom = ratio.width < ratio.height ? ratio.width : ratio.height;
+    cv::Size size_zoom = cv::Size(ratio_zoom * sv->img_L.cols, ratio_zoom * sv->img_L.rows);
+    cv::resize(sv->img_L, sv->img_L, size_zoom);
+    cv::resize(sv->img_R, sv->img_R, size_zoom);
     sv->dataExec();
 }
 
@@ -1749,7 +1759,7 @@ void MainWindow::radarDisplay(int detected_obj, cv::Mat *img, cv::Mat *topview)
     // update topview
     if (ui->checkBox_radar_topview->isChecked() && rc->current_count >= rc->update_count) {
         lock_radar.lockForRead();
-        ui->label_top_view_radar_long->setPixmap(QPixmap::fromImage(QImage::QImage(topview->data, topview->cols, topview->rows, QImage::Format_RGBA8888)).scaled(900, 600));
+        ui->label_top_view_radar_long->setPixmap(QPixmap::fromImage(QImage::QImage(topview->data, topview->cols, topview->rows, topview->step, QImage::Format_RGBA8888)).scaled(900, 600));
         lock_radar.unlock();
     }
 
@@ -1782,7 +1792,7 @@ void MainWindow::on_checkBox_radar_topview_clicked(bool checked)
                 rc->topview.at<cv::Vec4b>(r, c)[3] = 0;
         }
     }
-    ui->label_top_view_radar_long->setPixmap(QPixmap::fromImage(QImage::QImage(rc->topview.data, rc->topview.cols, rc->topview.rows, QImage::Format_RGBA8888)).scaled(900, 600));
+    ui->label_top_view_radar_long->setPixmap(QPixmap::fromImage(QImage::QImage(rc->topview.data, rc->topview.cols, rc->topview.rows, rc->topview.step, QImage::Format_RGBA8888)).scaled(900, 600));
 }
 
 void MainWindow::on_pushButton_start_all_clicked()

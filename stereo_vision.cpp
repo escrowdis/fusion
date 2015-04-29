@@ -428,12 +428,13 @@ void stereo_vision::depthCalculation()
     lock_sv.lockForWrite();
     for (int r = 0; r < IMG_H; r++) {
 #ifdef opencv_cuda
-        uchar* ptr_raw = (uchar*) (disp_raw.data + r * disp_raw.step);
+        uchar* ptr_raw = (uchar*)(disp_raw.data + r * disp_raw.step);
+
 #else
-        short int* ptr_raw = (short int*) (disp_raw.data + r * disp_raw.step);
+        short int* ptr_raw = (short int*)(disp_raw.data + r * disp_raw.step);
 #endif
 
-        uchar* ptr = (uchar*) (disp_pseudo.data + r * disp_pseudo.step);
+        uchar* ptr = (uchar*)(disp_pseudo.data + r * disp_pseudo.step);
         for (int c = 0; c < IMG_W; c++) {
             // non-overlapping part
             if (c < param_sgbm->num_of_disp / 2 && input_mode == SV::STEREO_MATCH::SGBM)
@@ -442,6 +443,7 @@ void stereo_vision::depthCalculation()
                 continue;
             // Depth calculation
             data[r][c].disp = ptr_raw[c];
+
             if (data[r][c].disp > 0) {
                 data[r][c].Z = cam_param->param_r / data[r][c].disp;
                 data[r][c].X = (c - IMG_W_HALF) * data[r][c].Z / cam_param->focal_length;

@@ -838,5 +838,21 @@
     </hint>
    </hints>
   </connection>
+  <connection>
+   <sender>horizontalSlider_bm_num_of_disp</sender>
+   <signal>valueChanged(int)</signal>
+   <receiver>label_bm_num_of_disp</receiver>
+   <slot>setNum(int)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>343</x>
+     <y>184</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>358</x>
+     <y>182</y>
+    </hint>
+   </hints>
+  </connection>
  </connections>
 </ui>
