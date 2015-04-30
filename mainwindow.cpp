@@ -1135,9 +1135,7 @@ void MainWindow::on_checkBox_do_depth_clicked(bool checked)
     if (checked) {
         // Though disparity is scaled by 16, GUI takes scaled pixels. If not, the topview looks weird.
         sv->cam_param->param_r = sv->cam_param->focal_length * sv->cam_param->base_line;
-#ifndef opencv_cuda
-         sv->cam_param->param_r *= 16.0;
-#endif
+
         ui->checkBox_pseudo_color->setEnabled(true);
         ui->checkBox_sv_topview->setEnabled(true);
         ui->checkBox_sv_reproject->setEnabled(true);

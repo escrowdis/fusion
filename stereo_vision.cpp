@@ -442,7 +442,11 @@ void stereo_vision::depthCalculation()
             else if (c < param_bm->num_of_disp / 2 && input_mode == SV::STEREO_MATCH::BM)
                 continue;
             // Depth calculation
+#ifdef opencv_cuda
             data[r][c].disp = ptr_raw[c];
+#else
+            data[r][c].disp = (short int)(ptr_raw[c] / 16.0);
+#endif
 
             if (data[r][c].disp > 0) {
                 data[r][c].Z = cam_param->param_r / data[r][c].disp;
