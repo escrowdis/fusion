@@ -2023,3 +2023,8 @@ void MainWindow::on_checkBox_sv_ground_filter_clicked(bool checked)
     else
         sv->fg_ground_filter = false;
 }
+
+void MainWindow::on_pushButton_clicked()
+{
+    sv->HoughLine();
+}

@@ -76,6 +76,8 @@ public:
 
     bool fusedTopview() {return fg_topview && fg_stereoMatch;}
 
+    void HoughLine();
+
     int time_proc;
 
     // RGB images for displaying
@@ -144,6 +146,8 @@ public:
     int* ground_filter;                 // the amount of pixel within pixels' range
 
     float ground_mean;                  // mean of ground_filter_id
+
+    float ground_mean_guess;
 
     int thresh_ground_filter;           // SD of ground_filter[]
 
@@ -256,6 +260,8 @@ private:
     bool rectifyImage();
 
     void depthCalculation();
+
+    void vDispCalculation();
 
     void stereoMatch();
 

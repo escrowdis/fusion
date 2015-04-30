@@ -21,6 +21,8 @@ stereo_vision::stereo_vision() : TopView(20, 200, 3000, 19.8, 1080, 750, 270, 12
     thick_obj_rect = 2;
     radius_obj_point = 3;
 
+    ground_mean_guess = 0.0;
+
     cam_param = new camParam;
     param_sgbm = new matchParamSGBM;
     param_bm = new matchParamBM;
@@ -519,6 +521,130 @@ void stereo_vision::depthCalculation()
     lock_sv.unlock();
 }
 
+void stereo_vision::vDispCalculation()
+{
+    int img_w;
+    switch (match_mode) {
+    case SV::STEREO_MATCH::BM:
+        img_w = param_bm->num_of_disp;
+        break;
+    case SV::STEREO_MATCH::SGBM:
+        img_w = param_sgbm->num_of_disp;
+        break;
+    }
+    cv::Mat v_disp = cv::Mat::zeros(IMG_H, img_w, CV_16SC1);
+    short int max_disp = 0;
+    for (int r = 0; r < IMG_H; r++) {
+        short int* ptr_v = (short int*)(v_disp.data + r * v_disp.step);
+        for (int c = 0 ; c < IMG_W; c++) {
+            short int val_raw = data[r][c].disp;
+            short int val = 1.0 * val_raw + 0.5;
+            if (val == -1) continue;
+            ptr_v[val]++;
+
+            if (max_disp < val)
+                max_disp = val;
+        }
+    }
+
+#ifdef debug_info_sv_v_disp
+    cv::Mat v_disp_display;
+    v_disp.convertTo(v_disp_display, CV_8UC1);
+    cv::imshow("V-disp", v_disp_display);
+//    cv::imwrite("v-disp.jpg", v_disp_display);
+#endif
+
+    if (fg_ground_filter) {
+        cv::Mat v_disp_src, v_disp_bi;
+        v_disp.convertTo(v_disp_src, CV_8UC1);
+        std::vector<cv::Vec2f> lines, lines_filtered;
+        cv::Canny(v_disp_src, v_disp_bi, 50, 255, 3);
+#ifdef debug_info_sv_v_disp
+        cv::imshow("canny", v_disp_bi);
+#endif
+        cv::HoughLines(v_disp_bi, lines, 1, 5*CV_PI/180, 75, 0, 0);
+
+#ifdef debug_info_sv_v_disp
+        cv::Mat display = cv::Mat::zeros(v_disp_src.rows, v_disp_src.cols, CV_8UC3);
+        //    v_disp_src.convertTo(display, CV_8UC3, 1.0, 0);
+#endif
+        float angle_min = 165 * CV_PI / 180.0, angle_max = 178 * CV_PI / 180.0;
+        for (int i = 0; i < lines.size(); i++) {
+            float rho = lines[i][0], theta = lines[i][1];
+            if (theta <= angle_max && theta >= angle_min && rho >= 15) {
+                cv::Point pt1, pt2;
+                double a = cos(theta), b = sin(theta);
+                double x0 = a*rho, y0 = b*rho;
+                pt1.x = cvRound(x0 + 1000*(-b));
+                pt1.y = cvRound(y0 + 1000*(a));
+                pt2.x = cvRound(x0 - 1000*(-b));
+                pt2.y = cvRound(y0 - 1000*(a));
+                lines_filtered.push_back(cv::Vec2f(rho, theta));
+#ifdef debug_info_sv_v_disp
+                qDebug()<<"rho"<<rho<<"theta"<<theta;
+                cv::line(display, pt1, pt2, cv::Scalar(0, 0, 255), 1, 8, 0);
+                //            qDebug()<<x0<<y0<<pt1.x<<pt1.y<<pt2.x<<pt2.y;
+#endif
+            }
+        }
+
+#ifdef debug_info_sv_v_disp
+        cv::imshow("Lines", display);
+#endif
+        cv::Mat img = img_r_L.clone();
+        float ground_avg_y = 0.0;
+        int avg_disp_count = 0;
+        for (int r = 0; r < IMG_H; r++) {
+            for (int c=  0 ; c < IMG_W; c++) {
+                for (int k = 0; k < lines_filtered.size(); k++) {
+                    float rho = lines_filtered[k][0];
+                    float theta = lines_filtered[k][1];
+                    float f_l = rho;
+                    float f_r = 1.0 * data[r][c].disp * cos(theta) + 1.0 * r * sin(theta);
+                    if (abs(f_l - f_r) / f_r < 0.1 && data[r][c].Y < 15 && data[r][c].Y != -1) {
+                        avg_disp_count++;
+                        ground_avg_y += 1.0 * (data[r][c].Y - ground_avg_y) / avg_disp_count;
+#ifdef debug_info_sv_v_disp
+                        cv::circle(img, cv::Point(c, r), 3, cv::Scalar(0, 0, 255), 1, 8, 0);
+#endif
+                    }
+                }
+            }
+        }
+
+        ground_mean_guess = ground_avg_y;
+#ifdef debug_info_sv_v_disp
+        qDebug()<<"avg Y: "<<ground_avg_y;
+        cv::imshow("det", img);
+#endif
+    }
+}
+
+void stereo_vision::HoughLine()
+{
+    std::vector<cv::Vec2f> lines;
+    QString file = QFileDialog::getOpenFileName();
+    cv::Mat img = cv::imread(file.toStdString());
+    cv::Mat img_bi;
+    cv::Canny(img, img_bi, 50, 255, 3);
+    cv::imshow("canny", img_bi);
+    cv::HoughLines(img_bi, lines, 1, CV_PI/180, 100, 0, 0);
+
+    for (int i = 0; i < lines.size(); i++) {
+        float rho = lines[i][0], theta = lines[i][1];
+        cv::Point pt1, pt2;
+        double a = cos(theta), b = sin(theta);
+        double x0 = a*rho, y0 = b*rho;
+        pt1.x = cvRound(x0 + 1000*(-b));
+        pt1.y = cvRound(y0 + 1000*(a));
+        pt2.x = cvRound(x0 - 1000*(-b));
+        pt2.y = cvRound(y0 - 1000*(a));
+        cv::line(img, pt1, pt2, cv::Scalar(0,0,255), 1, cv::LINE_AA);
+    }
+
+    cv::imshow("Lines", img);
+}
+
 bool stereo_vision::dataIn()
 {
     switch (input_mode) {
@@ -579,6 +705,7 @@ bool stereo_vision::dataExec()
     if (fg_stereoMatch) {
         stereoMatch();
         depthCalculation();
+        vDispCalculation();
 
         if (fg_topview) {
             pointProjectTopView();
@@ -781,6 +908,7 @@ void stereo_vision::pointProjectTopView()
 
             // porject each 3D point onto a topview
             if (data[r][c].Z >= min_distance && data[r][c].Z <= max_distance) {
+//                if (fg_ground_filter && data[r][c].Y <= ground_mean_guess + 10 && data[r][c].Y >= ground_mean_guess - 10)
                 if (fg_ground_filter &&
                         data[r][c].Y <= GROUND_RANGE && data[r][c].Y >= -1 * GROUND_RANGE &&
                         ground_filter[data[r][c].Y + GROUND_RANGE] >= (ground_filter[(int)(ground_mean)] - 3 * thresh_ground_filter) &&
