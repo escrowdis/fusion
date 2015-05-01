@@ -119,7 +119,7 @@ public:
     struct StereoData
     {
         // IMAGE -------------
-        short int disp;
+        float disp;
 
         // World coordinate system (WCS) (cm)
         int X;

@@ -445,7 +445,8 @@ void stereo_vision::depthCalculation()
 #ifdef opencv_cuda
             data[r][c].disp = ptr_raw[c];
 #else
-            data[r][c].disp = (short int)(ptr_raw[c] / 16.0);
+            float val = ptr_raw[c];
+            data[r][c].disp = val / 16.0;
 #endif
 
             if (data[r][c].disp > 0) {
