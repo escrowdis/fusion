@@ -325,7 +325,7 @@ float SensorInfo::pointTransformTopView(cv::Point sensor_pos, float range, float
     y_tmp = range * cos(angle * CV_PI / 180.0);
     output->x = vehicle.VCP.x + (x_tmp * ratio + sensor_pos.x);
     output->y = vehicle.VCP.y - (y_tmp * ratio + sensor_pos.y);
-    *rect = cv::Rect(vehicle.VCP.x + ((rect_in.tl().x) * ratio + sensor_pos.x),
+    *rect = cv::Rect(vehicle.VCP.x + (rect_in.tl().x * ratio + sensor_pos.x),
                      vehicle.VCP.y - (rect_in.tl().y * ratio + sensor_pos.y),
                      (rect_in.br().x - rect_in.tl().x) * ratio, abs(rect_in.br().y - rect_in.tl().y) * ratio);
 

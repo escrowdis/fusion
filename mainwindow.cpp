@@ -252,7 +252,7 @@ void MainWindow::mouseXY(int x, int y)
     xx = 2 * x;
     yy = 2 * y;
     lock_sv.lockForRead();
-    mouse_info.sprintf("(x,y) = (%d,%d), Disp. = %d, (X,Y,Z) = (%d,%d,%d)",
+    mouse_info.sprintf("(x,y) = (%d,%d), Disp. = %.0f, (X,Y,Z) = (%d,%d,%d)",
                        xx, yy, si->sv->data[yy][xx].disp,
                        si->sv->data[yy][xx].X, si->sv->data[yy][xx].Y, si->sv->data[yy][xx].Z); //**// real X, Y, Z
     lock_sv.unlock();
@@ -296,12 +296,14 @@ void MainWindow::paramRead()
 
     cv::FileNode n;
     n = fs["stereoVision"];
-    ui->comboBox_cam_device_index_L->setCurrentIndex((int) n["port_L"]);
-    ui->comboBox_cam_device_index_R->setCurrentIndex((int) n["port_R"]);
+    fin_cam_param->port_L = (int) n["port_L"];
+    fin_cam_param->port_R = (int) n["port_R"];
     fin_cam_param->cam_focal_length = (int) n["cam_focal_length"];
     fin_cam_param->base_line = (double) n["base_line"];
     fin_cam_param->rig_height = (double) n["rig_height"];
     fin_cam_param->focal_length = (double) n["focal_length"];
+    ui->comboBox_cam_device_index_L->setCurrentIndex(fin_cam_param->port_L);
+    ui->comboBox_cam_device_index_R->setCurrentIndex(fin_cam_param->port_R);
     ui->comboBox_camera_focal_length->setCurrentIndex(fin_cam_param->cam_focal_length);
     ui->label_sv_rig_height->setText(QString::number(fin_cam_param->rig_height));
     ui->lineEdit_base_line->setText(QString::number(fin_cam_param->base_line));
@@ -407,22 +409,29 @@ void MainWindow::paramWrite()
 
 void MainWindow::paramUpdate()
 {
-    if (fin_SGBM->pre_filter_cap    != si->sv->param_sgbm->pre_filter_cap ||
-    fin_SGBM->SAD_window_size       != si->sv->param_sgbm->SAD_window_size ||
-    fin_SGBM->min_disp              != si->sv->param_sgbm->min_disp ||
-    fin_SGBM->num_of_disp           != si->sv->param_sgbm->num_of_disp ||
-    fin_SGBM->uniquenese_ratio      != si->sv->param_sgbm->uniquenese_ratio ||
-    fin_SGBM->speckle_window_size   != si->sv->param_sgbm->speckle_window_size ||
-    fin_SGBM->speckle_range         != si->sv->param_sgbm->speckle_range ||
-    fin_BM->pre_filter_size         != si->sv->param_bm->pre_filter_size ||
-    fin_BM->pre_filter_cap          != si->sv->param_bm->pre_filter_cap ||
-    fin_BM->SAD_window_size         != si->sv->param_bm->SAD_window_size ||
-    fin_BM->min_disp                != si->sv->param_bm->min_disp ||
-    fin_BM->num_of_disp             != si->sv->param_bm->num_of_disp ||
-    fin_BM->texture_thresh          != si->sv->param_bm->texture_thresh ||
-    fin_BM->uniquenese_ratio        != si->sv->param_bm->uniquenese_ratio ||
-    fin_BM->speckle_window_size     != si->sv->param_bm->speckle_window_size ||
-    fin_BM->speckle_range           != si->sv->param_bm->speckle_range) {
+    // Unconsidered: topView, laserRangeFinder
+    if (fin_cam_param->port_L           != ui->comboBox_cam_device_index_L->currentIndex() ||
+        fin_cam_param->port_R           != ui->comboBox_cam_device_index_R->currentIndex() ||
+        fin_cam_param->cam_focal_length != ui->comboBox_camera_focal_length->currentIndex() ||
+        fin_cam_param->focal_length     != ui->label_sv_focal_length->text().toDouble() ||
+        fin_cam_param->rig_height       != ui->label_sv_rig_height->text().toDouble() ||
+        fin_cam_param->base_line        != ui->lineEdit_base_line->text().toDouble() ||
+        fin_SGBM->pre_filter_cap        != si->sv->param_sgbm->pre_filter_cap ||
+        fin_SGBM->SAD_window_size       != si->sv->param_sgbm->SAD_window_size ||
+        fin_SGBM->min_disp              != si->sv->param_sgbm->min_disp ||
+        fin_SGBM->num_of_disp           != si->sv->param_sgbm->num_of_disp ||
+        fin_SGBM->uniquenese_ratio      != si->sv->param_sgbm->uniquenese_ratio ||
+        fin_SGBM->speckle_window_size   != si->sv->param_sgbm->speckle_window_size ||
+        fin_SGBM->speckle_range         != si->sv->param_sgbm->speckle_range ||
+        fin_BM->pre_filter_size         != si->sv->param_bm->pre_filter_size ||
+        fin_BM->pre_filter_cap          != si->sv->param_bm->pre_filter_cap ||
+        fin_BM->SAD_window_size         != si->sv->param_bm->SAD_window_size ||
+        fin_BM->min_disp                != si->sv->param_bm->min_disp ||
+        fin_BM->num_of_disp             != si->sv->param_bm->num_of_disp ||
+        fin_BM->texture_thresh          != si->sv->param_bm->texture_thresh ||
+        fin_BM->uniquenese_ratio        != si->sv->param_bm->uniquenese_ratio ||
+        fin_BM->speckle_window_size     != si->sv->param_bm->speckle_window_size ||
+        fin_BM->speckle_range           != si->sv->param_bm->speckle_range) {
         QMessageBox::StandardButton reply = QMessageBox::question(0, "New change", "Parameters were changed, save the new ones?", QMessageBox::Yes | QMessageBox::No);
         if (reply == QMessageBox::Yes)
             paramWrite();

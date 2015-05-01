@@ -107,6 +107,8 @@ public:
     // depth estimatiom
     struct camParam
     {
+        int port_L;
+        int port_R;
         double param_r;
         double focal_length;
         int cam_focal_length;
