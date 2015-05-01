@@ -209,6 +209,7 @@ public:
         std::pair<int, int> tl;         // Top left (row, col)
         std::pair<int, int> br;         // Bottom right (row, col)
         std::pair<int, int> center;     // Center point of object in image (row, col)
+        cv::Scalar color;               // object's color
 
         float angle;                    // orientation degree. Middle is zero. (degree)
         float range;                    // (cm)

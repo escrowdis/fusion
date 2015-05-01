@@ -693,7 +693,6 @@ void MainWindow::drawFusedTopView(stereo_vision::objInformation *d_sv, RadarCont
                 tag = QString::number(k).toStdString() + ", " + QString::number(range_world / 100, 'g', range_precision).toStdString();
                 cv::putText(fused_topview, tag, plot_pt, font, font_size, sensors[device].color, font_thickness);
 
-
                 // Fusion ================================
                 double U_D = 500;    // max distance error (cm)
                 double R_sv = U_D * range_world / sv->max_distance;  // (cm)
@@ -734,7 +733,7 @@ void MainWindow::drawFusedTopView(stereo_vision::objInformation *d_sv, RadarCont
                         cv::circle(fused_topview, cv::Point(fused_pos), thickness + 2, cv::Scalar(139, 0, 139, 255), -1, 8, 0);
                         tag = QString::number(range / 100, 'g', range_precision).toStdString();
                         cv::putText(fused_topview, tag, cv::Point(plot_pt.x - 50, plot_pt.y), font, font_size, cv::Scalar(139, 0, 139, 255), font_thickness);
-                        std::cout<<k<<" "<<closest_radar_id<<"\t"<<range<<std::endl;
+//                        std::cout<<k<<" "<<closest_radar_id<<"\t"<<range<<std::endl;
                     }
                 }
             }
@@ -2023,3 +2022,4 @@ void MainWindow::on_checkBox_sv_ground_filter_clicked(bool checked)
     else
         sv->fg_ground_filter = false;
 }
+
