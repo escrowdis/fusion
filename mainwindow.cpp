@@ -73,12 +73,10 @@ MainWindow::MainWindow(QWidget *parent) :
     paramRead();
     // default setting ========================= End
 
+    si = new SensorInfo();
+
     // Laser range finder ======================
-
-    // Initialization
-    lrf = new lrf_controller();
-
-    QObject::connect(lrf, SIGNAL(updateGUI(double *, cv::Mat *)), this, SLOT(lrfDisplay(double *, cv::Mat *)));
+    QObject::connect(si->lrf, SIGNAL(updateGUI(double *, cv::Mat *)), this, SLOT(lrfDisplay(double *, cv::Mat *)));
     
     // display
     display_lrf = cv::Mat::zeros(800, 800, CV_8UC3);
@@ -99,8 +97,6 @@ MainWindow::MainWindow(QWidget *parent) :
 #endif
 
     // Initialization
-    sv = new stereo_vision();
-
     retrieveMatchParam();
 
     ui->label_cam_img_L->setStyleSheet("background-color:silver");
@@ -109,8 +105,8 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->label_sv_detected->setStyleSheet("background-color:silver");
     ui->label_sv_frame_count->setVisible(false);
 
-    QObject::connect(sv, SIGNAL(updateGUI(cv::Mat *, cv::Mat *, cv::Mat *, cv::Mat *, cv::Mat *, cv::Mat *, cv::Mat *, int, int)), this, SLOT(svDisplay(cv::Mat *, cv::Mat *, cv::Mat *, cv::Mat *, cv::Mat *, cv::Mat *, cv::Mat *, int, int)));
-    QObject::connect(sv, SIGNAL(videoEnd(void)), this, SLOT(videoIsEnd(void)));
+    QObject::connect(si->sv, SIGNAL(updateGUI(cv::Mat *, cv::Mat *, cv::Mat *, cv::Mat *, cv::Mat *, cv::Mat *, cv::Mat *, int, int)), this, SLOT(svDisplay(cv::Mat *, cv::Mat *, cv::Mat *, cv::Mat *, cv::Mat *, cv::Mat *, cv::Mat *, int, int)));
+    QObject::connect(si->sv, SIGNAL(videoEnd(void)), this, SLOT(videoIsEnd(void)));
 
     on_checkBox_pseudo_color_clicked(ui->checkBox_pseudo_color->isChecked());
     on_checkBox_sv_topview_clicked(ui->checkBox_sv_topview->isChecked());
@@ -124,8 +120,6 @@ MainWindow::MainWindow(QWidget *parent) :
     // Stereo vision =========================== End
 
     // Radar ESR ===============================
-    rc = new RadarController(0.0);
-
     radarDisplayTopViewBG();
 
     model_radar = new QStandardItemModel(64, 1, this);
@@ -133,15 +127,15 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->tableView_radar->setModel(model_radar);
     QStringList labels;
     for (int i = 0 ; i < 64; i++) {
-        model_radar->setItem(i, &rc->item[i]);
+        model_radar->setItem(i, &si->rc->item[i]);
         labels<<QString::number(i);
     }
     model_radar->setVerticalHeaderLabels(labels);
 
     on_checkBox_radar_topview_clicked(ui->checkBox_radar_topview->isChecked());
 
-    QObject::connect(rc, SIGNAL(updateGUI(int, cv::Mat *, cv::Mat *)), this, SLOT(radarDisplay(int, cv::Mat *, cv::Mat *)));
-    QObject::connect(rc, SIGNAL(dataEnd(void)), this, SLOT(dataIsEnd(void)));
+    QObject::connect(si->rc, SIGNAL(updateGUI(int, cv::Mat *, cv::Mat *)), this, SLOT(radarDisplay(int, cv::Mat *, cv::Mat *)));
+    QObject::connect(si->rc, SIGNAL(dataEnd(void)), this, SLOT(dataIsEnd(void)));
     // Radar ESR =============================== End
 
     // Fusion ==================================
@@ -163,7 +157,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
     // Pseudo color table ======================
     ui->label_color_table->setScaledContents(true) ;
-    ui->label_color_table->setPixmap(QPixmap::fromImage(*sv->color_table));
+    ui->label_color_table->setPixmap(QPixmap::fromImage(*si->sv->color_table));
     // ========================================= End
 
     // mouse control ===========================
@@ -190,10 +184,7 @@ MainWindow::~MainWindow()
 
     cv::destroyAllWindows();
 
-    delete rc;
-    delete lrf;
-    delete sv;
-    delete[] sensors;
+    delete si;
     delete label_file_loaded;
     delete ui;
 }
@@ -233,11 +224,11 @@ void MainWindow::keyPressEvent(QKeyEvent *ev)
         else if (QKeySequence(key_in).matches(QKeySequence("Ctrl+Right")) == QKeySequence::ExactMatch)
             ui->tabWidget->setCurrentIndex(index_1 + 1);
         else if (QKeySequence(key_in).matches(QKeySequence("Ctrl++")) == QKeySequence::ExactMatch) {
-            zoomInFusedTopView();
+            si->zoomInFusedTopView();
             updateFusedTopView();
         }
         else if (QKeySequence(key_in).matches(QKeySequence("Ctrl+-")) == QKeySequence::ExactMatch) {
-            zoomOutFusedTopView();
+            si->zoomOutFusedTopView();
             updateFusedTopView();
         }
     }
@@ -262,8 +253,8 @@ void MainWindow::mouseXY(int x, int y)
     yy = 2 * y;
     lock_sv.lockForRead();
     mouse_info.sprintf("(x,y) = (%d,%d), Disp. = %d, (X,Y,Z) = (%d,%d,%d)",
-                       xx, yy, sv->data[yy][xx].disp,
-                       sv->data[yy][xx].X, sv->data[yy][xx].Y, sv->data[yy][xx].Z); //**// real X, Y, Z
+                       xx, yy, si->sv->data[yy][xx].disp,
+                       si->sv->data[yy][xx].X, si->sv->data[yy][xx].Y, si->sv->data[yy][xx].Z); //**// real X, Y, Z
     lock_sv.unlock();
     ui->label_depth_info->setText(mouse_info);
 }
@@ -367,8 +358,8 @@ void MainWindow::paramWrite()
     fs << "port_L" << ui->comboBox_cam_device_index_L->currentIndex();
     fs << "port_R" << ui->comboBox_cam_device_index_R->currentIndex();
     fs << "cam_focal_length" << ui->comboBox_camera_focal_length->currentIndex();
-    fs << "focal_length" << sv->cam_param->focal_length;
-    fs << "rig_height" << sv->cam_param->rig_height;
+    fs << "focal_length" << si->sv->cam_param->focal_length;
+    fs << "rig_height" << si->sv->cam_param->rig_height;
     fs << "base_line" << ui->lineEdit_base_line->text().toDouble();
     fs << "}";
 
@@ -390,25 +381,25 @@ void MainWindow::paramWrite()
     fs << "}";
 
     fs << "stereoParamSGBM" << "{";
-    fs << "pre_filter_cap" << sv->param_sgbm->pre_filter_cap;
-    fs << "SAD_window_size" << sv->param_sgbm->SAD_window_size;
-    fs << "min_disp" << sv->param_sgbm->min_disp;
-    fs << "num_of_disp" << sv->param_sgbm->num_of_disp;
-    fs << "uniquenese_ratio" << sv->param_sgbm->uniquenese_ratio;
-    fs << "speckle_window_size" << sv->param_sgbm->speckle_window_size;
-    fs << "speckle_range" << sv->param_sgbm->speckle_range;
+    fs << "pre_filter_cap" << si->sv->param_sgbm->pre_filter_cap;
+    fs << "SAD_window_size" << si->sv->param_sgbm->SAD_window_size;
+    fs << "min_disp" << si->sv->param_sgbm->min_disp;
+    fs << "num_of_disp" << si->sv->param_sgbm->num_of_disp;
+    fs << "uniquenese_ratio" << si->sv->param_sgbm->uniquenese_ratio;
+    fs << "speckle_window_size" << si->sv->param_sgbm->speckle_window_size;
+    fs << "speckle_range" << si->sv->param_sgbm->speckle_range;
     fs << "}";
 
     fs << "stereoParamBM" << "{";
-    fs << "pre_filter_size" << sv->param_bm->pre_filter_size;
-    fs << "pre_filter_cap" << sv->param_bm->pre_filter_cap;
-    fs << "SAD_window_size" << sv->param_bm->SAD_window_size;
-    fs << "min_disp" << sv->param_bm->min_disp;
-    fs << "num_of_disp" << sv->param_bm->num_of_disp;
-    fs << "texture_thresh" << sv->param_bm->texture_thresh;
-    fs << "uniquenese_ratio" << sv->param_bm->uniquenese_ratio;
-    fs << "speckle_window_size" << sv->param_bm->speckle_window_size;
-    fs << "speckle_range" << sv->param_bm->speckle_range;
+    fs << "pre_filter_size" << si->sv->param_bm->pre_filter_size;
+    fs << "pre_filter_cap" << si->sv->param_bm->pre_filter_cap;
+    fs << "SAD_window_size" << si->sv->param_bm->SAD_window_size;
+    fs << "min_disp" << si->sv->param_bm->min_disp;
+    fs << "num_of_disp" << si->sv->param_bm->num_of_disp;
+    fs << "texture_thresh" << si->sv->param_bm->texture_thresh;
+    fs << "uniquenese_ratio" << si->sv->param_bm->uniquenese_ratio;
+    fs << "speckle_window_size" << si->sv->param_bm->speckle_window_size;
+    fs << "speckle_range" << si->sv->param_bm->speckle_range;
     fs << "}";
 
     fs.release();
@@ -416,22 +407,22 @@ void MainWindow::paramWrite()
 
 void MainWindow::paramUpdate()
 {
-    if (fin_SGBM->pre_filter_cap    != sv->param_sgbm->pre_filter_cap ||
-    fin_SGBM->SAD_window_size       != sv->param_sgbm->SAD_window_size ||
-    fin_SGBM->min_disp              != sv->param_sgbm->min_disp ||
-    fin_SGBM->num_of_disp           != sv->param_sgbm->num_of_disp ||
-    fin_SGBM->uniquenese_ratio      != sv->param_sgbm->uniquenese_ratio ||
-    fin_SGBM->speckle_window_size   != sv->param_sgbm->speckle_window_size ||
-    fin_SGBM->speckle_range         != sv->param_sgbm->speckle_range ||
-    fin_BM->pre_filter_size         != sv->param_bm->pre_filter_size ||
-    fin_BM->pre_filter_cap          != sv->param_bm->pre_filter_cap ||
-    fin_BM->SAD_window_size         != sv->param_bm->SAD_window_size ||
-    fin_BM->min_disp                != sv->param_bm->min_disp ||
-    fin_BM->num_of_disp             != sv->param_bm->num_of_disp ||
-    fin_BM->texture_thresh          != sv->param_bm->texture_thresh ||
-    fin_BM->uniquenese_ratio        != sv->param_bm->uniquenese_ratio ||
-    fin_BM->speckle_window_size     != sv->param_bm->speckle_window_size ||
-    fin_BM->speckle_range           != sv->param_bm->speckle_range) {
+    if (fin_SGBM->pre_filter_cap    != si->sv->param_sgbm->pre_filter_cap ||
+    fin_SGBM->SAD_window_size       != si->sv->param_sgbm->SAD_window_size ||
+    fin_SGBM->min_disp              != si->sv->param_sgbm->min_disp ||
+    fin_SGBM->num_of_disp           != si->sv->param_sgbm->num_of_disp ||
+    fin_SGBM->uniquenese_ratio      != si->sv->param_sgbm->uniquenese_ratio ||
+    fin_SGBM->speckle_window_size   != si->sv->param_sgbm->speckle_window_size ||
+    fin_SGBM->speckle_range         != si->sv->param_sgbm->speckle_range ||
+    fin_BM->pre_filter_size         != si->sv->param_bm->pre_filter_size ||
+    fin_BM->pre_filter_cap          != si->sv->param_bm->pre_filter_cap ||
+    fin_BM->SAD_window_size         != si->sv->param_bm->SAD_window_size ||
+    fin_BM->min_disp                != si->sv->param_bm->min_disp ||
+    fin_BM->num_of_disp             != si->sv->param_bm->num_of_disp ||
+    fin_BM->texture_thresh          != si->sv->param_bm->texture_thresh ||
+    fin_BM->uniquenese_ratio        != si->sv->param_bm->uniquenese_ratio ||
+    fin_BM->speckle_window_size     != si->sv->param_bm->speckle_window_size ||
+    fin_BM->speckle_range           != si->sv->param_bm->speckle_range) {
         QMessageBox::StandardButton reply = QMessageBox::question(0, "New change", "Parameters were changed, save the new ones?", QMessageBox::Yes | QMessageBox::No);
         if (reply == QMessageBox::Yes)
             paramWrite();
@@ -440,201 +431,35 @@ void MainWindow::paramUpdate()
 
 void MainWindow::initialFusedTopView()
 {
-    // vehicle & fused topview information
-    detection_range_pixel = ui->label_fusion->width() / 2;
+    si->initialFusedTopView(ui->label_fusion->width() / 2);
 
-    detection_range = sv->max_distance;
-
-    ratio = 1.0 * detection_range_pixel / sv->max_distance;
-
-    // use cart as default
-    vehicle.width = 43;
-
-    vehicle.length = 43;
-
-    vehicle.head_pos = vehicle.length / 2;
-
-    // find max & min detection range in all sensors, so this function shall be called after initialization of all sensors
-    max_detection_range = rc->max_distance;
-
-    min_detection_range = rc->min_distance + sqrt(pow(0.5 * vehicle.length, 2) + pow(0.5 * vehicle.width, 2));
-
-    fused_topview.create(2 * detection_range_pixel, 2 * detection_range_pixel, CV_8UC4);
-    fused_topview_BG.create(2 * detection_range_pixel, 2 * detection_range_pixel, CV_8UC4);
-
-    //**// You may CRASH if you add lots of sensors but you don't revise the number of the array
-    // sensor information
-    sensors = new sensorInformation[3];
-
-    thickness = 2;
-    font = cv::FONT_HERSHEY_PLAIN;
-    font_size = 1;
-    font_thickness = 1;
-
-    // sv
-    sensors[0].color = cv::Scalar(255, 0, 0, 255);
-
-    sensors[0].color_fov = cv::Scalar(200, 200, 200, 255);
-
-    sensors[0].angle = sv->view_angle * 0.5 * CV_PI / 180.0;
-
-    sensors[0].pos = cv::Point(0, 51);
-
-    // radar
-    sensors[1].color = cv::Scalar(0, 0, 255, 255);
-
-    sensors[1].color_fov = cv::Scalar(200, 200, 200, 255);
-
-    sensors[1].angle = rc->view_angle * 0.5 * CV_PI / 180.0;
-
-    sensors[1].pos = cv::Point(0, vehicle.head_pos);
-
-    // object's label color
-    QColor pic_color_sv = QColor(sensors[0].color[0], sensors[0].color[1], sensors[0].color[2]);
-    QPixmap pic_sv(20, 20);
-    pic_sv.fill(pic_color_sv);
-    ui->label_fusion_sv_color->setPixmap(pic_sv);
-    ui->label_fusion_sv_color->setPixmap(pic_sv);
-    QColor pic_color_radar = QColor(sensors[1].color[0], sensors[1].color[1], sensors[1].color[2]);
-    QPixmap pic_radar(20, 20);
-    pic_radar.fill(pic_color_radar);
-    ui->label_fusion_radar_color->setPixmap(pic_radar);
+    ui->label_fusion_sv_color->setPixmap(si->pic_sv);
+    ui->label_fusion_sv_color->setPixmap(si->pic_sv);
+    ui->label_fusion_radar_color->setPixmap(si->pic_radar);
 
     updateFusedTopView();
 }
 
 void MainWindow::updateFusedTopView()
 {
-    ratio = 1.0 * detection_range_pixel / detection_range;
+    si->updateFusedTopView();
 
-    vehicle.VCP = cv::Point(detection_range_pixel, detection_range_pixel);
-
-    vehicle.rect = cv::Rect(vehicle.VCP.x - (int)(vehicle.width * ratio / 2), vehicle.VCP.y - (int)(vehicle.length * ratio / 2),
-                            (int)(vehicle.width * ratio), (int)(vehicle.length * ratio));
-
-    vehicle.color = cv::Scalar(0, 255, 0, 255);
-
-    fused_topview.setTo(cv::Scalar(0, 0, 0, 0));
-
-    fused_topview_BG.setTo(cv::Scalar(0, 0, 0, 0));
-
-    // topview
-    cv::circle(fused_topview_BG, vehicle.VCP, detection_range_pixel, rc->color_BG, -1, 8, 0);
-
-    // max detection range [now]
-    cv::putText(fused_topview_BG, QString::number((int)detection_range).toStdString() + " cm", cv::Point(vehicle.VCP.x + 0.65 * detection_range_pixel, vehicle.VCP.y  - 0.8 * detection_range_pixel), cv::FONT_HERSHEY_COMPLEX_SMALL, 1, rc->color_line, 1);
-
-    // sensor information
-    sensors[0].pos_pixel = cv::Point(sensors[0].pos.x * ratio, sensors[0].pos.y * ratio);
-
-    sensors[1].pos_pixel = cv::Point(sensors[1].pos.x * ratio, sensors[1].pos.y * ratio);
-
-    // FOV - Stereo vision
-    cv::Point sensor_pos;
-    cv::Point pos_fov_r, pos_fov_l;
-    int shift_x, shift_y;
-    int device = 0;
-    sensor_pos = cv::Point(vehicle.VCP.x + sensors[device].pos_pixel.x, vehicle.VCP.y - sensors[device].pos_pixel.y);
-    shift_x = detection_range_pixel * sin(sensors[device].angle);
-    shift_y = detection_range_pixel * cos(sensors[device].angle);
-    pos_fov_r = cv::Point(sensor_pos.x + shift_x, sensor_pos.y - shift_y);
-    pos_fov_l = cv::Point(sensor_pos.x - shift_x, sensor_pos.y - shift_y);
-    cv::line(fused_topview_BG, sensor_pos, pos_fov_r, sensors[device].color_fov, 1, 8, 0);
-    cv::line(fused_topview_BG, sensor_pos, pos_fov_l, sensors[device].color_fov, 1, 8, 0);
-
-    // FOV - ESR
-    device = 1;
-    sensor_pos = cv::Point(vehicle.VCP.x + sensors[device].pos_pixel.x, vehicle.VCP.y - sensors[device].pos_pixel.y);
-    shift_x = detection_range_pixel * sin(sensors[device].angle);
-    shift_y = detection_range_pixel * cos(sensors[device].angle);
-    pos_fov_r = cv::Point(sensor_pos.x + shift_x, sensor_pos.y - shift_y);
-    pos_fov_l = cv::Point(sensor_pos.x - shift_x, sensor_pos.y - shift_y);
-    cv::line(fused_topview_BG, sensor_pos, pos_fov_r, sensors[device].color_fov, 1, 8, 0);
-    cv::line(fused_topview_BG, sensor_pos, pos_fov_l, sensors[device].color_fov, 1, 8, 0);
-
-    // 30 m
-    float distance = sv->max_distance * ratio;
-    if (distance <= detection_range_pixel)
-        cv::circle(fused_topview_BG, vehicle.VCP, distance, rc->color_line, 1, 8, 0);
-
-    // 5 m
-    distance = 500 * ratio;
-    if (distance <= detection_range_pixel)
-        cv::circle(fused_topview_BG, vehicle.VCP, distance, rc->color_line, 1, 8, 0);
-
-    // vehicle
-    cv::rectangle(fused_topview_BG, vehicle.rect, vehicle.color, -1, 8, 0);
-
-    ui->label_fusion_BG->setPixmap(QPixmap::fromImage(QImage::QImage(fused_topview_BG.data, fused_topview_BG.cols, fused_topview_BG.rows, fused_topview_BG.step, QImage::Format_RGBA8888)));
-    ui->label_fusion->setPixmap(QPixmap::fromImage(QImage::QImage(fused_topview.data, fused_topview.cols, fused_topview.rows, fused_topview.step, QImage::Format_RGBA8888)));
+    ui->label_fusion_BG->setPixmap(QPixmap::fromImage(QImage::QImage(si->fused_topview_BG.data, si->fused_topview_BG.cols, si->fused_topview_BG.rows, si->fused_topview_BG.step, QImage::Format_RGBA8888)));
+    ui->label_fusion->setPixmap(QPixmap::fromImage(QImage::QImage(si->fused_topview.data, si->fused_topview.cols, si->fused_topview.rows, si->fused_topview.step, QImage::Format_RGBA8888)));
 }
 
 void MainWindow::on_radioButton_vehicle_cart_clicked()
 {
-    // choose cart
-    vehicle.width = 43;
-
-    vehicle.length = 43;
-
-    vehicle.head_pos = vehicle.length / 2;
-
-    // find max & min detection range in all sensors, so this function shall be called after initialization of all sensors
-    max_detection_range = rc->max_distance;
-
-    min_detection_range = rc->min_distance + sqrt(pow(0.5 * vehicle.length, 2) + pow(0.5 * vehicle.width, 2));
-
-    sensors[0].pos = cv::Point(0, 29.5);
-
-    sensors[1].pos = cv::Point(0, vehicle.head_pos);
+    si->VehicleCart();
 
     updateFusedTopView();
 }
 
 void MainWindow::on_radioButton_vehicle_car_clicked()
 {
-    // choose car: TOYOTA Camry
-    vehicle.width = 183;
-
-    vehicle.length = 485;
-
-    vehicle.head_pos = vehicle.length / 2;
-
-    // find max & min detection range in all sensors, so this function shall be called after initialization of all sensors
-    max_detection_range = rc->max_distance;
-
-    min_detection_range = rc->min_distance + sqrt(pow(0.5 * vehicle.length, 2) + pow(0.5 * vehicle.width, 2));
-
-    sensors[0].pos = cv::Point(0, 75);
-
-    sensors[1].pos = cv::Point(0, vehicle.head_pos);
+    si->VehicleCar();
 
     updateFusedTopView();
-}
-
-void MainWindow::zoomOutFusedTopView()
-{
-    // zoom out (scrolling forward)
-    if (detection_range == min_detection_range) {
-        int count = min_detection_range / gap;
-        if (count == 0)
-            count = 1;
-        detection_range = ceil(count) * gap;
-    }
-    else
-        detection_range = detection_range + gap < max_detection_range ?
-                    detection_range + gap : max_detection_range;
-}
-
-void MainWindow::zoomInFusedTopView()
-{
-    // zoom in (scrolling backward)
-    if (detection_range == max_detection_range) {
-        int count = max_detection_range / gap;
-        detection_range = floor(count) * gap;
-    }
-    else
-        detection_range = detection_range - gap > min_detection_range ?
-                    detection_range - gap : min_detection_range;
 }
 
 void MainWindow::wheelEvent(QWheelEvent *ev)
@@ -642,10 +467,10 @@ void MainWindow::wheelEvent(QWheelEvent *ev)
     // vertical middle button
     if (ev->orientation() == Qt::Vertical) {
         if (ev->delta() > 0) {
-            zoomInFusedTopView();
+            si->zoomInFusedTopView();
         }
         if (ev->delta() < 0) {
-            zoomOutFusedTopView();
+            si->zoomOutFusedTopView();
         }
     }
 
@@ -654,149 +479,25 @@ void MainWindow::wheelEvent(QWheelEvent *ev)
 
 void MainWindow::dataFused()
 {
-    drawFusedTopView(sv->objects_display, rc->esr_obj);
-}
+    bool fg_sv = ui->checkBox_fusion_sv->isChecked() && fg_capturing && si->sv->fusedTopview();
+    bool fg_sv_each_pixel = ui->checkBox_fused_sv_plot_every_pixel->isChecked();
+    bool fg_radar = ui->checkBox_fusion_radar->isChecked() && fg_retrieving && si->rc->fusedTopview();
+    si->drawFusedTopView(fg_sv, fg_sv_each_pixel, fg_radar);
 
-void MainWindow::drawFusedTopView(stereo_vision::objInformation *d_sv, RadarController::ESR_track_object_info *d_radar)
-{
-    fused_topview.setTo(cv::Scalar(0, 0, 0, 0));
-
-    std::string tag;
-    int device = 0;
-    int range_precision = 3;
-    if (ui->checkBox_fusion_sv->isChecked() && fg_capturing && sv->fusedTopview()) {
-        // every pixel
-        if (ui->checkBox_fused_sv_plot_every_pixel->isChecked()) {
-            cv::Scalar color_pixel = sensors[device].color;
-            color_pixel[3] = 100;
-            for (int r = 0; r < IMG_H; r++) {
-                for (int c = 0; c < IMG_W; c++) {
-                    if (sv->data[r][c].disp > 0) {
-                        cv::Point plot_pt;
-                        float range, angle;
-                        range = sqrt(pow((double)(sv->data[r][c].Z), 2) + pow((double)(sv->data[r][c].X), 2));
-                        angle = atan(1.0 * sv->data[r][c].X / (1.0 * sv->data[r][c].Z)) * 180.0 / CV_PI;
-                        pointTransformTopView(sensors[device].pos_pixel, range, angle, &plot_pt);
-                        cv::circle(fused_topview, plot_pt, 1, color_pixel, -1, 8, 0);
-                    }
-                }
-            }
-        }
-        // objects
-        for (int k = 0; k < sv->obj_nums; k++) {
-            if (d_sv[k].labeled) {
-                cv::Point plot_pt;
-                cv::Rect rect;
-                float range_world = pointTransformTopView(sensors[device].pos_pixel, d_sv[k].range, d_sv[k].angle, &plot_pt, d_sv[k].rect, &rect);
-                cv::circle(fused_topview, plot_pt, thickness, sensors[device].color, -1, 8, 0);
-                cv::rectangle(fused_topview, rect, cv::Scalar(255, 255, 0, 255), 1, 8, 0);
-                tag = QString::number(k).toStdString() + ", " + QString::number(range_world / 100, 'g', range_precision).toStdString();
-                cv::putText(fused_topview, tag, plot_pt, font, font_size, sensors[device].color, font_thickness);
-
-
-                // Fusion ================================
-                double U_D = 500;    // max distance error (cm)
-                double R_sv = U_D * range_world / sv->max_distance;  // (cm)
-                int closest_radar_id = -1;
-                double closest_radar_distance = 10000000.0;
-                double sv_x = d_sv[k].range * sin(d_sv[k].angle * CV_PI / 180.0) + sensors[0].pos.x;
-                double sv_y = d_sv[k].range * cos(d_sv[k].angle * CV_PI / 180.0) + sensors[0].pos.y - vehicle.head_pos;
-                double radar_min_x;
-                double radar_min_y;
-//                std::cout<<"SV: "<<sv_x<<" "<<sv_y<<std::endl;
-                if (ui->checkBox_fusion_radar->isChecked() && fg_retrieving && rc->fusedTopview()) {
-                    for (int m = 0 ; m < 64; m++) {
-                        if (d_radar[m].status >= rc->obj_status_filtered) {
-                            double radar_x = 100.0 * d_radar[m].range * sin(d_radar[m].angle * CV_PI / 180.0) + sensors[1].pos.x;
-                            double radar_y = 100.0 * d_radar[m].range * cos(d_radar[m].angle * CV_PI / 180.0) + sensors[1].pos.y - vehicle.head_pos;
-                            double deviation = sqrt(pow((double)(radar_x - sv_x), 2) + pow((double)(radar_y - sv_y), 2));
-//                            std::cout<<deviation<<" "<<closest_radar_distance<<" "<<R_sv<<std::endl;
-//                            std::cout<<"RADAR: "<<radar_x<<" "<<radar_y<<std::endl;
-                            if (deviation < closest_radar_distance && deviation < R_sv) {
-                                closest_radar_id = m;
-                                closest_radar_distance = deviation;
-                                radar_min_x = radar_x;
-                                radar_min_y = radar_y;
-                            }
-//                            std::cout<<"dist. "<<sv_x<<" "<<sv_y<<"\t"<<radar_x<<" "<<radar_y<<std::endl;
-                        }
-                    }
-
-                    if (closest_radar_id != -1) {
-                        cv::Point2d fused_pos;
-                        float ratio_radar = 0.9;
-                        float ratio_sv = 0.1;
-                        double fused_x = vehicle.VCP.x + (ratio_radar * radar_min_x + ratio_sv * sv_x) * ratio;
-                        double fused_y = vehicle.VCP.y - (ratio_radar * radar_min_y + ratio_sv * sv_y) * ratio;
-                        double range = sqrt(pow((double)(0.1 * (sv_x + sensors[0].pos.x) + 0.9 * (radar_min_x + sensors[0].pos.x)), 2) +
-                                            pow((double)(0.1 * (sv_y + sensors[1].pos.y) + 0.9 * (radar_min_y + sensors[1].pos.y) - vehicle.head_pos), 2));
-                        fused_pos = cv::Point2d(fused_x, fused_y);
-                        cv::circle(fused_topview, cv::Point(fused_pos), thickness + 2, cv::Scalar(139, 0, 139, 255), -1, 8, 0);
-                        tag = QString::number(range / 100, 'g', range_precision).toStdString();
-                        cv::putText(fused_topview, tag, cv::Point(plot_pt.x - 50, plot_pt.y), font, font_size, cv::Scalar(139, 0, 139, 255), font_thickness);
-                        std::cout<<k<<" "<<closest_radar_id<<"\t"<<range<<std::endl;
-                    }
-                }
-            }
-        }
-    }
-
-    device = 1;
-    if (ui->checkBox_fusion_radar->isChecked() && fg_retrieving && rc->fusedTopview()) {
-        for (int m = 0; m < 64; m++) {
-            if (d_radar[m].status >= rc->obj_status_filtered) {
-                cv::Point plot_pt;
-                float range_world = pointTransformTopView(sensors[device].pos_pixel, 100 * d_radar[m].range, d_radar[m].angle + rc->aim_angle, &plot_pt);
-                cv::circle(fused_topview, plot_pt, thickness, sensors[device].color, -1, 8, 0);
-                tag = QString::number(m).toStdString() + ", " + QString::number(range_world / 100, 'g', range_precision).toStdString();
-                cv::putText(fused_topview, tag, cv::Point(plot_pt.x, plot_pt.y + 15), font, font_size, sensors[device].color, font_thickness);
-            }
-        }
-    }
-
-    ui->label_fusion->setPixmap(QPixmap::fromImage(QImage::QImage(fused_topview.data, fused_topview.cols, fused_topview.rows, fused_topview.step, QImage::Format_RGBA8888)));
-
+    ui->label_fusion->setPixmap(QPixmap::fromImage(QImage::QImage(si->fused_topview.data, si->fused_topview.cols, si->fused_topview.rows, si->fused_topview.step, QImage::Format_RGBA8888)));
     ui->label_fusion->update();
     qApp->processEvents();
 }
 
-float MainWindow::pointTransformTopView(cv::Point sensor_pos, float range, float angle, cv::Point *output)
-{
-    float x_tmp, y_tmp; // (cm)
-    x_tmp = range * sin(angle * CV_PI / 180.0);
-    y_tmp = range * cos(angle * CV_PI / 180.0);
-    output->x = vehicle.VCP.x + (x_tmp * ratio + sensor_pos.x);
-    output->y = vehicle.VCP.y - (y_tmp * ratio + sensor_pos.y);
-
-    return sqrt(pow((double)(x_tmp + sensor_pos.x / ratio), 2) + pow((double)(y_tmp + sensor_pos.y / ratio - vehicle.head_pos), 2));
-}
-
-float MainWindow::pointTransformTopView(cv::Point sensor_pos, float range, float angle, cv::Point *output, cv::Rect rect_in, cv::Rect *rect)
-{
-    float x_tmp, y_tmp; // (cm)
-    x_tmp = range * sin(angle * CV_PI / 180.0);
-    y_tmp = range * cos(angle * CV_PI / 180.0);
-    output->x = vehicle.VCP.x + (x_tmp * ratio + sensor_pos.x);
-    output->y = vehicle.VCP.y - (y_tmp * ratio + sensor_pos.y);
-    *rect = cv::Rect(vehicle.VCP.x + ((rect_in.tl().x) * ratio + sensor_pos.x),
-                     vehicle.VCP.y - (rect_in.tl().y * ratio + sensor_pos.y),
-                     (rect_in.br().x - rect_in.tl().x) * ratio, abs(rect_in.br().y - rect_in.tl().y) * ratio);
-
-//    std::cout<<rect->tl().x<<"\t"<<rect->tl().y<<"\t"<<rect->width<<"\t"<<rect->height<<"\t\t"<<
-//            rect_in.tl().x<<"\t"<<rect_in.tl().y<<"\t"<<rect_in.width<<"\t"<<rect_in.height<<std::endl;
-
-    return sqrt(pow((double)(x_tmp + sensor_pos.x / ratio), 2) + pow((double)(y_tmp + sensor_pos.y / ratio - vehicle.head_pos), 2));
-}
-
 void MainWindow::radarDisplayTopViewBG()
 {
-    if (rc->isInitializedTopView()) {
-        rc->drawTopViewLines(ui->spinBox_radar_topview_r->value(), ui->spinBox_radar_topview_c->value(), false);
-        ui->label_top_view_radar_long_BG->setPixmap(QPixmap::fromImage(QImage::QImage(rc->topview_BG.data, rc->topview_BG.cols, rc->topview_BG.rows, rc->topview_BG.step, QImage::Format_RGBA8888)).scaled(900, 600));
+    if (si->rc->isInitializedTopView()) {
+        si->rc->drawTopViewLines(ui->spinBox_radar_topview_r->value(), ui->spinBox_radar_topview_c->value(), false);
+        ui->label_top_view_radar_long_BG->setPixmap(QPixmap::fromImage(QImage::QImage(si->rc->topview_BG.data, si->rc->topview_BG.cols, si->rc->topview_BG.rows, si->rc->topview_BG.step, QImage::Format_RGBA8888)).scaled(900, 600));
 
-        ui->label_radar_data_BG->setPixmap(QPixmap::fromImage(QImage::QImage(rc->img_radar_BG.data, rc->img_radar_BG.cols, rc->img_radar_BG.rows, rc->img_radar_BG.step, QImage::Format_RGB888)));
+        ui->label_radar_data_BG->setPixmap(QPixmap::fromImage(QImage::QImage(si->rc->img_radar_BG.data, si->rc->img_radar_BG.cols, si->rc->img_radar_BG.rows, si->rc->img_radar_BG.step, QImage::Format_RGB888)));
     }
-//    cv::imshow("rc", rc->topview_BG);
+//    cv::imshow("rc", si->rc->topview_BG);
 }
 
 void MainWindow::on_spinBox_radar_topview_r_valueChanged(int arg1)
@@ -811,9 +512,9 @@ void MainWindow::on_spinBox_radar_topview_c_valueChanged(int arg1)
 
 void MainWindow::svDisplayTopViewBG()
 {
-    if (sv->isInitializedTopView()) {
-        sv->drawTopViewLines(ui->spinBox_topview_r->value(), ui->spinBox_topview_c->value(), true);
-        ui->label_top_view_bg->setPixmap(QPixmap::fromImage(QImage::QImage(sv->topview_BG.data, sv->topview_BG.cols, sv->topview_BG.rows, sv->topview_BG.step, QImage::Format_RGBA8888)).scaled(270, 750));
+    if (si->sv->isInitializedTopView()) {
+        si->sv->drawTopViewLines(ui->spinBox_topview_r->value(), ui->spinBox_topview_c->value(), true);
+        ui->label_top_view_bg->setPixmap(QPixmap::fromImage(QImage::QImage(si->sv->topview_BG.data, si->sv->topview_BG.cols, si->sv->topview_BG.rows, si->sv->topview_BG.step, QImage::Format_RGBA8888)).scaled(270, 750));
     }
 }
 
@@ -829,7 +530,7 @@ void MainWindow::on_spinBox_topview_c_valueChanged(int arg1)
 
 void MainWindow::on_pushButton_lrf_open_clicked()
 {
-    if (!lrf->open(ui->comboBox_lrf_com->currentText(), ui->comboBox_lrf_baudRate->currentText().toInt())) {
+    if (!si->lrf->open(ui->comboBox_lrf_com->currentText(), ui->comboBox_lrf_baudRate->currentText().toInt())) {
         reportError("lrf", "Error!", "Port cannot be open or under using.");
         return;
     }
@@ -879,8 +580,8 @@ void MainWindow::lrfDisplay(double *lrf_data, cv::Mat *display_lrf)
             fg_lrf_record = false;
         }
     }
-    ui->label_lrf_buf_proc->setText(QString::number(lrf->time_proc_buf));
-    ui->label_lrf_proc->setText(QString::number(lrf->time_proc));
+    ui->label_lrf_buf_proc->setText(QString::number(si->lrf->time_proc_buf));
+    ui->label_lrf_proc->setText(QString::number(si->lrf->time_proc));
 
     ui->label_lrf_data->update();
     ui->label_lrf_buf_proc->update();
@@ -890,30 +591,30 @@ void MainWindow::lrfDisplay(double *lrf_data, cv::Mat *display_lrf)
 
 void MainWindow::retrieveMatchParam()
 {
-    sv->cam_param->cam_focal_length     = fin_cam_param->cam_focal_length;
-    sv->cam_param->base_line            = fin_cam_param->base_line;
-    sv->cam_param->focal_length         = fin_cam_param->focal_length;
-    sv->cam_param->rig_height           = fin_cam_param->rig_height;
+    si->sv->cam_param->cam_focal_length     = fin_cam_param->cam_focal_length;
+    si->sv->cam_param->base_line            = fin_cam_param->base_line;
+    si->sv->cam_param->focal_length         = fin_cam_param->focal_length;
+    si->sv->cam_param->rig_height           = fin_cam_param->rig_height;
 
-    sv->param_sgbm->pre_filter_cap      = fin_SGBM->pre_filter_cap;
-    sv->param_sgbm->SAD_window_size     = fin_SGBM->SAD_window_size;
-    sv->param_sgbm->min_disp            = fin_SGBM->min_disp;
-    sv->param_sgbm->num_of_disp         = fin_SGBM->num_of_disp;
-    sv->param_sgbm->uniquenese_ratio    = fin_SGBM->uniquenese_ratio;
-    sv->param_sgbm->speckle_window_size = fin_SGBM->speckle_window_size;
-    sv->param_sgbm->speckle_range       = fin_SGBM->speckle_range;
+    si->sv->param_sgbm->pre_filter_cap      = fin_SGBM->pre_filter_cap;
+    si->sv->param_sgbm->SAD_window_size     = fin_SGBM->SAD_window_size;
+    si->sv->param_sgbm->min_disp            = fin_SGBM->min_disp;
+    si->sv->param_sgbm->num_of_disp         = fin_SGBM->num_of_disp;
+    si->sv->param_sgbm->uniquenese_ratio    = fin_SGBM->uniquenese_ratio;
+    si->sv->param_sgbm->speckle_window_size = fin_SGBM->speckle_window_size;
+    si->sv->param_sgbm->speckle_range       = fin_SGBM->speckle_range;
 
-    sv->param_bm->pre_filter_size     = fin_BM->pre_filter_size;
-    sv->param_bm->pre_filter_cap      = fin_BM->pre_filter_cap;
-    sv->param_bm->SAD_window_size     = fin_BM->SAD_window_size;
-    sv->param_bm->min_disp            = fin_BM->min_disp;
-    sv->param_bm->num_of_disp         = fin_BM->num_of_disp;
-    sv->param_bm->texture_thresh      = fin_BM->texture_thresh;
-    sv->param_bm->uniquenese_ratio    = fin_BM->uniquenese_ratio;
-    sv->param_bm->speckle_window_size = fin_BM->speckle_window_size;
-    sv->param_bm->speckle_range       = fin_BM->speckle_range;
+    si->sv->param_bm->pre_filter_size     = fin_BM->pre_filter_size;
+    si->sv->param_bm->pre_filter_cap      = fin_BM->pre_filter_cap;
+    si->sv->param_bm->SAD_window_size     = fin_BM->SAD_window_size;
+    si->sv->param_bm->min_disp            = fin_BM->min_disp;
+    si->sv->param_bm->num_of_disp         = fin_BM->num_of_disp;
+    si->sv->param_bm->texture_thresh      = fin_BM->texture_thresh;
+    si->sv->param_bm->uniquenese_ratio    = fin_BM->uniquenese_ratio;
+    si->sv->param_bm->speckle_window_size = fin_BM->speckle_window_size;
+    si->sv->param_bm->speckle_range       = fin_BM->speckle_range;
 
-    sv->updateParamsSmp();
+    si->sv->updateParamsSmp();
 }
 
 void MainWindow::camOpen()
@@ -921,9 +622,9 @@ void MainWindow::camOpen()
     int L = ui->comboBox_cam_device_index_L->currentIndex();
     int R = ui->comboBox_cam_device_index_R->currentIndex();
 
-    if (!sv->open(L, R)) {
+    if (!si->sv->open(L, R)) {
         reportError("sv", "Error!", "Camera can NOT be opened.");
-        sv->close();
+        si->sv->close();
         return;
     }
     else {
@@ -936,9 +637,9 @@ void MainWindow::svDisplay(cv::Mat *img_L, cv::Mat *img_R, cv::Mat *disp, cv::Ma
     ui->label_cam_img_L->setPixmap(QPixmap::fromImage(QImage::QImage(img_L->data, img_L->cols, img_L->rows, img_L->step, QImage::Format_RGB888)).scaled(IMG_DIS_W, IMG_DIS_H));
     ui->label_cam_img_R->setPixmap(QPixmap::fromImage(QImage::QImage(img_R->data, img_R->cols, img_R->rows, img_R->step, QImage::Format_RGB888)).scaled(IMG_DIS_W, IMG_DIS_H));
     ui->label_sv_detected_obj->setText(QString::number(detected_obj));
-    if (sv->input_mode == SV::INPUT_SOURCE::VIDEO)
+    if (si->sv->input_mode == SV::INPUT_SOURCE::VIDEO)
         ui->label_sv_frame_count->setText(QString::number(current_frame_count) + " / " + QString::number(sv_frame_count) + " frames");
-    else if (sv->input_mode == SV::INPUT_SOURCE::CAM)
+    else if (si->sv->input_mode == SV::INPUT_SOURCE::CAM)
         ui->label_sv_frame_count->setText(QString::number(current_frame_count) + " frames");
 
     if (ui->checkBox_do_depth->isChecked()) {    
@@ -958,7 +659,7 @@ void MainWindow::svDisplay(cv::Mat *img_L, cv::Mat *img_R, cv::Mat *disp, cv::Ma
         }
         lock_sv.unlock();
     }
-    ui->label_sv_proc->setText(QString::number(sv->time_proc));
+    ui->label_sv_proc->setText(QString::number(si->sv->time_proc));
 
     ui->label_cam_img_L->update();
     ui->label_cam_img_R->update();
@@ -974,34 +675,18 @@ void MainWindow::svDisplay(cv::Mat *img_L, cv::Mat *img_R, cv::Mat *disp, cv::Ma
 
 void MainWindow::on_checkBox_sv_topview_clicked(bool checked)
 {
-    if (checked) {
-        sv->fg_topview = true;
-        ui->checkBox_sv_reproject->setEnabled(true);
-        ui->checkBox_topview_plot_points->setEnabled(true);
-        for (int r = 0; r < sv->topview.rows; r++) {
-            for (int c = 0; c < sv->topview.cols; c++) {
-                cv::Vec4b val = sv->topview.at<cv::Vec4b>(r, c);
-                if (val[0] != 0 || val [1] != 0 || val[2] != 0)
-                    sv->topview.at<cv::Vec4b>(r, c)[3] = 255;
-            }
-        }
-    }
-    else {
-        sv->fg_topview = false;
-        ui->checkBox_sv_reproject->setEnabled(false);
-        ui->checkBox_topview_plot_points->setEnabled(false);
-        for (int r = 0; r < sv->topview.rows; r++) {
-            for (int c = 0; c < sv->topview.cols; c++)
-                sv->topview.at<cv::Vec4b>(r, c)[3] = 0;
-        }
-    }
-    ui->label_top_view_sv->setPixmap(QPixmap::fromImage(QImage::QImage(sv->topview.data, sv->topview.cols, sv->topview.rows, sv->topview.step, QImage::Format_RGBA8888)).scaled(270, 750));
+    si->sv->fg_topview = checked;
+    ui->label_top_view_sv->setVisible(checked);
+    ui->checkBox_sv_reproject->setEnabled(checked);
+    ui->checkBox_topview_plot_points->setEnabled(checked);
+    if (checked)
+        ui->label_top_view_sv->setPixmap(QPixmap::fromImage(QImage::QImage(si->sv->topview.data, si->sv->topview.cols, si->sv->topview.rows, si->sv->topview.step, QImage::Format_RGBA8888)).scaled(270, 750));
 }
 
 void MainWindow::on_pushButton_cam_open_clicked()
 {
     camOpen();
-    sv->input_mode = SV::INPUT_SOURCE::CAM;
+    si->sv->input_mode = SV::INPUT_SOURCE::CAM;
     ui->label_sv_frame_count->setVisible(false);
     on_pushButton_cam_step_clicked();
 }
@@ -1014,11 +699,11 @@ void MainWindow::exec()
 
 bool MainWindow::svWarning()
 {
-    if (sv->input_mode == SV::INPUT_SOURCE::CAM && !sv->isOpened()) {
+    if (si->sv->input_mode == SV::INPUT_SOURCE::CAM && !si->sv->isOpened()) {
         reportError("sv", "Error!", "Cameras haven't opened.");
         return true;
     }
-    else if (sv->input_mode == SV::INPUT_SOURCE::VIDEO && !re.vr->fileExist()) {
+    else if (si->sv->input_mode == SV::INPUT_SOURCE::VIDEO && !re.vr->fileExist()) {
         reportError("sv", "Error!", "No video is loaded.");
         return true;
     }
@@ -1036,7 +721,7 @@ void MainWindow::on_pushButton_cam_step_clicked()
     if (svWarning())
         return;
 
-    sv->dataExec();
+    si->sv->dataExec();
 }
 
 void MainWindow::on_pushButton_cam_capture_clicked()
@@ -1069,7 +754,7 @@ void MainWindow::threadBuffering()
 {
     // unimplement
     while (fg_buffering) {
-//        f_lrf_buf = QtConcurrent::run(lrf, &lrf_controller::pushToBuf);
+//        f_lrf_buf = QtConcurrent::run(si->lrf, &lrf_controller::pushToBuf);
 //        fw_lrf_buf.setFuture(f_lrf_buf);
 //        fw_lrf_buf.waitForFinished();
         qApp->processEvents();
@@ -1082,26 +767,26 @@ void MainWindow::threadProcessing()
     while (fg_running) {
         // sv
         if (fg_capturing && !f_sv.isRunning()) {
-//            sv->dataExec();
-            f_sv = QtConcurrent::run(sv, &stereo_vision::dataExec);
+//            si->sv->dataExec();
+            f_sv = QtConcurrent::run(si->sv, &stereo_vision::dataExec);
         }
 
         // lrf
         if (fg_acquiring && !f_lrf.isRunning()) {
-//            lrf->dataExec();
-            f_lrf = QtConcurrent::run(lrf, &lrf_controller::dataExec);
+//            si->lrf->dataExec();
+            f_lrf = QtConcurrent::run(si->lrf, &lrf_controller::dataExec);
         }
 
         // lrf buffer
-        if (fg_buffering && lrf->bufNotFull() && !f_lrf_buf.isRunning()) {
-//            lrf->pushToBuf();
-            f_lrf_buf = QtConcurrent::run(lrf, &lrf_controller::pushToBuf);
+        if (fg_buffering && si->lrf->bufNotFull() && !f_lrf_buf.isRunning()) {
+//            si->lrf->pushToBuf();
+            f_lrf_buf = QtConcurrent::run(si->lrf, &lrf_controller::pushToBuf);
         }
 
         // Radar ESR
         if (fg_retrieving && !f_radar.isRunning()) {
-//            rc->dataExec();
-            f_radar = QtConcurrent::run(rc, &RadarController::dataExec);
+//            si->rc->dataExec();
+            f_radar = QtConcurrent::run(si->rc, &RadarController::dataExec);
         }
         if (!f_fused.isRunning()) {
             f_fused = QtConcurrent::run(this, &MainWindow::dataFused);
@@ -1120,57 +805,57 @@ void MainWindow::on_checkBox_do_calibration_clicked(bool checked)
 {
     if (checked) {
         // load camera calibration files
-        if (!sv->loadRemapFile(ui->comboBox_camera_focal_length->currentText().toInt(), ui->lineEdit_base_line->text().toDouble())) {
+        if (!si->sv->loadRemapFile(ui->comboBox_camera_focal_length->currentText().toInt(), ui->lineEdit_base_line->text().toDouble())) {
             reportError("cc", "Error!", "Calibration files can NOT be imported.");
             ui->checkBox_do_calibration->setChecked(false);
         }
-        sv->fg_calib = true;
+        si->sv->fg_calib = true;
     }
     else
-        sv->fg_calib = false;
+        si->sv->fg_calib = false;
 }
 
 void MainWindow::on_checkBox_do_depth_clicked(bool checked)
 {
     if (checked) {
         // Though disparity is scaled by 16, GUI takes scaled pixels. If not, the topview looks weird.
-        sv->cam_param->param_r = sv->cam_param->focal_length * sv->cam_param->base_line;
+        si->sv->cam_param->param_r = si->sv->cam_param->focal_length * si->sv->cam_param->base_line;
 
         ui->checkBox_pseudo_color->setEnabled(true);
         ui->checkBox_sv_topview->setEnabled(true);
         ui->checkBox_sv_reproject->setEnabled(true);
-        sv->fg_stereoMatch = true;
+        si->sv->fg_stereoMatch = true;
     }
     else {
         ui->checkBox_pseudo_color->setEnabled(false);
         ui->checkBox_sv_topview->setEnabled(false);
         ui->checkBox_sv_reproject->setEnabled(false);
-        sv->fg_stereoMatch = false;
+        si->sv->fg_stereoMatch = false;
     }
 }
 
 void MainWindow::on_checkBox_pseudo_color_clicked(bool checked)
 {
     if (checked)
-        sv->fg_pseudo = true;
+        si->sv->fg_pseudo = true;
     else
-        sv->fg_pseudo = false;
+        si->sv->fg_pseudo = false;
 }
 
 void MainWindow::on_checkBox_sv_reproject_clicked(bool checked)
 {
     if (checked)
-        sv->fg_reproject = true;
+        si->sv->fg_reproject = true;
     else
-        sv->fg_reproject = false;
+        si->sv->fg_reproject = false;
 }
 
 void MainWindow::on_checkBox_topview_plot_points_clicked(bool checked)
 {
     if (checked)
-        sv->fg_topview_plot_points = true;
+        si->sv->fg_topview_plot_points = true;
     else
-        sv->fg_topview_plot_points = false;
+        si->sv->fg_topview_plot_points = false;
 }
 
 void MainWindow::on_pushButton_camera_calibration_clicked()
@@ -1212,19 +897,19 @@ void MainWindow::requestImage(char CCD)
 #ifdef debug_info_cc
         qDebug()<<"send left image";
 #endif
-        emit sendImage(&sv->img_r_L);
+        emit sendImage(&si->sv->img_r_L);
         break;
     case 'R':
 #ifdef debug_info_cc
         qDebug()<<"send right image";
 #endif
-        emit sendImage(&sv->img_r_R);
+        emit sendImage(&si->sv->img_r_R);
         break;
     case 'B':
 #ifdef debug_info_cc
         qDebug()<<"send both images";
 #endif
-        emit sendImages(&sv->img_r_L, &sv->img_r_R);
+        emit sendImages(&si->sv->img_r_L, &si->sv->img_r_R);
         break;
     }
 
@@ -1232,18 +917,18 @@ void MainWindow::requestImage(char CCD)
 
 void MainWindow::on_radioButton_BM_clicked()
 {
-    if (!sv->modeChanged(SV::STEREO_MATCH::BM))
+    if (!si->sv->modeChanged(SV::STEREO_MATCH::BM))
         return;
     report("Change to BM mathod.");
-    sv->modeChange(SV::STEREO_MATCH::BM, fg_form_smp_alloc);
+    si->sv->modeChange(SV::STEREO_MATCH::BM, fg_form_smp_alloc);
 }
 
 void MainWindow::on_radioButton_SGBM_clicked()
 {
-    if (!sv->modeChanged(SV::STEREO_MATCH::SGBM))
+    if (!si->sv->modeChanged(SV::STEREO_MATCH::SGBM))
         return;
     report("Change to SGBM mathod.");
-    sv->modeChange(SV::STEREO_MATCH::SGBM, fg_form_smp_alloc);
+    si->sv->modeChange(SV::STEREO_MATCH::SGBM, fg_form_smp_alloc);
 }
 
 void MainWindow::on_pushButton_stereo_match_param_clicked()
@@ -1252,33 +937,33 @@ void MainWindow::on_pushButton_stereo_match_param_clicked()
         form_smp->raise();
         return;
     }
-    form_smp = new stereoMatchParamForm(0, sv->match_mode);
+    form_smp = new stereoMatchParamForm(0, si->sv->match_mode);
     form_smp->move(1500, 100);
     fg_form_smp_alloc = true;
     QObject::connect(form_smp, SIGNAL(closed(void)), this, SLOT(closeFormSmp(void)));
 
     // send cuurent stereo matching params to ui
-    QObject::connect(sv, SIGNAL(updateForm(int, std::vector<int>)), form_smp, SLOT(updateParams(int, std::vector<int>)));
+    QObject::connect(si->sv, SIGNAL(updateForm(int, std::vector<int>)), form_smp, SLOT(updateParams(int, std::vector<int>)));
 
     // params connection
-    QObject::connect(form_smp, SIGNAL(send_bm_pre_filter_size(int)),        sv, SLOT(change_bm_pre_filter_size(int)));
-    QObject::connect(form_smp, SIGNAL(send_bm_pre_filter_cap(int)),         sv, SLOT(change_bm_pre_filter_cap(int)));
-    QObject::connect(form_smp, SIGNAL(send_bm_sad_window_size(int)),        sv, SLOT(change_bm_sad_window_size(int)));
-    QObject::connect(form_smp, SIGNAL(send_bm_min_disp(int)),               sv, SLOT(change_bm_min_disp(int)));
-    QObject::connect(form_smp, SIGNAL(send_bm_num_of_disp(int)),            sv, SLOT(change_bm_num_of_disp(int)));
-    QObject::connect(form_smp, SIGNAL(send_bm_texture_thresh(int)),         sv, SLOT(change_bm_texture_thresh(int)));
-    QObject::connect(form_smp, SIGNAL(send_bm_uniqueness_ratio(int)),       sv, SLOT(change_bm_uniqueness_ratio(int)));
-    QObject::connect(form_smp, SIGNAL(send_bm_speckle_window_size(int)),    sv, SLOT(change_bm_speckle_window_size(int)));
-    QObject::connect(form_smp, SIGNAL(send_bm_speckle_range(int)),          sv, SLOT(change_bm_speckle_range(int)));
-    QObject::connect(form_smp, SIGNAL(send_sgbm_pre_filter_cap(int)),       sv, SLOT(change_sgbm_pre_filter_cap(int)));
-    QObject::connect(form_smp, SIGNAL(send_sgbm_sad_window_size(int)),      sv, SLOT(change_sgbm_sad_window_size(int)));
-    QObject::connect(form_smp, SIGNAL(send_sgbm_min_disp(int)),             sv, SLOT(change_sgbm_min_disp(int)));
-    QObject::connect(form_smp, SIGNAL(send_sgbm_num_of_disp(int)),          sv, SLOT(change_sgbm_num_of_disp(int)));
-    QObject::connect(form_smp, SIGNAL(send_sgbm_uniqueness_ratio(int)),     sv, SLOT(change_sgbm_uniqueness_ratio(int)));
-    QObject::connect(form_smp, SIGNAL(send_sgbm_speckle_window_size(int)),  sv, SLOT(change_sgbm_speckle_window_size(int)));
-    QObject::connect(form_smp, SIGNAL(send_sgbm_speckle_range(int)),        sv, SLOT(change_sgbm_speckle_range(int)));
+    QObject::connect(form_smp, SIGNAL(send_bm_pre_filter_size(int)),        si->sv, SLOT(change_bm_pre_filter_size(int)));
+    QObject::connect(form_smp, SIGNAL(send_bm_pre_filter_cap(int)),         si->sv, SLOT(change_bm_pre_filter_cap(int)));
+    QObject::connect(form_smp, SIGNAL(send_bm_sad_window_size(int)),        si->sv, SLOT(change_bm_sad_window_size(int)));
+    QObject::connect(form_smp, SIGNAL(send_bm_min_disp(int)),               si->sv, SLOT(change_bm_min_disp(int)));
+    QObject::connect(form_smp, SIGNAL(send_bm_num_of_disp(int)),            si->sv, SLOT(change_bm_num_of_disp(int)));
+    QObject::connect(form_smp, SIGNAL(send_bm_texture_thresh(int)),         si->sv, SLOT(change_bm_texture_thresh(int)));
+    QObject::connect(form_smp, SIGNAL(send_bm_uniqueness_ratio(int)),       si->sv, SLOT(change_bm_uniqueness_ratio(int)));
+    QObject::connect(form_smp, SIGNAL(send_bm_speckle_window_size(int)),    si->sv, SLOT(change_bm_speckle_window_size(int)));
+    QObject::connect(form_smp, SIGNAL(send_bm_speckle_range(int)),          si->sv, SLOT(change_bm_speckle_range(int)));
+    QObject::connect(form_smp, SIGNAL(send_sgbm_pre_filter_cap(int)),       si->sv, SLOT(change_sgbm_pre_filter_cap(int)));
+    QObject::connect(form_smp, SIGNAL(send_sgbm_sad_window_size(int)),      si->sv, SLOT(change_sgbm_sad_window_size(int)));
+    QObject::connect(form_smp, SIGNAL(send_sgbm_min_disp(int)),             si->sv, SLOT(change_sgbm_min_disp(int)));
+    QObject::connect(form_smp, SIGNAL(send_sgbm_num_of_disp(int)),          si->sv, SLOT(change_sgbm_num_of_disp(int)));
+    QObject::connect(form_smp, SIGNAL(send_sgbm_uniqueness_ratio(int)),     si->sv, SLOT(change_sgbm_uniqueness_ratio(int)));
+    QObject::connect(form_smp, SIGNAL(send_sgbm_speckle_window_size(int)),  si->sv, SLOT(change_sgbm_speckle_window_size(int)));
+    QObject::connect(form_smp, SIGNAL(send_sgbm_speckle_range(int)),        si->sv, SLOT(change_sgbm_speckle_range(int)));
 
-    sv->modeChange(sv->match_mode, fg_form_smp_alloc);
+    si->sv->modeChange(si->sv->match_mode, fg_form_smp_alloc);
 
     form_smp->show();
 }
@@ -1286,25 +971,25 @@ void MainWindow::on_pushButton_stereo_match_param_clicked()
 void MainWindow::closeFormSmp(void)
 {
     QObject::disconnect(form_smp, SIGNAL(closed(void)), this, SLOT(closeFormSmp(void)));
-    QObject::disconnect(sv, SIGNAL(updateForm(int, std::vector<int>)), form_smp, SLOT(updateParams(int, std::vector<int>)));
+    QObject::disconnect(si->sv, SIGNAL(updateForm(int, std::vector<int>)), form_smp, SLOT(updateParams(int, std::vector<int>)));
 
     // params connection
-    QObject::disconnect(form_smp, SIGNAL(send_bm_pre_filter_size(int)),        sv, SLOT(change_bm_pre_filter_size(int)));
-    QObject::disconnect(form_smp, SIGNAL(send_bm_pre_filter_cap(int)),         sv, SLOT(change_bm_pre_filter_cap(int)));
-    QObject::disconnect(form_smp, SIGNAL(send_bm_sad_window_size(int)),        sv, SLOT(change_bm_sad_window_size(int)));
-    QObject::disconnect(form_smp, SIGNAL(send_bm_min_disp(int)),               sv, SLOT(change_bm_min_disp(int)));
-    QObject::disconnect(form_smp, SIGNAL(send_bm_num_of_disp(int)),            sv, SLOT(change_bm_num_of_disp(int)));
-    QObject::disconnect(form_smp, SIGNAL(send_bm_texture_thresh(int)),         sv, SLOT(change_bm_texture_thresh(int)));
-    QObject::disconnect(form_smp, SIGNAL(send_bm_uniqueness_ratio(int)),       sv, SLOT(change_bm_uniqueness_ratio(int)));
-    QObject::disconnect(form_smp, SIGNAL(send_bm_speckle_window_size(int)),    sv, SLOT(change_bm_speckle_window_size(int)));
-    QObject::disconnect(form_smp, SIGNAL(send_bm_speckle_range(int)),          sv, SLOT(change_bm_speckle_range(int)));
-    QObject::disconnect(form_smp, SIGNAL(send_sgbm_pre_filter_cap(int)),       sv, SLOT(change_sgbm_pre_filter_cap(int)));
-    QObject::disconnect(form_smp, SIGNAL(send_sgbm_sad_window_size(int)),      sv, SLOT(change_sgbm_sad_window_size(int)));
-    QObject::disconnect(form_smp, SIGNAL(send_sgbm_min_disp(int)),             sv, SLOT(change_sgbm_min_disp(int)));
-    QObject::disconnect(form_smp, SIGNAL(send_sgbm_num_of_disp(int)),          sv, SLOT(change_sgbm_num_of_disp(int)));
-    QObject::disconnect(form_smp, SIGNAL(send_sgbm_uniqueness_ratio(int)),     sv, SLOT(change_sgbm_uniqueness_ratio(int)));
-    QObject::disconnect(form_smp, SIGNAL(send_sgbm_speckle_window_size(int)),  sv, SLOT(change_sgbm_speckle_window_size(int)));
-    QObject::disconnect(form_smp, SIGNAL(send_sgbm_speckle_range(int)),        sv, SLOT(change_sgbm_speckle_range(int)));
+    QObject::disconnect(form_smp, SIGNAL(send_bm_pre_filter_size(int)),        si->sv, SLOT(change_bm_pre_filter_size(int)));
+    QObject::disconnect(form_smp, SIGNAL(send_bm_pre_filter_cap(int)),         si->sv, SLOT(change_bm_pre_filter_cap(int)));
+    QObject::disconnect(form_smp, SIGNAL(send_bm_sad_window_size(int)),        si->sv, SLOT(change_bm_sad_window_size(int)));
+    QObject::disconnect(form_smp, SIGNAL(send_bm_min_disp(int)),               si->sv, SLOT(change_bm_min_disp(int)));
+    QObject::disconnect(form_smp, SIGNAL(send_bm_num_of_disp(int)),            si->sv, SLOT(change_bm_num_of_disp(int)));
+    QObject::disconnect(form_smp, SIGNAL(send_bm_texture_thresh(int)),         si->sv, SLOT(change_bm_texture_thresh(int)));
+    QObject::disconnect(form_smp, SIGNAL(send_bm_uniqueness_ratio(int)),       si->sv, SLOT(change_bm_uniqueness_ratio(int)));
+    QObject::disconnect(form_smp, SIGNAL(send_bm_speckle_window_size(int)),    si->sv, SLOT(change_bm_speckle_window_size(int)));
+    QObject::disconnect(form_smp, SIGNAL(send_bm_speckle_range(int)),          si->sv, SLOT(change_bm_speckle_range(int)));
+    QObject::disconnect(form_smp, SIGNAL(send_sgbm_pre_filter_cap(int)),       si->sv, SLOT(change_sgbm_pre_filter_cap(int)));
+    QObject::disconnect(form_smp, SIGNAL(send_sgbm_sad_window_size(int)),      si->sv, SLOT(change_sgbm_sad_window_size(int)));
+    QObject::disconnect(form_smp, SIGNAL(send_sgbm_min_disp(int)),             si->sv, SLOT(change_sgbm_min_disp(int)));
+    QObject::disconnect(form_smp, SIGNAL(send_sgbm_num_of_disp(int)),          si->sv, SLOT(change_sgbm_num_of_disp(int)));
+    QObject::disconnect(form_smp, SIGNAL(send_sgbm_uniqueness_ratio(int)),     si->sv, SLOT(change_sgbm_uniqueness_ratio(int)));
+    QObject::disconnect(form_smp, SIGNAL(send_sgbm_speckle_window_size(int)),  si->sv, SLOT(change_sgbm_speckle_window_size(int)));
+    QObject::disconnect(form_smp, SIGNAL(send_sgbm_speckle_range(int)),        si->sv, SLOT(change_sgbm_speckle_range(int)));
 
     delete form_smp;
     fg_form_smp_alloc = false;
@@ -1329,21 +1014,21 @@ void MainWindow::on_lineEdit_base_line_returnPressed()
 
 void MainWindow::on_pushButton_lrf_request_ONCE_clicked()
 {
-    lrf->requestData(LRF::CAPTURE_MODE::ONCE);
-    while (!lrf->bufEnoughSet()) {
-        lrf->pushToBuf();
+    si->lrf->requestData(LRF::CAPTURE_MODE::ONCE);
+    while (!si->lrf->bufEnoughSet()) {
+        si->lrf->pushToBuf();
     }
-    lrf->dataExec();
+    si->lrf->dataExec();
 }
 
 void MainWindow::on_pushButton_lrf_request_clicked()
 {
-    lrf->requestData(LRF::CAPTURE_MODE::CONTINUOUS);
+    si->lrf->requestData(LRF::CAPTURE_MODE::CONTINUOUS);
 
     // push data to buffer //**// shouldn't be here
     fg_buffering = true;
     f_lrf_buf.setPaused(false);
-//        lrf->bufRunning();
+//        si->lrf->bufRunning();
 
     exec();
 }
@@ -1364,7 +1049,7 @@ void MainWindow::on_pushButton_lrf_stop_clicked()
     f_lrf_buf.setPaused(true);
 
     while (f_lrf.isRunning() && f_lrf_buf.isRunning()) {}
-    lrf->stopRetrieve();
+    si->lrf->stopRetrieve();
 
     threadCheck();
 
@@ -1375,13 +1060,13 @@ void MainWindow::on_pushButton_lrf_stop_clicked()
 
 void MainWindow::on_lineEdit_sv_rig_height_returnPressed()
 {
-    sv->cam_param->rig_height = ui->lineEdit_sv_rig_height->text().toDouble();
+    si->sv->cam_param->rig_height = ui->lineEdit_sv_rig_height->text().toDouble();
     ui->label_sv_rig_height->setText(ui->lineEdit_sv_rig_height->text());
 }
 
 void MainWindow::on_lineEdit_sv_focal_length_returnPressed()
 {
-    sv->cam_param->focal_length = ui->lineEdit_sv_focal_length->text().toDouble();
+    si->sv->cam_param->focal_length = ui->lineEdit_sv_focal_length->text().toDouble();
     ui->label_sv_focal_length->setText(ui->lineEdit_sv_focal_length->text());
     on_checkBox_do_depth_clicked(true);
 }
@@ -1412,7 +1097,7 @@ void MainWindow::on_pushButton_sv_record_data_clicked()
 
     for (int r = 0; r < IMG_H; r++) {
         for (int c = 0; c < IMG_W; c++) {
-            fprintf(fp, "%d ", sv->data[r][c].disp);
+            fprintf(fp, "%d ", si->sv->data[r][c].disp);
         }
         fprintf(fp, "\n");
     }
@@ -1420,8 +1105,8 @@ void MainWindow::on_pushButton_sv_record_data_clicked()
     fclose(fp);
 
     cv::Mat temp_L, temp_R;
-    cv::cvtColor(sv->img_r_L, temp_L, cv::COLOR_RGB2BGR);
-    cv::cvtColor(sv->img_r_R, temp_R, cv::COLOR_RGB2BGR);
+    cv::cvtColor(si->sv->img_r_L, temp_L, cv::COLOR_RGB2BGR);
+    cv::cvtColor(si->sv->img_r_R, temp_R, cv::COLOR_RGB2BGR);
     cv::imwrite("D_sv_L.jpg", temp_L);
     cv::imwrite("D_sv_R.jpg", temp_R);
 }
@@ -1436,18 +1121,18 @@ void MainWindow::on_pushButton_sv_read_images_clicked()
     QStringList imgs_path = QFileDialog::getOpenFileNames(0, "Load images. Choose left and right sequentially.", ".", tr("Image files (*.jpg, *.png)"));
     if (imgs_path.empty())
         return;
-    sv->input_mode = SV::INPUT_SOURCE::IMG;
+    si->sv->input_mode = SV::INPUT_SOURCE::IMG;
 
-    sv->img_L = cv::imread(imgs_path[0].toStdString());
-    sv->img_R = cv::imread(imgs_path[1].toStdString());
+    si->sv->img_L = cv::imread(imgs_path[0].toStdString());
+    si->sv->img_R = cv::imread(imgs_path[1].toStdString());
     cv::Size2f ratio;
-    ratio.width = 1.0 * IMG_W / sv->img_L.cols;
-    ratio.height = 1.0 * IMG_H / sv->img_L.rows;
+    ratio.width = 1.0 * IMG_W / si->sv->img_L.cols;
+    ratio.height = 1.0 * IMG_H / si->sv->img_L.rows;
     double ratio_zoom = ratio.width < ratio.height ? ratio.width : ratio.height;
-    cv::Size size_zoom = cv::Size(ratio_zoom * sv->img_L.cols, ratio_zoom * sv->img_L.rows);
-    cv::resize(sv->img_L, sv->img_L, size_zoom);
-    cv::resize(sv->img_R, sv->img_R, size_zoom);
-    sv->dataExec();
+    cv::Size size_zoom = cv::Size(ratio_zoom * si->sv->img_L.cols, ratio_zoom * si->sv->img_L.rows);
+    cv::resize(si->sv->img_L, si->sv->img_L, size_zoom);
+    cv::resize(si->sv->img_R, si->sv->img_R, size_zoom);
+    si->sv->dataExec();
 }
 
 void MainWindow::readFromTxt(QString file_name, cv::Mat *output)
@@ -1686,7 +1371,7 @@ void MainWindow::on_horizontalSlider_sliderReleased()
 
 void MainWindow::on_pushButton_lrf_request_2_clicked()
 {
-    lrf->requestData(LRF::CAPTURE_MODE::CONTINUOUS);
+    si->lrf->requestData(LRF::CAPTURE_MODE::CONTINUOUS);
 
     fg_buffering = true;
     fg_acquiring = true;
@@ -1695,8 +1380,8 @@ void MainWindow::on_pushButton_lrf_request_2_clicked()
 void MainWindow::on_pushButton_lrf_retrieve_2_clicked()
 {
     while (fg_acquiring) {
-        lrf->dataExec();
-        lrf->pushToBuf();
+        si->lrf->dataExec();
+        si->lrf->pushToBuf();
 
         qApp->processEvents();
     }
@@ -1707,13 +1392,13 @@ void MainWindow::on_pushButton_lrf_stop_2_clicked()
     fg_buffering = false;
     fg_acquiring = false;
 
-    lrf->stopRetrieve();
+    si->lrf->stopRetrieve();
     threadCheck();
 }
 
 void MainWindow::on_pushButton_radar_open_clicked()
 {
-    if (rc->open())
+    if (si->rc->open())
         report("Radar's Opened");
     else
         reportError("radar", "Error!", "Failed to open");
@@ -1721,7 +1406,7 @@ void MainWindow::on_pushButton_radar_open_clicked()
 
 void MainWindow::on_pushButton_radar_write_clicked()
 {
-    if (rc->write())
+    if (si->rc->write())
         report("send cmd complete, data start!");
     else
         reportError("radar", "Error!", "Failed to send cmd to radar.");
@@ -1729,7 +1414,7 @@ void MainWindow::on_pushButton_radar_write_clicked()
 
 void MainWindow::on_pushButton_radar_bus_on_clicked()
 {
-    rc->busOn();
+    si->rc->busOn();
 
     fg_retrieving = true;
     f_radar.setPaused(false);
@@ -1743,7 +1428,7 @@ void MainWindow::on_pushButton_radar_bus_off_clicked()
     f_radar.setPaused(true);
     while (f_radar.isRunning()) {}
 
-    rc->busOff();
+    si->rc->busOff();
     threadCheck();
 }
 
@@ -1755,14 +1440,14 @@ void MainWindow::radarDisplay(int detected_obj, cv::Mat *img, cv::Mat *topview)
     lock_radar.unlock();
 
     // update topview
-    if (ui->checkBox_radar_topview->isChecked() && rc->current_count >= rc->update_count) {
+    if (ui->checkBox_radar_topview->isChecked() && si->rc->current_count >= si->rc->update_count) {
         lock_radar.lockForRead();
         ui->label_top_view_radar_long->setPixmap(QPixmap::fromImage(QImage::QImage(topview->data, topview->cols, topview->rows, topview->step, QImage::Format_RGBA8888)).scaled(900, 600));
         lock_radar.unlock();
     }
 
     // computing time
-    ui->label_radar_proc->setText(QString::number(rc->time_proc));
+    ui->label_radar_proc->setText(QString::number(si->rc->time_proc));
 
     ui->label_radar_detected_obj->update();
     ui->label_radar_data->update();
@@ -1773,29 +1458,15 @@ void MainWindow::radarDisplay(int detected_obj, cv::Mat *img, cv::Mat *topview)
 
 void MainWindow::on_checkBox_radar_topview_clicked(bool checked)
 {
-    if (checked) {
-        rc->fg_topview = true;
-        for (int r = 0; r < rc->topview.rows; r++) {
-            for (int c = 0; c < rc->topview.cols; c++) {
-                cv::Vec4b val = rc->topview.at<cv::Vec4b>(r, c);
-                if (val[0] != 0 || val [1] != 0 || val[2] != 0)
-                rc->topview.at<cv::Vec4b>(r, c)[3] = 255;
-            }
-        }
-    }
-    else {
-        rc->fg_topview = false;
-        for (int r = 0; r < rc->topview.rows; r++) {
-            for (int c = 0; c < rc->topview.cols; c++)
-                rc->topview.at<cv::Vec4b>(r, c)[3] = 0;
-        }
-    }
-    ui->label_top_view_radar_long->setPixmap(QPixmap::fromImage(QImage::QImage(rc->topview.data, rc->topview.cols, rc->topview.rows, rc->topview.step, QImage::Format_RGBA8888)).scaled(900, 600));
+    si->rc->fg_topview = checked;
+    ui->label_top_view_radar_long->setVisible(checked);
+    if (checked)
+        ui->label_top_view_radar_long->setPixmap(QPixmap::fromImage(QImage::QImage(si->rc->topview.data, si->rc->topview.cols, si->rc->topview.rows, si->rc->topview.step, QImage::Format_RGBA8888)).scaled(900, 600));
 }
 
 void MainWindow::on_pushButton_start_all_clicked()
 {
-    if (sv->input_mode == SV::INPUT_SOURCE::CAM && rc->input_mode == RADAR::INPUT_SOURCE::ESR) {
+    if (si->sv->input_mode == SV::INPUT_SOURCE::CAM && si->rc->input_mode == RADAR::INPUT_SOURCE::ESR) {
         inputType(INPUT_TYPE::DEVICE);
 
         if (!fg_capturing)
@@ -1803,7 +1474,7 @@ void MainWindow::on_pushButton_start_all_clicked()
 
         if (!fg_retrieving) {
             on_pushButton_radar_open_clicked();
-            rc->busOn();
+            si->rc->busOn();
             on_pushButton_radar_write_clicked();
         }
     }
@@ -1994,13 +1665,13 @@ void MainWindow::inputType(int type)
 {
     switch (type) {
     case INPUT_TYPE::DEVICE:
-        sv->input_mode = SV::INPUT_SOURCE::CAM;
-        rc->input_mode = RADAR::INPUT_SOURCE::ESR;
+        si->sv->input_mode = SV::INPUT_SOURCE::CAM;
+        si->rc->input_mode = RADAR::INPUT_SOURCE::ESR;
         ui->radioButton_input_device->setChecked(true);
         break;
     case INPUT_TYPE::RECORDING:
-        sv->input_mode = SV::INPUT_SOURCE::VIDEO;
-        rc->input_mode = RADAR::INPUT_SOURCE::TXT;
+        si->sv->input_mode = SV::INPUT_SOURCE::VIDEO;
+        si->rc->input_mode = RADAR::INPUT_SOURCE::TXT;
         ui->radioButton_input_recording->setChecked(true);
         break;
     }
@@ -2019,7 +1690,8 @@ void MainWindow::on_radioButton_input_recording_clicked()
 void MainWindow::on_checkBox_sv_ground_filter_clicked(bool checked)
 {
     if (checked)
-        sv->fg_ground_filter = true;
+        si->sv->fg_ground_filter = true;
     else
-        sv->fg_ground_filter = false;
+        si->sv->fg_ground_filter = false;
 }
+

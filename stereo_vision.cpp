@@ -50,7 +50,7 @@ stereo_vision::stereo_vision() : TopView(20, 200, 3000, 19.8, 1080, 750, 270, 12
     bm = cv::createStereoBM(16, 9);
     sgbm = cv::createStereoSGBM(0, 16, 3);
 #endif
-    img_detected = cv::Mat::zeros(IMG_H, IMG_W, CV_8UC3);
+    img_detected = cv::Mat::zeros(IMG_H_HALF, IMG_W_HALF, CV_8UC3);
 
 #ifdef opencv_cuda
     match_mode = SV::STEREO_MATCH::BM;
@@ -955,6 +955,7 @@ void stereo_vision::blob(int thresh_pts_num)
 //                p = 256.0 / (1.0 * obj_nums) * grid_obj_label * (max_distance - min_distance);
                 p = (max_distance - 0.5 * (img_grid[row][col].y + img_grid[row_1][col].y)) - min_distance;
 
+                objects[grid_obj_label].color = cv::Scalar(ptr_color[3 * p + 0], ptr_color[3 * p + 1], ptr_color[3 * p + 2], 255);
                 cv::fillConvexPoly(topview, pts, thick_polygon, cv::Scalar(ptr_color[3 * p + 0], ptr_color[3 * p + 1], ptr_color[3 * p + 2], 255), 8, 0);
 
                 // find rect of object in topview
@@ -1072,10 +1073,11 @@ void stereo_vision::pointProjectImage()
     lock_sv.lockForWrite();
     img_detected.setTo(0);
     img_detected_display = img_r_L.clone();
+    cv::resize(img_detected_display, img_detected_display, cv::Size(IMG_W_HALF, IMG_H_HALF));
     lock_sv.unlock();
     for (int r = 0; r < IMG_H; r++) {
         uchar *ptr_o = img_r_L.ptr<uchar>(r);
-        uchar *ptr_d = img_detected.ptr<uchar>(r);
+        uchar *ptr_d = img_detected.ptr<uchar>(r / 2);
         for (int c = 0; c < IMG_W; c++) {
             int grid_r, grid_c;
             lock_sv.lockForRead();
@@ -1106,9 +1108,9 @@ void stereo_vision::pointProjectImage()
                 }
 
                 // draw points
-                ptr_d[3 * c + 0] = ptr_o[3 * c + 0];
-                ptr_d[3 * c + 1] = ptr_o[3 * c + 1];
-                ptr_d[3 * c + 2] = ptr_o[3 * c + 2];
+                ptr_d[3 * c / 2 + 0] = ptr_o[3 * c + 0];
+                ptr_d[3 * c / 2 + 1] = ptr_o[3 * c + 1];
+                ptr_d[3 * c / 2 + 2] = ptr_o[3 * c + 2];
             }
         }
     }
@@ -1125,9 +1127,8 @@ void stereo_vision::pointProjectImage()
     }
 
     // draw region of detected objects
+    int range_precision = 3;
     for (int i = 0; i < obj_nums; i++) {
-        uchar* ptr_color = color_table->scanLine(0);
-        int tag = objects[i].avg_Z - min_distance;
         lock_sv.lockForWrite();
         if (objects[i].labeled && objects[i].br != std::pair<int, int>(-1, -1) && objects[i].tl != std::pair<int, int>(-1, -1)) {
             // find center of rect
@@ -1135,12 +1136,15 @@ void stereo_vision::pointProjectImage()
             objects[i].angle = atan(1.0 * (objects[i].avg_X) / objects[i].avg_Z) * 180.0 / CV_PI;
             objects[i].range = sqrt(pow((double)(objects[i].avg_Z), 2) + pow((double)(objects[i].avg_X), 2));
 
-            cv::rectangle(img_detected, cv::Rect(objects[i].tl.second, objects[i].tl.first, objects[i].br.second - objects[i].tl.second, objects[i].br.first - objects[i].tl.first),
-                          cv::Scalar(ptr_color[3 * tag + 0], ptr_color[3 * tag + 1], ptr_color[3 * tag + 2]), thick_obj_rect, 8, 0);
-            cv::circle(img_detected, cv::Point(objects[i].center.second, objects[i].center.first), radius_obj_point, cv::Scalar(0, 255, 0), -1, 8, 0);
-            cv::rectangle(img_detected_display, cv::Rect(objects[i].tl.second, objects[i].tl.first, objects[i].br.second - objects[i].tl.second, objects[i].br.first - objects[i].tl.first),
-                          cv::Scalar(ptr_color[3 * tag + 0], ptr_color[3 * tag + 1], ptr_color[3 * tag + 2]), thick_obj_rect, 8, 0);
-            cv::circle(img_detected_display, cv::Point(objects[i].center.second, objects[i].center.first), radius_obj_point, cv::Scalar(0, 255, 0), -1, 8, 0);
+            cv::rectangle(img_detected, cv::Rect(objects[i].tl.second / 2, objects[i].tl.first / 2, (objects[i].br.second - objects[i].tl.second) / 2, (objects[i].br.first - objects[i].tl.first) / 2),
+                          objects[i].color, thick_obj_rect, 8, 0);
+            cv::circle(img_detected, cv::Point(objects[i].center.second / 2, objects[i].center.first / 2), radius_obj_point, cv::Scalar(0, 255, 0), -1, 8, 0);
+            cv::rectangle(img_detected_display, cv::Rect(objects[i].tl.second / 2, objects[i].tl.first / 2, (objects[i].br.second - objects[i].tl.second) / 2, (objects[i].br.first - objects[i].tl.first) / 2),
+                          objects[i].color, thick_obj_rect, 8, 0);
+            cv::circle(img_detected_display, cv::Point(objects[i].center.second / 2, objects[i].center.first / 2), radius_obj_point, cv::Scalar(0, 255, 0), -1, 8, 0);
+            std::string distance_tag = QString::number(objects[i].avg_Z / 100.0, 'g', range_precision).toStdString() + " M";
+            cv::putText(img_detected, distance_tag, cv::Point(objects[i].tl.second / 2, objects[i].tl.first / 2 - 5), cv::FONT_HERSHEY_COMPLEX_SMALL, 1, cv::Scalar(0, 0, 255), 1);
+            cv::putText(img_detected_display, distance_tag, cv::Point(objects[i].tl.second / 2, objects[i].tl.first / 2 - 5), cv::FONT_HERSHEY_COMPLEX_SMALL, 1, cv::Scalar(0, 0, 255), 1);
         }
         lock_sv.unlock();
     }
