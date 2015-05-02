@@ -53,27 +53,29 @@ void SensorInfo::initialFusedTopView(int range_pixel)
     font_thickness = 1;
 
     // sv
-    sensors[0].color = cv::Scalar(255, 0, 0, 255);
+    int sensor = SENSOR::SV;
+    sensors[sensor].color = cv::Scalar(255, 0, 0, 255);
 
-    sensors[0].color_fov = cv::Scalar(200, 200, 200, 255);
+    sensors[sensor].color_fov = cv::Scalar(200, 200, 200, 255);
 
-    sensors[0].angle = sv->view_angle * 0.5 * CV_PI / 180.0;
+    sensors[sensor].angle = sv->view_angle * 0.5 * CV_PI / 180.0;
 
-    sensors[0].pos = cv::Point(0, 51);
+    sensors[sensor].pos = cv::Point(0, 51);
+
+    QColor pic_color_sv = QColor(sensors[sensor].color[0], sensors[sensor].color[1], sensors[sensor].color[2]);
+    pic_sv.fill(pic_color_sv);
 
     // radar
-    sensors[1].color = cv::Scalar(0, 0, 255, 255);
+    sensor = SENSOR::RADAR;
+    sensors[sensor].color = cv::Scalar(0, 0, 255, 255);
 
-    sensors[1].color_fov = cv::Scalar(200, 200, 200, 255);
+    sensors[sensor].color_fov = cv::Scalar(200, 200, 200, 255);
 
-    sensors[1].angle = rc->view_angle * 0.5 * CV_PI / 180.0;
+    sensors[sensor].angle = rc->view_angle * 0.5 * CV_PI / 180.0;
 
-    sensors[1].pos = cv::Point(0, vehicle.head_pos);
+    sensors[sensor].pos = cv::Point(0, vehicle.head_pos);
 
-    // object's label color
-    QColor pic_color_sv = QColor(sensors[0].color[0], sensors[0].color[1], sensors[0].color[2]);
-    pic_sv.fill(pic_color_sv);
-    QColor pic_color_radar = QColor(sensors[1].color[0], sensors[1].color[1], sensors[1].color[2]);
+    QColor pic_color_radar = QColor(sensors[sensor].color[0], sensors[sensor].color[1], sensors[sensor].color[2]);
     pic_radar.fill(pic_color_radar);
 }
 
@@ -99,9 +101,10 @@ void SensorInfo::updateFusedTopView()
     cv::putText(fused_topview_BG, QString::number((int)detection_range).toStdString() + " cm", cv::Point(vehicle.VCP.x + 0.65 * detection_range_pixel, vehicle.VCP.y  - 0.8 * detection_range_pixel), cv::FONT_HERSHEY_COMPLEX_SMALL, 1, rc->color_line, 1);
 
     // sensor information
-    sensors[0].pos_pixel = cv::Point(sensors[0].pos.x * ratio, sensors[0].pos.y * ratio);
-
-    sensors[1].pos_pixel = cv::Point(sensors[1].pos.x * ratio, sensors[1].pos.y * ratio);
+    int sensor = SENSOR::SV;
+    sensors[sensor].pos_pixel = cv::Point(sensors[sensor].pos.x * ratio, sensors[sensor].pos.y * ratio);
+    sensor = SENSOR::RADAR;
+    sensors[sensor].pos_pixel = cv::Point(sensors[sensor].pos.x * ratio, sensors[sensor].pos.y * ratio);
 
     // FOV - Stereo vision
     cv::Point sensor_pos;
@@ -154,9 +157,9 @@ void SensorInfo::VehicleCart()
 
     min_detection_range = rc->min_distance + sqrt(pow(0.5 * vehicle.length, 2) + pow(0.5 * vehicle.width, 2));
 
-    sensors[0].pos = cv::Point(0, 29.5);
+    sensors[SENSOR::SV].pos = cv::Point(0, 29.5);
 
-    sensors[1].pos = cv::Point(0, vehicle.head_pos);
+    sensors[SENSOR::RADAR].pos = cv::Point(0, vehicle.head_pos);
 
     updateFusedTopView();
 }
@@ -175,9 +178,9 @@ void SensorInfo::VehicleCar()
 
     min_detection_range = rc->min_distance + sqrt(pow(0.5 * vehicle.length, 2) + pow(0.5 * vehicle.width, 2));
 
-    sensors[0].pos = cv::Point(0, 75);
+    sensors[SENSOR::SV].pos = cv::Point(0, 75);
 
-    sensors[1].pos = cv::Point(0, vehicle.head_pos);
+    sensors[SENSOR::RADAR].pos = cv::Point(0, vehicle.head_pos);
 
     updateFusedTopView();
 }
@@ -215,7 +218,7 @@ void SensorInfo::drawFusedTopView(bool fg_sv, bool fg_sv_each, bool fg_radar)
     fused_topview.setTo(cv::Scalar(0, 0, 0, 0));
 
     std::string tag;
-    int device = 0;
+    int device = SENSOR::SV;
     int range_precision = 3;
     if (fg_sv) {
         // every pixel
@@ -293,7 +296,7 @@ void SensorInfo::drawFusedTopView(bool fg_sv, bool fg_sv_each, bool fg_radar)
         }
     }
 
-    device = 1;
+    device = SENSOR::RADAR;
     if (fg_radar) {
         for (int m = 0; m < 64; m++) {
             if (d_radar[m].status >= rc->obj_status_filtered) {
@@ -307,8 +310,18 @@ void SensorInfo::drawFusedTopView(bool fg_sv, bool fg_sv_each, bool fg_radar)
     }
 }
 
+float SensorInfo::rangeWorldCalculation(cv::Point sensor_pos, float range, float angle)
+{
+    float x_tmp, y_tmp; // (cm)
+    x_tmp = range * sin(angle * CV_PI / 180.0);
+    y_tmp = range * cos(angle * CV_PI / 180.0);
+
+    return sqrt(pow((double)(x_tmp + sensor_pos.x / ratio), 2) + pow((double)(y_tmp + sensor_pos.y / ratio - vehicle.head_pos), 2));
+}
+
 float SensorInfo::pointTransformTopView(cv::Point sensor_pos, float range, float angle, cv::Point *output)
 {
+
     float x_tmp, y_tmp; // (cm)
     x_tmp = range * sin(angle * CV_PI / 180.0);
     y_tmp = range * cos(angle * CV_PI / 180.0);
@@ -316,6 +329,7 @@ float SensorInfo::pointTransformTopView(cv::Point sensor_pos, float range, float
     output->y = vehicle.VCP.y - (y_tmp * ratio + sensor_pos.y);
 
     return sqrt(pow((double)(x_tmp + sensor_pos.x / ratio), 2) + pow((double)(y_tmp + sensor_pos.y / ratio - vehicle.head_pos), 2));
+//    return rangeWorldCalculation(sensor_pos, range, angle);
 }
 
 float SensorInfo::pointTransformTopView(cv::Point sensor_pos, float range, float angle, cv::Point *output, cv::Rect rect_in, cv::Rect *rect)
@@ -333,4 +347,5 @@ float SensorInfo::pointTransformTopView(cv::Point sensor_pos, float range, float
 //            rect_in.tl().x<<"\t"<<rect_in.tl().y<<"\t"<<rect_in.width<<"\t"<<rect_in.height<<std::endl;
 
     return sqrt(pow((double)(x_tmp + sensor_pos.x / ratio), 2) + pow((double)(y_tmp + sensor_pos.y / ratio - vehicle.head_pos), 2));
+//    return rangeWorldCalculation(sensor_pos, range, angle);
 }

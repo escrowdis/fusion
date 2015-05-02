@@ -429,7 +429,6 @@ void stereo_vision::depthCalculation()
     for (int r = 0; r < IMG_H; r++) {
 #ifdef opencv_cuda
         uchar* ptr_raw = (uchar*)(disp_raw.data + r * disp_raw.step);
-
 #else
         short int* ptr_raw = (short int*)(disp_raw.data + r * disp_raw.step);
 #endif
@@ -442,10 +441,10 @@ void stereo_vision::depthCalculation()
             else if (c < param_bm->num_of_disp / 2 && input_mode == SV::STEREO_MATCH::BM)
                 continue;
             // Depth calculation
-#ifdef opencv_cuda
-            data[r][c].disp = ptr_raw[c];
-#else
             float val = ptr_raw[c];
+#ifdef opencv_cuda
+            data[r][c].disp = val;
+#else
             data[r][c].disp = val / 16.0;
 #endif
 
@@ -600,7 +599,7 @@ bool stereo_vision::dataExec()
     qDebug()<<"run"<<&img_L<<"emit"<<&img_r_L;
 #endif
 
-    updateDataFroDisplay();
+    updateDataForDisplay();
 
     if (t.elapsed() > time_gap) {
         emit updateGUI(&img_r_L, &img_r_R, &disp, &disp_pseudo, &topview, &img_detected, &img_detected_display, detected_obj, re.vr->current_frame_count);
@@ -609,166 +608,6 @@ bool stereo_vision::dataExec()
     }
 
     return true;
-}
-
-void stereo_vision::change_bm_pre_filter_size(int value)
-{
-    bm->setPreFilterSize(value);
-    param_bm->pre_filter_size = value;
-#ifdef debug_info_sv_param
-    qDebug()<<bm->getPreFilterSize();
-#endif
-}
-
-void stereo_vision::change_bm_pre_filter_cap(int value)
-{
-    bm->setPreFilterCap(value);
-    param_bm->pre_filter_cap = value;
-#ifdef debug_info_sv_param
-    qDebug()<<bm->getPreFilterCap();
-#endif
-}
-
-void stereo_vision::change_bm_sad_window_size(int value)
-{
-    bm->setBlockSize(value);
-    param_bm->SAD_window_size = value;
-#ifdef debug_info_sv_param
-    qDebug()<<bm->getBlockSize();
-#endif
-}
-
-void stereo_vision::change_bm_min_disp(int value)
-{
-    bm->setMinDisparity(value);
-    param_bm->min_disp = value;
-#ifdef debug_info_sv_param
-    qDebug()<<bm->getMinDisparity();
-#endif
-}
-
-void stereo_vision::change_bm_num_of_disp(int value)
-{
-    bm->setNumDisparities(value);
-    param_bm->num_of_disp = value;
-#ifdef debug_info_sv_param
-    qDebug()<<bm->getNumDisparities();
-#endif
-}
-
-void stereo_vision::change_bm_texture_thresh(int value)
-{
-    bm->setTextureThreshold(value);
-    param_bm->texture_thresh = value;
-#ifdef debug_info_sv_param
-    qDebug()<<bm->getTextureThreshold();
-#endif
-}
-
-void stereo_vision::change_bm_uniqueness_ratio(int value)
-{
-    bm->setUniquenessRatio(value);
-    param_bm->uniquenese_ratio = value;
-#ifdef debug_info_sv_param
-    qDebug()<<bm->getUniquenessRatio();
-#endif
-}
-
-void stereo_vision::change_bm_speckle_window_size(int value)
-{
-    bm->setSpeckleWindowSize(value);
-    param_bm->speckle_window_size = value;
-#ifdef debug_info_sv_param
-    qDebug()<<bm->getSpeckleWindowSize();
-#endif
-}
-
-void stereo_vision::change_bm_speckle_range(int value)
-{
-    bm->setSpeckleRange(value);
-    param_bm->speckle_range = value;
-#ifdef debug_info_sv_param
-    qDebug()<<bm->getSpeckleRange();
-#endif
-}
-
-void stereo_vision::change_sgbm_pre_filter_cap(int value)
-{
-#ifndef opencv_cuda
-    sgbm->setPreFilterCap(value);
-    param_sgbm->pre_filter_cap = value;
-#ifdef debug_info_sv_param
-    qDebug()<<sgbm->getPreFilterCap();
-#endif
-#endif
-}
-
-void stereo_vision::change_sgbm_sad_window_size(int value)
-{
-#ifndef opencv_cuda
-    sgbm->setBlockSize(value);
-    sgbm->setP1(8 * cn * value * value);
-    sgbm->setP2(32 * cn * value * value);
-    param_sgbm->SAD_window_size = value;
-#ifdef debug_info_sv_param
-    qDebug()<<sgbm->getBlockSize();
-#endif
-#endif
-}
-
-void stereo_vision::change_sgbm_min_disp(int value)
-{
-#ifndef opencv_cuda
-    sgbm->setMinDisparity(value);
-    param_sgbm->min_disp = value;
-#ifdef debug_info_sv_param
-    qDebug()<<sgbm->getMinDisparity();
-#endif
-#endif
-}
-
-void stereo_vision::change_sgbm_num_of_disp(int value)
-{
-#ifndef opencv_cuda
-    sgbm->setNumDisparities(value);
-    param_sgbm->num_of_disp = value;
-#ifdef debug_info_sv_param
-    qDebug()<<sgbm->getNumDisparities();
-#endif
-#endif
-}
-
-void stereo_vision::change_sgbm_uniqueness_ratio(int value)
-{
-#ifndef opencv_cuda
-    sgbm->setUniquenessRatio(value);
-    param_sgbm->uniquenese_ratio = value;
-#ifdef debug_info_sv_param
-    qDebug()<<sgbm->getUniquenessRatio();
-#endif
-#endif
-}
-
-void stereo_vision::change_sgbm_speckle_window_size(int value)
-{
-#ifndef opencv_cuda
-    sgbm->setSpeckleWindowSize(value);
-    param_sgbm->speckle_window_size = value;
-#ifdef debug_info_sv_param
-    qDebug()<<sgbm->getSpeckleWindowSize();
-#endif
-#endif
-}
-
-void stereo_vision::change_sgbm_speckle_range(int value)
-{
-#ifndef opencv_cuda
-    sgbm->setSpeckleRange(value);
-    param_sgbm->speckle_range = value;
-#ifdef debug_info_sv_param
-    qDebug()<<sgbm->getSpeckleRange();
-#endif
-#endif
 }
 
 void stereo_vision::pointProjectTopView()
@@ -956,7 +795,7 @@ void stereo_vision::blob(int thresh_pts_num)
                 p = (max_distance - 0.5 * (img_grid[row][col].y + img_grid[row_1][col].y)) - min_distance;
 
                 objects[grid_obj_label].color = cv::Scalar(ptr_color[3 * p + 0], ptr_color[3 * p + 1], ptr_color[3 * p + 2], 255);
-                cv::fillConvexPoly(topview, pts, thick_polygon, cv::Scalar(ptr_color[3 * p + 0], ptr_color[3 * p + 1], ptr_color[3 * p + 2], 255), 8, 0);
+                cv::fillConvexPoly(topview, pts, thick_polygon, objects[grid_obj_label].color, 8, 0);
 
                 // find rect of object in topview
                 if (objects[grid_obj_label].rect_tl.x > c) objects[grid_obj_label].rect_tl.x = c;
@@ -1141,15 +980,15 @@ void stereo_vision::pointProjectImage()
             cv::rectangle(img_detected_display, cv::Rect(objects[i].tl.second, objects[i].tl.first, (objects[i].br.second - objects[i].tl.second), (objects[i].br.first - objects[i].tl.first)),
                           objects[i].color, thick_obj_rect, 8, 0);
             cv::circle(img_detected_display, cv::Point(objects[i].center.second, objects[i].center.first), radius_obj_point, cv::Scalar(0, 255, 0), -1, 8, 0);
-            std::string distance_tag = QString::number(objects[i].avg_Z / 100.0, 'g', range_precision).toStdString() + " M";
-            cv::putText(img_detected, distance_tag, cv::Point(objects[i].tl.second, objects[i].tl.first - 5), cv::FONT_HERSHEY_COMPLEX_SMALL, 1, cv::Scalar(0, 0, 255), 1);
-            cv::putText(img_detected_display, distance_tag, cv::Point(objects[i].tl.second, objects[i].tl.first - 5), cv::FONT_HERSHEY_COMPLEX_SMALL, 1, cv::Scalar(0, 0, 255), 1);
+            std::string distance_tag = QString::number(objects[i].range / 100.0, 'g', range_precision).toStdString() + " M";
+            cv::putText(img_detected, distance_tag, cv::Point(objects[i].tl.second, objects[i].br.first - 5), cv::FONT_HERSHEY_COMPLEX_SMALL, 2, cv::Scalar(0, 0, 255), 2);
+            cv::putText(img_detected_display, distance_tag, cv::Point(objects[i].tl.second, objects[i].br.first - 5), cv::FONT_HERSHEY_COMPLEX_SMALL, 2, cv::Scalar(0, 0, 255), 2);
         }
         lock_sv.unlock();
     }
 }
 
-void stereo_vision::updateDataFroDisplay()
+void stereo_vision::updateDataForDisplay()
 {
     for (int i = 0; i < obj_nums; i++) {
         lock_sv.lockForRead();
@@ -1166,4 +1005,164 @@ void stereo_vision::updateDataFroDisplay()
         objects_display[i].rect = objects[i].rect;
         lock_sv.unlock();
     }
+}
+
+void stereo_vision::change_bm_pre_filter_size(int value)
+{
+    bm->setPreFilterSize(value);
+    param_bm->pre_filter_size = value;
+#ifdef debug_info_sv_param
+    qDebug()<<bm->getPreFilterSize();
+#endif
+}
+
+void stereo_vision::change_bm_pre_filter_cap(int value)
+{
+    bm->setPreFilterCap(value);
+    param_bm->pre_filter_cap = value;
+#ifdef debug_info_sv_param
+    qDebug()<<bm->getPreFilterCap();
+#endif
+}
+
+void stereo_vision::change_bm_sad_window_size(int value)
+{
+    bm->setBlockSize(value);
+    param_bm->SAD_window_size = value;
+#ifdef debug_info_sv_param
+    qDebug()<<bm->getBlockSize();
+#endif
+}
+
+void stereo_vision::change_bm_min_disp(int value)
+{
+    bm->setMinDisparity(value);
+    param_bm->min_disp = value;
+#ifdef debug_info_sv_param
+    qDebug()<<bm->getMinDisparity();
+#endif
+}
+
+void stereo_vision::change_bm_num_of_disp(int value)
+{
+    bm->setNumDisparities(value);
+    param_bm->num_of_disp = value;
+#ifdef debug_info_sv_param
+    qDebug()<<bm->getNumDisparities();
+#endif
+}
+
+void stereo_vision::change_bm_texture_thresh(int value)
+{
+    bm->setTextureThreshold(value);
+    param_bm->texture_thresh = value;
+#ifdef debug_info_sv_param
+    qDebug()<<bm->getTextureThreshold();
+#endif
+}
+
+void stereo_vision::change_bm_uniqueness_ratio(int value)
+{
+    bm->setUniquenessRatio(value);
+    param_bm->uniquenese_ratio = value;
+#ifdef debug_info_sv_param
+    qDebug()<<bm->getUniquenessRatio();
+#endif
+}
+
+void stereo_vision::change_bm_speckle_window_size(int value)
+{
+    bm->setSpeckleWindowSize(value);
+    param_bm->speckle_window_size = value;
+#ifdef debug_info_sv_param
+    qDebug()<<bm->getSpeckleWindowSize();
+#endif
+}
+
+void stereo_vision::change_bm_speckle_range(int value)
+{
+    bm->setSpeckleRange(value);
+    param_bm->speckle_range = value;
+#ifdef debug_info_sv_param
+    qDebug()<<bm->getSpeckleRange();
+#endif
+}
+
+void stereo_vision::change_sgbm_pre_filter_cap(int value)
+{
+#ifndef opencv_cuda
+    sgbm->setPreFilterCap(value);
+    param_sgbm->pre_filter_cap = value;
+#ifdef debug_info_sv_param
+    qDebug()<<sgbm->getPreFilterCap();
+#endif
+#endif
+}
+
+void stereo_vision::change_sgbm_sad_window_size(int value)
+{
+#ifndef opencv_cuda
+    sgbm->setBlockSize(value);
+    sgbm->setP1(8 * cn * value * value);
+    sgbm->setP2(32 * cn * value * value);
+    param_sgbm->SAD_window_size = value;
+#ifdef debug_info_sv_param
+    qDebug()<<sgbm->getBlockSize();
+#endif
+#endif
+}
+
+void stereo_vision::change_sgbm_min_disp(int value)
+{
+#ifndef opencv_cuda
+    sgbm->setMinDisparity(value);
+    param_sgbm->min_disp = value;
+#ifdef debug_info_sv_param
+    qDebug()<<sgbm->getMinDisparity();
+#endif
+#endif
+}
+
+void stereo_vision::change_sgbm_num_of_disp(int value)
+{
+#ifndef opencv_cuda
+    sgbm->setNumDisparities(value);
+    param_sgbm->num_of_disp = value;
+#ifdef debug_info_sv_param
+    qDebug()<<sgbm->getNumDisparities();
+#endif
+#endif
+}
+
+void stereo_vision::change_sgbm_uniqueness_ratio(int value)
+{
+#ifndef opencv_cuda
+    sgbm->setUniquenessRatio(value);
+    param_sgbm->uniquenese_ratio = value;
+#ifdef debug_info_sv_param
+    qDebug()<<sgbm->getUniquenessRatio();
+#endif
+#endif
+}
+
+void stereo_vision::change_sgbm_speckle_window_size(int value)
+{
+#ifndef opencv_cuda
+    sgbm->setSpeckleWindowSize(value);
+    param_sgbm->speckle_window_size = value;
+#ifdef debug_info_sv_param
+    qDebug()<<sgbm->getSpeckleWindowSize();
+#endif
+#endif
+}
+
+void stereo_vision::change_sgbm_speckle_range(int value)
+{
+#ifndef opencv_cuda
+    sgbm->setSpeckleRange(value);
+    param_sgbm->speckle_range = value;
+#ifdef debug_info_sv_param
+    qDebug()<<sgbm->getSpeckleRange();
+#endif
+#endif
 }

@@ -237,7 +237,7 @@ public:
     objInformation* objects;            // filtered objects
     objInformation* objects_display;
 
-    void updateDataFroDisplay();
+    void updateDataForDisplay();
     // ============================= End
 
 private:

@@ -13,8 +13,18 @@
 // Radar ESR controller
 #include "radarcontroller.h"
 
-class SensorInfo
+namespace SENSOR {
+enum {
+    SV,
+    RADAR,
+    LRF
+};
+}
+
+class SensorInfo : public QObject
 {
+    Q_OBJECT
+
 public:
     SensorInfo();
 
@@ -105,6 +115,7 @@ public:
 
     void drawFusedTopView(bool fg_sv, bool fg_sv_each, bool fg_radar);
 
+    float rangeWorldCalculation(cv::Point sensor_pos, float range, float angle);
     float pointTransformTopView(cv::Point sensor_pos, float range, float angle, cv::Point *output);
     float pointTransformTopView(cv::Point sensor_pos, float range, float angle, cv::Point *output, cv::Rect rect_in, cv::Rect *rect);
 
