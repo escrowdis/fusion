@@ -104,8 +104,6 @@ private:
 
     void camOpen();
 
-    void camStop() {}
-
     void svDisplayTopViewBG();
     // ======================== End
 
@@ -136,6 +134,8 @@ private:
     std::vector<double> lrf_temp;
     std::vector<std::vector<double> > display_lrf_3D;
     // ======================== End
+
+    // SensorInfo =============
     SensorInfo* si;
 
     void initialFusedTopView();
@@ -152,7 +152,7 @@ private:
     QFuture<bool> f_sv;
     QFuture<bool> f_lrf;
     QFuture<void> f_lrf_buf;
-    QFuture<void> f_radar;
+    QFuture<bool> f_radar;
     QFuture<void> f_fused;
 //    QFutureWatcher<void> fw_sv;
 //    QFutureWatcher<void> fw_lrf;
@@ -160,7 +160,6 @@ private:
 
     void exec();
     void threadCheck();
-    void threadBuffering();
     void threadProcessing();
     // ======================== End
 
@@ -251,7 +250,7 @@ private slots:
 
     void on_checkBox_do_depth_clicked(bool checked);
 
-    void svDisplay(cv::Mat *img_L, cv::Mat *img_R, cv::Mat *disp, cv::Mat *disp_pseudo, cv::Mat *topview, cv::Mat *img_detected, cv::Mat *img_detected_display, int detected_obj, int current_frame_count);
+    void svDisplay(cv::Mat *img_L, cv::Mat *img_R, cv::Mat *disp, cv::Mat *disp_pseudo, cv::Mat *topview, cv::Mat *img_detected, int detected_obj, int current_frame_count);
     // ======================== End
 
     // Stereo vision param ====
@@ -315,6 +314,10 @@ private slots:
 
     void on_spinBox_radar_topview_c_valueChanged(int arg1);
     // ======================== End
+
+    // SensorInfo =============
+    void fusedDisplay(cv::Mat *fused_topview, cv::Mat *img_detected_display);
+    // SensorInfo ============= End
 
     // 2014 BIOME =============
     void on_horizontalSlider_2_sliderReleased();

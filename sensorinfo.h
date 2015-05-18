@@ -3,6 +3,9 @@
 
 #include <opencv2/opencv.hpp>
 
+// sensor base
+#include "sensorbase.h"
+
 // Laser range finder controller
 #include "lrf_controller.h"
 
@@ -21,7 +24,14 @@ enum {
 };
 }
 
-class SensorInfo : public QObject
+namespace VEHICLE {
+enum {
+    CART,
+    CAR
+};
+}
+
+class SensorInfo : public QObject, public SensorBase
 {
     Q_OBJECT
 
@@ -30,13 +40,45 @@ public:
 
     ~SensorInfo();
 
-    RadarController* rc;
-
     stereo_vision* sv;
+
+    RadarController* rc;
 
     lrf_controller* lrf;
 
+    // Sensors' information ===
+    bool svDataExec();
 
+    bool radarDataExec();
+
+    bool lrfDataExec();
+
+    void lrfBufExec();
+    // Sensors' information === End
+
+    // Fusion =================
+    QPixmap pic_sv, pic_radar;
+
+    cv::Mat fused_topview_BG;
+
+    cv::Mat fused_topview;
+
+    void chooseVehicle(int vehicle_type);
+
+    void initialFusedTopView(int range_pixel);
+
+    void updateFusedTopView();
+
+    void drawFusedTopView(bool fg_sv, bool fg_sv_each, bool fg_radar);
+
+    void dataFused();
+
+    void zoomOutFusedTopView();
+
+    void zoomInFusedTopView();
+    // Fusion ================= End
+
+private:
     // Fusion =================
     // topview
     int detection_range_pixel;                      // fused topview radius (pixel)
@@ -57,35 +99,30 @@ public:
 
     int font_thickness;
 
-    QPixmap pic_sv, pic_radar;
-
     // information of objects detected by different sensors on fused topview
     struct sensorInformation {
-        cv::Point pos;                              // sensor's position based on the center of vehicle
-                                                    // (pixel) forward is x+, lateral right is y+.
+        SensorBase::sensorLocation location;
 
-        cv::Point pos_pixel;
+        cv::Point pos_pixel;                        // (pixel)
+
+        float angle_half_fov;                       // the half fov for displaying (deg)
 
         cv::Scalar color;                           // sensor's color on the topview
-
-        float angle;                                // the half fov for displaying (deg)
 
         cv::Scalar color_fov;
 
         sensorInformation() {
-            pos = cv::Point(-1, -1);
+            pos_pixel = cv::Point(-1, -1);
+
+            angle_half_fov = -1.0;
 
             color = cv::Scalar(0, 0, 0);
 
-            angle = -1.0;
+            color_fov = cv::Scalar(200, 200, 200, 255);
         }
     };
 
     sensorInformation *sensors;
-    // sensors:
-    // [0] = stereo vision
-    // [1] = radar ESR
-    // [2] = laser rangefinder
 
     struct vehicleInfo {
         cv::Point VCP;                              // fused topview vehicle current position (pixel)
@@ -101,32 +138,15 @@ public:
         cv::Scalar color;                           // vehicle color
     } vehicle;
 
-    cv::Mat fused_topview_BG;
-
-    cv::Mat fused_topview;
-
-    void VehicleCart();
-
-    void VehicleCar();
-
-    void initialFusedTopView(int range_pixel);
-
-    void updateFusedTopView();
-
-    void drawFusedTopView(bool fg_sv, bool fg_sv_each, bool fg_radar);
-
-    float rangeWorldCalculation(cv::Point sensor_pos, float range, float angle);
-    float pointTransformTopView(cv::Point sensor_pos, float range, float angle, cv::Point *output);
-    float pointTransformTopView(cv::Point sensor_pos, float range, float angle, cv::Point *output, cv::Rect rect_in, cv::Rect *rect);
-
-    void dataFused();
-
     int gap = 500;
 
-    void zoomOutFusedTopView();
+    PC rangeWorldCalculation(cv::Point sensor_pos, PC pc);
+    double pointTransformTopView(cv::Point sensor_pos, double range, double angle, cv::Point *output);
+    double pointTransformTopView(cv::Point sensor_pos, double range, double angle, cv::Point *output, cv::Rect rect_in, cv::Rect *rect);
+    // Fusion ================= End
 
-    void zoomInFusedTopView();
-    // ======================== End
+signals:
+    void updateGUI(cv::Mat *fused_topview, cv::Mat *img_detected_display);
 };
 
 #endif // SENSORINFO_H

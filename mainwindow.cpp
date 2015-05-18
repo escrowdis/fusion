@@ -105,7 +105,7 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->label_sv_detected->setStyleSheet("background-color:silver");
     ui->label_sv_frame_count->setVisible(false);
 
-    QObject::connect(si->sv, SIGNAL(updateGUI(cv::Mat *, cv::Mat *, cv::Mat *, cv::Mat *, cv::Mat *, cv::Mat *, cv::Mat *, int, int)), this, SLOT(svDisplay(cv::Mat *, cv::Mat *, cv::Mat *, cv::Mat *, cv::Mat *, cv::Mat *, cv::Mat *, int, int)));
+    QObject::connect(si->sv, SIGNAL(updateGUI(cv::Mat *, cv::Mat *, cv::Mat *, cv::Mat *, cv::Mat *, cv::Mat *, int, int)), this, SLOT(svDisplay(cv::Mat *, cv::Mat *, cv::Mat *, cv::Mat *, cv::Mat *, cv::Mat *, int, int)));
     QObject::connect(si->sv, SIGNAL(videoEnd(void)), this, SLOT(videoIsEnd(void)));
 
     on_checkBox_pseudo_color_clicked(ui->checkBox_pseudo_color->isChecked());
@@ -140,6 +140,8 @@ MainWindow::MainWindow(QWidget *parent) :
 
     // Fusion ==================================
     initialFusedTopView();
+
+    QObject::connect(si, SIGNAL(updateGUI(cv::Mat *, cv::Mat *)), this, SLOT(fusedDisplay(cv::Mat*,cv::Mat*)));
     // Fusion ================================== End
 
     // Thread control ==========================
@@ -459,14 +461,14 @@ void MainWindow::updateFusedTopView()
 
 void MainWindow::on_radioButton_vehicle_cart_clicked()
 {
-    si->VehicleCart();
+    si->chooseVehicle(VEHICLE::CART);
 
     updateFusedTopView();
 }
 
 void MainWindow::on_radioButton_vehicle_car_clicked()
 {
-    si->VehicleCar();
+    si->chooseVehicle(VEHICLE::CAR);
 
     updateFusedTopView();
 }
@@ -492,8 +494,15 @@ void MainWindow::dataFused()
     bool fg_sv_each_pixel = ui->checkBox_fused_sv_plot_every_pixel->isChecked();
     bool fg_radar = ui->checkBox_fusion_radar->isChecked() && fg_retrieving && si->rc->fusedTopview();
     si->drawFusedTopView(fg_sv, fg_sv_each_pixel, fg_radar);
+}
 
-    ui->label_fusion->setPixmap(QPixmap::fromImage(QImage::QImage(si->fused_topview.data, si->fused_topview.cols, si->fused_topview.rows, si->fused_topview.step, QImage::Format_RGBA8888)));
+void MainWindow::fusedDisplay(cv::Mat *fused_topview, cv::Mat *img_detected_display)
+{
+    lock_f_sv.lockForRead();
+    ui->label_sv_detected_display->setPixmap(QPixmap::fromImage(QImage::QImage(img_detected_display->data, img_detected_display->cols, img_detected_display->rows, img_detected_display->step, QImage::Format_RGB888)).scaled(IMG_DIS_W, IMG_DIS_H));
+    lock_f_sv.unlock();
+    ui->label_fusion->setPixmap(QPixmap::fromImage(QImage::QImage(fused_topview->data, fused_topview->cols, fused_topview->rows, fused_topview->step, QImage::Format_RGBA8888)));
+    ui->label_sv_detected_display->update();
     ui->label_fusion->update();
     qApp->processEvents();
 }
@@ -641,7 +650,7 @@ void MainWindow::camOpen()
     }
 }
 
-void MainWindow::svDisplay(cv::Mat *img_L, cv::Mat *img_R, cv::Mat *disp, cv::Mat *disp_pseudo, cv::Mat *topview, cv::Mat *img_detected, cv::Mat *img_detected_display, int detected_obj, int current_frame_count)
+void MainWindow::svDisplay(cv::Mat *img_L, cv::Mat *img_R, cv::Mat *disp, cv::Mat *disp_pseudo, cv::Mat *topview, cv::Mat *img_detected, int detected_obj, int current_frame_count)
 {
     ui->label_cam_img_L->setPixmap(QPixmap::fromImage(QImage::QImage(img_L->data, img_L->cols, img_L->rows, img_L->step, QImage::Format_RGB888)).scaled(IMG_DIS_W, IMG_DIS_H));
     ui->label_cam_img_R->setPixmap(QPixmap::fromImage(QImage::QImage(img_R->data, img_R->cols, img_R->rows, img_R->step, QImage::Format_RGB888)).scaled(IMG_DIS_W, IMG_DIS_H));
@@ -664,7 +673,6 @@ void MainWindow::svDisplay(cv::Mat *img_L, cv::Mat *img_R, cv::Mat *disp, cv::Ma
         if (ui->checkBox_sv_topview->isChecked()) {
             ui->label_top_view_sv->setPixmap(QPixmap::fromImage(QImage::QImage(topview->data, topview->cols, topview->rows, topview->step, QImage::Format_RGBA8888)).scaled(270, 750));
             ui->label_sv_detected->setPixmap(QPixmap::fromImage(QImage::QImage(img_detected->data, img_detected->cols, img_detected->rows, img_detected->step, QImage::Format_RGB888)).scaled(IMG_DIS_W, IMG_DIS_H));
-            ui->label_sv_detected_display->setPixmap(QPixmap::fromImage(QImage::QImage(img_detected_display->data, img_detected_display->cols, img_detected_display->rows, img_detected_display->step, QImage::Format_RGB888)).scaled(IMG_DIS_W, IMG_DIS_H));
         }
         lock_sv.unlock();
     }
@@ -730,7 +738,7 @@ void MainWindow::on_pushButton_cam_step_clicked()
     if (svWarning())
         return;
 
-    si->sv->dataExec();
+    si->svDataExec();
 }
 
 void MainWindow::on_pushButton_cam_capture_clicked()
@@ -759,43 +767,32 @@ void MainWindow::threadCheck()
         fg_running = false;
 }
 
-void MainWindow::threadBuffering()
-{
-    // unimplement
-    while (fg_buffering) {
-//        f_lrf_buf = QtConcurrent::run(si->lrf, &lrf_controller::pushToBuf);
-//        fw_lrf_buf.setFuture(f_lrf_buf);
-//        fw_lrf_buf.waitForFinished();
-        qApp->processEvents();
-    }
-}
-
 void MainWindow::threadProcessing()
 {
     fg_running = true;
     while (fg_running) {
         // sv
         if (fg_capturing && !f_sv.isRunning()) {
-//            si->sv->dataExec();
-            f_sv = QtConcurrent::run(si->sv, &stereo_vision::dataExec);
+//            si->svDataExec();
+            f_sv = QtConcurrent::run(si, &SensorInfo::svDataExec);
         }
 
         // lrf
         if (fg_acquiring && !f_lrf.isRunning()) {
-//            si->lrf->dataExec();
-            f_lrf = QtConcurrent::run(si->lrf, &lrf_controller::dataExec);
+//            si->lrfDataExec();
+            f_lrf = QtConcurrent::run(si, &SensorInfo::lrfDataExec);
         }
 
         // lrf buffer
         if (fg_buffering && si->lrf->bufNotFull() && !f_lrf_buf.isRunning()) {
-//            si->lrf->pushToBuf();
-            f_lrf_buf = QtConcurrent::run(si->lrf, &lrf_controller::pushToBuf);
+//            si->lrfBufExec();
+            f_lrf_buf = QtConcurrent::run(si, &SensorInfo::lrfBufExec);
         }
 
         // Radar ESR
         if (fg_retrieving && !f_radar.isRunning()) {
-//            si->rc->dataExec();
-            f_radar = QtConcurrent::run(si->rc, &RadarController::dataExec);
+//            si->radarDataExec();
+            f_radar = QtConcurrent::run(si, &SensorInfo::radarDataExec);
         }
         if (!f_fused.isRunning()) {
             f_fused = QtConcurrent::run(this, &MainWindow::dataFused);
@@ -1025,9 +1022,9 @@ void MainWindow::on_pushButton_lrf_request_ONCE_clicked()
 {
     si->lrf->requestData(LRF::CAPTURE_MODE::ONCE);
     while (!si->lrf->bufEnoughSet()) {
-        si->lrf->pushToBuf();
+        si->lrfBufExec();
     }
-    si->lrf->dataExec();
+    si->lrfDataExec();
 }
 
 void MainWindow::on_pushButton_lrf_request_clicked()
@@ -1037,7 +1034,6 @@ void MainWindow::on_pushButton_lrf_request_clicked()
     // push data to buffer //**// shouldn't be here
     fg_buffering = true;
     f_lrf_buf.setPaused(false);
-//        si->lrf->bufRunning();
 
     exec();
 }
@@ -1389,8 +1385,8 @@ void MainWindow::on_pushButton_lrf_request_2_clicked()
 void MainWindow::on_pushButton_lrf_retrieve_2_clicked()
 {
     while (fg_acquiring) {
-        si->lrf->dataExec();
-        si->lrf->pushToBuf();
+        si->lrfDataExec();
+        si->lrfBufExec();
 
         qApp->processEvents();
     }

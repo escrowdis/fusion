@@ -26,7 +26,8 @@ SOURCES += main.cpp\
     recording/recording.cpp \
     recording/textrecord.cpp \
     recording/videorecord.cpp \
-    sensorinfo.cpp
+    sensorinfo.cpp \
+    sensorbase.cpp
 
 HEADERS  += mainwindow.h \
             lrf_controller.h \
@@ -40,7 +41,8 @@ HEADERS  += mainwindow.h \
     recording/recording.h \
     recording/textrecord.h \
     recording/videorecord.h \
-    sensorinfo.h
+    sensorinfo.h \
+    sensorbase.h
 
 FORMS    += mainwindow.ui \
     calibrationform.ui \

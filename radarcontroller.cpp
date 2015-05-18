@@ -231,13 +231,15 @@ bool RadarController::dataIn()
     retrievingData();
 
     if (id == 0x53F)
-        return true;
-    return false;
+        fg_all_data_in = true;
+    else
+        fg_all_data_in = false;
 }
 
-void RadarController::dataExec()
+bool RadarController::dataExec()
 {
-    bool fg_all_data_in = dataIn();
+    if (!dataIn())
+        return false;
 
     if (fg_all_data_in && fg_data_in) {
 
@@ -245,16 +247,24 @@ void RadarController::dataExec()
 
         if (fg_topview)
             pointProjectTopView();
-
-        if (t.elapsed() > time_gap) {
-            time_proc = t_p.restart();
-            emit updateGUI(detected_obj, &img_radar, &topview);
-
-            t.restart();
-        }
-
-        reset();
     }
+
+    return true;
+}
+
+bool RadarController::guiUpdate()
+{
+    if (t.elapsed() > time_gap) {
+        time_proc = t_p.restart();
+        emit updateGUI(detected_obj, &img_radar, &topview);
+
+        t.restart();
+        reset();
+
+        return true;
+    }
+
+    return false;
 }
 
 void RadarController::retrievingData()

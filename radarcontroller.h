@@ -52,7 +52,9 @@ public:
 
     void retrievingData();
 
-    void dataExec();
+    bool dataExec();
+
+    bool guiUpdate();
 
     bool fusedTopview() {return fg_topview;}
 
@@ -74,7 +76,7 @@ public:
     int update_count;
 
     struct ESR_track_object_info{
-        float angle;                    // orientation degree. Middle is zero. From -51.2 to 51.1. (degree)
+        float angle;                    // azimuth degree. Middle is zero. From -51.2 to 51.1. (degree)
         bool bridge_object;             // non-functional
         bool grouping_changed;
         float lat_rate;
@@ -128,6 +130,7 @@ private:
 
     bool fg_read;                   // reading data
     bool fg_data_in;                // data is retrievable
+    bool fg_all_data_in;
 
     // CAN bus params ==============
     long            id;

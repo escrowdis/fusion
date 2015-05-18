@@ -79,6 +79,8 @@ public:
 
     bool dataExec();
 
+    bool guiUpdate();
+
     void pushToBuf();
 
     void requestData(int mode);
@@ -116,7 +118,10 @@ private:
 
     int mode;
 
+    // status
     QTime t_p, t_p_buf;             // process time of all exec.
+    QTime t;                            // control gui not to update too fast
+    int time_gap;
 
     QByteArray *buf;
 

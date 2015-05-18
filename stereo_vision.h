@@ -11,6 +11,7 @@ extern QDir project_path;
 // thread control
 #include <QReadWriteLock>
 extern QReadWriteLock lock_sv;
+extern QReadWriteLock lock_f_sv;
 
 // recording
 #include "recording/recording.h"
@@ -22,7 +23,6 @@ extern recording re;
 #ifdef opencv_cuda
 #include "opencv2/cudastereo.hpp"
 #endif
-
 
 // topview
 #include "topview.h"
@@ -73,6 +73,8 @@ public:
     bool loadRemapFile(int cam_focal_length, double base_line);
 
     bool dataExec();
+
+    bool guiUpdate();
 
     bool fusedTopview() {return fg_topview && fg_stereoMatch;}
 
@@ -150,7 +152,7 @@ public:
     int thresh_ground_filter;           // SD of ground_filter[]
 
     bool fg_ground_filter;
-    // ============================= End
+    // data - stereo vision ======== End
 
     // Stereo match params (SMP) ===
     void matchParamInitialize(int cur_mode);
@@ -189,7 +191,7 @@ public:
     };
     matchParamBM* param_bm;
 
-    // ============================= End
+    // Stereo match params (SMP) === End
 
     // object information ==========
     int obj_nums;                       // maximum object detection amount
@@ -238,7 +240,11 @@ public:
     objInformation* objects_display;
 
     void updateDataForDisplay();
-    // ============================= End
+    // object information ========== End
+
+    // object params ===============
+    int thick_obj_rect, radius_obj_point;
+    // object params =============== End
 
 private:
     int* LUT_grid_row;                  // depth -> grid map row
@@ -264,24 +270,26 @@ private:
 
     QTime t_p;                          // process time of all exec.
 
-    // status
+    // status ======================
     bool fg_cam_L, fg_cam_R;            // open or not
     bool fg_cam_opened;
     bool fg_calib_loaded;               // load the calibration files or not
     QTime t;                            // control gui not to update too fast
     int time_gap;
+    // status ====================== End
 
-    // capture from camera
+    // capture from camera =========
     int device_index_L;
     int device_index_R;
     cv::VideoCapture cam_L;
     cv::VideoCapture cam_R;
+    // capture from camera ========= End
 
-    // cv::Mat type capture image
+    // cv::Mat type capture image ==
     cv::Mat cap_L;
     cv::Mat cap_R;
 
-    // stereo calibration stuffs
+    // stereo calibration stuffs ===
     QDir remap_path;
     QString remap_folder;
     QString remap_file;
@@ -307,8 +315,6 @@ private:
     cv::Mat img_match_R;
 
     // object params ===============
-    int thick_obj_rect, radius_obj_point;
-
     int detected_obj;                   // detected object number
 
     objInformation obj_temp;            // sorting used
@@ -316,15 +322,13 @@ private:
     void resetBlob();
 
     void blob(int thresh_pts_num);
-
-    void cuboid();
-    // ============================= End
+    // object params =============== End
 
     // Topview =====================
     void pointProjectTopView();
 
     void pointProjectImage();
-    // ============================= End
+    // Topview ===================== End
 
 private slots:
     // BM ===========================
@@ -345,7 +349,7 @@ private slots:
     void change_bm_speckle_window_size(int value);
 
     void change_bm_speckle_range(int value);
-    // ============================== End
+    // BM =========================== End
 
     // SGBM =========================
     void change_sgbm_pre_filter_cap(int value);
@@ -361,10 +365,10 @@ private slots:
     void change_sgbm_speckle_window_size(int value);
 
     void change_sgbm_speckle_range(int value);
-    // ============================== End
+    // SGBM ========================= End
 
 signals:
-    void updateGUI(cv::Mat *img_L, cv::Mat *img_R, cv::Mat *disp, cv::Mat *disp_pseudo, cv::Mat *topview, cv::Mat *img_detected, cv::Mat *img_detected_display, int detected_obj, int current_frame_count);
+    void updateGUI(cv::Mat *img_L, cv::Mat *img_R, cv::Mat *disp, cv::Mat *disp_pseudo, cv::Mat *topview, cv::Mat *img_detected, int detected_obj, int current_frame_count);
 
     void updateForm(int mode, std::vector<int> params);
 

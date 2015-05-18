@@ -221,14 +221,20 @@ void lrf_controller::reset()
 bool lrf_controller::dataExec()
 {
 //    reset();
-    if (retrieveData(lrf_data)) {
+    return retrieveData(lrf_data);
+}
+
+bool lrf_controller::guiUpdate()
+{
+    if (t.elapsed() > time_gap) {
         time_proc = t_p.restart();
         emit updateGUI(lrf_data, &display_lrf);
+        t.restart();
 
         return true;
     }
-    else
-        return false;
+
+    return false;
 }
 
 bool lrf_controller::close()
