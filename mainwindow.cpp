@@ -454,9 +454,9 @@ void MainWindow::initialFusedTopView()
 void MainWindow::updateFusedTopView()
 {
     si->updateFusedTopView();
-
     ui->label_fusion_BG->setPixmap(QPixmap::fromImage(QImage::QImage(si->fused_topview_BG.data, si->fused_topview_BG.cols, si->fused_topview_BG.rows, si->fused_topview_BG.step, QImage::Format_RGBA8888)));
-    ui->label_fusion->setPixmap(QPixmap::fromImage(QImage::QImage(si->fused_topview.data, si->fused_topview.cols, si->fused_topview.rows, si->fused_topview.step, QImage::Format_RGBA8888)));
+
+    dataFused();
 }
 
 void MainWindow::on_radioButton_vehicle_cart_clicked()
@@ -490,9 +490,9 @@ void MainWindow::wheelEvent(QWheelEvent *ev)
 
 void MainWindow::dataFused()
 {
-    bool fg_sv = ui->checkBox_fusion_sv->isChecked() && fg_capturing && si->sv->fusedTopview();
+    bool fg_sv = ui->checkBox_fusion_sv->isChecked() && si->sv->fusedTopview();
     bool fg_sv_each_pixel = ui->checkBox_fused_sv_plot_every_pixel->isChecked();
-    bool fg_radar = ui->checkBox_fusion_radar->isChecked() && fg_retrieving && si->rc->fusedTopview();
+    bool fg_radar = ui->checkBox_fusion_radar->isChecked() && si->rc->fusedTopview();
     si->drawFusedTopView(fg_sv, fg_sv_each_pixel, fg_radar);
 }
 
