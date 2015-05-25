@@ -44,10 +44,10 @@ public:
 
     bool fg_frame_record;
 
+    void getBasicInfo(cv::VideoCapture &cap);
+
 private:
     void defaultBasicInfo(int img_h, int img_w);
-
-    void getBasicInfo(cv::VideoCapture *cap);
 
     QString file_path;
 

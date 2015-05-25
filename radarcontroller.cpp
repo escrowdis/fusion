@@ -59,11 +59,11 @@ void RadarController::createLUT()
 
     col_shift_LUT = 0.5 * chord_length;
 
-    for (int k = 0; k < max_distance; k++)
-        LUT_grid_row[k] = 1.0 * log10(1.0 * k / min_distance) / log10(1.0 + k);
+    for (int m = 0; m < max_distance; m++)
+        LUT_grid_row[m] = 1.0 * log10(1.0 * m / min_distance) / log10(1.0 + k);
 
-    for (int k = 0; k < chord_length; k++)
-        LUT_grid_col[k] = (1.0 * k) * img_col / chord_length;
+    for (int m = 0; m < chord_length; m++)
+        LUT_grid_col[m] = (1.0 * m) * img_col / chord_length;
 }
 
 int RadarController::corrGridRow(int k)
@@ -146,8 +146,8 @@ void RadarController::busOn()
             fg_read = true;
         break;
     case RADAR::INPUT_SOURCE::TXT:
-        //**// add if(file_is_loaded)
-        fg_read = true;
+        if (re.vr->fg_loaded)
+            fg_read = true;
         break;
     }
 }

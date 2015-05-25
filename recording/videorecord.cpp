@@ -43,14 +43,14 @@ void videoRecord::defaultBasicInfo(int img_h, int img_w)
     s = cv::Size(2 * img_w, img_h);
 }
 
-void videoRecord::getBasicInfo(cv::VideoCapture *cap)
+void videoRecord::getBasicInfo(cv::VideoCapture &cap)
 {
     ex = cv::VideoWriter::fourcc('D', 'I', 'V', 'X');
-//    ex = static_cast<int>(cap->get(cv::CAP_PROP_FOURCC));
-    fps = cap->get(cv::CAP_PROP_FPS);
-    s = cv::Size(cap->get(cv::CAP_PROP_FRAME_WIDTH),
-                          cap->get(cv::CAP_PROP_FRAME_HEIGHT));
-    frame_count = cap->get(cv::CAP_PROP_FRAME_COUNT);
+//    ex = static_cast<int>(cap.get(cv::CAP_PROP_FOURCC));
+    fps = cap.get(cv::CAP_PROP_FPS);
+    s = cv::Size(cap.get(cv::CAP_PROP_FRAME_WIDTH),
+                          cap.get(cv::CAP_PROP_FRAME_HEIGHT));
+    frame_count = cap.get(cv::CAP_PROP_FRAME_COUNT);
 }
 
 void videoRecord::createVideo()
@@ -143,7 +143,6 @@ bool videoRecord::segmentTwoImages(cv::Mat *img_1, cv::Mat *img_2, cv::Size s)
 bool videoRecord::loadVideo(QString str, bool fg_str_is_file)
 {
     setPath(str, fg_str_is_file);
-//    file_path = QFileDialog::getOpenFileName(0, "Load video", save_path, "Video files (*.avi)");
     if (file_path.isEmpty()) {
         fg_loaded = false;
         return fg_loaded;
@@ -156,7 +155,7 @@ bool videoRecord::loadVideo(QString str, bool fg_str_is_file)
     }
 
     current_frame_count = 0;
-    getBasicInfo(&cap);
+    getBasicInfo(cap);
 
     fg_loaded = true;
     return fg_loaded;

@@ -30,8 +30,8 @@ public:
 
     void setRecordType(int record_type);
 
-    //**// can't work 2015.04.06
-//    void setBasicInfo(cv::VideoCapture *cap);
+    //**// It's fixed but where to use? 2015.05.25 / can't work 2015.04.06
+    void setBasicInfo(cv::VideoCapture &cap);
 
     bool recordData(cv::Mat img);
     bool recordData(std::string data);

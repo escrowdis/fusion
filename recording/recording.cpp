@@ -49,10 +49,10 @@ void recording::setRecordType(int record_type)
     this->record_type = record_type;
 }
 
-//void recording::setBasicInfo(cv::VideoCapture *cap)
-//{
-//    vr->getBasicInfo(cap);
-//}
+void recording::setBasicInfo(cv::VideoCapture &cap)
+{
+    vr->getBasicInfo(cap);
+}
 
 bool recording::recordData(cv::Mat img)
 {
