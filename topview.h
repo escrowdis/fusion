@@ -39,7 +39,7 @@ public:
 
     cv::Mat topview_BG;
 
-    QImage *color_table;                // psuedo-color table //**// wanna make it static
+    QImage *color_table;                // psuedo-color table
 
     // color
     cv::Scalar color_BG;

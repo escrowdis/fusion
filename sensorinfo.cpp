@@ -358,24 +358,24 @@ SensorBase::PC SensorInfo::rangeWorldCalculation(cv::Point sensor_pos, SensorBas
     return pc_tmp;
 }
 
-bool SensorInfo::svDataExec()
+int SensorInfo::svDataExec()
 {
-    bool result = false;
-    if (sv->dataExec()) {
-        sv->guiUpdate();
-        result = true;
-    }
-    return result;
+    int stat = sv->dataExec();
+
+    if (stat == SV::STATUS::OK)
+        stat = sv->guiUpdate();
+
+    return stat;
 }
 
-bool SensorInfo::radarDataExec()
+int SensorInfo::radarDataExec()
 {
-    bool result = false;
-    if (rc->dataExec()) {
-        rc->guiUpdate();
-        result = true;
-    }
-    return result;
+    int stat = rc->dataExec();
+
+    if (stat == RADAR::STATUS::OK)
+        stat = rc->guiUpdate();
+
+    return stat;
 }
 
 bool SensorInfo::lrfDataExec()

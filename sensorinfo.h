@@ -47,9 +47,9 @@ public:
     lrf_controller* lrf;
 
     // Sensors' information ===
-    bool svDataExec();
+    int svDataExec();
 
-    bool radarDataExec();
+    int radarDataExec();
 
     bool lrfDataExec();
 

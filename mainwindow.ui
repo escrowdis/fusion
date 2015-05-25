@@ -761,6 +761,19 @@ parameters</string>
        </item>
       </layout>
      </widget>
+     <widget class="QPushButton" name="pushButton_radar_step">
+      <property name="geometry">
+       <rect>
+        <x>30</x>
+        <y>70</y>
+        <width>75</width>
+        <height>23</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Step</string>
+      </property>
+     </widget>
     </widget>
     <widget class="QWidget" name="tab_3">
      <attribute name="title">

@@ -19,6 +19,8 @@ public:
 
     bool loadText(QString str, bool fg_str_is_file);
 
+    bool fileExist() {return !file_path.isEmpty();}
+
     void setPath(QString str, bool fg_str_is_file);
 
     bool record(std::string data);

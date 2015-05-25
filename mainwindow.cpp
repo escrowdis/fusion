@@ -250,13 +250,14 @@ void MouseLabel::mouseMoveEvent(QMouseEvent *e)
 
 void MainWindow::mouseXY(int x, int y)
 {
-    int xx, yy;
-    xx = 2 * x;
-    yy = 2 * y;
+    dis_xx = 2 * x;
+    dis_yy = 2 * y;
+    dis_disp = -1;
+    dis_pos3D = cv::Point3i(-1, -1, -1);
+    si->sv->getMouseCursorInfo(dis_yy, dis_xx, dis_disp, dis_pos3D);
     lock_sv.lockForRead();
     mouse_info.sprintf("(x,y) = (%d,%d), Disp. = %.0f, (X,Y,Z) = (%d,%d,%d)",
-                       xx, yy, si->sv->data[yy][xx].disp,
-                       si->sv->data[yy][xx].X, si->sv->data[yy][xx].Y, si->sv->data[yy][xx].Z); //**// real X, Y, Z
+                       dis_xx, dis_yy, dis_disp, dis_pos3D.x, dis_pos3D.y, dis_pos3D.z); //**// real X, Y, Z
     lock_sv.unlock();
     ui->label_depth_info->setText(mouse_info);
 }
@@ -714,18 +715,32 @@ void MainWindow::exec()
         threadProcessing();
 }
 
-bool MainWindow::svWarning()
+bool MainWindow::radarDataIn()
+{
+    if (si->rc->input_mode == RADAR::INPUT_SOURCE::ESR && !si->rc->isOpened()) {
+        reportError("radar", "Error!", "ESR haven't opened.");
+        return false;
+    }
+    else if (si->rc->input_mode == RADAR::INPUT_SOURCE::TXT && !re.tr->fileExist()) {
+        reportError("radar", "Error!", "No text file is loaded.");
+        return false;
+    }
+
+    return true;
+}
+
+bool MainWindow::svDataIn()
 {
     if (si->sv->input_mode == SV::INPUT_SOURCE::CAM && !si->sv->isOpened()) {
         reportError("sv", "Error!", "Cameras haven't opened.");
-        return true;
+        return false;
     }
     else if (si->sv->input_mode == SV::INPUT_SOURCE::VIDEO && !re.vr->fileExist()) {
         reportError("sv", "Error!", "No video is loaded.");
-        return true;
+        return false;
     }
 
-    return false;
+    return true;
 }
 
 void MainWindow::on_pushButton_cam_step_clicked()
@@ -735,17 +750,18 @@ void MainWindow::on_pushButton_cam_step_clicked()
         return;
     }
 
-    if (svWarning())
-        return;
-
-    si->svDataExec();
+    int stat = si->svDataExec();
+    if (stat == SV::STATUS::NO_INPUT) {
+        reportError("sv", "Warning.", "No data is capturable.");
+        fg_capturing = false;
+        f_sv.setPaused(true);
+        while (f_sv.isRunning()) {}
+        threadCheck();
+    }
 }
 
 void MainWindow::on_pushButton_cam_capture_clicked()
 {
-    if (svWarning())
-        return;
-
     fg_capturing = true;
     f_sv.setPaused(false);
 
@@ -895,7 +911,7 @@ void MainWindow::closeFormCalib(void)
 
 void MainWindow::requestImage(char CCD)
 {
-    if (svWarning())
+    if (!svDataIn())
         return;
 
     switch (CCD) {
@@ -1437,6 +1453,16 @@ void MainWindow::on_pushButton_radar_bus_off_clicked()
     threadCheck();
 }
 
+void MainWindow::on_pushButton_radar_step_clicked()
+{
+    int stat;
+    while (stat != RADAR::STATUS::OK) {
+        stat = si->radarDataExec();
+        if (stat == RADAR::STATUS::NO_INPUT)
+            reportError("radar", "Warning.", "No data is retrievable.");
+    }
+}
+
 void MainWindow::radarDisplay(int detected_obj, cv::Mat *img, cv::Mat *topview)
 {
     ui->label_radar_detected_obj->setText(QString::number(detected_obj));
@@ -1471,6 +1497,9 @@ void MainWindow::on_checkBox_radar_topview_clicked(bool checked)
 
 void MainWindow::on_pushButton_start_all_clicked()
 {
+    if (!svDataIn() || !radarDataIn())
+        return;
+
     if (si->sv->input_mode == SV::INPUT_SOURCE::CAM && si->rc->input_mode == RADAR::INPUT_SOURCE::ESR) {
         inputType(INPUT_TYPE::DEVICE);
 
@@ -1485,9 +1514,6 @@ void MainWindow::on_pushButton_start_all_clicked()
     }
     else
         inputType(INPUT_TYPE::RECORDING);
-
-    if (svWarning())
-        return;
 
     if (!fg_capturing) {
         fg_capturing = true;
@@ -1695,8 +1721,7 @@ void MainWindow::on_radioButton_input_recording_clicked()
 void MainWindow::on_checkBox_sv_ground_filter_clicked(bool checked)
 {
     if (checked)
-        si->sv->fg_ground_filter = true;
+        si->sv->setGroundFilter(true);
     else
-        si->sv->fg_ground_filter = false;
+        si->sv->setGroundFilter(false);
 }
-

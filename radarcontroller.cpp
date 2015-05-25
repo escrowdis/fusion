@@ -166,7 +166,6 @@ bool RadarController::dataIn()
     case RADAR::INPUT_SOURCE::ESR:
         stat = canReadWait(h, &id, &can_data[0], &dlc, &flag, &time, 0xff);
         if (stat != canOK) {
-            std::cout<<"read FAILED"<<std::endl;
             return false;
         }
 
@@ -206,8 +205,7 @@ bool RadarController::dataIn()
                 return false;
 //        std::cout<<re.vr->current_frame_count<<"\t"<<re.tr->current_frame_count<<std::endl;
 
-        if (!fg_data_in)
-            fg_data_in = true;
+        fg_data_in = true;
         std::string text_raw;
         QString text, text_frame, text_id, text_bin;
         if (re.tr->file >> text_raw) {
@@ -234,12 +232,15 @@ bool RadarController::dataIn()
         fg_all_data_in = true;
     else
         fg_all_data_in = false;
+
+    return true;
 }
 
-bool RadarController::dataExec()
+int RadarController::dataExec()
 {
+    // dataIn() returns true when id == 0x53F
     if (!dataIn())
-        return false;
+        return RADAR::STATUS::NO_INPUT;
 
     if (fg_all_data_in && fg_data_in) {
 
@@ -247,12 +248,14 @@ bool RadarController::dataExec()
 
         if (fg_topview)
             pointProjectTopView();
+
+        return RADAR::STATUS::OK;
     }
 
-    return true;
+    return RADAR::STATUS::DATA_NOT_ENOUGHT;
 }
 
-bool RadarController::guiUpdate()
+int RadarController::guiUpdate()
 {
     if (t.elapsed() > time_gap) {
         time_proc = t_p.restart();
@@ -261,10 +264,10 @@ bool RadarController::guiUpdate()
         t.restart();
         reset();
 
-        return true;
+        return RADAR::STATUS::OK;
     }
 
-    return false;
+    return RADAR::STATUS::NO_UPDATE;
 }
 
 void RadarController::retrievingData()
@@ -456,8 +459,8 @@ void RadarController::pointProjectTopView()
 
                 p = (max_distance - 0.5 * (img_grid[row][col].y + img_grid[row_1][col].y)) - min_distance;
 
-//                cv::fillConvexPoly(topview, pts, thick_polygon, cv::Scalar(ptr[3 * p + 0], ptr[3 * p + 1], ptr[3 * p + 2], 255), 8, 0);
-                cv::fillConvexPoly(topview, pts, thick_polygon, cv::Scalar(255, 255, 255, 255), 8, 0);
+                cv::fillConvexPoly(topview, pts, thick_polygon, cv::Scalar(ptr[3 * p + 0], ptr[3 * p + 1], ptr[3 * p + 2], 255), 8, 0);
+//                cv::fillConvexPoly(topview, pts, thick_polygon, cv::Scalar(255, 255, 255, 255), 8, 0);
             }
         }
     }

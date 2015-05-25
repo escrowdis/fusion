@@ -187,6 +187,8 @@ bool stereo_vision::open(int device_index_L, int device_index_R)
     }
     if (fg_cam_L && fg_cam_R)
         fg_cam_opened = true;
+    else
+        fg_cam_opened = false;
 
     return fg_cam_opened;
 }
@@ -313,17 +315,23 @@ void stereo_vision::updateFormParams()
     emit updateForm(match_mode, match_param);
 }
 
-void stereo_vision::camCapture()
+bool stereo_vision::camCapture()
 {
     if (cam_L.isOpened()) {
         cam_L >> cap_L;
         cv::cvtColor(cap_L, img_L, cv::COLOR_BGR2RGB);
     }
+    else
+        return false;
 
     if (cam_R.isOpened()) {
         cam_R >> cap_R;
         cv::cvtColor(cap_R, img_R, cv::COLOR_BGR2RGB);
     }
+    else
+        return false;
+
+    return true;
 }
 
 bool stereo_vision::loadRemapFile(int cam_focal_length, double base_line)
@@ -526,7 +534,8 @@ bool stereo_vision::dataIn()
     switch (input_mode) {
     // camera capturing
     case SV::INPUT_SOURCE::CAM:
-        camCapture();
+        if (!camCapture())
+            return false;
 
         if (re.vr->fg_record) {
             cv::Mat img_merge = cv::Mat(IMG_H, 2 * IMG_W, CV_8UC3);
@@ -555,20 +564,20 @@ bool stereo_vision::dataIn()
     return true;
 }
 
-bool stereo_vision::dataExec()
+int stereo_vision::dataExec()
 {
 #ifdef debug_info_sv
     qDebug()<<"run";
 #endif
 
     if (!dataIn()) {
-        return false;
+        return SV::STATUS::NO_INPUT;
     }
 
     // camera calibration
     if (fg_calib) {
         if (!rectifyImage())
-            return false;
+            return SV::STATUS::NO_RECTIFYIMAGE;
     }
     else {
         img_r_L = img_L.clone();
@@ -602,18 +611,26 @@ bool stereo_vision::dataExec()
 
     updateDataForDisplay();
 
-    return true;
+    return SV::STATUS::OK;
 }
 
-bool stereo_vision::guiUpdate()
+int stereo_vision::guiUpdate()
 {
     if (t.elapsed() > time_gap) {
         emit updateGUI(&img_r_L, &img_r_R, &disp, &disp_pseudo, &topview, &img_detected, detected_obj, re.vr->current_frame_count);
         t.restart();
         time_proc = t_p.restart();
-        return true;
+        return SV::STATUS::OK;
     }
-    return false;
+    return SV::STATUS::NO_UPDATE;
+}
+
+void stereo_vision::getMouseCursorInfo(int y, int x, float &disp, cv::Point3i &pos3D)
+{
+    lock_sv.lockForRead();
+    disp = data[y][x].disp;
+    pos3D = cv::Point3i(data[y][x].X, data[y][x].Y, data[y][x].Z);
+    lock_sv.unlock();
 }
 
 void stereo_vision::pointProjectTopView()

@@ -39,6 +39,13 @@ extern recording re;
 #define GROUND_RANGE 20
 
 namespace SV {
+enum STATUS {
+    OK = 0,
+    NO_INPUT = -1,
+    NO_UPDATE = -2,
+    NO_RECTIFYIMAGE = -3
+};
+
 enum STEREO_MATCH {
     SGBM,
     BM
@@ -72,9 +79,9 @@ public:
 
     bool loadRemapFile(int cam_focal_length, double base_line);
 
-    bool dataExec();
+    int dataExec();
 
-    bool guiUpdate();
+    int guiUpdate();
 
     bool fusedTopview() {return fg_topview && fg_stereoMatch;}
 
@@ -144,18 +151,10 @@ public:
 
     StereoData** data;
 
-    // ground filtering
-    int* ground_filter;                 // the amount of pixel within pixels' range
+    void getMouseCursorInfo(int y, int x, float &disp, cv::Point3i &pos3D);
 
-    float ground_mean;                  // mean of ground_filter_id
-
-    int thresh_ground_filter;           // SD of ground_filter[]
-
-    bool fg_ground_filter;
+    void setGroundFilter(bool fg_enable) {fg_ground_filter = fg_enable;}
     // data - stereo vision ======== End
-
-    // Stereo match params (SMP) ===
-    void matchParamInitialize(int cur_mode);
 
     bool modeChanged(int cur_mode) {
         return match_mode != cur_mode;
@@ -190,57 +189,7 @@ public:
         int speckle_range;
     };
     matchParamBM* param_bm;
-
     // Stereo match params (SMP) === End
-
-    // object information ==========
-    int obj_nums;                       // maximum object detection amount
-
-    struct objInformation
-    {
-        // GRIDMAP -----------
-        int pts_num;
-
-        bool labeled;                   // filtered object
-
-        int avg_Z;                      // average depth
-
-        int avg_X;
-
-        int closest_count;              // smaller number represents closer to vehicle
-
-        // IMAGE -------------
-        std::pair<int, int> tl;         // Top left (row, col)
-        std::pair<int, int> br;         // Bottom right (row, col)
-        std::pair<int, int> center;     // Center point of object in image (row, col)
-        cv::Scalar color;               // object's color
-
-        float angle;                    // orientation degree. Middle is zero. (degree)
-        float range;                    // (cm)
-
-        // TOPVIEW -----------
-        cv::Rect rect;
-        cv::Point rect_tl, rect_br;
-
-        objInformation() {
-            labeled = false;
-            tl = std::pair<int, int>(-1, -1);
-            br = std::pair<int, int>(-1, -1);
-            center = std::pair<int, int>(-1, -1);
-            angle = 0.0;
-            range = 0.0;
-            avg_Z = 0;
-            avg_X = 0;
-            pts_num = 0;
-            closest_count = 0;
-        }
-    };
-
-    objInformation* objects;            // filtered objects
-    objInformation* objects_display;
-
-    void updateDataForDisplay();
-    // object information ========== End
 
     // object params ===============
     int thick_obj_rect, radius_obj_point;
@@ -258,7 +207,7 @@ private:
 
     void resetOpen(int device_index_L, int device_index_R);
 
-    void camCapture();
+    bool camCapture();
 
     bool dataIn();
 
@@ -314,8 +263,61 @@ private:
     cv::Mat img_match_L;
     cv::Mat img_match_R;
 
+    // object information ==========
+public:
+    //**// temporary, it sould be private
+    int obj_nums;                       // maximum object detection amount
+
+    struct objInformation
+    {
+        // GRIDMAP -----------
+        int pts_num;
+
+        bool labeled;                   // filtered object
+
+        int avg_Z;                      // average depth
+
+        int avg_X;
+
+        int closest_count;              // smaller number represents closer to vehicle
+
+        // IMAGE -------------
+        std::pair<int, int> tl;         // Top left (row, col)
+        std::pair<int, int> br;         // Bottom right (row, col)
+        std::pair<int, int> center;     // Center point of object in image (row, col)
+        cv::Scalar color;               // object's color
+
+        float angle;                    // orientation degree. Middle is zero. (degree)
+        float range;                    // (cm)
+
+        // TOPVIEW -----------
+        cv::Rect rect;
+        cv::Point rect_tl, rect_br;
+
+        objInformation() {
+            labeled = false;
+            tl = std::pair<int, int>(-1, -1);
+            br = std::pair<int, int>(-1, -1);
+            center = std::pair<int, int>(-1, -1);
+            angle = 0.0;
+            range = 0.0;
+            avg_Z = 0;
+            avg_X = 0;
+            pts_num = 0;
+            closest_count = 0;
+        }
+    };
+
+    objInformation* objects_display;
+
+private:
+    objInformation* objects;            // filtered objects
+
+    void updateDataForDisplay();
+    // object information ========== End
+
     // object params ===============
-    int detected_obj;                   // detected object number
+    int detected_obj;                   // Amount of detected object
 
     objInformation obj_temp;            // sorting used
 
@@ -323,6 +325,20 @@ private:
 
     void blob(int thresh_pts_num);
     // object params =============== End
+
+    // data - stereo vision ========
+    // ground filtering
+    int* ground_filter;                 // the amount of pixel within pixels' range
+
+    float ground_mean;                  // mean of ground_filter_id
+
+    int thresh_ground_filter;           // SD of ground_filter[]
+
+    bool fg_ground_filter;              // do the ground filtering algorithm or not
+
+    // Stereo match params (SMP) ===
+    void matchParamInitialize(int cur_mode);
+    // data - stereo vision ======== End
 
     // Topview =====================
     void pointProjectTopView();

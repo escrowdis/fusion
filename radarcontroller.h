@@ -27,6 +27,13 @@ extern recording re;
 #define OBJECT_NUM 64
 
 namespace RADAR {
+enum STATUS {
+    OK = 0,
+    NO_INPUT = -1,
+    NO_UPDATE = -2,
+    DATA_NOT_ENOUGHT = -3
+};
+
 enum INPUT_SOURCE {
     ESR,
     TXT
@@ -52,11 +59,13 @@ public:
 
     void retrievingData();
 
-    bool dataExec();
+    int dataExec();
 
-    bool guiUpdate();
+    int guiUpdate();
 
     bool fusedTopview() {return fg_topview;}
+
+    bool isOpened() {return fg_data_in;}
 
     int time_proc;
 

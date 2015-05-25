@@ -94,6 +94,8 @@ private:
     // tableView used
     QStandardItemModel* model_radar;
 
+    bool radarDataIn();
+
     void radarDisplayTopViewBG();
     // ======================== End
 
@@ -101,6 +103,8 @@ private:
     bool fg_capturing;
 
     bool svWarning();
+
+    bool svDataIn();
 
     void camOpen();
 
@@ -149,10 +153,10 @@ private:
 //    bool fg_running;
 
     QFutureSynchronizer<void> sync;
-    QFuture<bool> f_sv;
+    QFuture<int> f_sv;
     QFuture<bool> f_lrf;
     QFuture<void> f_lrf_buf;
-    QFuture<bool> f_radar;
+    QFuture<int> f_radar;
     QFuture<void> f_fused;
 //    QFutureWatcher<void> fw_sv;
 //    QFutureWatcher<void> fw_lrf;
@@ -170,6 +174,10 @@ private:
 
     // Mouse control ==========
     QString mouse_info;
+
+    int dis_xx, dis_yy;
+    float dis_disp;
+    cv::Point3i dis_pos3D;
     // ======================== End
 
     // Author =================
@@ -351,6 +359,7 @@ private slots:
     void on_radioButton_vehicle_cart_clicked();
     void on_radioButton_vehicle_car_clicked();
     void on_checkBox_sv_ground_filter_clicked(bool checked);
+    void on_pushButton_radar_step_clicked();
 };
 
 // Mouse control ==========
