@@ -4,8 +4,12 @@
 // thread control
 #include <QReadWriteLock>
 QReadWriteLock lock_sv;
+QReadWriteLock lock_sv_data;
+QReadWriteLock lock_sv_object;
+QReadWriteLock lock_sv_mouse;
 QReadWriteLock lock_lrf;
 QReadWriteLock lock_radar;
+
 QReadWriteLock lock_f_sv;
 #include <QDir>
 QDir project_path;

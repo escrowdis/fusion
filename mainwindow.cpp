@@ -122,11 +122,11 @@ MainWindow::MainWindow(QWidget *parent) :
     // Radar ESR ===============================
     radarDisplayTopViewBG();
 
-    model_radar = new QStandardItemModel(64, 1, this);
+    model_radar = new QStandardItemModel(si->rc->objSize(), 1, this);
     model_radar->setHorizontalHeaderItem(0, new QStandardItem(QString("Range")));
     ui->tableView_radar->setModel(model_radar);
     QStringList labels;
-    for (int i = 0 ; i < 64; i++) {
+    for (int i = 0 ; i < si->rc->objSize(); i++) {
         model_radar->setItem(i, &si->rc->item[i]);
         labels<<QString::number(i);
     }
@@ -255,10 +255,10 @@ void MainWindow::mouseXY(int x, int y)
     dis_disp = -1;
     dis_pos3D = cv::Point3i(-1, -1, -1);
     si->sv->getMouseCursorInfo(dis_yy, dis_xx, dis_disp, dis_pos3D);
-    lock_sv.lockForRead();
+    lock_sv_mouse.lockForRead();
     mouse_info.sprintf("(x,y) = (%d,%d), Disp. = %.0f, (X,Y,Z) = (%d,%d,%d)",
                        dis_xx, dis_yy, dis_disp, dis_pos3D.x, dis_pos3D.y, dis_pos3D.z); //**// real X, Y, Z
-    lock_sv.unlock();
+    lock_sv_mouse.unlock();
     ui->label_depth_info->setText(mouse_info);
 }
 
@@ -457,7 +457,8 @@ void MainWindow::updateFusedTopView()
     si->updateFusedTopView();
     ui->label_fusion_BG->setPixmap(QPixmap::fromImage(QImage::QImage(si->fused_topview_BG.data, si->fused_topview_BG.cols, si->fused_topview_BG.rows, si->fused_topview_BG.step, QImage::Format_RGBA8888)));
 
-    dataFused();
+    if (f_fused.isRunning())
+        dataFused();
 }
 
 void MainWindow::on_radioButton_vehicle_cart_clicked()
@@ -501,9 +502,9 @@ void MainWindow::fusedDisplay(cv::Mat *fused_topview, cv::Mat *img_detected_disp
 {
     lock_f_sv.lockForRead();
     ui->label_sv_detected_display->setPixmap(QPixmap::fromImage(QImage::QImage(img_detected_display->data, img_detected_display->cols, img_detected_display->rows, img_detected_display->step, QImage::Format_RGB888)).scaled(IMG_DIS_W, IMG_DIS_H));
+    ui->label_sv_detected_display->update();
     lock_f_sv.unlock();
     ui->label_fusion->setPixmap(QPixmap::fromImage(QImage::QImage(fused_topview->data, fused_topview->cols, fused_topview->rows, fused_topview->step, QImage::Format_RGBA8888)));
-    ui->label_sv_detected_display->update();
     ui->label_fusion->update();
     qApp->processEvents();
 }

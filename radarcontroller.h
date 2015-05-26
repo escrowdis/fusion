@@ -45,7 +45,7 @@ class RadarController : public QObject, public TopView
     Q_OBJECT
 
 public:
-    explicit RadarController(float aim_angle);
+    explicit RadarController();
 
     ~RadarController();
 
@@ -67,6 +67,8 @@ public:
 
     bool isOpened() {return fg_data_in;}
 
+    int objSize() {return OBJECT_NUM;}
+
     int time_proc;
 
     // status
@@ -74,8 +76,6 @@ public:
 
     // tableView used
     QStandardItem* item;
-
-    float aim_angle;                    // device's aim (yaw) angle (degree)
 
     bool fg_topview;                    // check wether project to topview
 

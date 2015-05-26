@@ -1,9 +1,7 @@
 #include "radarcontroller.h"
 
-RadarController::RadarController(float aim_angle) : TopView(1, 100, 20470, 102.3, 31900, 600, 900, 300, 400)//TopView(1, 200, 3000, 19.8, 1080, 750, 270, 125, 100)
+RadarController::RadarController() : TopView(1, 100, 20470, 102.3, 31900, 600, 900, 300, 400)//TopView(1, 200, 3000, 19.8, 1080, 750, 270, 125, 100)
 {
-    this->aim_angle = aim_angle;
-
     fg_read = false;
     fg_data_in = false;
 

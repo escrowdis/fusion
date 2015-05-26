@@ -11,6 +11,9 @@ extern QDir project_path;
 // thread control
 #include <QReadWriteLock>
 extern QReadWriteLock lock_sv;
+extern QReadWriteLock lock_sv_data;
+extern QReadWriteLock lock_sv_object;
+extern QReadWriteLock lock_sv_mouse;
 extern QReadWriteLock lock_f_sv;
 
 // recording
@@ -73,13 +76,17 @@ public:
 
     bool open(int device_index_L, int device_index_R);
 
+    // check if cam is opened or not
     bool isOpened() {return fg_cam_opened;}
 
+    // close cam
     void close();
 
     bool loadRemapFile(int cam_focal_length, double base_line);
 
     int dataExec();
+
+    int objSize() {return obj_nums;}
 
     int guiUpdate();
 
@@ -221,7 +228,7 @@ private:
 
     // status ======================
     bool fg_cam_L, fg_cam_R;            // open or not
-    bool fg_cam_opened;
+    bool fg_cam_opened;                 // check if cams are opened
     bool fg_calib_loaded;               // load the calibration files or not
     QTime t;                            // control gui not to update too fast
     int time_gap;
@@ -264,10 +271,9 @@ private:
     cv::Mat img_match_R;
 
     // object information ==========
-public:
-    //**// temporary, it sould be private
     int obj_nums;                       // maximum object detection amount
 
+public:
     struct objInformation
     {
         // GRIDMAP -----------
@@ -281,6 +287,8 @@ public:
 
         int closest_count;              // smaller number represents closer to vehicle
 
+        cv::Point rect_tl, rect_br;
+
         // IMAGE -------------
         std::pair<int, int> tl;         // Top left (row, col)
         std::pair<int, int> br;         // Bottom right (row, col)
@@ -292,7 +300,6 @@ public:
 
         // TOPVIEW -----------
         cv::Rect rect;
-        cv::Point rect_tl, rect_br;
 
         objInformation() {
             labeled = false;

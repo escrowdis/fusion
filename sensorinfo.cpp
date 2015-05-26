@@ -8,7 +8,7 @@ SensorInfo::SensorInfo()
 
     // Initialization
     sv = new stereo_vision();
-    rc = new RadarController(0.0);
+    rc = new RadarController();
     lrf = new lrf_controller();
 
     pic_sv = QPixmap(20, 20);
@@ -226,7 +226,13 @@ void SensorInfo::drawFusedTopView(bool fg_sv, bool fg_sv_each, bool fg_radar)
             }
         }
         // objects
-        for (int k = 0; k < sv->obj_nums; k++) {
+        lock_f_sv.lockForWrite();
+        if (sv->img_r_L.empty())
+            sv->img_detected_display = cv::Mat::zeros(IMG_H, IMG_W, CV_8UC3);
+        else
+            sv->img_detected_display = sv->img_r_L.clone();
+        lock_f_sv.unlock();
+        for (int k = 0; k < sv->objSize(); k++) {
             if (d_sv[k].labeled) {
                 cv::Point plot_pt;
                 cv::Rect rect;
@@ -263,7 +269,7 @@ void SensorInfo::drawFusedTopView(bool fg_sv, bool fg_sv_each, bool fg_radar)
                 double radar_min_y;
 //                std::cout<<"SV: "<<sv_x<<" "<<sv_y<<std::endl;
                 if (fg_radar) {
-                    for (int m = 0 ; m < 64; m++) {
+                    for (int m = 0 ; m < rc->objSize(); m++) {
                         if (d_radar[m].status >= rc->obj_status_filtered) {
                             double radar_x = 100.0 * d_radar[m].range * sin(d_radar[m].angle * CV_PI / 180.0) + sensors[1].location.pos.x;
                             double radar_y = 100.0 * d_radar[m].range * cos(d_radar[m].angle * CV_PI / 180.0) + sensors[1].location.pos.y - vehicle.head_pos;
@@ -301,7 +307,7 @@ void SensorInfo::drawFusedTopView(bool fg_sv, bool fg_sv_each, bool fg_radar)
 
     device = SENSOR::RADAR;
     if (fg_radar) {
-        for (int m = 0; m < 64; m++) {
+        for (int m = 0; m < rc->objSize(); m++) {
             if (d_radar[m].status >= rc->obj_status_filtered) {
                 cv::Point plot_pt;
                 float range_world = pointTransformTopView(sensors[device].pos_pixel, 100 * d_radar[m].range, d_radar[m].angle + rc->aim_angle, &plot_pt);

@@ -20,8 +20,8 @@ stereoParamSGBM:
    pre_filter_cap: 63
    SAD_window_size: 13
    min_disp: 0
-   num_of_disp: 144
-   uniquenese_ratio: 13
+   num_of_disp: 80
+   uniquenese_ratio: 11
    speckle_window_size: 100
    speckle_range: 15
 stereoParamBM:

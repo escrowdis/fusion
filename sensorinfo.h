@@ -47,12 +47,27 @@ public:
     lrf_controller* lrf;
 
     // Sensors' information ===
+    //!
+    //! \brief Retrieving data from stereo vision.
+    //! \return int status
+    //!
     int svDataExec();
 
+    //!
+    //! \brief Retrieving data from radar.
+    //! \return int status
+    //!
     int radarDataExec();
 
+    //!
+    //! \brief Retrieving data from laser rangefinder.
+    //! \return bool receive status (not used. 20150525)
+    //!
     bool lrfDataExec();
 
+    //!
+    //! \brief Retrieving lrf data to buf.
+    //!
     void lrfBufExec();
     // Sensors' information === End
 
@@ -79,6 +94,15 @@ public:
     // Fusion ================= End
 
 private:
+    // sensor location
+    struct sensorLocation {
+        // sensor's position based on the center of vehicle. (cm) forward is x+, lateral right is y+.
+        cv::Point pos;
+
+        // Orientation of sensor (degree). Forward is set as zero and counting clockwisely.
+        float theta;
+    };
+
     // Fusion =================
     // topview
     int detection_range_pixel;                      // fused topview radius (pixel)
@@ -99,17 +123,18 @@ private:
 
     int font_thickness;
 
-    // information of objects detected by different sensors on fused topview
+    // Information of objects detected by different sensors
+    // Based on fused topview
     struct sensorInformation {
-        SensorBase::sensorLocation location;
+        sensorLocation location;                    // Sensor location
 
         cv::Point pos_pixel;                        // (pixel)
 
-        float angle_half_fov;                       // the half fov for displaying (deg)
+        float angle_half_fov;                       // the half fov for displaying (degree)
 
-        cv::Scalar color;                           // sensor's color on the topview
+        cv::Scalar color;                           // color of different sensors on the fused topview
 
-        cv::Scalar color_fov;
+        cv::Scalar color_fov;                       // color of fov lines
 
         sensorInformation() {
             pos_pixel = cv::Point(-1, -1);

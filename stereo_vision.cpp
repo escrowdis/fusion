@@ -434,7 +434,7 @@ void stereo_vision::depthCalculation()
     for (int k = 0; k < 2 * GROUND_RANGE + 1; k++)
         ground_filter[k] = 0;
 
-    lock_sv.lockForWrite();
+    lock_sv_data.lockForWrite();
     for (int r = 0; r < IMG_H; r++) {
 #ifdef opencv_cuda
         uchar* ptr_raw = (uchar*)(disp_raw.data + r * disp_raw.step);
@@ -502,6 +502,7 @@ void stereo_vision::depthCalculation()
         }
         //            std::cout<<std::endl;
     }
+    lock_sv_data.unlock();
 
     // ground filtering
     // ground mean computation
@@ -526,7 +527,6 @@ void stereo_vision::depthCalculation()
         std::cout<<"filter range "<<(ground_filter[(int)(ground_mean)] - 2 * thresh_ground_filter)<<"\t"<<(ground_filter[(int)(ground_mean)] + 2 * thresh_ground_filter)<<std::endl;
 #endif
     }
-    lock_sv.unlock();
 }
 
 bool stereo_vision::dataIn()
@@ -627,10 +627,10 @@ int stereo_vision::guiUpdate()
 
 void stereo_vision::getMouseCursorInfo(int y, int x, float &disp, cv::Point3i &pos3D)
 {
-    lock_sv.lockForRead();
+    lock_sv_mouse.lockForRead();
     disp = data[y][x].disp;
     pos3D = cv::Point3i(data[y][x].X, data[y][x].Y, data[y][x].Z);
-    lock_sv.unlock();
+    lock_sv_mouse.unlock();
 }
 
 void stereo_vision::pointProjectTopView()
@@ -669,7 +669,7 @@ void stereo_vision::pointProjectTopView()
                 int grid_col_t = grid_col;
                 if (grid_row_t >= 0 && grid_row_t < img_row &&
                         grid_col_t >= 0 && grid_col_t < img_col) {
-                    lock_sv.lockForWrite();
+                    lock_sv_data.lockForWrite();
                     // count the amount of point
                     grid_map[grid_row_t][grid_col_t].pts_num++;
                     // average the depth
@@ -678,7 +678,7 @@ void stereo_vision::pointProjectTopView()
 
                     // label the point to the belonging cell
                     data[r][c].grid_id = std::pair<int, int>(grid_row_t, grid_col_t);
-                    lock_sv.unlock();
+                    lock_sv_data.unlock();
                 }
             }
         }
@@ -725,13 +725,13 @@ void stereo_vision::blob(int thresh_pts_num)
 
                 std::stack<std::pair<int, int> > neighbors;
                 neighbors.push(std::pair<int, int>(r, c));
-                lock_sv.lockForWrite();
+                lock_sv_object.lockForWrite();
                 grid_map[r][c].obj_label = cur_label;
                 objects[cur_label].pts_num += grid_map[r][c].pts_num;
                 objects[cur_label].avg_Z += 1.0 * (grid_map[r][c].avg_Z - objects[cur_label].avg_Z) / count;
                 objects[cur_label].avg_X += 1.0 * (grid_map[r][c].avg_X - objects[cur_label].avg_X) / count;
 
-                lock_sv.unlock();
+                lock_sv_object.unlock();
 
                 while (!neighbors.empty()) {
                     std::pair<int, int> cur_pos = neighbors.top();
@@ -751,12 +751,12 @@ void stereo_vision::blob(int thresh_pts_num)
                             if (grid_map[r_now][c_now].pts_num >= thresh_free_space &&
                                     grid_map[r_now][c_now].obj_label == -1) {
                                 neighbors.push(std::pair<int, int>(r_now, c_now));
-                                lock_sv.lockForWrite();
+                                lock_sv_object.lockForWrite();
                                 grid_map[r_now][c_now].obj_label = cur_label;
                                 objects[cur_label].pts_num += grid_map[r_now][c_now].pts_num;
                                 objects[cur_label].avg_Z += 1.0 * (grid_map[r][c].avg_Z - objects[cur_label].avg_Z) / count;
                                 objects[cur_label].avg_X += 1.0 * (grid_map[r][c].avg_X - objects[cur_label].avg_X) / count;
-                                lock_sv.unlock();
+                                lock_sv_object.unlock();
                             }
                         }
                     }
@@ -847,18 +847,15 @@ void stereo_vision::pointProjectImage()
     lock_sv.lockForWrite();
     img_detected.setTo(0);
     lock_sv.unlock();
-    lock_f_sv.lockForWrite();
-    img_detected_display = img_r_L.clone();
-    lock_f_sv.unlock();
     for (int r = 0; r < IMG_H; r++) {
         uchar *ptr_o = img_r_L.ptr<uchar>(r);
         uchar *ptr_d = img_detected.ptr<uchar>(r);
         for (int c = 0; c < IMG_W; c++) {
             int grid_r, grid_c;
-            lock_sv.lockForRead();
+            lock_sv_data.lockForRead();
             grid_r = data[r][c].grid_id.first;
             grid_c = data[r][c].grid_id.second;
-            lock_sv.unlock();
+            lock_sv_data.unlock();
             if (grid_r == -1 || grid_c == -1 || data[r][c].disp <= 0)
                 continue;
             int label = grid_map[grid_r][grid_c].obj_label;
@@ -870,7 +867,7 @@ void stereo_vision::pointProjectImage()
                     objects[label].tl = std::pair<int, int>(r, c);
                 }
                 else {
-                    lock_sv.lockForWrite();
+                    lock_sv_object.lockForWrite();
                     if (objects[label].br.first < r)
                         objects[label].br.first = r;
                     if (objects[label].br.second < c)
@@ -879,7 +876,7 @@ void stereo_vision::pointProjectImage()
                         objects[label].tl.first = r;
                     if (objects[label].tl.second > c)
                         objects[label].tl.second = c;
-                    lock_sv.unlock();
+                    lock_sv_object.unlock();
                 }
 
                 // draw points
@@ -904,7 +901,7 @@ void stereo_vision::pointProjectImage()
     // draw region of detected objects
     int range_precision = 3;
     for (int i = 0; i < obj_nums; i++) {
-        lock_sv.lockForWrite();
+        lock_sv_object.lockForWrite();
         if (objects[i].labeled && objects[i].br != std::pair<int, int>(-1, -1) && objects[i].tl != std::pair<int, int>(-1, -1)) {
             // find center of rect
             objects[i].center = std::pair<int, int>(0.5 * (objects[i].tl.first + objects[i].br.first), 0.5 * (objects[i].tl.second + objects[i].br.second));
@@ -917,14 +914,14 @@ void stereo_vision::pointProjectImage()
             std::string distance_tag = QString::number(objects[i].range / 100.0, 'g', range_precision).toStdString() + " M";
             cv::putText(img_detected, distance_tag, cv::Point(objects[i].tl.second, objects[i].br.first - 5), cv::FONT_HERSHEY_COMPLEX_SMALL, 2, cv::Scalar(0, 0, 255), 2);
         }
-        lock_sv.unlock();
+        lock_sv_object.unlock();
     }
 }
 
 void stereo_vision::updateDataForDisplay()
 {
     for (int i = 0; i < obj_nums; i++) {
-        lock_sv.lockForRead();
+        lock_sv_object.lockForRead();
         objects_display[i].angle = objects[i].angle;
         objects_display[i].range = objects[i].range;
         objects_display[i].avg_Z = objects[i].avg_Z;
@@ -937,7 +934,7 @@ void stereo_vision::updateDataForDisplay()
         objects_display[i].tl = objects[i].tl;
         objects_display[i].rect = objects[i].rect;
         objects_display[i].color = objects[i].color;
-        lock_sv.unlock();
+        lock_sv_object.unlock();
     }
 }
 
