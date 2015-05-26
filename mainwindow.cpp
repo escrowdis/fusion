@@ -495,7 +495,8 @@ void MainWindow::dataFused()
     bool fg_sv = ui->checkBox_fusion_sv->isChecked() && si->sv->fusedTopview();
     bool fg_sv_each_pixel = ui->checkBox_fused_sv_plot_every_pixel->isChecked();
     bool fg_radar = ui->checkBox_fusion_radar->isChecked() && si->rc->fusedTopview();
-    si->drawFusedTopView(fg_sv, fg_sv_each_pixel, fg_radar);
+    bool fg_fusion = ui->checkBox_fusion_data->isChecked();
+    si->dataExec(fg_sv, fg_radar, fg_fusion, fg_sv_each_pixel);
 }
 
 void MainWindow::fusedDisplay(cv::Mat *fused_topview, cv::Mat *img_detected_display)
@@ -1725,4 +1726,28 @@ void MainWindow::on_checkBox_sv_ground_filter_clicked(bool checked)
         si->sv->setGroundFilter(true);
     else
         si->sv->setGroundFilter(false);
+}
+
+void MainWindow::on_checkBox_fusion_sv_clicked(bool checked)
+{
+    if (checked && ui->checkBox_fusion_radar->isChecked()) {
+        ui->checkBox_fusion_data->setEnabled(true);
+        ui->checkBox_fusion_data->setChecked(true);
+    }
+    else {
+        ui->checkBox_fusion_data->setEnabled(false);
+        ui->checkBox_fusion_data->setChecked(false);
+    }
+}
+
+void MainWindow::on_checkBox_fusion_radar_clicked(bool checked)
+{
+    if (checked && ui->checkBox_fusion_sv->isChecked()) {
+        ui->checkBox_fusion_data->setEnabled(true);
+        ui->checkBox_fusion_data->setChecked(true);
+    }
+    else {
+        ui->checkBox_fusion_data->setEnabled(false);
+        ui->checkBox_fusion_data->setChecked(false);
+    }
 }

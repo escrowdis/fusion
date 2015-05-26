@@ -27,7 +27,11 @@ SOURCES += main.cpp\
     recording/textrecord.cpp \
     recording/videorecord.cpp \
     sensorinfo.cpp \
-    sensorbase.cpp
+    sensorbase.cpp \
+    objectTracking/kalmanfilter.cpp \
+    objectTracking/objecttracking.cpp \
+    objectTracking/particlefilter.cpp \
+    collisionAvoidance/vectorfieldhistogram.cpp
 
 HEADERS  += mainwindow.h \
             lrf_controller.h \
@@ -42,7 +46,14 @@ HEADERS  += mainwindow.h \
     recording/textrecord.h \
     recording/videorecord.h \
     sensorinfo.h \
-    sensorbase.h
+    sensorbase.h \
+    objectTracking/kalmanfilter.h \
+    objectTracking/objecttracking.h \
+    objectTracking/particlefilter.h \
+    ui_calibrationform.h \
+    ui_mainwindow.h \
+    ui_stereomatchparamform.h \
+    collisionAvoidance/vectorfieldhistogram.h
 
 FORMS    += mainwindow.ui \
     calibrationform.ui \

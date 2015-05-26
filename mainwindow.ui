@@ -969,7 +969,7 @@ parameters</string>
      </rect>
     </property>
     <property name="currentIndex">
-     <number>1</number>
+     <number>3</number>
     </property>
     <widget class="QWidget" name="tab_7">
      <attribute name="title">
@@ -1235,7 +1235,7 @@ parameters</string>
        <rect>
         <x>810</x>
         <y>30</y>
-        <width>111</width>
+        <width>151</width>
         <height>56</height>
        </rect>
       </property>
@@ -1247,6 +1247,13 @@ parameters</string>
          </property>
          <property name="checked">
           <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="1">
+        <widget class="QLabel" name="label_fusion_sv_color">
+         <property name="text">
+          <string/>
          </property>
         </widget>
        </item>
@@ -1267,13 +1274,6 @@ parameters</string>
          </property>
         </widget>
        </item>
-       <item row="0" column="1">
-        <widget class="QLabel" name="label_fusion_sv_color">
-         <property name="text">
-          <string/>
-         </property>
-        </widget>
-       </item>
        <item row="0" column="0" rowspan="2">
         <spacer name="horizontalSpacer">
          <property name="orientation">
@@ -1286,6 +1286,16 @@ parameters</string>
           </size>
          </property>
         </spacer>
+       </item>
+       <item row="0" column="3" rowspan="2">
+        <widget class="QCheckBox" name="checkBox_fusion_data">
+         <property name="text">
+          <string>Fusion</string>
+         </property>
+         <property name="checked">
+          <bool>true</bool>
+         </property>
+        </widget>
        </item>
       </layout>
      </widget>

@@ -694,8 +694,8 @@ void stereo_vision::resetBlob()
         objects[i].tl = std::pair<int, int>(-1, -1);
         objects[i].br = std::pair<int, int>(-1, -1);
         objects[i].center = std::pair<int, int>(-1, -1);
-        objects[i].angle = 0.0;
-        objects[i].range = 0.0;
+        objects[i].pc.angle = 0.0;
+        objects[i].pc.range = 0.0;
         objects[i].avg_Z = 0;
         objects[i].avg_X = 0;
         objects[i].pts_num = 0;
@@ -905,13 +905,13 @@ void stereo_vision::pointProjectImage()
         if (objects[i].labeled && objects[i].br != std::pair<int, int>(-1, -1) && objects[i].tl != std::pair<int, int>(-1, -1)) {
             // find center of rect
             objects[i].center = std::pair<int, int>(0.5 * (objects[i].tl.first + objects[i].br.first), 0.5 * (objects[i].tl.second + objects[i].br.second));
-            objects[i].angle = atan(1.0 * (objects[i].avg_X) / objects[i].avg_Z) * 180.0 / CV_PI;
-            objects[i].range = sqrt(pow((double)(objects[i].avg_Z), 2) + pow((double)(objects[i].avg_X), 2));
+            objects[i].pc.angle = atan(1.0 * (objects[i].avg_X) / objects[i].avg_Z) * 180.0 / CV_PI;
+            objects[i].pc.range = sqrt(pow((double)(objects[i].avg_Z), 2) + pow((double)(objects[i].avg_X), 2));
 
             cv::rectangle(img_detected, cv::Rect(objects[i].tl.second, objects[i].tl.first, (objects[i].br.second - objects[i].tl.second), (objects[i].br.first - objects[i].tl.first)),
                           objects[i].color, thick_obj_rect, 8, 0);
             cv::circle(img_detected, cv::Point(objects[i].center.second, objects[i].center.first), radius_obj_point, cv::Scalar(0, 255, 0), -1, 8, 0);
-            std::string distance_tag = QString::number(objects[i].range / 100.0, 'g', range_precision).toStdString() + " M";
+            std::string distance_tag = QString::number(objects[i].avg_Z / 100.0, 'g', range_precision).toStdString() + " M";
             cv::putText(img_detected, distance_tag, cv::Point(objects[i].tl.second, objects[i].br.first - 5), cv::FONT_HERSHEY_COMPLEX_SMALL, 2, cv::Scalar(0, 0, 255), 2);
         }
         lock_sv_object.unlock();
@@ -922,8 +922,7 @@ void stereo_vision::updateDataForDisplay()
 {
     for (int i = 0; i < obj_nums; i++) {
         lock_sv_object.lockForRead();
-        objects_display[i].angle = objects[i].angle;
-        objects_display[i].range = objects[i].range;
+        objects_display[i].pc = objects[i].pc;
         objects_display[i].avg_Z = objects[i].avg_Z;
         objects_display[i].avg_X = objects[i].avg_X;
         objects_display[i].br = objects[i].br;

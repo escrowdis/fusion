@@ -11,6 +11,16 @@ SensorInfo::SensorInfo()
     rc = new RadarController();
     lrf = new lrf_controller();
 
+    // max. size of detected objects
+    int obj_size;
+    ot_sv = new ObjectTracking();
+    obj_size = sv->objSize();
+    ot_sv->initialze(obj_size);
+    ot_fused = new ObjectTracking();
+    // max. size of detected objects
+    obj_size = sv->objSize() + rc->objSize();
+    ot_fused->initialze(obj_size);
+
     pic_sv = QPixmap(20, 20);
     pic_radar = QPixmap(20, 20);
 }
@@ -20,6 +30,8 @@ SensorInfo::~SensorInfo()
     delete sv;
     delete rc;
     delete lrf;
+    delete ot_sv;
+    delete ot_fused;
     delete[] sensors;
 }
 
@@ -198,12 +210,55 @@ void SensorInfo::zoomInFusedTopView()
                     detection_range - gap : min_detection_range;
 }
 
-void SensorInfo::drawFusedTopView(bool fg_sv, bool fg_sv_each, bool fg_radar)
+void SensorInfo::dataExec(bool fg_sv, bool fg_radar, bool fg_fusion, bool fg_sv_each)
+{
+    dataProcess(fg_sv, fg_radar);
+
+    if (fg_fusion && (fg_sv && fg_radar))
+        dataFusion();
+
+    drawFusedTopView(fg_sv, fg_radar, fg_sv_each);
+}
+
+void SensorInfo::dataProcess(bool fg_sv, bool fg_radar)
+{
+    stereo_vision::objInformation *d_sv = sv->objects_display;
+    RadarController::ESR_track_object_info *d_radar = rc->esr_obj;
+
+    // Stereo vision
+    int device = SENSOR::SV;
+    if (fg_sv) {
+        lock_f_sv.lockForWrite();
+        for (int k = 0; k < sv->objSize(); k++) {
+            d_sv[k].pc_world = coordinateTransform(CT_SCS2WCS, sensors[device].pos_pixel, d_sv[k].pc);
+            d_sv[k].plot_pt_f = point2FusedTopView(sensors[device].pos_pixel, d_sv[k].pc);
+            d_sv[k].rect_f = rectOnFusedTopView(d_sv[k].plot_pt_f, d_sv[k].rect);
+        }
+        lock_f_sv.unlock();
+    }
+    // RADAR
+    device = SENSOR::RADAR;
+    if (fg_radar) {
+        for (int m = 0; m < rc->objSize(); m++) {
+            d_radar[m].pc = SensorBase::PC(100 * d_radar[m].range, d_radar[m].angle + sensors[device].location.theta);
+            d_radar[m].plot_pt_f = point2FusedTopView(sensors[device].pos_pixel, d_radar[m].pc);
+            d_radar[m].pc_world = coordinateTransform(CT_SCS2WCS, sensors[device].pos_pixel, d_radar[m].pc);
+        }
+    }
+}
+
+void SensorInfo::dataFusion()
+{
+
+}
+
+void SensorInfo::drawFusedTopView(bool fg_sv, bool fg_radar, bool fg_sv_each)
 {
     stereo_vision::objInformation *d_sv = sv->objects_display;
     RadarController::ESR_track_object_info *d_radar = rc->esr_obj;
     fused_topview.setTo(cv::Scalar(0, 0, 0, 0));
 
+    // Sensor - Stereo vision
     std::string tag;
     int device = SENSOR::SV;
     int range_precision = 3;
@@ -215,11 +270,9 @@ void SensorInfo::drawFusedTopView(bool fg_sv, bool fg_sv_each, bool fg_radar)
             for (int r = 0; r < IMG_H; r++) {
                 for (int c = 0; c < IMG_W; c++) {
                     if (sv->data[r][c].disp > 0) {
-                        cv::Point plot_pt;
-                        float range, angle;
-                        range = sqrt(pow((double)(sv->data[r][c].Z), 2) + pow((double)(sv->data[r][c].X), 2));
-                        angle = atan(1.0 * sv->data[r][c].X / (1.0 * sv->data[r][c].Z)) * 180.0 / CV_PI;
-                        pointTransformTopView(sensors[device].pos_pixel, range, angle, &plot_pt);
+                        SensorBase::PC pc = SensorBase::PC(sqrt(pow((double)(sv->data[r][c].Z), 2) + pow((double)(sv->data[r][c].X), 2)),
+                                                           atan(1.0 * sv->data[r][c].X / (1.0 * sv->data[r][c].Z)) * 180.0 / CV_PI);
+                        cv::Point plot_pt = point2FusedTopView(sensors[device].pos_pixel, pc);
                         cv::circle(fused_topview, plot_pt, 1, color_pixel, -1, 8, 0);
                     }
                 }
@@ -234,37 +287,29 @@ void SensorInfo::drawFusedTopView(bool fg_sv, bool fg_sv_each, bool fg_radar)
         lock_f_sv.unlock();
         for (int k = 0; k < sv->objSize(); k++) {
             if (d_sv[k].labeled) {
-                cv::Point plot_pt;
-                cv::Rect rect;
-                PC pc = PC(d_sv[k].range, d_sv[k].angle);
-                float range_world = pointTransformTopView(sensors[device].pos_pixel, pc.range, pc.angle, &plot_pt, d_sv[k].rect, &rect);
-                cv::circle(fused_topview, plot_pt, thickness, sensors[device].color, -1, 8, 0);
-                cv::rectangle(fused_topview, rect, cv::Scalar(255, 255, 0, 255), 1, 8, 0);
-                tag = QString::number(k).toStdString() + ", " + QString::number(range_world / 100, 'g', range_precision).toStdString();
-                cv::putText(fused_topview, tag, plot_pt, font, font_size, sensors[device].color, font_thickness);
-
+                cv::circle(fused_topview, d_sv[k].plot_pt_f, thickness, sensors[device].color, -1, 8, 0);
+                cv::rectangle(fused_topview, d_sv[k].rect_f, cv::Scalar(255, 255, 0, 255), 1, 8, 0);
+                tag = QString::number(k).toStdString() + ", " + QString::number(d_sv[k].pc_world.range / 100, 'g', range_precision).toStdString();
+                cv::putText(fused_topview, tag, d_sv[k].plot_pt_f, font, font_size, sensors[device].color, font_thickness);
                 // calculate world range and angle
                 int range_precision = 3;
                 if (d_sv[k].br != std::pair<int, int>(-1, -1) && d_sv[k].tl != std::pair<int, int>(-1, -1)) {
-                    PC pc_world = rangeWorldCalculation(sensors[SENSOR::SV].location.pos, pc);
-
-                    lock_f_sv.lockForWrite();
+                    lock_f_sv.lockForRead();
                     cv::rectangle(sv->img_detected_display, cv::Rect(d_sv[k].tl.second, d_sv[k].tl.first, (d_sv[k].br.second - d_sv[k].tl.second), (d_sv[k].br.first - d_sv[k].tl.first)),
                                   d_sv[k].color, sv->thick_obj_rect, 8, 0);
                     cv::circle(sv->img_detected_display, cv::Point(d_sv[k].center.second, d_sv[k].center.first), sv->radius_obj_point, cv::Scalar(0, 255, 0), -1, 8, 0);
-                    std::string distance_tag = QString::number(pc_world.range / 100.0, 'g', range_precision).toStdString() + " M";
+                    std::string distance_tag = QString::number(d_sv[k].pc_world.range / 100.0, 'g', range_precision).toStdString() + " M";
                     cv::putText(sv->img_detected_display, distance_tag, cv::Point(d_sv[k].tl.second, d_sv[k].br.first - 5), cv::FONT_HERSHEY_COMPLEX_SMALL, 2, cv::Scalar(0, 0, 255), 2);
                     lock_f_sv.unlock();
                 }
 
-
                 // Fusion ================================
                 double U_D = 500;    // max distance error (cm)
-                double R_sv = U_D * range_world / sv->max_distance;  // (cm)
+                double R_sv = U_D * d_sv[k].pc_world.range / sv->max_distance;  // (cm)
                 int closest_radar_id = -1;
                 double closest_radar_distance = 10000000.0;
-                double sv_x = pc.range * sin(pc.angle * CV_PI / 180.0) + sensors[0].location.pos.x;
-                double sv_y = pc.range * cos(pc.angle * CV_PI / 180.0) + sensors[0].location.pos.y - vehicle.head_pos;
+                double sv_x = d_sv[k].pc.range * sin(d_sv[k].pc.angle * CV_PI / 180.0) + sensors[0].location.pos.x;
+                double sv_y = d_sv[k].pc.range * cos(d_sv[k].pc.angle * CV_PI / 180.0) + sensors[0].location.pos.y - vehicle.head_pos;
                 double radar_min_x;
                 double radar_min_y;
 //                std::cout<<"SV: "<<sv_x<<" "<<sv_y<<std::endl;
@@ -297,7 +342,7 @@ void SensorInfo::drawFusedTopView(bool fg_sv, bool fg_sv_each, bool fg_radar)
                         fused_pos = cv::Point2d(fused_x, fused_y);
                         cv::circle(fused_topview, cv::Point(fused_pos), thickness + 2, cv::Scalar(139, 0, 139, 255), -1, 8, 0);
                         tag = QString::number(range / 100, 'g', range_precision).toStdString();
-                        cv::putText(fused_topview, tag, cv::Point(plot_pt.x - 50, plot_pt.y), font, font_size, cv::Scalar(139, 0, 139, 255), font_thickness);
+                        cv::putText(fused_topview, tag, cv::Point(d_sv[k].plot_pt_f.x - 50, d_sv[k].plot_pt_f.y), font, font_size, cv::Scalar(139, 0, 139, 255), font_thickness);
 //                        std::cout<<k<<" "<<closest_radar_id<<"\t"<<range<<std::endl;
                     }
                 }
@@ -305,63 +350,59 @@ void SensorInfo::drawFusedTopView(bool fg_sv, bool fg_sv_each, bool fg_radar)
         }
     }
 
+    // Sensor - RADAR
     device = SENSOR::RADAR;
     if (fg_radar) {
         for (int m = 0; m < rc->objSize(); m++) {
             if (d_radar[m].status >= rc->obj_status_filtered) {
-                cv::Point plot_pt;
-                float range_world = pointTransformTopView(sensors[device].pos_pixel, 100 * d_radar[m].range, d_radar[m].angle + rc->aim_angle, &plot_pt);
-                cv::circle(fused_topview, plot_pt, thickness, sensors[device].color, -1, 8, 0);
-                tag = QString::number(m).toStdString() + ", " + QString::number(range_world / 100, 'g', range_precision).toStdString();
-                cv::putText(fused_topview, tag, cv::Point(plot_pt.x, plot_pt.y + 15), font, font_size, sensors[device].color, font_thickness);
+                cv::circle(fused_topview, d_radar[m].plot_pt_f, thickness, sensors[device].color, -1, 8, 0);
+                tag = QString::number(m).toStdString() + ", " + QString::number(d_radar[m].pc_world.range / 100, 'g', range_precision).toStdString();
+                cv::putText(fused_topview, tag, cv::Point(d_radar[m].plot_pt_f.x, d_radar[m].plot_pt_f.y + 15), font, font_size, sensors[device].color, font_thickness);
             }
         }
     }
 
-
     emit updateGUI(&fused_topview, &sv->img_detected_display);
 }
 
-double SensorInfo::pointTransformTopView(cv::Point sensor_pos, double range, double angle, cv::Point *output)
+SensorBase::PC SensorInfo::coordinateTransform(int type, cv::Point sensor_pos, SensorBase::PC pc_in)
 {
-    double x_tmp, y_tmp; // (cm)
-    x_tmp = range * sin(angle * CV_PI / 180.0);
-    y_tmp = range * cos(angle * CV_PI / 180.0);
-    output->x = vehicle.VCP.x + (x_tmp * ratio + sensor_pos.x);
-    output->y = vehicle.VCP.y - (y_tmp * ratio + sensor_pos.y);
+    double range = pc_in.range;
+    double angle = pc_in.angle;
+    SensorBase::PC pc_out;
+    switch (type) {
+    case CT_SCS2WCS:
+        double x_world, z_world; // (cm)
+        x_world = (double)(range * sin(angle * CV_PI / 180.0) + sensor_pos.x);
+        z_world = (double)(range * cos(angle * CV_PI / 180.0) + sensor_pos.y - vehicle.head_pos);
 
-    return sqrt(pow((double)(x_tmp + sensor_pos.x / ratio), 2) + pow((double)(y_tmp + sensor_pos.y / ratio - vehicle.head_pos), 2));
+        pc_out.angle = atan(x_world / z_world);
+        pc_out.range = sqrt(pow(x_world, 2) + pow(z_world, 2));
+        break;
+    case CT_WCS2SCS:
+        break;
+    }
+
+    return pc_out;
 }
 
-double SensorInfo::pointTransformTopView(cv::Point sensor_pos, double range, double angle, cv::Point *output, cv::Rect rect_in, cv::Rect *rect)
+cv::Point SensorInfo::point2FusedTopView(cv::Point sensor_pos, SensorBase::PC pc)
 {
     double x_tmp, z_tmp; // (cm)
-    x_tmp = range * sin(angle * CV_PI / 180.0);
-    z_tmp = range * cos(angle * CV_PI / 180.0);
-    output->x = vehicle.VCP.x + (x_tmp * ratio + sensor_pos.x);
-    output->y = vehicle.VCP.y - (z_tmp * ratio + sensor_pos.y);
-    *rect = cv::Rect(vehicle.VCP.x + (rect_in.tl().x * ratio + sensor_pos.x),
-                     vehicle.VCP.y - (rect_in.tl().y * ratio + sensor_pos.y),
-                     (rect_in.br().x - rect_in.tl().x) * ratio, abs(rect_in.br().y - rect_in.tl().y) * ratio);
+    x_tmp = pc.range * sin(pc.angle * CV_PI / 180.0);
+    z_tmp = pc.range * cos(pc.angle * CV_PI / 180.0);
+    int out_x, out_y;
+    out_x = vehicle.VCP.x + (x_tmp * ratio + sensor_pos.x);
+    out_y = vehicle.VCP.y - (z_tmp * ratio + sensor_pos.y);
 
-//    std::cout<<rect->tl().x<<"\t"<<rect->tl().y<<"\t"<<rect->width<<"\t"<<rect->height<<"\t\t"<<
-//            rect_in.tl().x<<"\t"<<rect_in.tl().y<<"\t"<<rect_in.width<<"\t"<<rect_in.height<<std::endl;
-
-    return sqrt(pow((double)(x_tmp + sensor_pos.x / ratio), 2) + pow((double)(z_tmp + sensor_pos.y / ratio - vehicle.head_pos), 2));
+    return cv::Point(out_x, out_y);
 }
 
-SensorBase::PC SensorInfo::rangeWorldCalculation(cv::Point sensor_pos, SensorBase::PC pc)
+cv::Rect SensorInfo::rectOnFusedTopView(cv::Point pt_pixel, cv::Rect rect_in)
 {
-    double range = pc.range;
-    double angle = pc.angle;
-    double x_world, z_world; // (cm)
-    x_world = (double)(range * sin(angle * CV_PI / 180.0) + sensor_pos.x);
-    z_world = (double)(range * cos(angle * CV_PI / 180.0) + sensor_pos.y - vehicle.head_pos);
-
-    SensorBase::PC pc_tmp;
-    pc_tmp.angle = atan(x_world / z_world);
-    pc_tmp.range = sqrt(pow(x_world, 2) + pow(z_world, 2));
-    return pc_tmp;
+    double w_pixel = rect_in.width * ratio;
+    double h_pixel = rect_in.height * ratio;
+    return cv::Rect(pt_pixel.x - w_pixel * 0.5, pt_pixel.y - h_pixel * 0.5, w_pixel, h_pixel);
 }
 
 int SensorInfo::svDataExec()

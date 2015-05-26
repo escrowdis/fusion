@@ -24,6 +24,9 @@ extern recording re;
 // topview
 #include "topview.h"
 
+// Sensor base
+#include "sensorbase.h"
+
 #define OBJECT_NUM 64
 
 namespace RADAR {
@@ -40,7 +43,7 @@ enum INPUT_SOURCE {
 };
 }
 
-class RadarController : public QObject, public TopView
+class RadarController : public QObject, public TopView, public SensorBase
 {
     Q_OBJECT
 
@@ -85,6 +88,7 @@ public:
     int update_count;
 
     struct ESR_track_object_info{
+        // SENSOR ============
         float angle;                    // azimuth degree. Middle is zero. From -51.2 to 51.1. (degree)
         bool bridge_object;             // non-functional
         bool grouping_changed;
@@ -100,6 +104,16 @@ public:
         double x;                       // radar coordinates system (cm)
         double y;
         double z;
+
+        //
+        // TOPVIEW -----------
+        PC pc;
+
+        // FUSED TOPVIEW -----
+        cv::Point plot_pt_f;            // (pixel)
+
+        // WCS ===============
+        PC pc_world;                    // (cm)
     };
 
     ESR_track_object_info* esr_obj;

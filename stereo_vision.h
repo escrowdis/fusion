@@ -30,6 +30,9 @@ extern recording re;
 // topview
 #include "topview.h"
 
+// Sensor base
+#include "sensorbase.h"
+
 #define IMG_W 640
 #define IMG_H 480
 #define IMG_W_HALF 320
@@ -61,7 +64,7 @@ enum INPUT_SOURCE {
 };
 }
 
-class stereo_vision : public QObject, public TopView
+class stereo_vision : public QObject, public TopView, public SensorBase
 {
     Q_OBJECT
 
@@ -276,6 +279,7 @@ private:
 public:
     struct objInformation
     {
+        // SENSOR ============
         // GRIDMAP -----------
         int pts_num;
 
@@ -295,19 +299,26 @@ public:
         std::pair<int, int> center;     // Center point of object in image (row, col)
         cv::Scalar color;               // object's color
 
-        float angle;                    // orientation degree. Middle is zero. (degree)
-        float range;                    // (cm)
-
         // TOPVIEW -----------
-        cv::Rect rect;
+        cv::Rect rect;                  // (pixel)
+
+        PC pc;
+
+        // FUSED TOPVIEW -----
+        cv::Rect rect_f;                // (pixel)
+
+        cv::Point plot_pt_f;            // (pixel)
+
+        // WCS ===============
+        cv::Rect rect_world;            // (cm)
+
+        PC pc_world;                    // (cm)
 
         objInformation() {
             labeled = false;
             tl = std::pair<int, int>(-1, -1);
             br = std::pair<int, int>(-1, -1);
             center = std::pair<int, int>(-1, -1);
-            angle = 0.0;
-            range = 0.0;
             avg_Z = 0;
             avg_X = 0;
             pts_num = 0;

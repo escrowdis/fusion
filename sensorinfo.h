@@ -3,9 +3,6 @@
 
 #include <opencv2/opencv.hpp>
 
-// sensor base
-#include "sensorbase.h"
-
 // Laser range finder controller
 #include "lrf_controller.h"
 
@@ -15,6 +12,9 @@
 
 // Radar ESR controller
 #include "radarcontroller.h"
+
+// Object tracking
+#include "objectTracking/objecttracking.h"
 
 namespace SENSOR {
 enum {
@@ -31,7 +31,11 @@ enum {
 };
 }
 
-class SensorInfo : public QObject, public SensorBase
+//! SensorInfor class
+//!
+//! \brief This class deals with all the sensors' information and also fused one.
+//!
+class SensorInfo : public QObject
 {
     Q_OBJECT
 
@@ -45,6 +49,10 @@ public:
     RadarController* rc;
 
     lrf_controller* lrf;
+
+    ObjectTracking* ot_sv;
+
+    ObjectTracking* ot_fused;
 
     // Sensors' information ===
     //!
@@ -84,9 +92,13 @@ public:
 
     void updateFusedTopView();
 
-    void drawFusedTopView(bool fg_sv, bool fg_sv_each, bool fg_radar);
+    void dataExec(bool fg_sv, bool fg_radar, bool fg_fusion, bool fg_sv_each);
 
-    void dataFused();
+    void dataProcess(bool fg_sv, bool fg_radar);
+
+    void dataFusion();
+
+    void drawFusedTopView(bool fg_sv, bool fg_radar, bool fg_sv_each);
 
     void zoomOutFusedTopView();
 
@@ -165,9 +177,21 @@ private:
 
     int gap = 500;
 
-    PC rangeWorldCalculation(cv::Point sensor_pos, PC pc);
-    double pointTransformTopView(cv::Point sensor_pos, double range, double angle, cv::Point *output);
-    double pointTransformTopView(cv::Point sensor_pos, double range, double angle, cv::Point *output, cv::Rect rect_in, cv::Rect *rect);
+    enum {
+        CT_WCS2SCS,
+        CT_SCS2WCS
+    };
+
+    //!
+    //! \brief coordinateTransform. The transformation of coordinates system
+    //! \param int type
+    //! \param cv::Point sensor_pos
+    //! \param SensorBase::PC pc_in
+    //! \return SensorBase::PC pc_out
+    //!
+    SensorBase::PC coordinateTransform(int type, cv::Point sensor_pos, SensorBase::PC pc_in);
+    cv::Rect rectOnFusedTopView(cv::Point pt_pixel, cv::Rect rect_in);
+    cv::Point point2FusedTopView(cv::Point sensor_pos, SensorBase::PC pc);
     // Fusion ================= End
 
 signals:

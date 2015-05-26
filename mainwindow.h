@@ -360,6 +360,8 @@ private slots:
     void on_radioButton_vehicle_car_clicked();
     void on_checkBox_sv_ground_filter_clicked(bool checked);
     void on_pushButton_radar_step_clicked();
+    void on_checkBox_fusion_sv_clicked(bool checked);
+    void on_checkBox_fusion_radar_clicked(bool checked);
 };
 
 // Mouse control ==========
