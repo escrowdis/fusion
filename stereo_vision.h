@@ -276,6 +276,35 @@ private:
     // object information ==========
     int obj_nums;                       // maximum object detection amount
 
+    bool fg_om_existed;
+    bool fg_om_prev_existed;
+
+    int om_size;
+    int om_prev_size;
+
+    int om_obj_num;
+    int om_prev_obj_num;
+
+    std::vector<cv::Point> corr_id_map_Bha;
+
+    struct objMatchingInfo
+    {
+        SensorBase::PC pc;
+
+        cv::Mat img;
+
+        cv::Mat H_img;
+
+        cv::Mat H_hist;
+
+        bool fg_Bha_check;
+    };
+
+    objMatchingInfo *om;
+    objMatchingInfo *om_prev;
+
+    void resetObjMatching();
+
 public:
     struct objInformation
     {
@@ -289,6 +318,8 @@ public:
 
         int avg_X;
 
+        int avg_Y;
+
         int closest_count;              // smaller number represents closer to vehicle
 
         cv::Point rect_tl, rect_br;
@@ -298,6 +329,7 @@ public:
         std::pair<int, int> br;         // Bottom right (row, col)
         std::pair<int, int> center;     // Center point of object in image (row, col)
         cv::Scalar color;               // object's color
+        cv::Mat img;                    // object's image
 
         // TOPVIEW -----------
         cv::Rect rect;                  // (pixel)
@@ -314,6 +346,8 @@ public:
 
         PC pc_world;                    // (cm)
 
+        int prev_id;
+
         objInformation() {
             labeled = false;
             tl = std::pair<int, int>(-1, -1);
@@ -321,6 +355,7 @@ public:
             center = std::pair<int, int>(-1, -1);
             avg_Z = 0;
             avg_X = 0;
+            avg_Y = 0;
             pts_num = 0;
             closest_count = 0;
         }
@@ -363,6 +398,14 @@ private:
 
     void pointProjectImage();
     // Topview ===================== End
+
+    // Object Matching =============
+    void splitOneOut(int channel, cv::Mat src, cv::Mat *dst);
+    // Object Matching ============= End
+
+    // Object matching =============
+    void objectMatching();
+    // Object matching ============= End
 
 private slots:
     // BM ===========================

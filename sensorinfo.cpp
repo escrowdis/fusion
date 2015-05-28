@@ -11,15 +11,16 @@ SensorInfo::SensorInfo()
     rc = new RadarController();
     lrf = new lrf_controller();
 
+    fg_fusion = false;
+
     // max. size of detected objects
-    int obj_size;
     ot_sv = new ObjectTracking();
-    obj_size = sv->objSize();
-    ot_sv->initialze(obj_size);
+    ot_sv->initialze(sv->objSize());
+    ot_radar = new ObjectTracking();
+    ot_radar->initialze(rc->objSize());
     ot_fused = new ObjectTracking();
     // max. size of detected objects
-    obj_size = sv->objSize() + rc->objSize();
-    ot_fused->initialze(obj_size);
+    ot_fused->initialze(sv->objSize() + rc->objSize());
 
     pic_sv = QPixmap(20, 20);
     pic_radar = QPixmap(20, 20);
@@ -31,6 +32,7 @@ SensorInfo::~SensorInfo()
     delete rc;
     delete lrf;
     delete ot_sv;
+    delete ot_radar;
     delete ot_fused;
     delete[] sensors;
 }
@@ -214,8 +216,8 @@ void SensorInfo::dataExec(bool fg_sv, bool fg_radar, bool fg_fusion, bool fg_sv_
 {
     dataProcess(fg_sv, fg_radar);
 
-    if (fg_fusion && (fg_sv && fg_radar))
-        dataFusion();
+    this->fg_fusion = fg_fusion && (fg_sv && fg_radar);
+    dataFusion();
 
     drawFusedTopView(fg_sv, fg_radar, fg_sv_each);
 }
@@ -230,9 +232,12 @@ void SensorInfo::dataProcess(bool fg_sv, bool fg_radar)
     if (fg_sv) {
         lock_f_sv.lockForWrite();
         for (int k = 0; k < sv->objSize(); k++) {
-            d_sv[k].pc_world = coordinateTransform(CT_SCS2WCS, sensors[device].pos_pixel, d_sv[k].pc);
-            d_sv[k].plot_pt_f = point2FusedTopView(sensors[device].pos_pixel, d_sv[k].pc);
-            d_sv[k].rect_f = rectOnFusedTopView(d_sv[k].plot_pt_f, d_sv[k].rect);
+            if (d_sv[k].labeled) {
+                d_sv[k].pc_world = coordinateTransform(CT_SCS2WCS, sensors[device].pos_pixel, d_sv[k].pc);
+                d_sv[k].plot_pt_f = point2FusedTopView(sensors[device].pos_pixel, d_sv[k].pc);
+                d_sv[k].rect_f = rectOnFusedTopView(d_sv[k].plot_pt_f, d_sv[k].rect);
+
+            }
         }
         lock_f_sv.unlock();
     }
@@ -240,16 +245,68 @@ void SensorInfo::dataProcess(bool fg_sv, bool fg_radar)
     device = SENSOR::RADAR;
     if (fg_radar) {
         for (int m = 0; m < rc->objSize(); m++) {
-            d_radar[m].pc = SensorBase::PC(100 * d_radar[m].range, d_radar[m].angle + sensors[device].location.theta);
-            d_radar[m].plot_pt_f = point2FusedTopView(sensors[device].pos_pixel, d_radar[m].pc);
-            d_radar[m].pc_world = coordinateTransform(CT_SCS2WCS, sensors[device].pos_pixel, d_radar[m].pc);
+            if (d_radar[m].status >= rc->obj_status_filtered) {
+                d_radar[m].pc = SensorBase::PC(100 * d_radar[m].range, d_radar[m].angle + sensors[device].location.theta);
+                d_radar[m].plot_pt_f = point2FusedTopView(sensors[device].pos_pixel, d_radar[m].pc);
+                d_radar[m].pc_world = coordinateTransform(CT_SCS2WCS, sensors[device].pos_pixel, d_radar[m].pc);
+            }
         }
     }
 }
 
 void SensorInfo::dataFusion()
 {
+    if (!fg_fusion)
+        return;
 
+    stereo_vision::objInformation *d_sv = sv->objects_display;
+    RadarController::ESR_track_object_info *d_radar = rc->esr_obj;
+
+    std::string tag;
+    int range_precision = 3;
+
+    for (int k = 0; k < sv->objSize(); k++) {
+        double U_D = 500;    // max distance error (cm)
+        double R_sv = U_D * d_sv[k].pc_world.range / sv->max_distance;  // (cm)
+        int closest_radar_id = -1;
+        double closest_radar_distance = 10000000.0;
+        double sv_x = d_sv[k].pc.range * sin(d_sv[k].pc.angle * CV_PI / 180.0) + sensors[0].location.pos.x;
+        double sv_y = d_sv[k].pc.range * cos(d_sv[k].pc.angle * CV_PI / 180.0) + sensors[0].location.pos.y - vehicle.head_pos;
+        double radar_min_x;
+        double radar_min_y;
+    //    std::cout<<"SV: "<<sv_x<<" "<<sv_y<<std::endl;
+        for (int m = 0; m < rc->objSize(); m++) {
+            if (d_radar[m].status >= rc->obj_status_filtered) {
+                double radar_x = 100.0 * d_radar[m].range * sin(d_radar[m].angle * CV_PI / 180.0) + sensors[1].location.pos.x;
+                double radar_y = 100.0 * d_radar[m].range * cos(d_radar[m].angle * CV_PI / 180.0) + sensors[1].location.pos.y - vehicle.head_pos;
+                double deviation = sqrt(pow((double)(radar_x - sv_x), 2) + pow((double)(radar_y - sv_y), 2));
+//                std::cout<<deviation<<" "<<closest_radar_distance<<" "<<R_sv<<std::endl;
+//                std::cout<<"RADAR: "<<radar_x<<" "<<radar_y<<std::endl;
+                if (deviation < closest_radar_distance && deviation < R_sv) {
+                    closest_radar_id = m;
+                    closest_radar_distance = deviation;
+                    radar_min_x = radar_x;
+                    radar_min_y = radar_y;
+                }
+//                std::cout<<"dist. "<<sv_x<<" "<<sv_y<<"\t"<<radar_x<<" "<<radar_y<<std::endl;
+            }
+        }
+
+        if (closest_radar_id != -1) {
+            cv::Point2d fused_pos;
+            float ratio_radar = 0.9;
+            float ratio_sv = 0.1;
+            double fused_x = vehicle.VCP.x + (ratio_radar * radar_min_x + ratio_sv * sv_x) * ratio;
+            double fused_y = vehicle.VCP.y - (ratio_radar * radar_min_y + ratio_sv * sv_y) * ratio;
+            double range = sqrt(pow((double)(0.1 * (sv_x + sensors[0].location.pos.x) + 0.9 * (radar_min_x + sensors[0].location.pos.x)), 2) +
+                    pow((double)(0.1 * (sv_y + sensors[1].location.pos.y) + 0.9 * (radar_min_y + sensors[1].location.pos.y) - vehicle.head_pos), 2));
+            fused_pos = cv::Point2d(fused_x, fused_y);
+            cv::circle(fused_topview, cv::Point(fused_pos), thickness + 2, cv::Scalar(139, 0, 139, 255), -1, 8, 0);
+            tag = QString::number(range / 100, 'g', range_precision).toStdString();
+            cv::putText(fused_topview, tag, cv::Point(fused_pos.x - 50, fused_pos.y), font, font_size, cv::Scalar(139, 0, 139, 255), font_thickness);
+//            std::cout<<k<<" "<<closest_radar_id<<"\t"<<range<<std::endl;
+        }
+    }
 }
 
 void SensorInfo::drawFusedTopView(bool fg_sv, bool fg_radar, bool fg_sv_each)
@@ -301,50 +358,6 @@ void SensorInfo::drawFusedTopView(bool fg_sv, bool fg_radar, bool fg_sv_each)
                     std::string distance_tag = QString::number(d_sv[k].pc_world.range / 100.0, 'g', range_precision).toStdString() + " M";
                     cv::putText(sv->img_detected_display, distance_tag, cv::Point(d_sv[k].tl.second, d_sv[k].br.first - 5), cv::FONT_HERSHEY_COMPLEX_SMALL, 2, cv::Scalar(0, 0, 255), 2);
                     lock_f_sv.unlock();
-                }
-
-                // Fusion ================================
-                double U_D = 500;    // max distance error (cm)
-                double R_sv = U_D * d_sv[k].pc_world.range / sv->max_distance;  // (cm)
-                int closest_radar_id = -1;
-                double closest_radar_distance = 10000000.0;
-                double sv_x = d_sv[k].pc.range * sin(d_sv[k].pc.angle * CV_PI / 180.0) + sensors[0].location.pos.x;
-                double sv_y = d_sv[k].pc.range * cos(d_sv[k].pc.angle * CV_PI / 180.0) + sensors[0].location.pos.y - vehicle.head_pos;
-                double radar_min_x;
-                double radar_min_y;
-//                std::cout<<"SV: "<<sv_x<<" "<<sv_y<<std::endl;
-                if (fg_radar) {
-                    for (int m = 0 ; m < rc->objSize(); m++) {
-                        if (d_radar[m].status >= rc->obj_status_filtered) {
-                            double radar_x = 100.0 * d_radar[m].range * sin(d_radar[m].angle * CV_PI / 180.0) + sensors[1].location.pos.x;
-                            double radar_y = 100.0 * d_radar[m].range * cos(d_radar[m].angle * CV_PI / 180.0) + sensors[1].location.pos.y - vehicle.head_pos;
-                            double deviation = sqrt(pow((double)(radar_x - sv_x), 2) + pow((double)(radar_y - sv_y), 2));
-//                            std::cout<<deviation<<" "<<closest_radar_distance<<" "<<R_sv<<std::endl;
-//                            std::cout<<"RADAR: "<<radar_x<<" "<<radar_y<<std::endl;
-                            if (deviation < closest_radar_distance && deviation < R_sv) {
-                                closest_radar_id = m;
-                                closest_radar_distance = deviation;
-                                radar_min_x = radar_x;
-                                radar_min_y = radar_y;
-                            }
-//                            std::cout<<"dist. "<<sv_x<<" "<<sv_y<<"\t"<<radar_x<<" "<<radar_y<<std::endl;
-                        }
-                    }
-
-                    if (closest_radar_id != -1) {
-                        cv::Point2d fused_pos;
-                        float ratio_radar = 0.9;
-                        float ratio_sv = 0.1;
-                        double fused_x = vehicle.VCP.x + (ratio_radar * radar_min_x + ratio_sv * sv_x) * ratio;
-                        double fused_y = vehicle.VCP.y - (ratio_radar * radar_min_y + ratio_sv * sv_y) * ratio;
-                        double range = sqrt(pow((double)(0.1 * (sv_x + sensors[0].location.pos.x) + 0.9 * (radar_min_x + sensors[0].location.pos.x)), 2) +
-                                            pow((double)(0.1 * (sv_y + sensors[1].location.pos.y) + 0.9 * (radar_min_y + sensors[1].location.pos.y) - vehicle.head_pos), 2));
-                        fused_pos = cv::Point2d(fused_x, fused_y);
-                        cv::circle(fused_topview, cv::Point(fused_pos), thickness + 2, cv::Scalar(139, 0, 139, 255), -1, 8, 0);
-                        tag = QString::number(range / 100, 'g', range_precision).toStdString();
-                        cv::putText(fused_topview, tag, cv::Point(d_sv[k].plot_pt_f.x - 50, d_sv[k].plot_pt_f.y), font, font_size, cv::Scalar(139, 0, 139, 255), font_thickness);
-//                        std::cout<<k<<" "<<closest_radar_id<<"\t"<<range<<std::endl;
-                    }
                 }
             }
         }

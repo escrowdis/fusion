@@ -81,11 +81,14 @@ protected:
 
         int avg_X;
 
+        int avg_Y;
+
         blobNode() {
             obj_label = -1;
             pts_num = 0;
             avg_Z = 0;
             avg_X = 0;
+            avg_Y = 0;
         }
     };
 

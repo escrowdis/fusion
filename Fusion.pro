@@ -31,7 +31,8 @@ SOURCES += main.cpp\
     objectTracking/kalmanfilter.cpp \
     objectTracking/objecttracking.cpp \
     objectTracking/particlefilter.cpp \
-    collisionAvoidance/vectorfieldhistogram.cpp
+    collisionAvoidance/vectorfieldhistogram.cpp \
+    objectrecognition.cpp
 
 HEADERS  += mainwindow.h \
             lrf_controller.h \
@@ -53,7 +54,8 @@ HEADERS  += mainwindow.h \
     ui_calibrationform.h \
     ui_mainwindow.h \
     ui_stereomatchparamform.h \
-    collisionAvoidance/vectorfieldhistogram.h
+    collisionAvoidance/vectorfieldhistogram.h \
+    objectrecognition.h
 
 FORMS    += mainwindow.ui \
     calibrationform.ui \

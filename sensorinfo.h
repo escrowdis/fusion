@@ -13,6 +13,9 @@
 // Radar ESR controller
 #include "radarcontroller.h"
 
+// Object Recognition
+#include "objectrecognition.h"
+
 // Object tracking
 #include "objectTracking/objecttracking.h"
 
@@ -50,7 +53,11 @@ public:
 
     lrf_controller* lrf;
 
+    ObjectTracking::ObjectTrackingInfo ti;
+
     ObjectTracking* ot_sv;
+
+    ObjectTracking* ot_radar;
 
     ObjectTracking* ot_fused;
 
@@ -94,12 +101,6 @@ public:
 
     void dataExec(bool fg_sv, bool fg_radar, bool fg_fusion, bool fg_sv_each);
 
-    void dataProcess(bool fg_sv, bool fg_radar);
-
-    void dataFusion();
-
-    void drawFusedTopView(bool fg_sv, bool fg_radar, bool fg_sv_each);
-
     void zoomOutFusedTopView();
 
     void zoomInFusedTopView();
@@ -116,6 +117,14 @@ private:
     };
 
     // Fusion =================
+    void dataProcess(bool fg_sv, bool fg_radar);
+
+    bool fg_fusion;
+
+    void dataFusion();
+
+    void drawFusedTopView(bool fg_sv, bool fg_radar, bool fg_sv_each);
+
     // topview
     int detection_range_pixel;                      // fused topview radius (pixel)
 

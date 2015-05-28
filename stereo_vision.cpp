@@ -27,6 +27,13 @@ stereo_vision::stereo_vision() : TopView(20, 200, 3000, 19.8, 1080, 750, 270, 12
 
     objects = new objInformation[obj_nums];
     objects_display = new objInformation[obj_nums];
+    om = new objMatchingInfo[obj_nums];
+    om_prev = new objMatchingInfo[obj_nums];
+    fg_om_existed = false;
+    fg_om_prev_existed = false;
+    om_size = obj_nums;
+    om_prev_size = obj_nums;
+
 
     data = new StereoData * [IMG_H];
     for (int r = 0; r < IMG_H; r++) {
@@ -80,6 +87,8 @@ stereo_vision::~stereo_vision()
 
     delete[] objects;
     delete[] objects_display;
+    delete[] om;
+    delete[] om_prev;
 
     delete[] LUT_grid_row;
     delete[] LUT_grid_col;
@@ -595,8 +604,13 @@ int stereo_vision::dataExec()
             pointProjectTopView();
             blob(3000);
 
-            if (fg_reproject)
+            if (fg_reproject) {
                 pointProjectImage();
+//                if (fg_recognition)
+//                    objectRecognition();
+//                if (fg_tracking)
+                    objectMatching();
+            }
         }
     }
     else {
@@ -675,6 +689,7 @@ void stereo_vision::pointProjectTopView()
                     // average the depth
                     grid_map[grid_row_t][grid_col_t].avg_Z += 1.0 * (data[r][c].Z - grid_map[grid_row_t][grid_col_t].avg_Z) / grid_map[grid_row_t][grid_col_t].pts_num;
                     grid_map[grid_row_t][grid_col_t].avg_X += 1.0 * (data[r][c].X - grid_map[grid_row_t][grid_col_t].avg_X) / grid_map[grid_row_t][grid_col_t].pts_num;
+                    grid_map[grid_row_t][grid_col_t].avg_Y += 1.0 * (data[r][c].Y - grid_map[grid_row_t][grid_col_t].avg_Y) / grid_map[grid_row_t][grid_col_t].pts_num;
 
                     // label the point to the belonging cell
                     data[r][c].grid_id = std::pair<int, int>(grid_row_t, grid_col_t);
@@ -730,6 +745,7 @@ void stereo_vision::blob(int thresh_pts_num)
                 objects[cur_label].pts_num += grid_map[r][c].pts_num;
                 objects[cur_label].avg_Z += 1.0 * (grid_map[r][c].avg_Z - objects[cur_label].avg_Z) / count;
                 objects[cur_label].avg_X += 1.0 * (grid_map[r][c].avg_X - objects[cur_label].avg_X) / count;
+                objects[cur_label].avg_Y += 1.0 * (grid_map[r][c].avg_Y - objects[cur_label].avg_Y) / count;
 
                 lock_sv_object.unlock();
 
@@ -756,6 +772,7 @@ void stereo_vision::blob(int thresh_pts_num)
                                 objects[cur_label].pts_num += grid_map[r_now][c_now].pts_num;
                                 objects[cur_label].avg_Z += 1.0 * (grid_map[r][c].avg_Z - objects[cur_label].avg_Z) / count;
                                 objects[cur_label].avg_X += 1.0 * (grid_map[r][c].avg_X - objects[cur_label].avg_X) / count;
+                                objects[cur_label].avg_Y += 1.0 * (grid_map[r][c].avg_Y - objects[cur_label].avg_Y) / count;
                                 lock_sv_object.unlock();
                             }
                         }
@@ -900,6 +917,10 @@ void stereo_vision::pointProjectImage()
 
     // draw region of detected objects
     int range_precision = 3;
+
+    lock_f_sv.lockForRead();
+    cv::Mat img_r_L_tmp = img_r_L.clone();
+    lock_f_sv.unlock();
     for (int i = 0; i < obj_nums; i++) {
         lock_sv_object.lockForWrite();
         if (objects[i].labeled && objects[i].br != std::pair<int, int>(-1, -1) && objects[i].tl != std::pair<int, int>(-1, -1)) {
@@ -907,9 +928,10 @@ void stereo_vision::pointProjectImage()
             objects[i].center = std::pair<int, int>(0.5 * (objects[i].tl.first + objects[i].br.first), 0.5 * (objects[i].tl.second + objects[i].br.second));
             objects[i].pc.angle = atan(1.0 * (objects[i].avg_X) / objects[i].avg_Z) * 180.0 / CV_PI;
             objects[i].pc.range = sqrt(pow((double)(objects[i].avg_Z), 2) + pow((double)(objects[i].avg_X), 2));
+            cv::Rect rect_tmp = cv::Rect(objects[i].tl.second, objects[i].tl.first, (objects[i].br.second - objects[i].tl.second), (objects[i].br.first - objects[i].tl.first));
+            objects[i].img = img_r_L_tmp(rect_tmp);
 
-            cv::rectangle(img_detected, cv::Rect(objects[i].tl.second, objects[i].tl.first, (objects[i].br.second - objects[i].tl.second), (objects[i].br.first - objects[i].tl.first)),
-                          objects[i].color, thick_obj_rect, 8, 0);
+            cv::rectangle(img_detected, rect_tmp, objects[i].color, thick_obj_rect, 8, 0);
             cv::circle(img_detected, cv::Point(objects[i].center.second, objects[i].center.first), radius_obj_point, cv::Scalar(0, 255, 0), -1, 8, 0);
             std::string distance_tag = QString::number(objects[i].avg_Z / 100.0, 'g', range_precision).toStdString() + " M";
             cv::putText(img_detected, distance_tag, cv::Point(objects[i].tl.second, objects[i].br.first - 5), cv::FONT_HERSHEY_COMPLEX_SMALL, 2, cv::Scalar(0, 0, 255), 2);
@@ -918,21 +940,191 @@ void stereo_vision::pointProjectImage()
     }
 }
 
+void stereo_vision::splitOneOut(int channel, cv::Mat src, cv::Mat *dst)
+{
+    if (src.size != dst->size)
+        dst->release();
+    if (dst->empty())
+        dst->create(src.rows, src.cols, CV_8UC1);
+    int tc = src.channels();
+    for (int r = 0; r < src.rows; r++) {
+        uchar *ptr = src.ptr<uchar>(r);
+        for (int c = 0; c < src.cols; c++) {
+            dst->ptr<uchar>(r)[c] = ptr[tc * c + channel];
+        }
+    }
+}
+
+void stereo_vision::resetObjMatching()
+{
+    fg_om_prev_existed = fg_om_existed;
+    fg_om_existed = false;
+    om_obj_num = 0;
+    corr_id_map_Bha.clear();
+    for (int i = 0; i < obj_nums; i++) {
+        om[i].pc.range = 0.0;
+        om[i].pc.angle = 0.0;
+        om[i].img.release();
+        om[i].H_img.release();
+        om[i].H_hist.release();
+        om[i].fg_Bha_check = false;
+    }
+}
+
+void stereo_vision::objectMatching()
+{
+    // Bhattacharyya distance comparison using Bubble search
+    int hist_size = 255;
+    float h_range[] = {0, 360};
+    const float *hist_ranges = h_range;
+    resetObjMatching();
+    std::vector<int> map_Bha_corr_id_r;
+    std::vector<int> map_Bha_corr_id_c;
+    // Extract histogram of H color space
+    lock_sv_object.lockForRead();
+    for (int i = 0; i < obj_nums; i++) {
+        if (objects[i].labeled) {
+            map_Bha_corr_id_c.push_back(i);
+            fg_om_existed = true;
+            om_obj_num++;
+            om[i].pc = objects[i].pc;
+            cv::Mat img_hsv = cv::Mat(objects[i].img.rows, objects[i].img.cols, CV_8UC3);
+            om[i].img = objects[i].img.clone();
+            cv::cvtColor(objects[i].img, img_hsv, cv::COLOR_BGR2HSV);
+            splitOneOut(0, img_hsv, &om[i].H_img);
+            cv::calcHist(&om[i].H_img, 1, 0, cv::Mat(), om[i].H_hist, 1, &hist_size, &hist_ranges, true, false);
+            cv::normalize(om[i].H_hist, om[i].H_hist, h_range[0], h_range[1], cv::NORM_MINMAX, -1, cv::Mat());
+        }
+    }
+    lock_sv_object.unlock();
+
+    // record detected object's id
+    for (int m = 0; m < om_prev_size; m++)
+        if (!om_prev[m].H_hist.empty()) {
+            map_Bha_corr_id_r.push_back(m);
+        }
+    for (int m = 0; m < om_size; m++)
+        if (!om[m].H_hist.empty()) {
+            map_Bha_corr_id_c.push_back(m);
+        }
+    om_prev_obj_num = map_Bha_corr_id_r.size();
+    om_obj_num = map_Bha_corr_id_c.size();
+
+    // Bhattacharyya distance
+    if (fg_om_existed && fg_om_prev_existed) {
+        cv::Mat map_Bha = cv::Mat(om_prev_obj_num, om_obj_num, CV_64F, cv::Scalar(1.1));
+#ifdef debug_info_sv_object_matching
+        std::cout<<"Bha map\n";
+#endif
+        for (int m = 0; m < map_Bha_corr_id_r.size(); m++) {
+            for (int n = 0; n < map_Bha_corr_id_c.size(); n++) {
+                int id, id_prev;
+                id_prev = map_Bha_corr_id_r[m];
+                id = map_Bha_corr_id_c[n];
+                map_Bha.ptr<double>(m)[n] = cv::compareHist(om_prev[id_prev].H_hist, om[id].H_hist, cv::HISTCMP_BHATTACHARYYA);
+#ifdef debug_info_sv_object_matching
+                std::cout<<map_Bha.ptr<double>(m)[n]<<" ";
+#endif
+            }
+#ifdef debug_info_sv_object_matching
+            std::cout<<std::endl;
+#endif
+        }
+#ifdef debug_info_sv_object_matching
+        std::cout<<std::endl;
+#endif
+
+        double Bha_min;
+        cv::Point Bha_min_count = cv::Point(-1, -1);
+        std::vector<cv::Point> sort_min_Bha;    // (prev, now)
+        cv::Mat_<bool> check_map_Bha_r = cv::Mat_<bool>(map_Bha.rows, 1, false);
+        cv::Mat_<bool> check_map_Bha_c = cv::Mat_<bool>(map_Bha.cols, 1, false);
+        bool fg_find = true;
+        while (fg_find) {
+            Bha_min = 2.0;   // The max. of Bha. Dist. is 1.0, so greater than 1.0 is ok.
+            Bha_min_count.x = -1;
+            Bha_min_count.y = -1;
+            for (int r = 0; r < map_Bha.rows; r++) {
+                for (int c = 0; c < map_Bha.cols; c++) {
+                    if (check_map_Bha_r.at<bool>(r) == true || check_map_Bha_c.at<bool>(c) == true)
+                        continue;
+                    if (Bha_min > map_Bha.ptr<double>(r)[c]) {
+                        Bha_min = map_Bha.ptr<double>(r)[c];
+                        Bha_min_count.x = r;
+                        Bha_min_count.y = c;
+                    }
+                }
+            }
+            if (Bha_min_count.x == -1 || Bha_min_count.y == -1)
+                continue;
+            sort_min_Bha.push_back(Bha_min_count);
+            check_map_Bha_r.at<bool>(Bha_min_count.x) = true;
+            check_map_Bha_c.at<bool>(Bha_min_count.y) = true;
+
+            // check if all the pairs are connected
+            fg_find = false;
+            for (int i = 0; i < map_Bha.rows; i++)
+                if (check_map_Bha_r.at<bool>(i) == false) {
+                    fg_find = true;
+                    break;
+                }
+            if (fg_find)
+                for (int i = 0; i < map_Bha.cols; i++)
+                    if (check_map_Bha_c.at<bool>(i) == false) {
+                        fg_find = true;
+                        break;
+                    }
+        }
+#ifdef debug_info_sv_object_matching
+        for (int i = 0 ; i < sort_min_Bha.size(); i++) {
+            std::cout<<"prev "<<sort_min_Bha[i].x<<", now "<<sort_min_Bha[i].y<<"\t";
+            cv::imshow("Image - now", om[map_Bha_corr_id_c[sort_min_Bha[i].y]].img);
+            cv::imshow("Image - prev", om_prev[map_Bha_corr_id_r[sort_min_Bha[i].x]].img);
+            cv::waitKey(500);
+        }
+        std::cout<<std::endl;
+#endif
+    }
+
+    for (int k = 0 ; k < obj_nums; k++) {
+        for (int m = 0; m < obj_nums; m++) {
+//            double err_range = objects[k].pc.range - objects_display[m].pc.range;
+//            double err_angle = objects[k].pc.angle - objects_display[m].pc.angle;
+        }
+    }
+
+    // push om to om_prev  //**// can't use swap()?
+    om_prev_obj_num = om_obj_num;
+    for (int i = 0; i < obj_nums; i++) {
+        om_prev[i].pc.range = om[i].pc.range;
+        om_prev[i].pc.angle = om[i].pc.angle;
+        om_prev[i].img = om[i].img.clone();
+        om_prev[i].H_hist = om[i].H_hist.clone();
+        om_prev[i].H_img = om[i].H_img.clone();
+    }
+}
+
 void stereo_vision::updateDataForDisplay()
 {
     for (int i = 0; i < obj_nums; i++) {
         lock_sv_object.lockForRead();
-        objects_display[i].pc = objects[i].pc;
+        objects_display[i].pts_num = objects[i].pts_num;
+        objects_display[i].labeled = objects[i].labeled;
         objects_display[i].avg_Z = objects[i].avg_Z;
         objects_display[i].avg_X = objects[i].avg_X;
+        objects_display[i].closest_count = objects[i].closest_count;
+        objects_display[i].rect_tl = objects[i].rect_tl;
+        objects_display[i].rect_br = objects[i].rect_br;
+        objects_display[i].tl = objects[i].tl;
         objects_display[i].br = objects[i].br;
         objects_display[i].center = objects[i].center;
-        objects_display[i].closest_count = objects[i].closest_count;
-        objects_display[i].labeled = objects[i].labeled;
-        objects_display[i].pts_num = objects[i].pts_num;
-        objects_display[i].tl = objects[i].tl;
-        objects_display[i].rect = objects[i].rect;
         objects_display[i].color = objects[i].color;
+        objects_display[i].img = objects[i].img.clone();
+        objects_display[i].rect = objects[i].rect;
+        objects_display[i].pc = objects[i].pc;
+        objects_display[i].rect_f = objects[i].rect_f;
+        objects_display[i].rect_world = objects[i].rect_world;
+        objects_display[i].pc_world = objects[i].pc_world;
         lock_sv_object.unlock();
     }
 }

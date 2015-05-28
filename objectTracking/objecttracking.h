@@ -17,6 +17,8 @@ public:
 
     void initialze(int object_size);
 
+    void reset();
+
     // Object List
     struct ObjectTrackingInfo
     {
@@ -28,20 +30,24 @@ public:
 
         int status;                     // static or dynamic
 
+        int prev_id;
+
         KalmanFilter::objectTrackingKF kf;
 
         ObjectTrackingInfo() {
+            pos = cv::Point(-1, -1);
+
             vel = std::pair<float, float>(0, 0);
 
             acc = std::pair<float, float>(0, 0);
 
             status = -1;
 
-            pos = cv::Point(-1, -1);
+            prev_id = -1;
         }
     };
 
-    ObjectTrackingInfo *ti;     // object's tracking information
+    std::vector<ObjectTrackingInfo> ti;     // object's tracking information
 
 private:
     bool fg_initialized;        // check whether ObjectTrackingInfo is initialized
