@@ -29,6 +29,9 @@ stereo_vision::stereo_vision() : TopView(20, 200, 3000, 19.8, 1080, 750, 270, 12
     objects_display = new objInformation[obj_nums];
     om = new objMatchingInfo[obj_nums];
     om_prev = new objMatchingInfo[obj_nums];
+    hist_size = 255;
+//    float h_range[] = {0, 360};
+    hist_ranges = new float[]({0, 360});
     fg_om_existed = false;
     fg_om_prev_existed = false;
     om_size = obj_nums;
@@ -960,7 +963,8 @@ void stereo_vision::resetObjMatching()
     fg_om_prev_existed = fg_om_existed;
     fg_om_existed = false;
     om_obj_num = 0;
-    corr_id_map_Bha.clear();
+    map_Bha_corr_id_r.clear();
+    map_Bha_corr_id_c.clear();
     for (int i = 0; i < obj_nums; i++) {
         om[i].pc.range = 0.0;
         om[i].pc.angle = 0.0;
@@ -974,12 +978,7 @@ void stereo_vision::resetObjMatching()
 void stereo_vision::objectMatching()
 {
     // Bhattacharyya distance comparison using Bubble search
-    int hist_size = 255;
-    float h_range[] = {0, 360};
-    const float *hist_ranges = h_range;
     resetObjMatching();
-    std::vector<int> map_Bha_corr_id_r;
-    std::vector<int> map_Bha_corr_id_c;
     // Extract histogram of H color space
     lock_sv_object.lockForRead();
     for (int i = 0; i < obj_nums; i++) {
@@ -993,7 +992,7 @@ void stereo_vision::objectMatching()
             cv::cvtColor(objects[i].img, img_hsv, cv::COLOR_BGR2HSV);
             splitOneOut(0, img_hsv, &om[i].H_img);
             cv::calcHist(&om[i].H_img, 1, 0, cv::Mat(), om[i].H_hist, 1, &hist_size, &hist_ranges, true, false);
-            cv::normalize(om[i].H_hist, om[i].H_hist, h_range[0], h_range[1], cv::NORM_MINMAX, -1, cv::Mat());
+            cv::normalize(om[i].H_hist, om[i].H_hist, hist_ranges[0], hist_ranges[1], cv::NORM_MINMAX, -1, cv::Mat());
         }
     }
     lock_sv_object.unlock();
@@ -1013,7 +1012,7 @@ void stereo_vision::objectMatching()
     // Bhattacharyya distance
     if (fg_om_existed && fg_om_prev_existed) {
         cv::Mat map_Bha = cv::Mat(om_prev_obj_num, om_obj_num, CV_64F, cv::Scalar(1.1));
-#ifdef debug_info_sv_object_matching
+#ifdef debug_info_sv_object_matching_others
         std::cout<<"Bha map\n";
 #endif
         for (int m = 0; m < map_Bha_corr_id_r.size(); m++) {
@@ -1022,15 +1021,15 @@ void stereo_vision::objectMatching()
                 id_prev = map_Bha_corr_id_r[m];
                 id = map_Bha_corr_id_c[n];
                 map_Bha.ptr<double>(m)[n] = cv::compareHist(om_prev[id_prev].H_hist, om[id].H_hist, cv::HISTCMP_BHATTACHARYYA);
-#ifdef debug_info_sv_object_matching
+#ifdef debug_info_sv_object_matching_others
                 std::cout<<map_Bha.ptr<double>(m)[n]<<" ";
 #endif
             }
-#ifdef debug_info_sv_object_matching
+#ifdef debug_info_sv_object_matching_others
             std::cout<<std::endl;
 #endif
         }
-#ifdef debug_info_sv_object_matching
+#ifdef debug_info_sv_object_matching_others
         std::cout<<std::endl;
 #endif
 
@@ -1039,8 +1038,7 @@ void stereo_vision::objectMatching()
         std::vector<cv::Point> sort_min_Bha;    // (prev, now)
         cv::Mat_<bool> check_map_Bha_r = cv::Mat_<bool>(map_Bha.rows, 1, false);
         cv::Mat_<bool> check_map_Bha_c = cv::Mat_<bool>(map_Bha.cols, 1, false);
-        bool fg_find = true;
-        while (fg_find) {
+        for (int p = 0; p < map_Bha.rows; p++) {
             Bha_min = 2.0;   // The max. of Bha. Dist. is 1.0, so greater than 1.0 is ok.
             Bha_min_count.x = -1;
             Bha_min_count.y = -1;
@@ -1057,40 +1055,31 @@ void stereo_vision::objectMatching()
             }
             if (Bha_min_count.x == -1 || Bha_min_count.y == -1)
                 continue;
-            sort_min_Bha.push_back(Bha_min_count);
+            // if Bha. dist. is greater than threshold, it's probably a successful match.
+            if (map_Bha.ptr<double>(Bha_min_count.x)[Bha_min_count.y] <= thresh_Bha)
+                sort_min_Bha.push_back(Bha_min_count);
             check_map_Bha_r.at<bool>(Bha_min_count.x) = true;
             check_map_Bha_c.at<bool>(Bha_min_count.y) = true;
-
-            // check if all the pairs are connected
-            fg_find = false;
-            for (int i = 0; i < map_Bha.rows; i++)
-                if (check_map_Bha_r.at<bool>(i) == false) {
-                    fg_find = true;
-                    break;
-                }
-            if (fg_find)
-                for (int i = 0; i < map_Bha.cols; i++)
-                    if (check_map_Bha_c.at<bool>(i) == false) {
-                        fg_find = true;
-                        break;
-                    }
         }
 #ifdef debug_info_sv_object_matching
         for (int i = 0 ; i < sort_min_Bha.size(); i++) {
+#ifdef debug_info_sv_object_matching_others
             std::cout<<"prev "<<sort_min_Bha[i].x<<", now "<<sort_min_Bha[i].y<<"\t";
+#endif
+#ifdef debug_info_sv_object_matching_data_extract
             cv::imshow("Image - now", om[map_Bha_corr_id_c[sort_min_Bha[i].y]].img);
             cv::imshow("Image - prev", om_prev[map_Bha_corr_id_r[sort_min_Bha[i].x]].img);
-            cv::waitKey(500);
+            char c = cv::waitKey();
+            if (c == '1')
+                std::cout<<"correct "<<map_Bha.ptr<double>(sort_min_Bha[i].x)[sort_min_Bha[i].y]<<std::endl;
+            else if (c == '2')
+                std::cout<<"wrong "<<map_Bha.ptr<double>(sort_min_Bha[i].x)[sort_min_Bha[i].y]<<std::endl;
+#endif
         }
+#ifdef debug_info_sv_object_matching_others
         std::cout<<std::endl;
 #endif
-    }
-
-    for (int k = 0 ; k < obj_nums; k++) {
-        for (int m = 0; m < obj_nums; m++) {
-//            double err_range = objects[k].pc.range - objects_display[m].pc.range;
-//            double err_angle = objects[k].pc.angle - objects_display[m].pc.angle;
-        }
+#endif
     }
 
     // push om to om_prev  //**// can't use swap()?

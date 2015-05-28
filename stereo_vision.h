@@ -273,19 +273,28 @@ private:
     cv::Mat img_match_L;
     cv::Mat img_match_R;
 
-    // object information ==========
-    int obj_nums;                       // maximum object detection amount
+    // object matching =============
+    double thresh_Bha = 0.15;
 
+    // histogram calculation used
+    int hist_size;
+    const float *hist_ranges;
+
+    // check if there's any object detected
     bool fg_om_existed;
     bool fg_om_prev_existed;
 
+    // amount of objects. Default: obj_nums
     int om_size;
     int om_prev_size;
 
+    // amount of detected object
     int om_obj_num;
     int om_prev_obj_num;
 
-    std::vector<cv::Point> corr_id_map_Bha;
+    // object's id <-> map_Bha id
+    std::vector<int> map_Bha_corr_id_r;
+    std::vector<int> map_Bha_corr_id_c;
 
     struct objMatchingInfo
     {
@@ -304,6 +313,12 @@ private:
     objMatchingInfo *om_prev;
 
     void resetObjMatching();
+
+    void objectMatching();
+    // object matching ============= End
+
+    // object information ==========
+    int obj_nums;                       // maximum object detection amount
 
 public:
     struct objInformation
@@ -402,10 +417,6 @@ private:
     // Object Matching =============
     void splitOneOut(int channel, cv::Mat src, cv::Mat *dst);
     // Object Matching ============= End
-
-    // Object matching =============
-    void objectMatching();
-    // Object matching ============= End
 
 private slots:
     // BM ===========================
