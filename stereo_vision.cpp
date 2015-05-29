@@ -977,16 +977,17 @@ void stereo_vision::resetObjMatching()
 
 void stereo_vision::objectMatching()
 {
-    // Bhattacharyya distance comparison using Bubble search
+    // Object matching: a) Bha. dist. of H color space, b) bias of X & Z of WCS location
+    // Comparison of H color space image using Bhattacharyya distance with Bubble search
     resetObjMatching();
     // Extract histogram of H color space
     lock_sv_object.lockForRead();
     for (int i = 0; i < obj_nums; i++) {
         if (objects[i].labeled) {
-            map_Bha_corr_id_c.push_back(i);
             fg_om_existed = true;
             om_obj_num++;
             om[i].pc = objects[i].pc;
+            om[i].center = objects[i].center;
             cv::Mat img_hsv = cv::Mat(objects[i].img.rows, objects[i].img.cols, CV_8UC3);
             om[i].img = objects[i].img.clone();
             cv::cvtColor(objects[i].img, img_hsv, cv::COLOR_BGR2HSV);
@@ -1012,60 +1013,84 @@ void stereo_vision::objectMatching()
     // Bhattacharyya distance
     if (fg_om_existed && fg_om_prev_existed) {
         cv::Mat map_Bha = cv::Mat(om_prev_obj_num, om_obj_num, CV_64F, cv::Scalar(1.1));
-#ifdef debug_info_sv_object_matching_others
-        std::cout<<"Bha map\n";
-#endif
+        cv::Mat map_err_pos_x = cv::Mat(om_prev_obj_num, om_obj_num, CV_64F, cv::Scalar(1.1));
+        cv::Mat map_err_pos_z = cv::Mat(om_prev_obj_num, om_obj_num, CV_64F, cv::Scalar(1.1));
         for (int m = 0; m < map_Bha_corr_id_r.size(); m++) {
             for (int n = 0; n < map_Bha_corr_id_c.size(); n++) {
                 int id, id_prev;
                 id_prev = map_Bha_corr_id_r[m];
                 id = map_Bha_corr_id_c[n];
+                // H color space object image comparison
                 map_Bha.ptr<double>(m)[n] = cv::compareHist(om_prev[id_prev].H_hist, om[id].H_hist, cv::HISTCMP_BHATTACHARYYA);
-#ifdef debug_info_sv_object_matching_others
-                std::cout<<map_Bha.ptr<double>(m)[n]<<" ";
-#endif
+
+                // WCS location comparison
+                std::pair<double, double> pc, pc_prev;
+                pc_prev.first = om_prev[id_prev].pc.range * sin(om_prev[id_prev].pc.angle * CV_PI / 180.0);
+                pc_prev.second = om_prev[id_prev].pc.range * cos(om_prev[id_prev].pc.angle * CV_PI / 180.0);
+                pc.first = om[id].pc.range * sin(om[id].pc.angle * CV_PI / 180.0);
+                pc.second = om[id].pc.range * cos(om[id].pc.angle * CV_PI / 180.0);
+                map_err_pos_x.ptr<double>(m)[n] = abs(pc.first - pc_prev.first);
+                map_err_pos_z.ptr<double>(m)[n] = abs(pc.second - pc_prev.second);
             }
-#ifdef debug_info_sv_object_matching_others
-            std::cout<<std::endl;
-#endif
         }
 #ifdef debug_info_sv_object_matching_others
+        std::cout<<"Bha map\n";
+        for (int m = 0; m < map_Bha_corr_id_r.size(); m++) {
+            for (int n = 0; n < map_Bha_corr_id_c.size(); n++) {
+                std::cout<<map_Bha.ptr<double>(m)[n]<<" ";
+            }
+            std::cout<<std::endl;
+        }
+        std::cout<<std::endl;
+
+        std::cout<<"Err pos X-Z map\n";
+        for (int m = 0; m < map_Bha_corr_id_r.size(); m++) {
+            for (int n = 0; n < map_Bha_corr_id_c.size(); n++) {
+                int id, id_prev;
+                id_prev = map_Bha_corr_id_r[m];
+                id = map_Bha_corr_id_c[n];
+                std::cout<<map_err_pos_x.ptr<double>(m)[n]<<" "<<map_err_pos_z.ptr<double>(m)[n]<<"\t\t";
+            }
+            std::cout<<std::endl;
+        }
         std::cout<<std::endl;
 #endif
 
+        std::vector<cv::Point> sort_min;    // (prev, now)
         double Bha_min;
-        cv::Point Bha_min_count = cv::Point(-1, -1);
-        std::vector<cv::Point> sort_min_Bha;    // (prev, now)
+        cv::Point min_count = cv::Point(-1, -1);
         cv::Mat_<bool> check_map_Bha_r = cv::Mat_<bool>(map_Bha.rows, 1, false);
         cv::Mat_<bool> check_map_Bha_c = cv::Mat_<bool>(map_Bha.cols, 1, false);
         for (int p = 0; p < map_Bha.rows; p++) {
             Bha_min = 2.0;   // The max. of Bha. Dist. is 1.0, so greater than 1.0 is ok.
-            Bha_min_count.x = -1;
-            Bha_min_count.y = -1;
+            min_count.x = -1;
+            min_count.y = -1;
             for (int r = 0; r < map_Bha.rows; r++) {
                 for (int c = 0; c < map_Bha.cols; c++) {
                     if (check_map_Bha_r.at<bool>(r) == true || check_map_Bha_c.at<bool>(c) == true)
                         continue;
                     if (Bha_min > map_Bha.ptr<double>(r)[c]) {
                         Bha_min = map_Bha.ptr<double>(r)[c];
-                        Bha_min_count.x = r;
-                        Bha_min_count.y = c;
+                        min_count.x = r;
+                        min_count.y = c;
                     }
                 }
             }
-            if (Bha_min_count.x == -1 || Bha_min_count.y == -1)
+            if (min_count.x == -1 || min_count.y == -1)
                 continue;
-            // if Bha. dist. is greater than threshold, it's probably a successful match.
-            if (map_Bha.ptr<double>(Bha_min_count.x)[Bha_min_count.y] <= thresh_Bha)
-                sort_min_Bha.push_back(Bha_min_count);
-            check_map_Bha_r.at<bool>(Bha_min_count.x) = true;
-            check_map_Bha_c.at<bool>(Bha_min_count.y) = true;
+            // Check if the object satisfies the threshold
+            // if Bha. dist. is less than threshold, it's probably a successful match.
+            if (map_Bha.ptr<double>(min_count.x)[min_count.y] <= thresh_Bha &&
+                    map_err_pos_x.ptr<double>(min_count.x)[min_count.y] <= thresh_err_x &&
+                    map_err_pos_z.ptr<double>(min_count.x)[min_count.y] <= thresh_err_z)
+                sort_min.push_back(min_count);
+            check_map_Bha_r.at<bool>(min_count.x) = true;
+            check_map_Bha_c.at<bool>(min_count.y) = true;
         }
-#ifdef debug_info_sv_object_matching
-        for (int i = 0 ; i < sort_min_Bha.size(); i++) {
+
 #ifdef debug_info_sv_object_matching_others
+        for (int i = 0 ; i < sort_min_Bha.size(); i++) {
             std::cout<<"prev "<<sort_min_Bha[i].x<<", now "<<sort_min_Bha[i].y<<"\t";
-#endif
 #ifdef debug_info_sv_object_matching_data_extract
             cv::imshow("Image - now", om[map_Bha_corr_id_c[sort_min_Bha[i].y]].img);
             cv::imshow("Image - prev", om_prev[map_Bha_corr_id_r[sort_min_Bha[i].x]].img);
@@ -1076,9 +1101,30 @@ void stereo_vision::objectMatching()
                 std::cout<<"wrong "<<map_Bha.ptr<double>(sort_min_Bha[i].x)[sort_min_Bha[i].y]<<std::endl;
 #endif
         }
-#ifdef debug_info_sv_object_matching_others
         std::cout<<std::endl;
 #endif
+#ifdef debug_info_sv_object_matching_img
+        cv::Mat comp_mix;
+        comp = img_detected.clone();
+        if (!comp_prev.empty()) {
+            comp_mix = cv::Mat::zeros(2 * IMG_H, IMG_W, CV_8UC3);
+            comp_prev.copyTo(comp_mix(cv::Rect(0, 0, IMG_W, IMG_H)));
+            comp.copyTo(comp_mix(cv::Rect(0, IMG_H, IMG_W, IMG_H)));
+            cv::putText(comp_mix, "Previous", cv::Point(0, 0.1 * IMG_H), cv::FONT_HERSHEY_DUPLEX, 1, cv::Scalar(0, 255, 0, 255));
+            cv::putText(comp_mix, "Now", cv::Point(0, 1.1 * IMG_H), cv::FONT_HERSHEY_DUPLEX, 1, cv::Scalar(0, 255, 0, 255));
+            cv::line(comp_mix, cv::Point(0, IMG_H), cv::Point(IMG_W, IMG_H), cv::Scalar(0, 0, 255), 1, 8, 0);
+        }
+        for (int i = 0 ; i < sort_min_Bha.size(); i++) {
+            if (!comp_prev.empty()) {
+                cv::Point p1, p2;
+                p1 = cv::Point(om_prev[map_Bha_corr_id_r[sort_min_Bha[i].x]].center.second, om_prev[map_Bha_corr_id_r[sort_min_Bha[i].x]].center.first);
+                p2 = cv::Point(om[map_Bha_corr_id_c[sort_min_Bha[i].y]].center.second, om[map_Bha_corr_id_c[sort_min_Bha[i].y]].center.first + IMG_H);
+                cv::line(comp_mix, p1, p2, cv::Scalar(255, 0, 0), 2, 8, 0);
+            }
+        }
+        if (!comp_prev.empty())
+            cv::imshow("Comp", comp_mix);
+        comp_prev = comp.clone();
 #endif
     }
 
@@ -1087,6 +1133,7 @@ void stereo_vision::objectMatching()
     for (int i = 0; i < obj_nums; i++) {
         om_prev[i].pc.range = om[i].pc.range;
         om_prev[i].pc.angle = om[i].pc.angle;
+        om_prev[i].center = om[i].center;
         om_prev[i].img = om[i].img.clone();
         om_prev[i].H_hist = om[i].H_hist.clone();
         om_prev[i].H_img = om[i].H_img.clone();

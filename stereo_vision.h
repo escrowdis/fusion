@@ -274,7 +274,8 @@ private:
     cv::Mat img_match_R;
 
     // object matching =============
-    double thresh_Bha = 0.15;
+    double thresh_Bha = 0.3; //**// tuned params 20150528
+    double thresh_err_x = 150, thresh_err_z = 150; //**// tuned params 20150528
 
     // histogram calculation used
     int hist_size;
@@ -300,17 +301,26 @@ private:
     {
         SensorBase::PC pc;
 
-        cv::Mat img;
+        std::pair<double, double> err_pos;
+
+        cv::Mat img;                    // object's image (cropped)
 
         cv::Mat H_img;
 
         cv::Mat H_hist;
 
         bool fg_Bha_check;
+
+        // IMAGE -------------
+        std::pair<int, int> center;     // Center point of object in image (row, col)
     };
 
     objMatchingInfo *om;
     objMatchingInfo *om_prev;
+
+#ifdef debug_info_sv_object_matching_img
+    cv::Mat comp, comp_prev;
+#endif
 
     void resetObjMatching();
 

@@ -19,7 +19,7 @@
 //#define debug_info_sv_blob_data
 //#define debug_info_sv_topview
 //#define debug_info_sv_ground_filter
-//#define debug_info_sv_object_matching
+//#define debug_info_sv_object_matching_img
 //#define debug_info_sv_object_matching_data_extract
 //#define debug_info_sv_object_matching_others
 //#define debug_info_cc
