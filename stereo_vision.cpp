@@ -523,38 +523,35 @@ void stereo_vision::depthCalculation()
 
 void stereo_vision::vDispCalculation()
 {
-    int img_w;
-    switch (match_mode) {
-    case SV::STEREO_MATCH::BM:
-        img_w = param_bm->num_of_disp;
-        break;
-    case SV::STEREO_MATCH::SGBM:
-        img_w = param_sgbm->num_of_disp;
-        break;
-    }
-    cv::Mat v_disp = cv::Mat::zeros(IMG_H, img_w, CV_16SC1);
-    short int max_disp = 0;
-    for (int r = 0; r < IMG_H; r++) {
-        short int* ptr_v = (short int*)(v_disp.data + r * v_disp.step);
-        for (int c = 0 ; c < IMG_W; c++) {
-            short int val_raw = data[r][c].disp;
-            short int val = 1.0 * val_raw + 0.5;
-            if (val == -1) continue;
-            ptr_v[val]++;
-
-            if (max_disp < val)
-                max_disp = val;
+    if (fg_ground_filter) {
+        int img_w;
+        switch (match_mode) {
+        case SV::STEREO_MATCH::BM:
+            img_w = param_bm->num_of_disp;
+            break;
+        case SV::STEREO_MATCH::SGBM:
+            img_w = param_sgbm->num_of_disp;
+            break;
         }
-    }
+        cv::Mat v_disp = cv::Mat::zeros(IMG_H, img_w, CV_16SC1);
+        for (int r = 0; r < IMG_H; r++) {
+            short int* ptr_v = v_disp.ptr<short int>(r);
+            for (int c = 0 ; c < IMG_W; c++) {
+                short int val_raw = data[r][c].disp;
+                short int val = 1.0 * val_raw + 0.5;
+                if (val == -1 && val >= img_w) continue;
+                ptr_v[val]++;
+            }
+        }
 
 #ifdef debug_info_sv_v_disp
-    cv::Mat v_disp_display;
-    v_disp.convertTo(v_disp_display, CV_8UC1);
-    cv::imshow("V-disp", v_disp_display);
-//    cv::imwrite("v-disp.jpg", v_disp_display);
+        cv::Mat v_disp_display;
+        v_disp.convertTo(v_disp_display, CV_8UC1);
+        cv::normalize(v_disp_display, v_disp_display, 0, 255, cv::NORM_MINMAX, -1, cv::Mat());
+        cv::imshow("V-disp", v_disp_display);
+        //    cv::imwrite("v-disp.jpg", v_disp_display);
 #endif
 
-    if (fg_ground_filter) {
         cv::Mat v_disp_src, v_disp_bi;
         v_disp.convertTo(v_disp_src, CV_8UC1);
         std::vector<cv::Vec2f> lines, lines_filtered;
@@ -572,16 +569,14 @@ void stereo_vision::vDispCalculation()
         for (int i = 0; i < lines.size(); i++) {
             float rho = lines[i][0], theta = lines[i][1];
             if (theta <= angle_max && theta >= angle_min && rho >= 15) {
-                cv::Point pt1, pt2;
-                double a = cos(theta), b = sin(theta);
-                double x0 = a*rho, y0 = b*rho;
-                pt1.x = cvRound(x0 + 1000*(-b));
-                pt1.y = cvRound(y0 + 1000*(a));
-                pt2.x = cvRound(x0 - 1000*(-b));
-                pt2.y = cvRound(y0 - 1000*(a));
                 lines_filtered.push_back(cv::Vec2f(rho, theta));
 #ifdef debug_info_sv_v_disp
                 qDebug()<<"rho"<<rho<<"theta"<<theta;
+                cv::Point pt1, pt2;
+                pt1.x = 0;
+                pt2.x = v_disp_src.cols;
+                pt1.y = pt1.x * (-1 * cos(theta) / sin (theta)) + rho / sin(theta);
+                pt2.y = pt2.x * (-1 * cos(theta) / sin (theta)) + rho / sin(theta);
                 cv::line(display, pt1, pt2, cv::Scalar(0, 0, 255), 1, 8, 0);
                 //            qDebug()<<x0<<y0<<pt1.x<<pt1.y<<pt2.x<<pt2.y;
 #endif
@@ -590,8 +585,8 @@ void stereo_vision::vDispCalculation()
 
 #ifdef debug_info_sv_v_disp
         cv::imshow("Lines", display);
-#endif
         cv::Mat img = img_r_L.clone();
+#endif
         float ground_avg_y = 0.0;
         int avg_disp_count = 0;
         for (int r = 0; r < IMG_H; r++) {
@@ -599,25 +594,41 @@ void stereo_vision::vDispCalculation()
                 for (int k = 0; k < lines_filtered.size(); k++) {
                     float rho = lines_filtered[k][0];
                     float theta = lines_filtered[k][1];
-                    float f_l = rho;
-                    float f_r = 1.0 * data[r][c].disp * cos(theta) + 1.0 * r * sin(theta);
-                    if (abs(f_l - f_r) / f_r < 0.1 && data[r][c].Y < 15 && data[r][c].Y != -1) {
+                    cv::Point coor_v_disp = cv::Point(data[r][c].disp, r);
+                    cv::Point line_1, line_2;
+                    line_1.x = 0;
+                    line_2.x = v_disp_src.cols;
+                    line_1.y = line_1.x * (-1 * cos(theta) / sin (theta)) + rho / sin(theta);
+                    line_2.y = line_2.x * (-1 * cos(theta) / sin (theta)) + rho / sin(theta);
+                    float dist = point2Line(coor_v_disp, line_1, line_2);
+                    if (dist < 2 && data[r][c].Y < 20 && data[r][c].Y != -1) {
                         avg_disp_count++;
                         ground_avg_y += 1.0 * (data[r][c].Y - ground_avg_y) / avg_disp_count;
 #ifdef debug_info_sv_v_disp
-                        cv::circle(img, cv::Point(c, r), 3, cv::Scalar(0, 0, 255), 1, 8, 0);
+                        cv::circle(img, cv::Point(c, r), 1, cv::Scalar(0, 0, 255), 1, 8, 0);
 #endif
                     }
                 }
             }
         }
 
-        ground_mean_guess = ground_avg_y;
+        ground_mean_guess = ground_avg_y * 0.3 + ground_mean_guess * 0.7;
 #ifdef debug_info_sv_v_disp
-        qDebug()<<"avg Y: "<<ground_avg_y;
+        qDebug()<<"ground_mean_guess: "<<ground_mean_guess<<"\tavg Y: "<<ground_avg_y;
         cv::imshow("det", img);
 #endif
     }
+}
+
+int stereo_vision::point2Line(cv::Point pt, cv::Point line_1, cv::Point line_2)
+{
+    float a, b, c, dis;
+    a = line_2.y - line_1.y;
+    b = line_1.x - line_2.x;
+    c = line_2.x * line_1.y - line_1.x * line_2.y;
+    dis = abs(a * pt.x + b * pt.y + c) / sqrt(a * a + b * b);
+
+    return dis;
 }
 
 void stereo_vision::HoughLine()
@@ -908,11 +919,7 @@ void stereo_vision::pointProjectTopView()
 
             // porject each 3D point onto a topview
             if (data[r][c].Z >= min_distance && data[r][c].Z <= max_distance) {
-//                if (fg_ground_filter && data[r][c].Y <= ground_mean_guess + 10 && data[r][c].Y >= ground_mean_guess - 10)
-                if (fg_ground_filter &&
-                        data[r][c].Y <= GROUND_RANGE && data[r][c].Y >= -1 * GROUND_RANGE &&
-                        ground_filter[data[r][c].Y + GROUND_RANGE] >= (ground_filter[(int)(ground_mean)] - 3 * thresh_ground_filter) &&
-                        ground_filter[data[r][c].Y + GROUND_RANGE] <= (ground_filter[(int)(ground_mean)] + 3 * thresh_ground_filter))
+                if (fg_ground_filter && data[r][c].Y <= ground_mean_guess + 5)
                     continue;
 
                 grid_row = corrGridRow(data[r][c].Z);

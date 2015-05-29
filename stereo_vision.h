@@ -263,6 +263,8 @@ private:
 
     void vDispCalculation();
 
+    int point2Line(cv::Point pt, cv::Point line_1, cv::Point line_2);
+
     void stereoMatch();
 
     QTime t_p;                          // process time of all exec.
