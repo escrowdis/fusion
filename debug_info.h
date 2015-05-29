@@ -22,6 +22,7 @@
 //#define debug_info_sv_object_matching_img
 //#define debug_info_sv_object_matching_data_extract
 //#define debug_info_sv_object_matching_others
+//#define debug_info_sv_v_disp
 //#define debug_info_cc
 
 #endif // DEBUG_INFO_H
