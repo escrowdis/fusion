@@ -413,19 +413,30 @@ private:
     void blob(int thresh_pts_num);
     // object params =============== End
 
-    // data - stereo vision ========
-    // ground filtering
+    // ground filtering ============
+    int thresh_ground_cand;             // possible ground if v-disp didn't recognize ground
+
     float ground_mean_guess;
-
-    int* ground_filter;                 // the amount of pixel within pixels' range
-
-    float ground_mean;                  // mean of ground_filter_id
-
-    int thresh_ground_filter;           // SD of ground_filter[]
 
     bool fg_ground_filter;              // do the ground filtering algorithm or not
 
     bool fg_vDisp;                      // if there's no frame detected
+
+    // v-disparity
+    double angle_min, angle_max;        // angle range in Hough line
+    float thresh_rho_min;               // min. rho forfiltering in Hough line
+    float thresh_ground_y_max;          // max. height of ground
+    float thresh_dist;                  // threshold of distance between point and line
+    float weight_now, weight_prev;      // weihgt for updating ground's hright
+
+    std::vector<cv::Vec2f> lines;
+    std::vector<int> lines_fitted_pt;
+    cv::Vec2f fitted_line;
+
+    cv::Mat v_disp, v_disp_norm, v_disp_display, v_disp_bi;
+    // ground filtering ============ End
+
+    // data - stereo vision ========
     // Stereo match params (SMP) ===
     void matchParamInitialize(int cur_mode);
     // data - stereo vision ======== End

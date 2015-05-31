@@ -17,6 +17,16 @@ stereo_vision::stereo_vision() : TopView(20, 200, 3000, 19.8, 1080, 750, 270, 12
     // blob
     obj_nums = 256;
 
+    // ground filtering
+    thresh_ground_cand = 10;
+    thresh_ground_y_max = 50;
+    thresh_rho_min = 15.0;
+    thresh_dist = 1.0;
+    angle_min = 165 * CV_PI / 180.0;
+    angle_max = 178 * CV_PI / 180.0;
+    weight_now = 0.2;
+    weight_prev = 0.8;
+
     // thickness of frawing paint for objects on the image
     thick_obj_rect = 2;
     radius_obj_point = 3;
@@ -44,8 +54,6 @@ stereo_vision::stereo_vision() : TopView(20, 200, 3000, 19.8, 1080, 750, 270, 12
     for (int r = 0; r < IMG_H; r++) {
         data[r] = new StereoData[IMG_W];
     }
-
-    ground_filter = new int[2 * GROUND_RANGE + 1];
 
     createLUT();
 
@@ -87,8 +95,6 @@ stereo_vision::~stereo_vision()
         delete[] data[i];
     }
     delete[] data;
-
-    delete[] ground_filter;
 
     delete[] objects;
     delete[] objects_display;
@@ -445,9 +451,6 @@ void stereo_vision::depthCalculation()
         disp_pseudo.setTo(0);
     uchar* ptr_color = color_table->scanLine(0);
 
-    for (int k = 0; k < 2 * GROUND_RANGE + 1; k++)
-        ground_filter[k] = 0;
-
     lock_sv_data.lockForWrite();
     for (int r = 0; r < IMG_H; r++) {
 #ifdef opencv_cuda
@@ -475,8 +478,6 @@ void stereo_vision::depthCalculation()
                 data[r][c].Z = cam_param->param_r / data[r][c].disp;
                 data[r][c].X = (c - IMG_W_HALF) * data[r][c].Z / cam_param->focal_length;
                 data[r][c].Y = (IMG_H_HALF - r) * data[r][c].Z / cam_param->focal_length + cam_param->rig_height;
-                if (data[r][c].Y <= GROUND_RANGE && data[r][c].Y >= -1 * GROUND_RANGE)
-                    ground_filter[data[r][c].Y + GROUND_RANGE]++;
 
                 // pseudo color transform
                 if (fg_pseudo) {
@@ -517,30 +518,6 @@ void stereo_vision::depthCalculation()
         //            std::cout<<std::endl;
     }
     lock_sv_data.unlock();
-
-    // ground filtering
-    // ground mean computation
-    if (fg_ground_filter) {
-        ground_mean = 0.0;
-        float ground_count_sd = 0.0;
-        int ground_count = 0;
-        int total_range = 2 * GROUND_RANGE + 1;
-        for (int k = 0; k < total_range; k++)
-            ground_count += ground_filter[k];
-        int ground_count_mean = 1.0 * ground_count / total_range;
-        for (int k = 0; k < total_range; k++) {
-#ifdef debug_info_sv_ground_filter
-            std::cout<<k - GROUND_RANGE<<" "<<ground_filter[k]<<"\t";
-#endif
-            ground_mean += 1.0 * k * ground_filter[k] / ground_count;
-            ground_count_sd += pow((double)(ground_filter[k] - ground_count_mean), 2);
-        }
-        thresh_ground_filter = sqrt(1.0 * ground_count_sd / (total_range - 1));
-#ifdef debug_info_sv_ground_filter
-        std::cout<<std::endl<<ground_mean<<"\t"<<thresh_ground_filter<<std::endl;
-        std::cout<<"filter range "<<(ground_filter[(int)(ground_mean)] - 2 * thresh_ground_filter)<<"\t"<<(ground_filter[(int)(ground_mean)] + 2 * thresh_ground_filter)<<std::endl;
-#endif
-    }
 }
 
 bool stereo_vision::vDispCalculation()
@@ -555,8 +532,12 @@ bool stereo_vision::vDispCalculation()
         break;
     }
 
+    v_disp.release();
+    v_disp_norm.release();
+    v_disp_display.release();
+    v_disp_bi.release();
     // v-disparity generation
-    cv::Mat v_disp = cv::Mat::zeros(IMG_H, img_w, CV_16SC1);
+    v_disp = cv::Mat::zeros(IMG_H, img_w, CV_16SC1);
     for (int r = 0; r < IMG_H; r++) {
         short int* ptr_v = v_disp.ptr<short int>(r);
         for (int c = 0 ; c < IMG_W; c++) {
@@ -567,8 +548,7 @@ bool stereo_vision::vDispCalculation()
         }
     }
 
-    cv::Mat v_disp_norm;
-    cv::Mat v_disp_display = cv::Mat::zeros(v_disp.rows, v_disp.cols, CV_8UC3);
+    v_disp_display = cv::Mat::zeros(v_disp.rows, v_disp.cols, CV_8UC3);
     cv::normalize(v_disp, v_disp_norm, 0, 255, cv::NORM_MINMAX, -1, cv::Mat());
     for (int r = 0; r < v_disp_norm.rows; r++) {
         short int *ptr = v_disp_norm.ptr<short int>(r);
@@ -583,7 +563,7 @@ bool stereo_vision::vDispCalculation()
     cv::imshow("V-disp", v_disp_display);
 #endif
 
-    cv::Mat v_disp_bi = cv::Mat::zeros(v_disp.rows, v_disp.cols, CV_8UC1);
+    v_disp_bi = cv::Mat::zeros(v_disp.rows, v_disp.cols, CV_8UC1);
     for (int r = 0; r < v_disp.rows; r++) {
         short int *ptr = v_disp.ptr<short int>(r);
         uchar *ptr_o = v_disp_bi.ptr<uchar>(r);
@@ -597,12 +577,10 @@ bool stereo_vision::vDispCalculation()
     qDebug()<<"rho theta";
 #endif
 
-    std::vector<cv::Vec2f> lines;
-    double angle_min = 165 * CV_PI / 180.0, angle_max = 178 * CV_PI / 180.0;
-
+    lines.clear();
     cv::HoughLines(v_disp_bi, lines, 1, CV_PI / 180, 75, 0, 0);
     if (lines.empty()) return false;
-    std::vector<int> lines_fitted_pt;
+    lines_fitted_pt.clear();
     lines_fitted_pt.resize(lines.size(), 0);
 
     for (int i = 0; i < lines.size(); i++) {
@@ -610,7 +588,7 @@ bool stereo_vision::vDispCalculation()
 #ifdef debug_info_sv_ground_filter_v_disp
         qDebug()<<rho<<theta;
 #endif
-        if (rho >= 15 && theta >= angle_min && theta <= angle_max) {
+        if (rho >= thresh_rho_min && theta >= angle_min && theta <= angle_max) {
             for (int c = 0; c < v_disp.cols; c++) {
                 int disp_y = c * (-1 * cos(theta) / sin (theta)) + rho / sin(theta);
                 if (c >= v_disp.cols || c < 0 || disp_y >= v_disp.rows || disp_y < 0)
@@ -621,7 +599,6 @@ bool stereo_vision::vDispCalculation()
         }
     }
 
-    cv::Vec2f fitted_line;
     int fitted_line_id = -1;
     int amount_fitted_pt = 0;
     for (int k = 0 ; k < lines.size(); k++) {
@@ -663,7 +640,7 @@ bool stereo_vision::vDispCalculation()
             for (int c = 0 ; c < IMG_W; c++) {
                 float rho = fitted_line[0];
                 float theta = fitted_line[1];
-                if (data[r][c].disp == -1 || data[r][c].Y > 50) {
+                if (data[r][c].disp == -1 || data[r][c].Y > thresh_ground_y_max) {
                     data[r][c].ground_cand = false;
                     continue;
                 }
@@ -674,7 +651,7 @@ bool stereo_vision::vDispCalculation()
                 line_2.x = v_disp.cols;
                 line_2.y = line_2.x * (-1 * cos(theta) / sin (theta)) + rho / sin(theta);
                 float dist = point2Line(coor_v_disp, line_1, line_2);
-                if (dist < 1.0) {
+                if (dist < thresh_dist) {
                     avg_disp_count += 1.0;
                     ground_avg_y += 1.0 * (data[r][c].Y - ground_avg_y) / avg_disp_count;
                     data[r][c].ground_cand = true;
@@ -692,7 +669,7 @@ bool stereo_vision::vDispCalculation()
 
     if (avg_disp_count == 0.0)
         return false;
-    ground_mean_guess = ground_avg_y * 0.2 + ground_mean_guess * 0.8;
+    ground_mean_guess = ground_avg_y * weight_now + ground_mean_guess * weight_prev;
     return true;
 }
 
