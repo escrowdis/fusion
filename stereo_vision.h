@@ -149,6 +149,8 @@ public:
         int Y;
         int Z;
 
+        bool ground_cand;               // recognized as ground by v-disparity algorithm
+
         // GRIDMAP -----------
         std::pair<int, int> grid_id;    // located cell in topview
 
@@ -157,6 +159,7 @@ public:
             X = -1;
             Y = -1;
             Z = -1;
+            ground_cand = false;
             grid_id = std::pair<int, int>(-1, -1);
         }
     };
@@ -227,9 +230,9 @@ private:
 
     void depthCalculation();
 
-    void vDispCalculation();
+    bool vDispCalculation();
 
-    int point2Line(cv::Point pt, cv::Point line_1, cv::Point line_2);
+    float point2Line(cv::Point pt, cv::Point line_1, cv::Point line_2);
 
     void stereoMatch();
 
@@ -422,6 +425,7 @@ private:
 
     bool fg_ground_filter;              // do the ground filtering algorithm or not
 
+    bool fg_vDisp;                      // if there's no frame detected
     // Stereo match params (SMP) ===
     void matchParamInitialize(int cur_mode);
     // data - stereo vision ======== End
