@@ -1,6 +1,8 @@
 #ifndef KALMANFILTER_H
 #define KALMANFILTER_H
 
+#include "debug_info.h"
+
 #include "opencv2/opencv.hpp"
 
 class KalmanFilter

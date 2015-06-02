@@ -15,7 +15,15 @@ AStar::AStar()
 
 std::vector<std::pair<int, int> > AStar::PathFind2D(const int & xStart, const int & yStart, const int & xEnd, const int & yEnd)
 {
+#ifdef debug_info_ca_astar
+    t_p.restart();
+#endif
+
     PathFind(xStart, yStart, xEnd, yEnd);
+
+#ifdef debug_info_ca_astar
+    std::cout<<"A* proc. time = "<<t_p.elapsed()<<std::endl;
+#endif
     return path2D;
 }
 
@@ -151,26 +159,36 @@ void AStar::resetMap()
     }
 }
 
-bool AStar::kernelDilation(cv::Point pt, cv::Size dilate_kernel)
+void AStar::kernelDilation(cv::Point pt, cv::Size dilate_kernel)
 {
-    if (dilate_kernel.height % 2 == 0 || dilate_kernel.width % 2 == 0)
-        return false;
-
     int dilate_half_y = (dilate_kernel.height - 1) / 2;
     int dilate_half_x = (dilate_kernel.width - 1) / 2;
-    for (int r = 0; r < MAP_HEIGHT; r++) {
-        for (int c = 0; c < MAP_WIDTH; c++) {
-            for (int m = -1 * dilate_half_y; m <= dilate_half_y; m++) {
-                for (int n = -1 * dilate_half_x; n <= dilate_half_x; n++) {
-                    int x = pt.x + n;
-                    int y = pt.y + m;
-                    if (x < 0 || x >= MAP_WIDTH || y < 0 || y >= MAP_HEIGHT)
-                        continue;
-                    map[x][y] = 1;
-                }
-            }
+    int x, y;
+    bool fg_surrounded = true;
+    for (int i = -1; i <= 1; i++) {
+        for (int j = -1; j <= 1; j++) {
+            if (!fg_surrounded)
+                break;
+            x = pt.x + i;
+            y = pt.y + j;
+            if (x < 0 || x >= MAP_WIDTH || y < 0 || y >= MAP_HEIGHT)
+                continue;
+            if (map[x][y] == 0)
+                fg_surrounded = false;
+        }
+        if (!fg_surrounded)
+            break;
+    }
+    if (fg_surrounded)
+        return;
+
+    for (int n = -1 * dilate_half_x; n <= dilate_half_x; n++) {
+        for (int m = -1 * dilate_half_y; m <= dilate_half_y; m++) {
+            x = pt.x + n;
+            y = pt.y + m;
+            if (x < 0 || x >= MAP_WIDTH || y < 0 || y >= MAP_HEIGHT)
+                continue;
+            map[x][y] = 1;
         }
     }
-
-    return true;
 }

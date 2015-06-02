@@ -37,13 +37,12 @@ stereo_vision::stereo_vision() : TopView(20, 200, 3000, 19.8, 1080, 750, 270, 12
     param_sgbm = new matchParamSGBM;
     param_bm = new matchParamBM;
 
-    objects = new objInformation[obj_nums];
-    objects_display = new objInformation[obj_nums];
-    om = new objMatchingInfo[obj_nums];
-    om_prev = new objMatchingInfo[obj_nums];
+    objects = new objectInfo[obj_nums];
+    objects_display = new objectInfo[obj_nums];
+    om = new objectMatchingInfo[obj_nums];
+    om_prev = new objectMatchingInfo[obj_nums];
     hist_size = 255;
-//    float h_range[] = {0, 360};
-    hist_ranges = new float[]({0, 360});
+    hist_ranges = new float[]({1, 360});
     fg_om_existed = false;
     fg_om_prev_existed = false;
     om_size = obj_nums;
@@ -270,6 +269,7 @@ void stereo_vision::matchParamInitialize(int cur_mode)
 void stereo_vision::modeChange(int cur_mode, bool fg_form_smp_update)
 {
     match_mode = cur_mode;
+
     updateParamsSmp();
 
     if (fg_form_smp_update)
@@ -1316,27 +1316,11 @@ void stereo_vision::objectMatching()
 
 void stereo_vision::updateDataForDisplay()
 {
-    for (int i = 0; i < obj_nums; i++) {
-        lock_sv_object.lockForRead();
-        objects_display[i].pts_num = objects[i].pts_num;
-        objects_display[i].labeled = objects[i].labeled;
-        objects_display[i].avg_Z = objects[i].avg_Z;
-        objects_display[i].avg_X = objects[i].avg_X;
-        objects_display[i].closest_count = objects[i].closest_count;
-        objects_display[i].rect_tl = objects[i].rect_tl;
-        objects_display[i].rect_br = objects[i].rect_br;
-        objects_display[i].tl = objects[i].tl;
-        objects_display[i].br = objects[i].br;
-        objects_display[i].center = objects[i].center;
-        objects_display[i].color = objects[i].color;
-        objects_display[i].img = objects[i].img.clone();
-        objects_display[i].rect = objects[i].rect;
-        objects_display[i].pc = objects[i].pc;
-        objects_display[i].rect_f = objects[i].rect_f;
-        objects_display[i].rect_world = objects[i].rect_world;
-        objects_display[i].pc_world = objects[i].pc_world;
-        lock_sv_object.unlock();
-    }
+//    objectInfo *oti;
+//    oti = objects_display;
+//    objects_display = objects;
+//    objects = oti;
+    std::swap(objects, objects_display);
 }
 
 void stereo_vision::change_bm_pre_filter_size(int value)

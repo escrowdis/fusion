@@ -7,11 +7,14 @@
 #include <string>
 #include <math.h>
 #include <ctime>
+#include <QTime>
+
+#include "debug_info.h"
 
 #include "opencv2/core.hpp"
 
 #define MAP_WIDTH 640
-#define MAP_HEIGHT 640
+#define MAP_HEIGHT 320
 
 // possible direction
 const static int dir = 8;
@@ -78,7 +81,7 @@ public:
 //    std::string PathFind(const int & xStart, const int & yStart, const int & xEnd, const int & yEnd);
     void PathFind(const int & xStart, const int & yStart, const int & xEnd, const int & yEnd);
 
-    bool kernelDilation(cv::Point pt, cv::Size dilate_kernel);
+    void kernelDilation(cv::Point pt, cv::Size dilate_kernel);
 
     void resetMap();
 
@@ -98,6 +101,8 @@ private:
     std::string path;
 
     std::vector<std::pair<int, int> > path2D;
+
+    QTime t_p;                          // process time of all exec.
 };
 
 

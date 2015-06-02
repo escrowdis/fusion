@@ -24,7 +24,7 @@
      </rect>
     </property>
     <property name="currentIndex">
-     <number>1</number>
+     <number>4</number>
     </property>
     <widget class="QWidget" name="tab">
      <attribute name="title">
@@ -936,6 +936,89 @@ parameters</string>
       </widget>
      </widget>
     </widget>
+    <widget class="QWidget" name="tab_9">
+     <attribute name="title">
+      <string>Tracking</string>
+     </attribute>
+     <widget class="QCheckBox" name="checkBox_ot">
+      <property name="geometry">
+       <rect>
+        <x>30</x>
+        <y>40</y>
+        <width>73</width>
+        <height>16</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Tracking</string>
+      </property>
+     </widget>
+     <widget class="QCheckBox" name="checkBox_ca_astar">
+      <property name="geometry">
+       <rect>
+        <x>170</x>
+        <y>110</y>
+        <width>73</width>
+        <height>16</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>A*</string>
+      </property>
+     </widget>
+     <widget class="QCheckBox" name="checkBox_ca_vfh">
+      <property name="geometry">
+       <rect>
+        <x>170</x>
+        <y>140</y>
+        <width>73</width>
+        <height>16</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>VFH</string>
+      </property>
+     </widget>
+     <widget class="QCheckBox" name="checkBox_ot_kf">
+      <property name="geometry">
+       <rect>
+        <x>120</x>
+        <y>40</y>
+        <width>91</width>
+        <height>16</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Kalman filter</string>
+      </property>
+     </widget>
+     <widget class="QCheckBox" name="checkBox_ot_pf">
+      <property name="geometry">
+       <rect>
+        <x>120</x>
+        <y>70</y>
+        <width>91</width>
+        <height>16</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Particle filter</string>
+      </property>
+     </widget>
+     <widget class="QCheckBox" name="checkBox_ca">
+      <property name="geometry">
+       <rect>
+        <x>30</x>
+        <y>110</y>
+        <width>121</width>
+        <height>16</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Collision Avoidance</string>
+      </property>
+     </widget>
+    </widget>
    </widget>
    <widget class="QWidget" name="layoutWidget">
     <property name="geometry">
@@ -969,7 +1052,7 @@ parameters</string>
      </rect>
     </property>
     <property name="currentIndex">
-     <number>1</number>
+     <number>3</number>
     </property>
     <widget class="QWidget" name="tab_7">
      <attribute name="title">
@@ -1234,7 +1317,7 @@ parameters</string>
       <property name="geometry">
        <rect>
         <x>810</x>
-        <y>30</y>
+        <y>50</y>
         <width>151</width>
         <height>56</height>
        </rect>
@@ -1303,7 +1386,7 @@ parameters</string>
       <property name="geometry">
        <rect>
         <x>820</x>
-        <y>100</y>
+        <y>120</y>
         <width>109</width>
         <height>16</height>
        </rect>
@@ -1325,11 +1408,41 @@ parameters</string>
        <string>Detected image</string>
       </property>
      </widget>
+     <widget class="QWidget" name="layoutWidget">
+      <property name="geometry">
+       <rect>
+        <x>810</x>
+        <y>10</y>
+        <width>111</width>
+        <height>18</height>
+       </rect>
+      </property>
+      <layout class="QGridLayout" name="gridLayout_22">
+       <item row="0" column="0">
+        <widget class="QRadioButton" name="radioButton_vehicle_cart">
+         <property name="text">
+          <string>Cart</string>
+         </property>
+         <property name="checked">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="1">
+        <widget class="QRadioButton" name="radioButton_vehicle_car">
+         <property name="text">
+          <string>Car</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
      <zorder>layoutWidget</zorder>
      <zorder>label_fusion_BG</zorder>
      <zorder>label_fusion</zorder>
      <zorder>checkBox_fused_sv_plot_every_pixel</zorder>
      <zorder>label_sv_detected_display</zorder>
+     <zorder>layoutWidget</zorder>
     </widget>
    </widget>
    <widget class="QWidget" name="layoutWidget">
@@ -1861,35 +1974,6 @@ parameters</string>
       <widget class="QLabel" name="label_12">
        <property name="text">
         <string>Computing Time</string>
-       </property>
-      </widget>
-     </item>
-    </layout>
-   </widget>
-   <widget class="QWidget" name="layoutWidget">
-    <property name="geometry">
-     <rect>
-      <x>230</x>
-      <y>10</y>
-      <width>111</width>
-      <height>18</height>
-     </rect>
-    </property>
-    <layout class="QGridLayout" name="gridLayout_22">
-     <item row="0" column="0">
-      <widget class="QRadioButton" name="radioButton_vehicle_cart">
-       <property name="text">
-        <string>Cart</string>
-       </property>
-       <property name="checked">
-        <bool>true</bool>
-       </property>
-      </widget>
-     </item>
-     <item row="0" column="1">
-      <widget class="QRadioButton" name="radioButton_vehicle_car">
-       <property name="text">
-        <string>Car</string>
        </property>
       </widget>
      </item>

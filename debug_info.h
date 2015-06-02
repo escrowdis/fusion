@@ -24,5 +24,6 @@
 //#define debug_info_sv_object_matching_others
 //#define debug_info_sv_ground_filter_v_disp
 //#define debug_info_cc
+//#define debug_info_ca_astar
 
 #endif // DEBUG_INFO_H

@@ -15,6 +15,7 @@ extern QReadWriteLock lock_sv_data;
 extern QReadWriteLock lock_sv_object;
 extern QReadWriteLock lock_sv_mouse;
 extern QReadWriteLock lock_f_sv;
+extern QReadWriteLock lock_f_topview;
 
 // recording
 #include "recording/recording.h"
@@ -306,7 +307,7 @@ private:
     std::vector<int> map_Bha_corr_id_r;
     std::vector<int> map_Bha_corr_id_c;
 
-    struct objMatchingInfo
+    struct objectMatchingInfo
     {
         SensorBase::PC pc;
 
@@ -324,8 +325,8 @@ private:
         std::pair<int, int> center;     // Center point of object in image (row, col)
     };
 
-    objMatchingInfo *om;
-    objMatchingInfo *om_prev;
+    objectMatchingInfo *om;
+    objectMatchingInfo *om_prev;
 
 #ifdef debug_info_sv_object_matching_img
     cv::Mat comp, comp_prev;
@@ -340,7 +341,7 @@ private:
     int obj_nums;                       // maximum object detection amount
 
 public:
-    struct objInformation
+    struct objectInfo
     {
         // SENSOR ============
         // GRIDMAP -----------
@@ -382,7 +383,7 @@ public:
 
         int prev_id;
 
-        objInformation() {
+        objectInfo() {
             labeled = false;
             tl = std::pair<int, int>(-1, -1);
             br = std::pair<int, int>(-1, -1);
@@ -395,10 +396,10 @@ public:
         }
     };
 
-    objInformation* objects_display;
+    objectInfo* objects_display;
 
 private:
-    objInformation* objects;            // filtered objects
+    objectInfo* objects;                // filtered objects
 
     void updateDataForDisplay();
     // object information ========== End
@@ -406,7 +407,7 @@ private:
     // object params ===============
     int detected_obj;                   // Amount of detected object
 
-    objInformation obj_temp;            // sorting used
+    objectInfo obj_temp;                // sorting used
 
     void resetBlob();
 

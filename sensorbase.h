@@ -23,8 +23,8 @@ public:
     };
 
     // Conversion between polar and Cartesian
-    cv::Point polar2Cart(PC pc_in);
-    PC cart2Polar(cv::Point pt_in);
+    static cv::Point polar2Cart(PC pc_in);
+    static PC cart2Polar(cv::Point pt_in);
 };
 
 #endif // SENSORBASE_H

@@ -457,8 +457,7 @@ void MainWindow::updateFusedTopView()
     si->updateFusedTopView();
     ui->label_fusion_BG->setPixmap(QPixmap::fromImage(QImage::QImage(si->fused_topview_BG.data, si->fused_topview_BG.cols, si->fused_topview_BG.rows, si->fused_topview_BG.step, QImage::Format_RGBA8888)));
 
-    if (f_fused.isRunning())
-        dataFused();
+    dataFused();
 }
 
 void MainWindow::on_radioButton_vehicle_cart_clicked()
@@ -487,6 +486,7 @@ void MainWindow::wheelEvent(QWheelEvent *ev)
         }
     }
 
+    while (f_fused.isRunning()) {}
     updateFusedTopView();
 }
 
@@ -496,16 +496,19 @@ void MainWindow::dataFused()
     bool fg_sv_each_pixel = ui->checkBox_fused_sv_plot_every_pixel->isChecked();
     bool fg_radar = ui->checkBox_fusion_radar->isChecked() && si->rc->fusedTopview();
     bool fg_fusion = ui->checkBox_fusion_data->isChecked();
-    si->dataExec(fg_sv, fg_radar, fg_fusion, fg_sv_each_pixel);
+    bool fg_ca_astar = ui->checkBox_ca->isChecked() && ui->checkBox_ca_astar->isChecked();
+    si->dataExec(fg_sv, fg_radar, fg_fusion, fg_sv_each_pixel, fg_ca_astar);
 }
 
 void MainWindow::fusedDisplay(cv::Mat *fused_topview, cv::Mat *img_detected_display)
 {
     lock_f_sv.lockForRead();
     ui->label_sv_detected_display->setPixmap(QPixmap::fromImage(QImage::QImage(img_detected_display->data, img_detected_display->cols, img_detected_display->rows, img_detected_display->step, QImage::Format_RGB888)).scaled(IMG_DIS_W, IMG_DIS_H));
-    ui->label_sv_detected_display->update();
     lock_f_sv.unlock();
+    lock_f_topview.lockForRead();
     ui->label_fusion->setPixmap(QPixmap::fromImage(QImage::QImage(fused_topview->data, fused_topview->cols, fused_topview->rows, fused_topview->step, QImage::Format_RGBA8888)));
+    lock_f_topview.unlock();
+    ui->label_sv_detected_display->update();
     ui->label_fusion->update();
     qApp->processEvents();
 }
@@ -813,6 +816,7 @@ void MainWindow::threadProcessing()
             f_radar = QtConcurrent::run(si, &SensorInfo::radarDataExec);
         }
         if (!f_fused.isRunning()) {
+//            dataFused();
             f_fused = QtConcurrent::run(this, &MainWindow::dataFused);
         }
 

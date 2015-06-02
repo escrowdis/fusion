@@ -102,7 +102,7 @@ public:
 
     void updateFusedTopView();
 
-    void dataExec(bool fg_sv, bool fg_radar, bool fg_fusion, bool fg_sv_each);
+    void dataExec(bool fg_sv, bool fg_radar, bool fg_fusion, bool fg_sv_each, bool fg_ca_astar);
 
     void zoomOutFusedTopView();
 
@@ -124,7 +124,11 @@ private:
 
     bool fg_fusion;
 
+    bool fg_ca_astar;
+
     void dataFusion();
+
+    void dataCollisionAvoidance(bool fg_sv, bool fg_radar);
 
     void drawFusedTopView(bool fg_sv, bool fg_radar, bool fg_sv_each);
 
@@ -182,9 +186,13 @@ private:
 
         int length;                                 // (cm)
 
+        int width_pixel;                            // (pixel)
+
+        int length_pixel;                           // (pixel)
+
         int head_pos;                               // (cm)
 
-        cv::Rect rect;
+        cv::Rect rect;                              // (pixel)
 
         cv::Scalar color;                           // vehicle color
     } vehicle;

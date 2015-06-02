@@ -11,6 +11,8 @@ QReadWriteLock lock_lrf;
 QReadWriteLock lock_radar;
 
 QReadWriteLock lock_f_sv;
+QReadWriteLock lock_f_topview;
+
 #include <QDir>
 QDir project_path;
 #include "recording/recording.h"

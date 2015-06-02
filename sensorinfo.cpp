@@ -14,6 +14,8 @@ SensorInfo::SensorInfo()
     fg_fusion = false;
 
     // max. size of detected objects
+    fg_ca_astar = false;
+
     ot_sv = new ObjectTracking();
     ot_sv->initialze(sv->objSize());
     ot_radar = new ObjectTracking();
@@ -53,8 +55,9 @@ void SensorInfo::initialFusedTopView(int range_pixel)
 
     // use cart as default
     vehicle.width = 43;
-
     vehicle.length = 43;
+    vehicle.width_pixel = vehicle.width * ratio;
+    vehicle.length_pixel = vehicle.length * ratio;
 
     vehicle.head_pos = vehicle.length / 2;
 
@@ -104,12 +107,10 @@ void SensorInfo::updateFusedTopView()
 
     vehicle.VCP = cv::Point(detection_range_pixel, detection_range_pixel);
 
-    vehicle.rect = cv::Rect(vehicle.VCP.x - (int)(vehicle.width * ratio / 2), vehicle.VCP.y - (int)(vehicle.length * ratio / 2),
-                            (int)(vehicle.width * ratio), (int)(vehicle.length * ratio));
+    vehicle.rect = cv::Rect(vehicle.VCP.x - (int)(vehicle.width_pixel / 2.0), vehicle.VCP.y - (int)(vehicle.length_pixel / 2.0),
+                            vehicle.width_pixel, vehicle.length_pixel);
 
     vehicle.color = cv::Scalar(0, 255, 0, 255);
-
-    fused_topview.setTo(cv::Scalar(0, 0, 0, 0));
 
     fused_topview_BG.setTo(cv::Scalar(0, 0, 0, 0));
 
@@ -184,6 +185,9 @@ void SensorInfo::chooseVehicle(int vehicle_type)
         sensors[SENSOR::RADAR].location.pos = cv::Point(0, vehicle.head_pos);
         break;
     }
+
+    vehicle.width_pixel = vehicle.width * ratio;
+    vehicle.length_pixel = vehicle.length * ratio;
     // find max & min detection range in all sensors, so this function shall be called after initialization of all sensors
     max_detection_range = rc->max_distance;
     min_detection_range = rc->min_distance + sqrt(pow(0.5 * vehicle.length, 2) + pow(0.5 * vehicle.width, 2));
@@ -217,32 +221,102 @@ void SensorInfo::zoomInFusedTopView()
                     detection_range - gap : min_detection_range;
 }
 
-void SensorInfo::dataExec(bool fg_sv, bool fg_radar, bool fg_fusion, bool fg_sv_each)
+void SensorInfo::dataExec(bool fg_sv, bool fg_radar, bool fg_fusion, bool fg_sv_each, bool fg_ca_astar)
 {
     dataProcess(fg_sv, fg_radar);
+
+    lock_f_topview.lockForWrite();
+    fused_topview.setTo(cv::Scalar(0, 0, 0, 0));
+    lock_f_topview.unlock();
 
     this->fg_fusion = fg_fusion && (fg_sv && fg_radar);
     dataFusion();
 
-    // A*
-    ca->path = ca->astar->PathFind2D(320, 320, 320, 0);
-    if (!ca->path.empty()) {
-        for (int k = 0; k < ca->path.size(); k++) {
-            int map_x = ca->path[k].first;
-            int map_y = ca->path[k].second;
-            cv::circle(fused_topview, cv::Point(map_x, map_y), 3, cv::Scalar(0, 0, 255, 255), 2, 8, 0);
-        }
-    }
+    this->fg_ca_astar = fg_ca_astar && (fg_sv || fg_radar);
+    dataCollisionAvoidance(fg_sv, fg_radar);
 
     drawFusedTopView(fg_sv, fg_radar, fg_sv_each);
 }
 
+void SensorInfo::dataCollisionAvoidance(bool fg_sv, bool fg_radar)
+{
+    if (!fg_ca_astar)
+        return;
+
+    stereo_vision::objectInfo *d_sv = sv->objects_display;
+    RadarController::objectTrackingInfo *d_radar = rc->objects_display;
+
+    // reset A* map
+    ca->astar->resetMap();
+
+    // plot to map w/ dilation using size of vehicle
+    // Stereo vision
+    int device = SENSOR::SV;
+    if (fg_sv)
+        lock_f_sv.lockForWrite();
+        for (int k = 0; k < sv->objSize(); k++)
+            if (d_sv[k].labeled) {
+                int tl_x, tl_y, br_x, br_y;
+                tl_x = d_sv[k].rect_f.tl().x;
+                tl_y = d_sv[k].rect_f.tl().y;
+                br_x = d_sv[k].rect_f.br().x;
+                br_y = d_sv[k].rect_f.br().y;
+                for (int c = tl_x; c < br_x; c++) {
+                    for (int r = tl_y; r < br_y; r++) {
+                        ca->astar->map[c][r] = 1;
+                        ca->astar->kernelDilation(d_sv[k].plot_pt_f, cv::Size(vehicle.width_pixel, vehicle.length_pixel));
+                    }
+                }
+            }
+        lock_f_sv.unlock();
+    // RADAR
+    device = SENSOR::RADAR;
+    if (fg_radar)
+        for (int m = 0; m < rc->objSize(); m++)
+            if (d_radar[m].status >= rc->obj_status_filtered)
+                ca->astar->kernelDilation(d_radar[m].plot_pt_f, cv::Size(vehicle.width_pixel + 9, vehicle.length_pixel + 11));
+
+    // A* path planning
+    ca->path = ca->astar->PathFind2D(320, 320, 320, 0);
+
+#ifdef debug_info_ca_astar
+    int ratio = 1;
+    int display_w = MAP_WIDTH * ratio;
+    int display_h = MAP_HEIGHT * ratio;
+    cv::Mat img_result = cv::Mat(display_h, display_w, CV_8UC3, cv::Scalar(255, 255, 255));
+    for (int c = 0; c < MAP_WIDTH; c++) {
+        for (int r = 0; r < MAP_HEIGHT; r++) {
+            if (ca->astar->map[c][r] == 1) {
+                for (int rr = r * ratio; rr < (r + 1) * ratio; rr++) {
+                    for (int cc = c * ratio; cc < (c + 1) * ratio; cc++) {
+                        img_result.at<cv::Vec3b>(rr, cc) = cv::Vec3b(0, 0, 0);
+                    }
+                }
+            }
+        }
+    }
+
+    if (!ca->path.empty()) {
+        for (int k = 0; k < ca->path.size(); k++) {
+            int map_x = ca->path[k].first;
+            int map_y = ca->path[k].second;
+            for (int r = map_y * ratio; r < (map_y + 1) * ratio; r++) {
+                for (int c = map_x * ratio; c < (map_x + 1) * ratio; c++) {
+                    img_result.at<cv::Vec3b>(r, c) = cv::Vec3b(128, 128, 128);
+                }
+            }
+        }
+    }
+
+//    cv::imshow("A* result", img_result);
+    cv::imwrite("Astar.jpg", img_result);
+#endif
+}
+
 void SensorInfo::dataProcess(bool fg_sv, bool fg_radar)
 {
-    stereo_vision::objInformation *d_sv = sv->objects_display;
-    RadarController::ESR_track_object_info *d_radar = rc->esr_obj;
-
-    ca->astar->resetMap();
+    stereo_vision::objectInfo *d_sv = sv->objects_display;
+    RadarController::objectTrackingInfo *d_radar = rc->objects_display;
 
     // Stereo vision
     int device = SENSOR::SV;
@@ -253,9 +327,6 @@ void SensorInfo::dataProcess(bool fg_sv, bool fg_radar)
                 d_sv[k].pc_world = coordinateTransform(CT_SCS2WCS, sensors[device].pos_pixel, d_sv[k].pc);
                 d_sv[k].plot_pt_f = point2FusedTopView(sensors[device].pos_pixel, d_sv[k].pc);
                 d_sv[k].rect_f = rectOnFusedTopView(d_sv[k].plot_pt_f, d_sv[k].rect);
-
-                // A*
-                ca->astar->kernelDilation(d_sv[k].plot_pt_f, cv::Size(19, 27));
             }
         }
         lock_f_sv.unlock();
@@ -268,9 +339,6 @@ void SensorInfo::dataProcess(bool fg_sv, bool fg_radar)
                 d_radar[m].pc = SensorBase::PC(100 * d_radar[m].range, d_radar[m].angle + sensors[device].location.theta);
                 d_radar[m].plot_pt_f = point2FusedTopView(sensors[device].pos_pixel, d_radar[m].pc);
                 d_radar[m].pc_world = coordinateTransform(CT_SCS2WCS, sensors[device].pos_pixel, d_radar[m].pc);
-
-                // A*
-                ca->astar->kernelDilation(d_radar[m].plot_pt_f, cv::Size(19, 27));
             }
         }
     }
@@ -281,8 +349,8 @@ void SensorInfo::dataFusion()
     if (!fg_fusion)
         return;
 
-    stereo_vision::objInformation *d_sv = sv->objects_display;
-    RadarController::ESR_track_object_info *d_radar = rc->esr_obj;
+    stereo_vision::objectInfo *d_sv = sv->objects_display;
+    RadarController::objectTrackingInfo *d_radar = rc->objects_display;
 
     std::string tag;
     for (int k = 0; k < sv->objSize(); k++) {
@@ -321,19 +389,20 @@ void SensorInfo::dataFusion()
             double range = sqrt(pow((double)(0.1 * (sv_x + sensors[0].location.pos.x) + 0.9 * (radar_min_x + sensors[0].location.pos.x)), 2) +
                     pow((double)(0.1 * (sv_y + sensors[1].location.pos.y) + 0.9 * (radar_min_y + sensors[1].location.pos.y) - vehicle.head_pos), 2));
             fused_pos = cv::Point2d(fused_x, fused_y);
-            cv::circle(fused_topview, cv::Point(fused_pos), thickness + 2, cv::Scalar(139, 0, 139, 255), -1, 8, 0);
             tag = QString::number(range / 100, 'g', range_precision).toStdString();
+            lock_f_topview.lockForWrite();
+            cv::circle(fused_topview, cv::Point(fused_pos), thickness + 2, cv::Scalar(139, 0, 139, 255), -1, 8, 0);
             cv::putText(fused_topview, tag, cv::Point(fused_pos.x - 50, fused_pos.y), font, font_size, cv::Scalar(139, 0, 139, 255), font_thickness);
 //            std::cout<<k<<" "<<closest_radar_id<<"\t"<<range<<std::endl;
+            lock_f_topview.unlock();
         }
     }
 }
 
 void SensorInfo::drawFusedTopView(bool fg_sv, bool fg_radar, bool fg_sv_each)
 {
-    stereo_vision::objInformation *d_sv = sv->objects_display;
-    RadarController::ESR_track_object_info *d_radar = rc->esr_obj;
-    fused_topview.setTo(cv::Scalar(0, 0, 0, 0));
+    stereo_vision::objectInfo *d_sv = sv->objects_display;
+    RadarController::objectTrackingInfo *d_radar = rc->objects_display;
 
     // Sensor - Stereo vision
     std::string tag;
@@ -343,6 +412,7 @@ void SensorInfo::drawFusedTopView(bool fg_sv, bool fg_radar, bool fg_sv_each)
         if (fg_sv_each) {
             cv::Scalar color_pixel = sensors[device].color;
             color_pixel[3] = 100;
+            lock_f_topview.lockForWrite();
             for (int r = 0; r < IMG_H; r++) {
                 for (int c = 0; c < IMG_W; c++) {
                     if (sv->data[r][c].disp > 0) {
@@ -353,6 +423,7 @@ void SensorInfo::drawFusedTopView(bool fg_sv, bool fg_radar, bool fg_sv_each)
                     }
                 }
             }
+            lock_f_topview.unlock();
         }
         // objects
         lock_f_sv.lockForWrite();
@@ -360,50 +431,55 @@ void SensorInfo::drawFusedTopView(bool fg_sv, bool fg_radar, bool fg_sv_each)
             sv->img_detected_display = cv::Mat::zeros(IMG_H, IMG_W, CV_8UC3);
         else
             sv->img_detected_display = sv->img_r_L.clone();
-        lock_f_sv.unlock();
+
         for (int k = 0; k < sv->objSize(); k++) {
             if (d_sv[k].labeled) {
+                tag = QString::number(k).toStdString() + ", " + QString::number(d_sv[k].pc_world.range / 100, 'g', range_precision).toStdString();
                 cv::circle(fused_topview, d_sv[k].plot_pt_f, thickness, sensors[device].color, -1, 8, 0);
                 cv::rectangle(fused_topview, d_sv[k].rect_f, cv::Scalar(255, 255, 0, 255), 1, 8, 0);
-                tag = QString::number(k).toStdString() + ", " + QString::number(d_sv[k].pc_world.range / 100, 'g', range_precision).toStdString();
                 cv::putText(fused_topview, tag, d_sv[k].plot_pt_f, font, font_size, sensors[device].color, font_thickness);
                 // calculate world range and angle
                 int range_precision = 4;
                 if (d_sv[k].br != std::pair<int, int>(-1, -1) && d_sv[k].tl != std::pair<int, int>(-1, -1)) {
-                    lock_f_sv.lockForRead();
                     cv::rectangle(sv->img_detected_display, cv::Rect(d_sv[k].tl.second, d_sv[k].tl.first, (d_sv[k].br.second - d_sv[k].tl.second), (d_sv[k].br.first - d_sv[k].tl.first)),
                                   d_sv[k].color, sv->thick_obj_rect, 8, 0);
                     cv::circle(sv->img_detected_display, cv::Point(d_sv[k].center.second, d_sv[k].center.first), sv->radius_obj_point, cv::Scalar(0, 255, 0), -1, 8, 0);
                     std::string distance_tag = QString::number(d_sv[k].pc_world.range / 100.0, 'g', range_precision).toStdString() + " M";
                     cv::putText(sv->img_detected_display, distance_tag, cv::Point(d_sv[k].tl.second, d_sv[k].br.first - 5), cv::FONT_HERSHEY_COMPLEX_SMALL, 2, cv::Scalar(0, 0, 255), 2);
-                    lock_f_sv.unlock();
                 }
             }
         }
+        lock_f_sv.unlock();
     }
 
     // Sensor - RADAR
     device = SENSOR::RADAR;
     if (fg_radar) {
+        lock_f_topview.lockForWrite();
         for (int m = 0; m < rc->objSize(); m++) {
             if (d_radar[m].status >= rc->obj_status_filtered) {
-                cv::circle(fused_topview, d_radar[m].plot_pt_f, thickness, sensors[device].color, -1, 8, 0);
                 tag = QString::number(m).toStdString() + ", " + QString::number(d_radar[m].pc_world.range / 100, 'g', range_precision).toStdString();
+                cv::circle(fused_topview, d_radar[m].plot_pt_f, thickness, sensors[device].color, -1, 8, 0);
                 cv::putText(fused_topview, tag, cv::Point(d_radar[m].plot_pt_f.x, d_radar[m].plot_pt_f.y + 15), font, font_size, sensors[device].color, font_thickness);
             }
         }
+        lock_f_topview.unlock();
     }
 
     // Collision avoidance
     // A*
-    for (int k = 0; k < ca->path.size(); k++) {
-        int map_x = ca->path[k].first;
-        int map_y = ca->path[k].second;
-        for (int r = map_y; r < map_y + 1; r++) {
-            for (int c = map_x; c < map_x + 1; c++) {
-                fused_topview.at<cv::Vec4b>(r, c) = cv::Vec4b(0, 0, 0, 255);
+    if (fg_ca_astar && !ca->path.empty()) {
+        lock_f_topview.lockForWrite();
+        for (int k = 0; k < ca->path.size(); k++) {
+            int map_x = ca->path[k].first;
+            int map_y = ca->path[k].second;
+            for (int r = map_y; r < map_y + 1; r++) {
+                for (int c = map_x; c < map_x + 1; c++) {
+                    fused_topview.at<cv::Vec4b>(r, c) = cv::Vec4b(0, 0, 0, 255);
+                }
             }
         }
+        lock_f_topview.unlock();
     }
 
     emit updateGUI(&fused_topview, &sv->img_detected_display);

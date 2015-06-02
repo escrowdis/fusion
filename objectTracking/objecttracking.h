@@ -1,6 +1,8 @@
 #ifndef OBJECTTRACKING_H
 #define OBJECTTRACKING_H
 
+#include "debug_info.h"
+
 #include "kalmanfilter.h"
 #include "particlefilter.h"
 

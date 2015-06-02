@@ -8,7 +8,9 @@ RadarController::RadarController() : TopView(1, 100, 20470, 102.3, 31900, 600, 9
     // input source
     input_mode = RADAR::INPUT_SOURCE::ESR;
 
-    esr_obj = new ESR_track_object_info[OBJECT_NUM];
+    objects = new objectTrackingInfo[OBJECT_NUM];
+
+    objects_display = new objectTrackingInfo[OBJECT_NUM];
 
     obj_status_filtered = 2;
 
@@ -45,7 +47,8 @@ RadarController::~RadarController()
     delete[] LUT_grid_row;
     delete[] LUT_grid_col;
 
-    delete[] esr_obj;
+    delete[] objects;
+    delete[] objects_display;
 
     delete[] item;
 }
@@ -250,7 +253,18 @@ int RadarController::dataExec()
         return RADAR::STATUS::OK;
     }
 
+    updateDataForDisplay();
+
     return RADAR::STATUS::DATA_NOT_ENOUGHT;
+}
+
+void RadarController::updateDataForDisplay()
+{
+//    objectTrackingInfo *oti;
+//    oti = objects_display;
+//    objects_display = objects;
+//    objects = oti;
+    std::swap(objects, objects_display);
 }
 
 int RadarController::guiUpdate()
@@ -307,56 +321,56 @@ void RadarController::retrievingData()
 
             if (b_track_lat_rate.at(5) == 1) {
                 b_track_lat_rate[5] = 0;
-                esr_obj[_id].lat_rate = b_track_lat_rate.to_ulong() * 0.25 - 8.0;
+                objects[_id].lat_rate = b_track_lat_rate.to_ulong() * 0.25 - 8.0;
             }
             else
-                esr_obj[_id].lat_rate = b_track_lat_rate.to_ulong() * 0.25;
-            esr_obj[_id].lat_rate = b_track_lat_rate.to_ulong() * 0.25;
-            esr_obj[_id].grouping_changed = (b_track_lat_rate.to_ulong() == 1 ? true : false);
-            esr_obj[_id].oncoming = (b_track_oncoming.to_ulong() == 1 ? true : false);
-            esr_obj[_id].status = b_track_status.to_ulong();
+                objects[_id].lat_rate = b_track_lat_rate.to_ulong() * 0.25;
+            objects[_id].lat_rate = b_track_lat_rate.to_ulong() * 0.25;
+            objects[_id].grouping_changed = (b_track_lat_rate.to_ulong() == 1 ? true : false);
+            objects[_id].oncoming = (b_track_oncoming.to_ulong() == 1 ? true : false);
+            objects[_id].status = b_track_status.to_ulong();
             if (b_track_angle.at(9) == 1) {
                 b_track_angle[9] = 0;
-                esr_obj[_id].angle = b_track_angle.to_ulong() * 0.1 - 51.2;
+                objects[_id].angle = b_track_angle.to_ulong() * 0.1 - 51.2;
             }
             else
-                esr_obj[_id].angle = b_track_angle.to_ulong() * 0.1;
-            esr_obj[_id].range = b_track_range.to_ulong() * 0.1;
-            esr_obj[_id].bridge_object = (b_track_bridge_object.to_ulong() == 1 ? true : false);
-            esr_obj[_id].rolling_count = (b_track_rolling_count.to_ulong() == 1 ? true : false);
-            esr_obj[_id].width = b_track_width.to_ulong() * 0.5;
+                objects[_id].angle = b_track_angle.to_ulong() * 0.1;
+            objects[_id].range = b_track_range.to_ulong() * 0.1;
+            objects[_id].bridge_object = (b_track_bridge_object.to_ulong() == 1 ? true : false);
+            objects[_id].rolling_count = (b_track_rolling_count.to_ulong() == 1 ? true : false);
+            objects[_id].width = b_track_width.to_ulong() * 0.5;
             if (b_track_range_accel.at(9) == 1) {
                 b_track_range_accel[9] = 0;
-                esr_obj[_id].range_accel = b_track_range_accel.to_ulong() * 0.05 - 25.6;
+                objects[_id].range_accel = b_track_range_accel.to_ulong() * 0.05 - 25.6;
             }
             else
-                esr_obj[_id].range_accel = b_track_range_accel.to_ulong() * 0.05;
-            esr_obj[_id].med_range_mode = b_track_med_range_mode.to_ulong();
+                objects[_id].range_accel = b_track_range_accel.to_ulong() * 0.05;
+            objects[_id].med_range_mode = b_track_med_range_mode.to_ulong();
             if (b_track_range_rate.at(13) == 1) {
                 b_track_range_rate[13] = 0;
-                esr_obj[_id].range_rate = b_track_range_rate.to_ulong() * 0.01 - 81.92;
+                objects[_id].range_rate = b_track_range_rate.to_ulong() * 0.01 - 81.92;
             }
             else
-                esr_obj[_id].range_rate = b_track_range_rate.to_ulong() * 0.01;
+                objects[_id].range_rate = b_track_range_rate.to_ulong() * 0.01;
 
-            esr_obj[_id].x = 1.0 * esr_obj[_id].range * sin(abs(esr_obj[_id].angle));
-            esr_obj[_id].y = 0.0;
-            esr_obj[_id].z = esr_obj[_id].range * cos(esr_obj[_id].angle);
+            objects[_id].x = 1.0 * objects[_id].range * sin(abs(objects[_id].angle));
+            objects[_id].y = 0.0;
+            objects[_id].z = objects[_id].range * cos(objects[_id].angle);
 
 #ifdef debug_info_radar_data
             std::cout<<_id<<"\t\n"<<
-                    esr_obj[_id].lat_rate <<" "<<
-                    esr_obj[_id].oncoming <<" "<<
-                    esr_obj[_id].grouping_changed <<" "<<
-                    esr_obj[_id].status <<" "<<
-                    esr_obj[_id].angle <<" "<<
-                    esr_obj[_id].range <<" "<<
-                    esr_obj[_id].bridge_object <<" "<<
-                    esr_obj[_id].rolling_count <<" "<<
-                    esr_obj[_id].width <<" "<<
-                    esr_obj[_id].range_accel <<" "<<
-                    esr_obj[_id].med_range_mode <<" "<<
-                    esr_obj[_id].range_rate <<" "<<
+                    objects[_id].lat_rate <<" "<<
+                    objects[_id].oncoming <<" "<<
+                    objects[_id].grouping_changed <<" "<<
+                    objects[_id].status <<" "<<
+                    objects[_id].angle <<" "<<
+                    objects[_id].range <<" "<<
+                    objects[_id].bridge_object <<" "<<
+                    objects[_id].rolling_count <<" "<<
+                    objects[_id].width <<" "<<
+                    objects[_id].range_accel <<" "<<
+                    objects[_id].med_range_mode <<" "<<
+                    objects[_id].range_rate <<" "<<
                     std::endl<<std::endl;
 #endif
         }
@@ -385,24 +399,24 @@ void RadarController::pointDisplayFrontView()
     detected_obj = 0;
 
     for (int k = 0; k < OBJECT_NUM; k++) {
-        if (esr_obj[k].status >= obj_status_filtered) {
+        if (objects[k].status >= obj_status_filtered) {
             detected_obj++;
 
             int pt_x, pt_y;
             float gain = 5.0; //**// another value?
             lock_radar.lockForWrite();
-            pt_x = 1.0 * esr_obj[k].x * gain * (1.0 - 1.0 * esr_obj[k].z / max_distance) + img_center.x;
-            pt_y = img_rows * (1.0 - 1.0 * esr_obj[k].z / max_distance);
+            pt_x = 1.0 * objects[k].x * gain * (1.0 - 1.0 * objects[k].z / max_distance) + img_center.x;
+            pt_y = img_rows * (1.0 - 1.0 * objects[k].z / max_distance);
             cv::circle(img_radar, cv::Point(pt_x, pt_y), 1, cv::Scalar(0, 255, 0, 255), -1, 8, 0);
             cv::rectangle(img_radar, cv::Rect(pt_x - obj_rect.x / 2, pt_y - obj_rect.y / 2, obj_rect.x, obj_rect.y), cv::Scalar(0, 0, 255, 255), 2, 8, 0);
             cv::putText(img_radar, QString::number(k).toStdString(), cv::Point(pt_x + obj_rect.x / 2, pt_y), cv::FONT_HERSHEY_DUPLEX, 1, cv::Scalar(0, 255, 0, 255));
             lock_radar.unlock();
 #ifdef debug_info_radar_data
-//                ui->textEdit->append("data struct\nangle: " + QString::number(esr_obj[k].angle) + " range: " + QString::number(esr_obj[k].range)
-//                                     + " accel: " + QString::number(esr_obj[k].range_accel) + " width: " + QString::number(esr_obj[k].width)
-//                                     + " (x,y,z) = (" + QString::number(esr_obj[k].x) + ", " + QString::number(esr_obj[k].y) + ", " + QString::number(esr_obj[k].z) + ")");
+//                ui->textEdit->append("data struct\nangle: " + QString::number(objects[k].angle) + " range: " + QString::number(objects[k].range)
+//                                     + " accel: " + QString::number(objects[k].range_accel) + " width: " + QString::number(objects[k].width)
+//                                     + " (x,y,z) = (" + QString::number(objects[k].x) + ", " + QString::number(objects[k].y) + ", " + QString::number(objects[k].z) + ")");
 #endif
-            item[k].setText(QString::number(esr_obj[k].range));
+            item[k].setText(QString::number(objects[k].range));
         }
         else {
             item[k].setText("0");
@@ -419,11 +433,11 @@ void RadarController::pointProjectTopView()
 
     int grid_row, grid_col;
     for (int m = 0; m < OBJECT_NUM; m++) {
-        if (esr_obj[m].status >= obj_status_filtered) {
-            grid_row = corrGridRow(100.0 * esr_obj[m].z);
-            grid_col = corrGridCol(100.0 * esr_obj[m].x);
-//            grid_row = 1.0 * log10(100.0 * esr_obj[m].z / min_distance) / log10(1.0 + k);
-//            grid_col = (100.0 * esr_obj[m].x + 0.5 * chord_length) * img_col / chord_length;
+        if (objects[m].status >= obj_status_filtered) {
+            grid_row = corrGridRow(100.0 * objects[m].z);
+            grid_col = corrGridCol(100.0 * objects[m].x);
+//            grid_row = 1.0 * log10(100.0 * objects[m].z / min_distance) / log10(1.0 + k);
+//            grid_col = (100.0 * objects[m].x + 0.5 * chord_length) * img_col / chord_length;
             int grid_row_t = img_row - grid_row - 1;
             int grid_col_t = grid_col;
             // mark each point belongs to which cell

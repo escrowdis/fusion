@@ -87,7 +87,8 @@ public:
 
     int update_count;
 
-    struct ESR_track_object_info{
+    // object params ===============
+    struct objectTrackingInfo{
         // SENSOR ============
         float angle;                    // azimuth degree. Middle is zero. From -51.2 to 51.1. (degree)
         bool bridge_object;             // non-functional
@@ -105,7 +106,6 @@ public:
         double y;
         double z;
 
-        //
         // TOPVIEW -----------
         PC pc;
 
@@ -116,7 +116,14 @@ public:
         PC pc_world;                    // (cm)
     };
 
-    ESR_track_object_info* esr_obj;
+private:
+    objectTrackingInfo* objects;
+
+public:
+    objectTrackingInfo* objects_display;
+
+    void updateDataForDisplay();
+    // object params =============== End
 
     int detected_obj;
 
