@@ -22,8 +22,12 @@ SensorInfo::SensorInfo()
     // max. size of detected objects
     ot_fused->initialze(sv->objSize() + rc->objSize());
 
+    ca = new CollisionAvoidance();
+
     pic_sv = QPixmap(20, 20);
     pic_radar = QPixmap(20, 20);
+
+    range_precision = 4;
 }
 
 SensorInfo::~SensorInfo()
@@ -34,6 +38,7 @@ SensorInfo::~SensorInfo()
     delete ot_sv;
     delete ot_radar;
     delete ot_fused;
+    delete ca;
     delete[] sensors;
 }
 
@@ -219,6 +224,16 @@ void SensorInfo::dataExec(bool fg_sv, bool fg_radar, bool fg_fusion, bool fg_sv_
     this->fg_fusion = fg_fusion && (fg_sv && fg_radar);
     dataFusion();
 
+    // A*
+    ca->path = ca->astar->PathFind2D(320, 320, 320, 0);
+    if (!ca->path.empty()) {
+        for (int k = 0; k < ca->path.size(); k++) {
+            int map_x = ca->path[k].first;
+            int map_y = ca->path[k].second;
+            cv::circle(fused_topview, cv::Point(map_x, map_y), 3, cv::Scalar(0, 0, 255, 255), 2, 8, 0);
+        }
+    }
+
     drawFusedTopView(fg_sv, fg_radar, fg_sv_each);
 }
 
@@ -226,6 +241,8 @@ void SensorInfo::dataProcess(bool fg_sv, bool fg_radar)
 {
     stereo_vision::objInformation *d_sv = sv->objects_display;
     RadarController::ESR_track_object_info *d_radar = rc->esr_obj;
+
+    ca->astar->resetMap();
 
     // Stereo vision
     int device = SENSOR::SV;
@@ -237,6 +254,8 @@ void SensorInfo::dataProcess(bool fg_sv, bool fg_radar)
                 d_sv[k].plot_pt_f = point2FusedTopView(sensors[device].pos_pixel, d_sv[k].pc);
                 d_sv[k].rect_f = rectOnFusedTopView(d_sv[k].plot_pt_f, d_sv[k].rect);
 
+                // A*
+                ca->astar->kernelDilation(d_sv[k].plot_pt_f, cv::Size(19, 27));
             }
         }
         lock_f_sv.unlock();
@@ -249,6 +268,9 @@ void SensorInfo::dataProcess(bool fg_sv, bool fg_radar)
                 d_radar[m].pc = SensorBase::PC(100 * d_radar[m].range, d_radar[m].angle + sensors[device].location.theta);
                 d_radar[m].plot_pt_f = point2FusedTopView(sensors[device].pos_pixel, d_radar[m].pc);
                 d_radar[m].pc_world = coordinateTransform(CT_SCS2WCS, sensors[device].pos_pixel, d_radar[m].pc);
+
+                // A*
+                ca->astar->kernelDilation(d_radar[m].plot_pt_f, cv::Size(19, 27));
             }
         }
     }
@@ -263,8 +285,6 @@ void SensorInfo::dataFusion()
     RadarController::ESR_track_object_info *d_radar = rc->esr_obj;
 
     std::string tag;
-    int range_precision = 3;
-
     for (int k = 0; k < sv->objSize(); k++) {
         double U_D = 500;    // max distance error (cm)
         double R_sv = U_D * d_sv[k].pc_world.range / sv->max_distance;  // (cm)
@@ -318,7 +338,6 @@ void SensorInfo::drawFusedTopView(bool fg_sv, bool fg_radar, bool fg_sv_each)
     // Sensor - Stereo vision
     std::string tag;
     int device = SENSOR::SV;
-    int range_precision = 3;
     if (fg_sv) {
         // every pixel
         if (fg_sv_each) {
@@ -349,7 +368,7 @@ void SensorInfo::drawFusedTopView(bool fg_sv, bool fg_radar, bool fg_sv_each)
                 tag = QString::number(k).toStdString() + ", " + QString::number(d_sv[k].pc_world.range / 100, 'g', range_precision).toStdString();
                 cv::putText(fused_topview, tag, d_sv[k].plot_pt_f, font, font_size, sensors[device].color, font_thickness);
                 // calculate world range and angle
-                int range_precision = 3;
+                int range_precision = 4;
                 if (d_sv[k].br != std::pair<int, int>(-1, -1) && d_sv[k].tl != std::pair<int, int>(-1, -1)) {
                     lock_f_sv.lockForRead();
                     cv::rectangle(sv->img_detected_display, cv::Rect(d_sv[k].tl.second, d_sv[k].tl.first, (d_sv[k].br.second - d_sv[k].tl.second), (d_sv[k].br.first - d_sv[k].tl.first)),
@@ -371,6 +390,18 @@ void SensorInfo::drawFusedTopView(bool fg_sv, bool fg_radar, bool fg_sv_each)
                 cv::circle(fused_topview, d_radar[m].plot_pt_f, thickness, sensors[device].color, -1, 8, 0);
                 tag = QString::number(m).toStdString() + ", " + QString::number(d_radar[m].pc_world.range / 100, 'g', range_precision).toStdString();
                 cv::putText(fused_topview, tag, cv::Point(d_radar[m].plot_pt_f.x, d_radar[m].plot_pt_f.y + 15), font, font_size, sensors[device].color, font_thickness);
+            }
+        }
+    }
+
+    // Collision avoidance
+    // A*
+    for (int k = 0; k < ca->path.size(); k++) {
+        int map_x = ca->path[k].first;
+        int map_y = ca->path[k].second;
+        for (int r = map_y; r < map_y + 1; r++) {
+            for (int c = map_x; c < map_x + 1; c++) {
+                fused_topview.at<cv::Vec4b>(r, c) = cv::Vec4b(0, 0, 0, 255);
             }
         }
     }

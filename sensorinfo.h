@@ -19,6 +19,9 @@
 // Object tracking
 #include "objectTracking/objecttracking.h"
 
+// Collision avoidance
+#include "collisionAvoidance/collisionavoidance.h"
+
 namespace SENSOR {
 enum {
     SV,
@@ -53,13 +56,13 @@ public:
 
     lrf_controller* lrf;
 
-    ObjectTracking::ObjectTrackingInfo ti;
-
     ObjectTracking* ot_sv;
 
     ObjectTracking* ot_radar;
 
     ObjectTracking* ot_fused;
+
+    CollisionAvoidance* ca;
 
     // Sensors' information ===
     //!
@@ -124,6 +127,8 @@ private:
     void dataFusion();
 
     void drawFusedTopView(bool fg_sv, bool fg_radar, bool fg_sv_each);
+
+    int range_precision;
 
     // topview
     int detection_range_pixel;                      // fused topview radius (pixel)
