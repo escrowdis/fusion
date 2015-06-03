@@ -251,10 +251,9 @@ void SensorInfo::dataCollisionAvoidance(bool fg_sv, bool fg_radar)
 
     // plot to map w/ dilation using size of vehicle
     // Stereo vision
-    int device = SENSOR::SV;
-    if (fg_sv)
+    if (fg_sv) {
         lock_f_sv.lockForWrite();
-        for (int k = 0; k < sv->objSize(); k++)
+        for (int k = 0; k < sv->objSize(); k++) {
             if (d_sv[k].labeled) {
                 int tl_x, tl_y, br_x, br_y;
                 tl_x = d_sv[k].rect_f.tl().x;
@@ -268,13 +267,17 @@ void SensorInfo::dataCollisionAvoidance(bool fg_sv, bool fg_radar)
                     }
                 }
             }
+        }
         lock_f_sv.unlock();
+    }
     // RADAR
-    device = SENSOR::RADAR;
-    if (fg_radar)
-        for (int m = 0; m < rc->objSize(); m++)
-            if (d_radar[m].status >= rc->obj_status_filtered)
+    if (fg_radar) {
+        for (int m = 0; m < rc->objSize(); m++) {
+            if (d_radar[m].status >= rc->obj_status_filtered) {
                 ca->astar->kernelDilation(d_radar[m].plot_pt_f, cv::Size(vehicle.width_pixel + 9, vehicle.length_pixel + 11));
+            }
+        }
+    }
 
     // A* path planning
     ca->path = ca->astar->PathFind2D(320, 320, 320, 0);
