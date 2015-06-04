@@ -250,10 +250,10 @@ int RadarController::dataExec()
         if (fg_topview)
             pointProjectTopView();
 
+        updateDataForDisplay();
+
         return RADAR::STATUS::OK;
     }
-
-    updateDataForDisplay();
 
     return RADAR::STATUS::DATA_NOT_ENOUGHT;
 }
