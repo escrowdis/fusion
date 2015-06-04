@@ -29,7 +29,7 @@ SensorInfo::SensorInfo()
     pic_sv = QPixmap(20, 20);
     pic_radar = QPixmap(20, 20);
 
-    range_precision = 4;
+    range_precision = 3;
 }
 
 SensorInfo::~SensorInfo()
