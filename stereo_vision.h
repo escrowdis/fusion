@@ -16,6 +16,7 @@ extern QReadWriteLock lock_sv_object;
 extern QReadWriteLock lock_sv_mouse;
 extern QReadWriteLock lock_f_sv;
 extern QReadWriteLock lock_f_topview;
+extern QReadWriteLock lock_data_fused;
 
 // recording
 #include "recording/recording.h"
@@ -119,6 +120,7 @@ public:
     bool fg_pseudo;                     // chekc wether pesudo the disparity image
     bool fg_topview;                    // check wether project to topview
     bool fg_reproject;                  // check wether re-project detected objects to image
+    bool fg_tracking;                   // it's true when object tracking is activated
     bool fg_topview_plot_points;        // check wethere to plot each points on the topview
 
     // disparity image
@@ -285,7 +287,9 @@ private:
 
     // object matching =============
     double thresh_Bha = 0.3; //**// tuned params 20150528
-    double thresh_err_x = 150, thresh_err_z = 150; //**// tuned params 20150528
+    double max_err_z = 500;
+    cv::Mat map_thresh_err_z;
+    double thresh_err_x = 300;  //**// tuned params 20150528
 
     // histogram calculation used
     int hist_size;
@@ -332,6 +336,10 @@ private:
     cv::Mat comp, comp_prev;
 #endif
 
+    void resetMatchingInfo(objectMatchingInfo &src);
+
+    void moveOm(objectMatchingInfo &src, objectMatchingInfo &dst);
+
     void resetObjMatching();
 
     void objectMatching();
@@ -354,8 +362,6 @@ public:
         int avg_X;
 
         int avg_Y;
-
-        int closest_count;              // smaller number represents closer to vehicle
 
         cv::Point rect_tl, rect_br;
 
@@ -381,18 +387,23 @@ public:
 
         PC pc_world;                    // (cm)
 
-        int prev_id;
+        cv::Point2f vel;                // velocity of object (cm/s)
+
+        int prev_id;                    // previous object id. -1 is no previous object.
 
         objectInfo() {
+            pts_num = 0;
             labeled = false;
-            tl = std::pair<int, int>(-1, -1);
-            br = std::pair<int, int>(-1, -1);
-            center = std::pair<int, int>(-1, -1);
             avg_Z = 0;
             avg_X = 0;
             avg_Y = 0;
-            pts_num = 0;
-            closest_count = 0;
+            rect_tl = cv::Point(-1, -1);
+            rect_br = cv::Point(-1, -1);
+            tl = std::pair<int, int>(-1, -1);
+            br = std::pair<int, int>(-1, -1);
+            center = std::pair<int, int>(-1, -1);
+            vel = cv::Point(0, 0);
+            prev_id = -1;
         }
     };
 
@@ -400,6 +411,12 @@ public:
 
 private:
     objectInfo* objects;                // filtered objects
+
+    objectInfo* object_tmp;
+
+    void resetObjectInfo(objectInfo &src);
+
+    void moveInfo(objectInfo &src, objectInfo &dst);
 
     void updateDataForDisplay();
     // object information ========== End
