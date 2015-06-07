@@ -870,7 +870,8 @@ void stereo_vision::pointProjectTopView()
             data[r][c].grid_id = std::pair<int, int>(-1, -1);
 
             // porject each 3D point onto a topview
-            if (data[r][c].Z >= min_distance && data[r][c].Z <= max_distance) {
+            if (data[r][c].Z >= min_distance && data[r][c].Z <= max_distance &&
+                    data[r][c].Y <= 300) {
                 // ground filtering
                 if (fg_ground_filter) {
                     if (fg_vDisp) {
@@ -1360,7 +1361,7 @@ void stereo_vision::objectMatching()
                 p1 = cv::Point(om_prev[map_Bha_corr_id_r[sort_min[i].x]].center.second, om_prev[map_Bha_corr_id_r[sort_min[i].x]].center.first);
                 p2 = cv::Point(om[map_Bha_corr_id_c[sort_min[i].y]].center.second, om[map_Bha_corr_id_c[sort_min[i].y]].center.first + IMG_H);
                 cv::line(comp_mix, p1, p2, cv::Scalar(255, 0, 0), 2, 8, 0);
-                cv::putText(comp_mix, QString::number(map_Bha_corr_id_c[sort_min[i].y]).toStdString(), p2, cv::FONT_HERSHEY_DUPLEX, 1, cv::Scalar(255, 0, 0));
+                cv::putText(comp_mix, QString::number(map_Bha_corr_id_c[sort_min[i].y]).toStdString(), p2, cv::FONT_HERSHEY_DUPLEX, 1, cv::Scalar(0, 0, 255));
             }
         }
         if (!comp_prev.empty())
@@ -1386,9 +1387,7 @@ void stereo_vision::resetObjectInfo(objectInfo &src)
     src.tl = std::pair<int, int>(-1, -1);
     src.br = std::pair<int, int>(-1, -1);
     src.center = std::pair<int, int>(-1, -1);
-    src.pc.angle = 0.0;
-    src.pc.range = 0.0;
-    src.vel = cv::Point2f(0.0, 0.0);
+    src.img.release();
 }
 
 void stereo_vision::moveOm(objectMatchingInfo &src, objectMatchingInfo &dst)
@@ -1406,23 +1405,33 @@ void stereo_vision::moveOm(objectMatchingInfo &src, objectMatchingInfo &dst)
 
 void stereo_vision::moveInfo(objectInfo &src, objectInfo &dst)
 {
-    dst.labeled = src.labeled;
-    dst.avg_X   = src.avg_X;
-    dst.avg_Y   = src.avg_Y;
-    dst.avg_Z   = src.avg_Z;
-    dst.rect_tl = src.rect_tl;
-    dst.rect_br = src.rect_br;
-    dst.tl      = src.tl;
-    dst.br      = src.br;
-    dst.center  = src.center;
-    dst.vel     = src.vel;
+    dst.labeled     = src.labeled;
+    dst.avg_X       = src.avg_X;
+    dst.avg_Y       = src.avg_Y;
+    dst.avg_Z       = src.avg_Z;
+    dst.rect_tl     = src.rect_tl;
+    dst.rect_br     = src.rect_br;
+    dst.tl          = src.tl;
+    dst.br          = src.br;
+    dst.center      = src.center;
+    dst.color       = src.color;
+    dst.img.release();
+    dst.img         = src.img.clone();
+    dst.pc          = src.pc;
+    dst.rect_f      = src.rect_f;
+    dst.plot_pt_f   = src.plot_pt_f;
+    dst.rect_world  = src.rect_world;
+    dst.pc_world    = src.pc_world;
+    dst.vel         = src.vel;
 
     resetObjectInfo(src);
 }
 
 void stereo_vision::updateDataForDisplay()
 {
-    std::swap(objects, objects_display);;
+    lock_sv_object.lockForWrite();
+    std::swap(objects, objects_display);
+    lock_sv_object.unlock();
 }
 
 void stereo_vision::change_bm_pre_filter_size(int value)

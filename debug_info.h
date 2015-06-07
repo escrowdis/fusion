@@ -14,6 +14,7 @@
 
 // STEREO VISION ===============
 //#define debug_info_sv
+//#define debug_info_sv_time_proc
 //#define debug_info_sv_param
 //#define debug_info_sv_data
 //#define debug_info_sv_blob_data

@@ -389,8 +389,6 @@ public:
 
         cv::Point2f vel;                // velocity of object (cm/s)
 
-        int prev_id;                    // previous object id. -1 is no previous object.
-
         objectInfo() {
             pts_num = 0;
             labeled = false;
@@ -403,7 +401,6 @@ public:
             br = std::pair<int, int>(-1, -1);
             center = std::pair<int, int>(-1, -1);
             vel = cv::Point(0, 0);
-            prev_id = -1;
         }
     };
 
