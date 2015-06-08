@@ -12,10 +12,21 @@ lrf_controller::lrf_controller()
     buf = new QByteArray(MAX_BUF_SIZE, '0x0');
 //    buf->reserve(MAX_BUF_SIZE);
 
-    display_lrf = cv::Mat::zeros(800, 800, CV_8UC3);
+    display_lrf = cv::Mat::zeros(LRF_MAP_HEIGHT, LRF_MAP_WIDTH, CV_8UC4);
+    display_lrf_BG = cv::Mat::zeros(LRF_MAP_HEIGHT, LRF_MAP_WIDTH, CV_8UC3);
+    cv::Point center = cv::Point(LRF_MAP_WIDTH / 2, LRF_MAP_HEIGHT - 100);
+    int max_range = 8191;
+    int gap = 1000;
+    int line_tag;
+    for (int i = 1; i < (int)(max_range / gap); i++) {
+        line_tag = i * gap * (1.0 * LRF_MAP_HEIGHT / max_range);
+        cv::circle(display_lrf_BG, center, line_tag, cv::Scalar(255, 255, 255), 1, 8, 0);
+    }
+
+    time_gap = 10;
+    t.restart();
 
     reset();
-    count_resend = 0;
 }
 
 lrf_controller::~lrf_controller()
@@ -67,6 +78,7 @@ bool lrf_controller::open(QString comPortIn, int baudRateIn)
         break;
     }
 
+    if (!(serial->isOpen() && serial->isWritable())) return false;
     serial->write(cmd_LMS291, 8);
     while(!serial->waitForBytesWritten(10)) {}
 
@@ -83,30 +95,28 @@ bool lrf_controller::open(QString comPortIn, int baudRateIn)
 
 bool lrf_controller::sendMsg(int mode)
 {
-    lock_lrf.lockForWrite();
-
     buf->clear();
 
     switch (mode) {
     default:
     case LRF::CAPTURE_MODE::ONCE:
+        if (!(serial->isOpen() && serial->isWritable())) return false;
         serial->write(request_data_once, 8);
         break;
     case LRF::CAPTURE_MODE::CONTINUOUS:
+        if (!(serial->isOpen() && serial->isWritable())) return false;
         serial->write(request_data_continuous, 8);
         break;
 
     case LRF::CAPTURE_MODE::STOP:
+        if (!(serial->isOpen() && serial->isWritable())) return false;
         serial->write(request_data_stop, 8);
         break;
     }
-    lock_lrf.unlock();
+
+    while(!serial->waitForBytesWritten(1)) {qDebug()<<"FK";}
 
 //    checkACK();
-
-    while(!serial->waitForBytesWritten(1)) {
-
-    }
 
     this->mode = mode;
 
@@ -227,6 +237,20 @@ bool lrf_controller::dataExec()
 bool lrf_controller::guiUpdate()
 {
     if (t.elapsed() > time_gap) {
+        double angle = 0.0;
+        display_lrf.setTo(0);
+        lock_lrf.lockForRead();
+        for (int i = 0; i < LENGTH_DATA; ++i) {
+            double r = lrf_data[i];
+            double x = r * cos(angle * CV_PI / 180.0);
+            double y = r * sin(angle * CV_PI / 180.0);
+            cv::circle(display_lrf, cv::Point(x / scale_ratio + LRF_MAP_WIDTH / 2 + LRF_SHIFT_X, LRF_MAP_HEIGHT - (y / scale_ratio + 100)), 1, cv::Scalar(255, 0, 0, 255), -1);
+            if (LENGTH_DATA / 2 == i)
+                cv::circle(display_lrf, cv::Point(x / scale_ratio + LRF_MAP_WIDTH / 2 + LRF_SHIFT_X, LRF_MAP_HEIGHT - (y / scale_ratio + 100)), 5, cv::Scalar(0, 255, 0, 255), -1);
+            angle += RESOLUTION;
+        }
+        lock_lrf.unlock();
+
         time_proc = t_p.restart();
         emit updateGUI(lrf_data, &display_lrf);
         t.restart();

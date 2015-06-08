@@ -27,6 +27,10 @@ extern QReadWriteLock lock_lrf;
 #define RESOLUTION 0.5
 #define MAX_BUF_SIZE 7330
 
+#define LRF_SHIFT_X 45  //**// unknown
+#define LRF_MAP_WIDTH 722
+#define LRF_MAP_HEIGHT 800
+
 const char header_data[] =                 {0x06, 0x02, 0x80, 0xD6, 0x02, 0xB0, 0x69, 0x01};
 // once mode: header_data pop up
 // continuous mode: ACK first and come up w/ header data w/o first uchar 0x06
@@ -67,9 +71,13 @@ public:
 
     int time_proc, time_proc_buf;
 
-    double *lrf_data;
+    int scale_ratio = 2;
+
+    double *lrf_data;               // (cm)
 
     cv::Mat display_lrf;
+
+    cv::Mat display_lrf_BG;
 
     bool open(QString comPortIn, int baudRateIn);
 
@@ -94,11 +102,6 @@ public:
     bool bufEnoughSet() {
         if (buf->size() >= dataset_size)
             return true;
-        count_resend++;
-        if (count_resend > 220) {
-            requestData(LRF::CAPTURE_MODE::ONCE);
-            count_resend = 0;
-        }
         return false;
     }
 
@@ -140,8 +143,6 @@ private:
     // ======================
 
     QByteArray dataSet;
-
-    int count_resend;
 
     bool sendMsg(int mode);
 

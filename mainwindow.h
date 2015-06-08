@@ -78,6 +78,7 @@ private:
     stereo_vision::camParam* fin_cam_param;
     stereo_vision::matchParamSGBM* fin_SGBM;
     stereo_vision::matchParamBM* fin_BM;
+    int fin_lrf_port, fin_lrf_baud_rate, fin_lrf_scale, fin_lrf_res;
 
     void paramRead();                   // read params from basic_param.yml
 
@@ -362,6 +363,7 @@ private slots:
     void on_pushButton_radar_step_clicked();
     void on_checkBox_fusion_sv_clicked(bool checked);
     void on_checkBox_fusion_radar_clicked(bool checked);
+    void on_spinBox_lrf_scale_valueChanged(int arg1);
 };
 
 // Mouse control ==========
