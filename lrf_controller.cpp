@@ -58,6 +58,7 @@ bool lrf_controller::open(QString comPortIn, int baudRateIn)
         break;
     }
 
+    if (!(serial->isOpen() && serial->isWritable())) return false;
     serial->write(cmd_LMS291, 8);
     while(!serial->waitForBytesWritten(10)) {}
 
@@ -74,30 +75,27 @@ bool lrf_controller::open(QString comPortIn, int baudRateIn)
 
 bool lrf_controller::sendMsg(int mode)
 {
-    lock.lockForWrite();
-
     buf->clear();
 
     switch (mode) {
     default:
     case LRF::CAPTURE_MODE::ONCE:
+        if (!(serial->isOpen() && serial->isWritable())) return false;
         serial->write(request_data_once, 8);
         break;
     case LRF::CAPTURE_MODE::CONTINUOUS:
+        if (!(serial->isOpen() && serial->isWritable())) return false;
         serial->write(request_data_continuous, 8);
         break;
 
     case LRF::CAPTURE_MODE::STOP:
+        if (!(serial->isOpen() && serial->isWritable())) return false;
         serial->write(request_data_stop, 8);
         break;
     }
-    lock.unlock();
+    while(!serial->waitForBytesWritten(1)) {qDebug()<<"FK";}
 
 //    checkACK();
-
-    while(!serial->waitForBytesWritten(1)) {
-
-    }
 
     this->mode = mode;
 
