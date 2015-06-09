@@ -22,8 +22,12 @@ SensorBase::PC SensorBase::cart2Polar(cv::Point pt_in)
 
 cv::Point2f SensorBase::velEstimation(cv::Point2f p_now, cv::Point2f p_prev, int time_proc)
 {
+    // (m/frame) -> (m/s)
     float frame2sec = 1000.0 / (1.0 * time_proc);
-    float m2km_s2hr = 3600.0 / 1000.0;
-    return cv::Point2f(1.0 * (p_now.x - p_prev.x) * m2km_s2hr * frame2sec,
-                       1.0 * (p_now.y - p_prev.y) * m2km_s2hr * frame2sec);
+    float cm2meter = 0.01;
+    float cm2km = 0.00001;
+    float meter2km = 0.001;
+    float sec2hr = 3600;        // 1/sec -> 1/hr
+    return cv::Point2f(1.0 * (p_now.x - p_prev.x) * frame2sec,
+                       1.0 * (p_now.y - p_prev.y) * frame2sec);
 }

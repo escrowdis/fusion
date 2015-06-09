@@ -366,6 +366,10 @@ private slots:
     void on_pushButton_radar_step_clicked();
     void on_checkBox_fusion_sv_clicked(bool checked);
     void on_checkBox_fusion_radar_clicked(bool checked);
+    void on_spinBox_lrf_scale_valueChanged(int arg1);
+    void on_checkBox_ca_clicked(bool checked);
+    void on_checkBox_ot_clicked(bool checked);
+    void on_checkBox_ca_astar_clicked(bool checked);
 };
 
 // Mouse control ==========

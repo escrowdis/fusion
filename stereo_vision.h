@@ -29,6 +29,9 @@ extern recording re;
 #include "opencv2/cudastereo.hpp"
 #endif
 
+// object matching
+//#include "objectTracking/objectmatching.h"
+
 // topview
 #include "topview.h"
 
@@ -66,7 +69,7 @@ enum INPUT_SOURCE {
 };
 }
 
-class stereo_vision : public QObject, public TopView, public SensorBase
+class stereo_vision : public QObject, public TopView, protected SensorBase//, private ObjectMatching
 {
     Q_OBJECT
 
@@ -285,66 +288,6 @@ private:
     cv::Mat img_match_L;
     cv::Mat img_match_R;
 
-    // object matching =============
-    double thresh_Bha = 0.3; //**// tuned params 20150528
-    double max_err_z = 500;
-    cv::Mat map_thresh_err_z;
-    double thresh_err_x = 300;  //**// tuned params 20150528
-
-    // histogram calculation used
-    int hist_size;
-    const float *hist_ranges;
-
-    // check if there's any object detected
-    bool fg_om_existed;
-    bool fg_om_prev_existed;
-
-    // amount of objects. Default: obj_nums
-    int om_size;
-    int om_prev_size;
-
-    // amount of detected object
-    int om_obj_num;
-    int om_prev_obj_num;
-
-    // object's id <-> map_Bha id
-    std::vector<int> map_Bha_corr_id_r;
-    std::vector<int> map_Bha_corr_id_c;
-
-    struct objectMatchingInfo
-    {
-        SensorBase::PC pc;
-
-        std::pair<double, double> err_pos;
-
-        cv::Mat img;                    // object's image (cropped)
-
-        cv::Mat H_img;
-
-        cv::Mat H_hist;
-
-        bool fg_Bha_check;
-
-        // IMAGE -------------
-        std::pair<int, int> center;     // Center point of object in image (row, col)
-    };
-
-    objectMatchingInfo *om;
-    objectMatchingInfo *om_prev;
-
-#ifdef debug_info_sv_object_matching_img
-    cv::Mat comp, comp_prev;
-#endif
-
-    void resetMatchingInfo(objectMatchingInfo &src);
-
-    void moveOm(objectMatchingInfo &src, objectMatchingInfo &dst);
-
-    void resetObjMatching();
-
-    void objectMatching();
-    // object matching ============= End
-
     // object information ==========
     int obj_nums;                       // maximum object detection amount
 
@@ -387,7 +330,7 @@ public:
 
         PC pc_world;                    // (cm)
 
-        cv::Point2f vel;                // velocity of object (cm/s)
+        cv::Point2f vel;                // velocity of object (m/s)
 
         objectInfo() {
             pts_num = 0;
@@ -410,6 +353,10 @@ private:
     objectInfo* objects;                // filtered objects
 
     objectInfo* object_tmp;
+
+    std::vector<std::pair<int, int> > matching_result;
+
+    void objectMatching();
 
     void resetObjectInfo(objectInfo &src);
 
@@ -461,10 +408,6 @@ private:
 
     void pointProjectImage();
     // Topview ===================== End
-
-    // Object Matching =============
-    void splitOneOut(int channel, cv::Mat src, cv::Mat *dst);
-    // Object Matching ============= End
 
 private slots:
     // BM ===========================

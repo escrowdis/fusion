@@ -16,6 +16,9 @@
 // Object Recognition
 #include "objectrecognition.h"
 
+// object matching
+#include "objectTracking/objectmatching.h"
+
 // Object tracking
 #include "objectTracking/objecttracking.h"
 
@@ -41,7 +44,7 @@ enum {
 //!
 //! \brief This class deals with all the sensors' information and also fused one.
 //!
-class SensorInfo : public QObject
+class SensorInfo : public QObject, private ObjectMatching
 {
     Q_OBJECT
 
@@ -56,9 +59,9 @@ public:
 
     lrf_controller* lrf;
 
-    ObjectTracking* ot_sv;
+    ObjectTracking::objectTrackingInfo *data_fused;
 
-    ObjectTracking* ot_radar;
+    int dataFusedSize() {return size_data_fused;}
 
     ObjectTracking* ot_fused;
 
@@ -102,12 +105,14 @@ public:
 
     void updateFusedTopView();
 
-    void dataExec(bool fg_sv, bool fg_radar, bool fg_fusion, bool fg_sv_each, bool fg_ca_astar);
+    void dataExec(bool fg_sv, bool fg_radar, bool fg_data_update, bool fg_fusion, bool fg_om, bool fg_ot_kf, bool fg_ca_astar, bool fg_sv_each);
 
     void zoomOutFusedTopView();
 
     void zoomInFusedTopView();
     // Fusion ================= End
+
+    int test_range;
 
 private:
     // sensor location
@@ -119,16 +124,40 @@ private:
         float theta;
     };
 
-    // Fusion =================
-    void dataProcess(bool fg_sv, bool fg_radar);
+    QTime t;
+    int time_gap;
 
+    // Fusion =================
     bool fg_fusion;
+
+    int size_data_fused;
 
     bool fg_ca_astar;
 
-    void dataFusion();
+    void resetFusion();
 
-    void dataCollisionAvoidance(bool fg_sv, bool fg_radar);
+    int closest_radar_id;
+    double U_D;                                     // max distance error (cm)
+    double R_sv;                                    // (cm)
+    double closest_radar_distance;
+    cv::Point2d sv_pos;
+    cv::Point2d radar_pos_closest;
+
+    void dataProcess(bool fg_sv, bool fg_radar);    // fused topview and fusion information process
+
+    // Object matching ========
+    void resetObjectTrackingInfo(ObjectTracking::objectTrackingInfo &src);
+
+    void moveTrackingInfo(ObjectTracking::objectTrackingInfo &src, ObjectTracking::objectTrackingInfo &dst);
+
+    void dataMatching();
+
+    std::vector<std::pair<int, int> > matching_result;
+    // Object matching ======== End
+
+    void dataTracking();
+
+    void dataCollisionAvoidance();
 
     void drawFusedTopView(bool fg_sv, bool fg_radar, bool fg_sv_each);
 
@@ -214,7 +243,11 @@ private:
     SensorBase::PC coordinateTransform(int type, cv::Point sensor_pos, SensorBase::PC pc_in);
     cv::Rect rectOnFusedTopView(cv::Point pt_pixel, cv::Rect rect_in);
     cv::Point point2FusedTopView(cv::Point sensor_pos, SensorBase::PC pc);
+    cv::Point point2FusedTopView(SensorBase::PC pc_world);
     // Fusion ================= End
+
+private slots:
+    void drawArrow(cv::Mat& img, cv::Point pStart, cv::Point pEnd, int len, int alpha, cv::Scalar& color, int thickness = 1, int lineType = 8);
 
 signals:
     void updateGUI(cv::Mat *fused_topview, cv::Mat *img_detected_display);

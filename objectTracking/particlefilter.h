@@ -1,7 +1,7 @@
 #ifndef PARTICLEFILTER_H
 #define PARTICLEFILTER_H
 
-#include "debug_info.h"
+#include "../debug_info.h"
 
 class ParticleFilter
 {

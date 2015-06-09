@@ -20,11 +20,16 @@
 //#define debug_info_sv_blob_data
 //#define debug_info_sv_topview
 //#define debug_info_sv_ground_filter
-//#define debug_info_sv_object_matching_img
-//#define debug_info_sv_object_matching_data_extract
-//#define debug_info_sv_object_matching_others
 //#define debug_info_sv_ground_filter_v_disp
 //#define debug_info_cc
 //#define debug_info_ca_astar
+
+// OBJECT MATCHING =============
+//#define debug_info_object_matching_img
+//#define debug_info_object_matching_others
+//#define debug_info_object_matching_data_extract
+
+// FUSION ====================== (You may comment "#define multi_thread")
+//#define debug_info_fusion
 
 #endif // DEBUG_INFO_H

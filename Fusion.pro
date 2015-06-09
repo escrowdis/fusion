@@ -34,7 +34,8 @@ SOURCES += main.cpp\
     collisionAvoidance/vectorfieldhistogram.cpp \
     objectrecognition.cpp \
     collisionAvoidance/AStar.cpp \
-    collisionAvoidance/collisionavoidance.cpp
+    collisionAvoidance/collisionavoidance.cpp \
+    objectTracking/objectmatching.cpp
 
 HEADERS  += mainwindow.h \
             lrf_controller.h \
@@ -59,7 +60,8 @@ HEADERS  += mainwindow.h \
     collisionAvoidance/vectorfieldhistogram.h \
     objectrecognition.h \
     collisionAvoidance/AStar.h \
-    collisionAvoidance/collisionavoidance.h
+    collisionAvoidance/collisionavoidance.h \
+    objectTracking/objectmatching.h
 
 FORMS    += mainwindow.ui \
     calibrationform.ui \

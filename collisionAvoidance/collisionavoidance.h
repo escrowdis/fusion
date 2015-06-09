@@ -1,7 +1,7 @@
 #ifndef COLLISIONAVOIDANCE_H
 #define COLLISIONAVOIDANCE_H
 
-#include "debug_info.h"
+#include "../debug_info.h"
 
 #include "AStar.h"
 #include "vectorfieldhistogram.h"

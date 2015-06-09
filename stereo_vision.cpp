@@ -41,15 +41,6 @@ stereo_vision::stereo_vision() : TopView(20, 200, 3000, 19.8, 1080, 750, 270, 12
     object_tmp = new objectInfo();
     objects = new objectInfo[obj_nums];
     objects_display = new objectInfo[obj_nums];
-    om = new objectMatchingInfo[obj_nums];
-    om_prev = new objectMatchingInfo[obj_nums];
-    hist_size = 255;
-    hist_ranges = new float[]({1, 360});
-    fg_om_existed = false;
-    fg_om_prev_existed = false;
-    om_size = obj_nums;
-    om_prev_size = obj_nums;
-
 
     data = new StereoData * [IMG_H];
     for (int r = 0; r < IMG_H; r++) {
@@ -73,12 +64,6 @@ stereo_vision::stereo_vision() : TopView(20, 200, 3000, 19.8, 1080, 750, 270, 12
 #endif
     img_detected = cv::Mat::zeros(IMG_H, IMG_W, CV_8UC3);
     img_detected_display = cv::Mat::zeros(IMG_H, IMG_W, CV_8UC3);
-
-#ifdef opencv_cuda
-    match_mode = SV::STEREO_MATCH::BM;
-#else
-    match_mode = SV::STEREO_MATCH::SGBM;
-#endif
 
     matchParamInitialize(match_mode);
 
@@ -104,8 +89,6 @@ stereo_vision::~stereo_vision()
     delete object_tmp;
     delete[] objects;
     delete[] objects_display;
-    delete[] om;
-    delete[] om_prev;
 
     delete[] LUT_grid_row;
     delete[] LUT_grid_col;
@@ -729,8 +712,10 @@ bool stereo_vision::dataIn()
     case SV::INPUT_SOURCE::VIDEO:
         // For synchronization replay
         if (re.tr->fg_loaded && re.vr->fg_loaded)
-            if (!re.tr->fg_data_end && re.tr->current_frame_count < re.vr->current_frame_count)
+            if (!re.tr->fg_data_end && re.tr->current_frame_count < re.vr->current_frame_count) {
+//                std::cout<<re.tr->fg_data_end<<" "<<re.tr->current_frame_count<<" "<<re.vr->current_frame_count;
                 return false;
+            }
         if (!re.vr->segmentTwoImages(&img_L, &img_R, cv::Size(IMG_W, IMG_H))) {
             emit videoEnd();
             return false;
@@ -1147,232 +1132,48 @@ void stereo_vision::pointProjectImage()
     }
 }
 
-void stereo_vision::splitOneOut(int channel, cv::Mat src, cv::Mat *dst)
-{
-    if (src.size != dst->size)
-        dst->release();
-    if (dst->empty())
-        dst->create(src.rows, src.cols, CV_8UC1);
-    int tc = src.channels();
-    for (int r = 0; r < src.rows; r++) {
-        uchar *ptr = src.ptr<uchar>(r);
-        for (int c = 0; c < src.cols; c++) {
-            dst->ptr<uchar>(r)[c] = ptr[tc * c + channel];
-        }
-    }
-}
-
-void stereo_vision::resetMatchingInfo(objectMatchingInfo &src)
-{
-    src.pc.range = 0.0;
-    src.pc.angle = 0.0;
-    src.img.release();
-    src.H_img.release();
-    src.H_hist.release();
-    src.fg_Bha_check = false;
-}
-
-void stereo_vision::resetObjMatching()
-{
-    fg_om_prev_existed = fg_om_existed;
-    fg_om_existed = false;
-    om_obj_num = 0;
-    map_Bha_corr_id_r.clear();
-    map_Bha_corr_id_c.clear();
-    for (int i = 0; i < obj_nums; i++)
-        resetMatchingInfo(om[i]);
-}
-
 void stereo_vision::objectMatching()
 {
-    // Object matching: a) Bha. dist. of H color space, b) bias of X & Z of WCS location
-    // Comparison of H color space image using Bhattacharyya distance with Bubble search
-    resetObjMatching();
-    // Extract histogram of H color space
-    lock_sv_object.lockForRead();
-    for (int i = 0; i < obj_nums; i++) {
-        if (objects[i].labeled) {
-            fg_om_existed = true;
-            om_obj_num++;
-            om[i].pc = objects[i].pc;
-            om[i].center = objects[i].center;
-            cv::Mat img_hsv = cv::Mat(objects[i].img.rows, objects[i].img.cols, CV_8UC3);
-            om[i].img = objects[i].img.clone();
-            cv::cvtColor(objects[i].img, img_hsv, cv::COLOR_BGR2HSV);
-            splitOneOut(0, img_hsv, &om[i].H_img);
-            cv::calcHist(&om[i].H_img, 1, 0, cv::Mat(), om[i].H_hist, 1, &hist_size, &hist_ranges, true, false);
-            cv::normalize(om[i].H_hist, om[i].H_hist, hist_ranges[0], hist_ranges[1], cv::NORM_MINMAX, -1, cv::Mat());
-        }
-    }
-    lock_sv_object.unlock();
+//    // Object matching: a) Bha. dist. of H color space, b) bias of X & Z of WCS location
+//    // Comparison of H color space image using Bhattacharyya distance with Bubble search
+//    resetObjMatching();
+//    // Extract histogram of H color space
+//    lock_sv_object.lockForRead();
+//    for (int i = 0; i < obj_nums; i++) {
+//        if (objects[i].labeled) {
+//            fg_om_existed = true;
+//            om[i].labeled = true;
+//            om[i].match_type = MATCH_TYPE::RANGE_BHA;
+//            om_obj_num++;
+//            om[i].pc = objects[i].pc;
+//            om[i].center = objects[i].center;
+//            cv::Mat img_hsv = cv::Mat(objects[i].img.rows, objects[i].img.cols, CV_8UC3);
+//            om[i].img = objects[i].img.clone();
+//            cv::cvtColor(objects[i].img, img_hsv, cv::COLOR_BGR2HSV);
+//            splitOneOut(0, img_hsv, &om[i].H_img);
+//            cv::calcHist(&om[i].H_img, 1, 0, cv::Mat(), om[i].H_hist, 1, &hist_size, &hist_ranges, true, false);
+//            cv::normalize(om[i].H_hist, om[i].H_hist, hist_ranges[0], hist_ranges[1], cv::NORM_MINMAX, -1, cv::Mat());
+//        }
+//    }
+//#ifdef debug_info_object_matching_img
+//    comp = img_detected.clone();
+//#endif
+//    lock_sv_object.unlock();
 
-    // record detected object's id
-    for (int m = 0; m < om_prev_size; m++)
-        if (!om_prev[m].H_hist.empty()) {
-            map_Bha_corr_id_r.push_back(m);
-        }
-    for (int m = 0; m < om_size; m++)
-        if (!om[m].H_hist.empty()) {
-            map_Bha_corr_id_c.push_back(m);
-        }
-    om_prev_obj_num = map_Bha_corr_id_r.size();
-    om_obj_num = map_Bha_corr_id_c.size();
+//    matching_result.clear();
+//    matching_result = Matching();
 
-    // Bhattacharyya distance
-    if (fg_om_existed && fg_om_prev_existed) {
-        cv::Mat map_Bha = cv::Mat(om_prev_obj_num, om_obj_num, CV_64F, cv::Scalar(1.1));
-        cv::Mat map_err_pos_x = cv::Mat(om_prev_obj_num, om_obj_num, CV_64F, cv::Scalar(1.1));
-        cv::Mat map_err_pos_z = cv::Mat(om_prev_obj_num, om_obj_num, CV_64F, cv::Scalar(1.1));
-        map_thresh_err_z.release();
-        map_thresh_err_z = cv::Mat(om_obj_num, 1, CV_64F, cv::Scalar(0.0));
-        for (int m = 0; m < map_Bha_corr_id_r.size(); m++) {
-            for (int n = 0; n < map_Bha_corr_id_c.size(); n++) {
-                int id, id_prev;
-                id_prev = map_Bha_corr_id_r[m];
-                id = map_Bha_corr_id_c[n];
-                // H color space object image comparison
-                map_Bha.ptr<double>(m)[n] = cv::compareHist(om_prev[id_prev].H_hist, om[id].H_hist, cv::HISTCMP_BHATTACHARYYA);
-
-                // WCS location comparison
-                std::pair<double, double> pc, pc_prev;
-                pc_prev.first = om_prev[id_prev].pc.range * sin(om_prev[id_prev].pc.angle * CV_PI / 180.0);
-                pc_prev.second = om_prev[id_prev].pc.range * cos(om_prev[id_prev].pc.angle * CV_PI / 180.0);
-                pc.first = om[id].pc.range * sin(om[id].pc.angle * CV_PI / 180.0);
-                pc.second = om[id].pc.range * cos(om[id].pc.angle * CV_PI / 180.0);
-                map_err_pos_x.ptr<double>(m)[n] = fabs(pc.first - pc_prev.first);
-                map_err_pos_z.ptr<double>(m)[n] = fabs(pc.second - pc_prev.second);
-
-                if (m == 0)
-                    map_thresh_err_z.ptr<double>(n)[0] = pc.second * max_err_z / max_distance;
-            }
-        }
-
-#ifdef debug_info_sv_object_matching_others
-        std::cout<<"Bha map\n";
-        for (int m = 0; m < map_Bha_corr_id_r.size(); m++) {
-            for (int n = 0; n < map_Bha_corr_id_c.size(); n++) {
-                std::cout<<map_Bha.ptr<double>(m)[n]<<"\t\t";
-            }
-            std::cout<<std::endl;
-        }
-        std::cout<<std::endl;
-
-        std::cout<<"Err pos X-Z map\n";
-        for (int m = 0; m < map_Bha_corr_id_r.size(); m++) {
-            for (int n = 0; n < map_Bha_corr_id_c.size(); n++) {
-                int id, id_prev;
-                id_prev = map_Bha_corr_id_r[m];
-                id = map_Bha_corr_id_c[n];
-                std::cout<<map_err_pos_x.ptr<double>(m)[n]<<" "<<map_err_pos_z.ptr<double>(m)[n]<<"\t\t\t";
-            }
-            std::cout<<std::endl;
-        }
-        std::cout<<std::endl;
-#endif
-
-        std::vector<cv::Point> sort_min;    // contains correspondence between prev. and now on map. (prev, now)
-        double Bha_min;
-        cv::Point min_count = cv::Point(-1, -1);
-        cv::Mat_<bool> check_map_Bha_r = cv::Mat_<bool>(map_Bha.rows, 1, false);
-        cv::Mat_<bool> check_map_Bha_c = cv::Mat_<bool>(map_Bha.cols, 1, false);
-        for (int p = 0; p < map_Bha.rows; p++) {
-            Bha_min = 2.0;   // The max. of Bha. Dist. is 1.0, so greater than 1.0 is ok.
-            min_count.x = -1;
-            min_count.y = -1;
-            for (int r = 0; r < map_Bha.rows; r++) {
-                for (int c = 0; c < map_Bha.cols; c++) {
-                    if (check_map_Bha_r.at<bool>(r) == true || check_map_Bha_c.at<bool>(c) == true)
-                        continue;
-                    if (Bha_min > map_Bha.ptr<double>(r)[c]) {
-                        Bha_min = map_Bha.ptr<double>(r)[c];
-                        min_count.x = r;
-                        min_count.y = c;
-                    }
-                }
-            }
-            if (min_count.x == -1 || min_count.y == -1)
-                continue;
-            // Check if the object satisfies the threshold
-            // if Bha. dist. is less than threshold, it's probably a successful match.
-            if (map_Bha.ptr<double>(min_count.x)[min_count.y] <= thresh_Bha &&
-                    map_err_pos_x.ptr<double>(min_count.x)[min_count.y] <= thresh_err_x &&
-                    map_err_pos_z.ptr<double>(min_count.x)[min_count.y] <= map_thresh_err_z.ptr<double>(min_count.y)[0])
-                sort_min.push_back(min_count);
-            check_map_Bha_r.at<bool>(min_count.x) = true;
-            check_map_Bha_c.at<bool>(min_count.y) = true;
-        }
-
-        // push matching result to objects, id is followed by previous id
-        lock_sv_object.lockForWrite();
-        for (int i = 0 ; i < sort_min.size(); i++) {
-            int id = map_Bha_corr_id_c[sort_min[i].y];
-            int id_prev = map_Bha_corr_id_r[sort_min[i].x];
-            if (id != id_prev) {
-                if (objects[id_prev].labeled) {
-                    for (int j = 0; j < obj_nums; j++) {
-                        if (!objects[j].labeled) {
-                            moveInfo(objects[id_prev], objects[j]);
-                            moveOm(om[id_prev], om[j]);
-                            break;
-                        }
-                    }
-                }
-                moveInfo(objects[id], objects[id_prev]);
-                moveOm(om[id], om[id_prev]);
-            }
-            map_Bha_corr_id_c[sort_min[i].y] = id_prev;
-            // (cm/frame) -> (km/hr)
-            cv::Point2f p1 = cv::Point2f(objects[id_prev].avg_X / 100.0, objects[id_prev].avg_Z / 100.0);
-            cv::Point2f p2 = cv::Point2f(objects_display[id_prev].avg_X / 100.0, objects_display[id_prev].avg_Z / 100.0);
-            objects[id_prev].vel = SensorBase::velEstimation(p1, p2, time_proc);
-        }
-        lock_sv_object.unlock();
-
-#ifdef debug_info_sv_object_matching_others
-        for (int i = 0 ; i < sort_min.size(); i++) {
-            std::cout<<"prev "<<sort_min[i].x<<" ("<<map_Bha_corr_id_r[sort_min[i].x]<<
-                       "), now "<<sort_min[i].y<<" ("<<map_Bha_corr_id_c[sort_min[i].y]<<")\t";
-#ifdef debug_info_sv_object_matching_data_extract
-            cv::imshow("Image - now", om[map_Bha_corr_id_c[sort_min[i].y]].img);
-            cv::imshow("Image - prev", om_prev[map_Bha_corr_id_r[sort_min[i].x]].img);
-            char c = cv::waitKey();
-            if (c == '1')
-                std::cout<<"correct "<<map_Bha.ptr<double>(sort_min[i].x)[sort_min[i].y]<<std::endl;
-            else if (c == '2')
-                std::cout<<"wrong "<<map_Bha.ptr<double>(sort_min[i].x)[sort_min[i].y]<<std::endl;
-#endif
-        }
-        std::cout<<std::endl;
-#endif
-#ifdef debug_info_sv_object_matching_img
-        cv::Mat comp_mix;
-        comp = img_detected.clone();
-        if (!comp_prev.empty()) {
-            comp_mix = cv::Mat::zeros(2 * IMG_H, IMG_W, CV_8UC3);
-            comp_prev.copyTo(comp_mix(cv::Rect(0, 0, IMG_W, IMG_H)));
-            comp.copyTo(comp_mix(cv::Rect(0, IMG_H, IMG_W, IMG_H)));
-            cv::putText(comp_mix, "Previous", cv::Point(0, 0.1 * IMG_H), cv::FONT_HERSHEY_DUPLEX, 1, cv::Scalar(0, 255, 0, 255));
-            cv::putText(comp_mix, "Now", cv::Point(0, 1.1 * IMG_H), cv::FONT_HERSHEY_DUPLEX, 1, cv::Scalar(0, 255, 0, 255));
-            cv::line(comp_mix, cv::Point(0, IMG_H), cv::Point(IMG_W, IMG_H), cv::Scalar(0, 0, 255), 1, 8, 0);
-        }
-        for (int i = 0 ; i < sort_min.size(); i++) {
-            if (!comp_prev.empty()) {
-                cv::Point p1, p2;
-                p1 = cv::Point(om_prev[map_Bha_corr_id_r[sort_min[i].x]].center.second, om_prev[map_Bha_corr_id_r[sort_min[i].x]].center.first);
-                p2 = cv::Point(om[map_Bha_corr_id_c[sort_min[i].y]].center.second, om[map_Bha_corr_id_c[sort_min[i].y]].center.first + IMG_H);
-                cv::line(comp_mix, p1, p2, cv::Scalar(255, 0, 0), 2, 8, 0);
-                cv::putText(comp_mix, QString::number(map_Bha_corr_id_c[sort_min[i].y]).toStdString(), p2, cv::FONT_HERSHEY_DUPLEX, 1, cv::Scalar(0, 0, 255));
-            }
-        }
-        if (!comp_prev.empty())
-            cv::imshow("Comp", comp_mix);
-        comp_prev = comp.clone();
-#endif
-    }
-
-    // push om to om_prev
-    om_prev_obj_num = om_obj_num;
-    std::swap(om_prev, om);
+//    lock_sv_object.lockForWrite();
+//    for (int k = 0; k < matching_result.size(); k++) {
+//        int id_old = matching_result[k].first;
+//        int id = matching_result[k].second;
+//        moveInfo(objects[id_old], objects[id]);
+//        // velocity estimation
+//        cv::Point2f p1 = cv::Point2f(objects[id].avg_X / 100.0, objects[id].avg_Z / 100.0);
+//        cv::Point2f p2 = cv::Point2f(objects_display[id].avg_X / 100.0, objects_display[id].avg_Z / 100.0);
+//        objects[id].vel = SensorBase::velEstimation(p1, p2, time_proc);
+//    }
+//    lock_sv_object.unlock();
 }
 
 void stereo_vision::resetObjectInfo(objectInfo &src)
@@ -1390,19 +1191,6 @@ void stereo_vision::resetObjectInfo(objectInfo &src)
     src.img.release();
 }
 
-void stereo_vision::moveOm(objectMatchingInfo &src, objectMatchingInfo &dst)
-{
-    dst.center       = src.center;
-    dst.err_pos      = src.err_pos;
-    dst.fg_Bha_check = src.fg_Bha_check;
-    dst.H_hist       = src.H_hist.clone();
-    dst.H_img        = src.H_img.clone();
-    dst.img          = src.img.clone();
-    dst.pc           = src.pc;
-
-    resetMatchingInfo(src);
-}
-
 void stereo_vision::moveInfo(objectInfo &src, objectInfo &dst)
 {
     dst.labeled     = src.labeled;
@@ -1418,6 +1206,7 @@ void stereo_vision::moveInfo(objectInfo &src, objectInfo &dst)
     dst.img.release();
     dst.img         = src.img.clone();
     dst.pc          = src.pc;
+    dst.rect        = src.rect;
     dst.rect_f      = src.rect_f;
     dst.plot_pt_f   = src.plot_pt_f;
     dst.rect_world  = src.rect_world;

@@ -1,7 +1,7 @@
 #ifndef KALMANFILTER_H
 #define KALMANFILTER_H
 
-#include "debug_info.h"
+#include "../debug_info.h"
 
 #include "opencv2/opencv.hpp"
 
@@ -13,7 +13,7 @@ public:
     ~KalmanFilter();
 
     struct objectTrackingKF {
-        cv::KalmanFilter kf;
+        cv::KalmanFilter kf_core;
 
         cv::Mat state;
 
@@ -32,7 +32,7 @@ public:
         std::vector<cv::Point> obj_pos, kalman_pos;
 
         objectTrackingKF() {
-            kf = cv::KalmanFilter(4, 2, 0);
+            kf_core = cv::KalmanFilter(4, 2, 0);
             state = cv::Mat_<float>(4, 1);  // (x, y, Vx, Vy)
             processNoise = cv::Mat(4, 1, CV_32F);
             measurement = cv::Mat_<float>::zeros(2, 1);

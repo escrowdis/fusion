@@ -43,7 +43,7 @@ enum INPUT_SOURCE {
 };
 }
 
-class RadarController : public QObject, public TopView, public SensorBase
+class RadarController : public QObject, public TopView, protected SensorBase
 {
     Q_OBJECT
 
@@ -106,6 +106,8 @@ public:
         double y;
         double z;
 
+        bool fg_fused;                  // Is object fused with stereo vision or not
+
         // TOPVIEW -----------
         PC pc;
 
@@ -114,6 +116,8 @@ public:
 
         // WCS ===============
         PC pc_world;                    // (cm)
+
+        cv::Point2f vel;                // (m/s)
     };
 
 private:
@@ -146,6 +150,8 @@ private:
     void reset();
 
     bool dataIn();
+
+    void velocityEstimation();
 
     QTime t_p;                          // process time of all exec.
 

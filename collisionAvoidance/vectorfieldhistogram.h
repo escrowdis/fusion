@@ -1,7 +1,7 @@
 #ifndef VECTORFIELDHISTOGRAM_H
 #define VECTORFIELDHISTOGRAM_H
 
-#include "debug_info.h"
+#include "../debug_info.h"
 
 class VectorFieldHistogram
 {

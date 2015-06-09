@@ -443,7 +443,8 @@ void MainWindow::initialFusedTopView()
     ui->label_fusion_sv_color->setPixmap(si->pic_sv);
     ui->label_fusion_radar_color->setPixmap(si->pic_radar);
 
-    updateFusedTopView();
+    si->updateFusedTopView();
+    ui->label_fusion_BG->setPixmap(QPixmap::fromImage(QImage::QImage(si->fused_topview_BG.data, si->fused_topview_BG.cols, si->fused_topview_BG.rows, si->fused_topview_BG.step, QImage::Format_RGBA8888)));
 }
 
 void MainWindow::updateFusedTopView()
@@ -491,9 +492,15 @@ void MainWindow::dataFused()
     bool fg_sv = ui->checkBox_fusion_sv->isChecked() && si->sv->fusedTopview();
     bool fg_sv_each_pixel = ui->checkBox_fused_sv_plot_every_pixel->isChecked();
     bool fg_radar = ui->checkBox_fusion_radar->isChecked() && si->rc->fusedTopview();
+    bool fg_data_update = f_sv_status == SV::STATUS::OK || f_radar_status == RADAR::STATUS::OK;
     bool fg_fusion = ui->checkBox_fusion_data->isChecked();
+    bool fg_om = ui->checkBox_ot->isChecked();
+    bool fg_ot_kf = ui->checkBox_ot->isChecked() && ui->checkBox_ot_kf->isChecked();
+    bool fg_ot_pf = ui->checkBox_ot->isChecked() && ui->checkBox_ot_pf->isChecked();
     bool fg_ca_astar = ui->checkBox_ca->isChecked() && ui->checkBox_ca_astar->isChecked();
-    si->dataExec(fg_sv, fg_radar, fg_fusion, fg_sv_each_pixel, fg_ca_astar);
+    bool fg_ca_vfh = ui->checkBox_ca->isChecked() && ui->checkBox_ca_vfh->isChecked();
+
+    si->dataExec(fg_sv, fg_radar, fg_data_update, fg_fusion, fg_om, fg_ot_kf, fg_ca_astar, fg_sv_each_pixel);
 }
 
 void MainWindow::fusedDisplay(cv::Mat *fused_topview, cv::Mat *img_detected_display)
@@ -1755,4 +1762,32 @@ void MainWindow::on_checkBox_fusion_radar_clicked(bool checked)
         ui->checkBox_fusion_data->setEnabled(checked);
         ui->checkBox_fusion_data->setChecked(checked);
     }
+}
+
+void MainWindow::on_spinBox_lrf_scale_valueChanged(int arg1)
+{
+//    if (fg_acquiring)
+//        si->lrf->scale_ratio = arg1;
+}
+
+void MainWindow::on_checkBox_ca_clicked(bool checked)
+{
+    ui->checkBox_ca_astar->setEnabled(checked);
+    ui->checkBox_ca_vfh->setEnabled(checked);
+}
+
+void MainWindow::on_checkBox_ot_clicked(bool checked)
+{
+    ui->checkBox_ot_kf->setEnabled(checked);
+    ui->checkBox_ot_pf->setEnabled(checked);
+
+#ifdef debug_info_sv_object_matching_img
+    cv::namedWindow("Comp", cv::WINDOW_AUTOSIZE);
+#endif
+
+    si->sv->fg_tracking = checked;
+}
+
+void MainWindow::on_checkBox_ca_astar_clicked(bool checked)
+{
 }

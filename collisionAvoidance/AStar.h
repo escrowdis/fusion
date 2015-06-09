@@ -9,7 +9,7 @@
 #include <ctime>
 #include <QTime>
 
-#include "debug_info.h"
+#include "../debug_info.h"
 
 #include "opencv2/core.hpp"
 

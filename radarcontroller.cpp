@@ -36,7 +36,7 @@ RadarController::RadarController() : TopView(1, 100, 20470, 102.3, 31900, 600, 9
 
     update_count = 3;
 
-    time_gap = 30;
+    time_gap = 50;
     t.start();
 }
 
@@ -244,6 +244,8 @@ int RadarController::dataExec()
     // dataIn() returns true when id == 0x53F
     while (!dataIn()) {}
 
+    velocityEstimation();
+
     if (fg_all_data_in && fg_data_in) {
 
         pointDisplayFrontView();
@@ -259,13 +261,24 @@ int RadarController::dataExec()
     return RADAR::STATUS::DATA_NOT_ENOUGHT;
 }
 
+void RadarController::velocityEstimation()
+{
+    for (int m = 0; m < OBJECT_NUM; m++) {
+        if (objects[m].status >= obj_status_filtered) {
+            cv::Point2f p1 = cv::Point2f(objects[m].x / 100.0, objects[m].z / 100.0);
+            cv::Point2f p2 = cv::Point2f(objects_display[m].x / 100.0, objects_display[m].z / 100.0);
+            objects[m].vel = SensorBase::velEstimation(p1, p2, time_proc);
+        }
+        else
+            objects[m].vel = cv::Point2f(0.0, 0.0);
+    }
+}
+
 void RadarController::updateDataForDisplay()
 {
-//    objectTrackingInfo *oti;
-//    oti = objects_display;
-//    objects_display = objects;
-//    objects = oti;
+    lock_radar.lockForWrite();
     std::swap(objects, objects_display);
+    lock_radar.unlock();
 }
 
 int RadarController::guiUpdate()
@@ -320,8 +333,10 @@ void RadarController::retrievingData()
                     std::endl;
 #endif
 
+            lock_radar.lockForWrite();
             if (b_track_lat_rate.at(5) == 1) {
                 b_track_lat_rate[5] = 0;
+
                 objects[_id].lat_rate = b_track_lat_rate.to_ulong() * 0.25 - 8.0;
             }
             else
@@ -374,6 +389,7 @@ void RadarController::retrievingData()
                     objects[_id].range_rate <<" "<<
                     std::endl<<std::endl;
 #endif
+            lock_radar.unlock();
         }
 #ifdef debug_info_radar_data
         if (id == 0x53F) {
@@ -399,19 +415,18 @@ void RadarController::pointDisplayFrontView()
 
     detected_obj = 0;
 
+    lock_radar.lockForWrite();
     for (int k = 0; k < OBJECT_NUM; k++) {
         if (objects[k].status >= obj_status_filtered) {
             detected_obj++;
 
             int pt_x, pt_y;
             float gain = 5.0; //**// another value?
-            lock_radar.lockForWrite();
             pt_x = 1.0 * objects[k].x * gain * (1.0 - 1.0 * objects[k].z / max_distance) + img_center.x;
             pt_y = img_rows * (1.0 - 1.0 * objects[k].z / max_distance);
             cv::circle(img_radar, cv::Point(pt_x, pt_y), 1, cv::Scalar(0, 255, 0, 255), -1, 8, 0);
             cv::rectangle(img_radar, cv::Rect(pt_x - obj_rect.x / 2, pt_y - obj_rect.y / 2, obj_rect.x, obj_rect.y), cv::Scalar(0, 0, 255, 255), 2, 8, 0);
             cv::putText(img_radar, QString::number(k).toStdString(), cv::Point(pt_x + obj_rect.x / 2, pt_y), cv::FONT_HERSHEY_DUPLEX, 1, cv::Scalar(0, 255, 0, 255));
-            lock_radar.unlock();
 #ifdef debug_info_radar_data
 //                ui->textEdit->append("data struct\nangle: " + QString::number(objects[k].angle) + " range: " + QString::number(objects[k].range)
 //                                     + " accel: " + QString::number(objects[k].range_accel) + " width: " + QString::number(objects[k].width)
@@ -423,6 +438,7 @@ void RadarController::pointDisplayFrontView()
             item[k].setText("0");
         }
     }
+    lock_radar.unlock();
 }
 
 void RadarController::pointProjectTopView()
@@ -433,6 +449,7 @@ void RadarController::pointProjectTopView()
     }
 
     int grid_row, grid_col;
+    lock_radar.lockForWrite();
     for (int m = 0; m < OBJECT_NUM; m++) {
         if (objects[m].status >= obj_status_filtered) {
             grid_row = corrGridRow(100.0 * objects[m].z);
@@ -444,13 +461,13 @@ void RadarController::pointProjectTopView()
             // mark each point belongs to which cell
             if (grid_row_t >= 0 && grid_row_t < img_row &&
                     grid_col_t >= 0 && grid_col_t < img_col) {
-                lock_radar.lockForWrite();
                 grid_map[grid_row_t][grid_col_t].pts_num++;
 //                std::cout<<data[m].z<<std::endl;
-                lock_radar.unlock();
             }
         }
     }
+    lock_radar.unlock();
+
     // check whether the cell is satisfied as an object
     cv::Point pts[4];
     uchar* ptr = color_table->scanLine(0);
