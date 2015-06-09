@@ -14,6 +14,10 @@ lrf_controller::lrf_controller()
 
     display_lrf = cv::Mat::zeros(800, 800, CV_8UC3);
 
+    time_gap = 20;
+
+    t.restart();
+
     reset();
     count_resend = 0;
 }
@@ -68,7 +72,13 @@ bool lrf_controller::open(QString comPortIn, int baudRateIn)
     }
 
     serial->write(cmd_LMS291, 8);
-    while(!serial->waitForBytesWritten(10)) {}
+    int count_while = 0;
+    int thresh_count = 10;
+    while(!serial->waitForBytesWritten(10)) {
+        count_while++;
+        if (count_while > thresh_count)
+            return -1;
+    }
 
     serial->waitForReadyRead(300); // wait for lrf response
 

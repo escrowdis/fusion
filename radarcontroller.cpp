@@ -229,19 +229,20 @@ bool RadarController::dataIn()
 
     retrievingData();
 
-    if (id == 0x53F)
+    if (id == 0x53F) {
         fg_all_data_in = true;
+        return true;
+    }
     else
         fg_all_data_in = false;
 
-    return true;
+    return false;
 }
 
 int RadarController::dataExec()
 {
     // dataIn() returns true when id == 0x53F
-    if (!dataIn())
-        return RADAR::STATUS::NO_INPUT;
+    while (!dataIn()) {}
 
     if (fg_all_data_in && fg_data_in) {
 

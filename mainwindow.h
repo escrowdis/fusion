@@ -1,6 +1,9 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
+// multi-thread processing
+#define multi_thread
+
 #include <QMainWindow>
 #include <QApplication>
 #include <QFileDialog>
@@ -151,13 +154,14 @@ private:
 
     // Thread control =========
 //    bool fg_running;
-
-    QFutureSynchronizer<void> sync;
     QFuture<int> f_sv;
     QFuture<bool> f_lrf;
     QFuture<void> f_lrf_buf;
     QFuture<int> f_radar;
     QFuture<void> f_fused;
+    int f_sv_status;
+    bool f_lrf_status;
+    int f_radar_status;
 //    QFutureWatcher<void> fw_sv;
 //    QFutureWatcher<void> fw_lrf;
 //    QFutureWatcher<void> fw_lrf_buf;

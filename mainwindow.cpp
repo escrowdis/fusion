@@ -91,9 +91,14 @@ MainWindow::MainWindow(QWidget *parent) :
 #ifdef opencv_cuda
     ui->radioButton_SGBM->setEnabled(false);
     ui->radioButton_BM->setChecked(true);
+    si->sv->match_mode = SV::STEREO_MATCH::BM;
 #else
-    ui->radioButton_SGBM->setEnabled(true);
-    ui->radioButton_SGBM->setChecked(true);
+    ui->radioButton_BM->setEnabled(true);
+    ui->radioButton_BM->setChecked(true);
+    si->sv->match_mode = SV::STEREO_MATCH::BM;
+//    ui->radioButton_SGBM->setEnabled(true);
+//    ui->radioButton_SGBM->setChecked(true);
+//    match_mode = SV::STEREO_MATCH::SGBM;
 #endif
 
     // Initialization
@@ -142,20 +147,7 @@ MainWindow::MainWindow(QWidget *parent) :
     initialFusedTopView();
 
     QObject::connect(si, SIGNAL(updateGUI(cv::Mat *, cv::Mat *)), this, SLOT(fusedDisplay(cv::Mat*,cv::Mat*)));
-    // Fusion ================================== End
-
-    // Thread control ==========================
-    f_sv.setPaused(true);
-    f_lrf.setPaused(true);
-    f_lrf_buf.setPaused(true);
-    f_radar.setPaused(true);
-//    f_fused.setPaused(true);
-    sync.addFuture(f_sv);
-    sync.addFuture(f_lrf);
-    sync.addFuture(f_lrf_buf);
-    sync.addFuture(f_radar);
-    sync.addFuture(f_fused);
-    // ========================================= End
+    // Fusion ================================== En
 
     // Pseudo color table ======================
     ui->label_color_table->setScaledContents(true) ;
@@ -227,10 +219,12 @@ void MainWindow::keyPressEvent(QKeyEvent *ev)
             ui->tabWidget->setCurrentIndex(index_1 + 1);
         else if (QKeySequence(key_in).matches(QKeySequence("Ctrl++")) == QKeySequence::ExactMatch) {
             si->zoomInFusedTopView();
+            f_fused.waitForFinished();
             updateFusedTopView();
         }
         else if (QKeySequence(key_in).matches(QKeySequence("Ctrl+-")) == QKeySequence::ExactMatch) {
             si->zoomOutFusedTopView();
+            f_fused.waitForFinished();
             updateFusedTopView();
         }
     }
@@ -464,6 +458,7 @@ void MainWindow::on_radioButton_vehicle_cart_clicked()
 {
     si->chooseVehicle(VEHICLE::CART);
 
+    f_fused.waitForFinished();
     updateFusedTopView();
 }
 
@@ -471,6 +466,7 @@ void MainWindow::on_radioButton_vehicle_car_clicked()
 {
     si->chooseVehicle(VEHICLE::CAR);
 
+    f_fused.waitForFinished();
     updateFusedTopView();
 }
 
@@ -486,7 +482,7 @@ void MainWindow::wheelEvent(QWheelEvent *ev)
         }
     }
 
-    while (f_fused.isRunning()) {}
+    f_fused.waitForFinished();
     updateFusedTopView();
 }
 
@@ -716,8 +712,9 @@ void MainWindow::on_pushButton_cam_open_clicked()
 
 void MainWindow::exec()
 {
-    if (!fg_running)
+    if (!fg_running) {
         threadProcessing();
+    }
 }
 
 bool MainWindow::radarDataIn()
@@ -759,8 +756,6 @@ void MainWindow::on_pushButton_cam_step_clicked()
     if (stat == SV::STATUS::NO_INPUT) {
         reportError("sv", "Warning.", "No data is capturable.");
         fg_capturing = false;
-        f_sv.setPaused(true);
-        while (f_sv.isRunning()) {}
         threadCheck();
     }
 }
@@ -768,7 +763,6 @@ void MainWindow::on_pushButton_cam_step_clicked()
 void MainWindow::on_pushButton_cam_capture_clicked()
 {
     fg_capturing = true;
-    f_sv.setPaused(false);
 
     exec();
 }
@@ -776,57 +770,77 @@ void MainWindow::on_pushButton_cam_capture_clicked()
 void MainWindow::on_pushButton_cam_stop_clicked()
 {
     fg_capturing = false;
-    f_sv.setPaused(true);
 
-    while (f_sv.isRunning()) {}
     threadCheck();
 }
 
 void MainWindow::threadCheck()
 {
-    if (fg_running && !fg_acquiring && !fg_buffering && !fg_capturing && !fg_retrieving)
+    if (fg_running && !fg_acquiring && !fg_buffering && !fg_capturing && !fg_retrieving) {
         fg_running = false;
+    }
 }
 
 void MainWindow::threadProcessing()
 {
     fg_running = true;
+#ifndef multi_thread
+    bool fg_sv = false, fg_radar = false;
+#endif
     while (fg_running) {
         // sv
+#ifdef multi_thread
         if (fg_capturing && !f_sv.isRunning()) {
-//            si->svDataExec();
             f_sv = QtConcurrent::run(si, &SensorInfo::svDataExec);
+            f_sv_status = f_sv;
+        }
+        if (fg_acquiring && !f_lrf.isRunning()) {
+            f_lrf = QtConcurrent::run(si, &SensorInfo::lrfDataExec);
+            f_lrf_status = f_lrf;
+        }
+        if (fg_buffering && si->lrf->bufNotFull() && !f_lrf_buf.isRunning()) {
+            f_lrf_buf = QtConcurrent::run(si, &SensorInfo::lrfBufExec);
+        }
+        if (fg_retrieving && !f_radar.isRunning()) {
+            f_radar = QtConcurrent::run(si, &SensorInfo::radarDataExec);
+            f_radar_status = f_radar;
+        }
+        if (!f_fused.isRunning() && (fg_capturing || fg_retrieving )) {
+            f_fused = QtConcurrent::run(this, &MainWindow::dataFused);
+        }
+#else
+        if (fg_capturing) {
+            int stat = si->svDataExec();
+            if (!fg_sv)
+                if (stat == SV::STATUS::OK)
+                    fg_sv = true;
         }
 
         // lrf
-        if (fg_acquiring && !f_lrf.isRunning()) {
-//            si->lrfDataExec();
-            f_lrf = QtConcurrent::run(si, &SensorInfo::lrfDataExec);
-        }
+        if (fg_acquiring)
+            si->lrfDataExec();
 
         // lrf buffer
-        if (fg_buffering && si->lrf->bufNotFull() && !f_lrf_buf.isRunning()) {
-//            si->lrfBufExec();
-            f_lrf_buf = QtConcurrent::run(si, &SensorInfo::lrfBufExec);
-        }
+        if (fg_buffering)
+            si->lrfBufExec();
 
         // Radar ESR
-        if (fg_retrieving && !f_radar.isRunning()) {
-//            si->radarDataExec();
-            f_radar = QtConcurrent::run(si, &SensorInfo::radarDataExec);
+        if (fg_retrieving) {
+            int stat = si->radarDataExec();
+            if (!fg_radar)
+                if (stat == RADAR::STATUS::OK)
+                    fg_radar = true;
         }
-        if (!f_fused.isRunning()) {
-//            dataFused();
-            f_fused = QtConcurrent::run(this, &MainWindow::dataFused);
+        if (fg_sv && fg_radar) {
+            dataFused();
+            fg_sv = false;
+            fg_radar = false;
         }
+#endif
 
         qApp->sendPostedEvents();
         qApp->processEvents();
-//        sync.waitForFinished();
     }
-
-    sync.setCancelOnWait(true);
-    while (!sync.cancelOnWait()) {}
 }
 
 void MainWindow::on_checkBox_do_calibration_clicked(bool checked)
@@ -1055,7 +1069,6 @@ void MainWindow::on_pushButton_lrf_request_clicked()
 
     // push data to buffer //**// shouldn't be here
     fg_buffering = true;
-    f_lrf_buf.setPaused(false);
 
     exec();
 }
@@ -1063,7 +1076,6 @@ void MainWindow::on_pushButton_lrf_request_clicked()
 void MainWindow::on_pushButton_lrf_retrieve_clicked()
 {
     fg_acquiring = true;
-    f_lrf.setPaused(false);
 
     exec();
 }
@@ -1072,10 +1084,7 @@ void MainWindow::on_pushButton_lrf_stop_clicked()
 {
     fg_buffering = false;
     fg_acquiring = false;
-    f_lrf.setPaused(true);
-    f_lrf_buf.setPaused(true);
 
-    while (f_lrf.isRunning() && f_lrf_buf.isRunning()) {}
     si->lrf->stopRetrieve();
 
     threadCheck();
@@ -1444,7 +1453,6 @@ void MainWindow::on_pushButton_radar_bus_on_clicked()
     si->rc->busOn();
 
     fg_retrieving = true;
-    f_radar.setPaused(false);
 
     exec();
 }
@@ -1452,8 +1460,6 @@ void MainWindow::on_pushButton_radar_bus_on_clicked()
 void MainWindow::on_pushButton_radar_bus_off_clicked()
 {
     fg_retrieving = false;
-    f_radar.setPaused(true);
-    while (f_radar.isRunning()) {}
 
     si->rc->busOff();
     threadCheck();
@@ -1523,11 +1529,9 @@ void MainWindow::on_pushButton_start_all_clicked()
 
     if (!fg_capturing) {
         fg_capturing = true;
-        f_sv.setPaused(false);
     }
     if (!fg_retrieving) {
         fg_retrieving = true;
-        f_radar.setPaused(false);
     }
 
     exec();
@@ -1588,7 +1592,6 @@ void MainWindow::on_pushButton_sv_record_clicked()
     // record goes off
     else {
         ui->pushButton_sv_record->setIcon(QIcon(":/icon/record_off.png"));
-        while (f_sv.isRunning()) {}
         re.stop();
         ui->label_sv_frame_count->setVisible(false);
     }
@@ -1604,7 +1607,6 @@ void MainWindow::on_pushButton_radar_record_clicked()
     // record goes off
     else {
         ui->pushButton_radar_record->setIcon(QIcon(":/icon/record_off.png"));
-        while (f_radar.isRunning()) {}
         re.stop();
     }
 }
@@ -1632,7 +1634,6 @@ void MainWindow::on_pushButton_all_record_clicked()
         ui->pushButton_sv_record->setIcon(QIcon(":/icon/record_off.png"));
         ui->pushButton_radar_record->setIcon(QIcon(":/icon/record_off.png"));
         ui->pushButton_all_record->setIcon(QIcon(":/icon/all_record_off.png"));
-        while (f_radar.isRunning() || f_sv.isRunning()) {}
         re.stop();
         ui->label_sv_frame_count->setVisible(false);
     }
@@ -1735,23 +1736,23 @@ void MainWindow::on_checkBox_sv_ground_filter_clicked(bool checked)
 void MainWindow::on_checkBox_fusion_sv_clicked(bool checked)
 {
     if (checked && ui->checkBox_fusion_radar->isChecked()) {
-        ui->checkBox_fusion_data->setEnabled(true);
-        ui->checkBox_fusion_data->setChecked(true);
+        ui->checkBox_fusion_data->setEnabled(checked);
+        ui->checkBox_fusion_data->setChecked(checked);
     }
     else {
-        ui->checkBox_fusion_data->setEnabled(false);
-        ui->checkBox_fusion_data->setChecked(false);
+        ui->checkBox_fusion_data->setEnabled(checked);
+        ui->checkBox_fusion_data->setChecked(checked);
     }
 }
 
 void MainWindow::on_checkBox_fusion_radar_clicked(bool checked)
 {
     if (checked && ui->checkBox_fusion_sv->isChecked()) {
-        ui->checkBox_fusion_data->setEnabled(true);
-        ui->checkBox_fusion_data->setChecked(true);
+        ui->checkBox_fusion_data->setEnabled(checked);
+        ui->checkBox_fusion_data->setChecked(checked);
     }
     else {
-        ui->checkBox_fusion_data->setEnabled(false);
-        ui->checkBox_fusion_data->setChecked(false);
+        ui->checkBox_fusion_data->setEnabled(checked);
+        ui->checkBox_fusion_data->setChecked(checked);
     }
 }
