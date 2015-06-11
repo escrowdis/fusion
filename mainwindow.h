@@ -161,8 +161,8 @@ private:
     QFuture<int> f_radar;
     QFuture<void> f_fused;
     int f_sv_status;
-    bool f_lrf_status;
-    int f_radar_status;
+    bool f_lrf_status = false;
+    int f_radar_status = false;
 //    QFutureWatcher<void> fw_sv;
 //    QFutureWatcher<void> fw_lrf;
 //    QFutureWatcher<void> fw_lrf_buf;

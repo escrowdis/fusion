@@ -166,7 +166,7 @@ private:
 
     bool fg_read;                   // reading data
     bool fg_data_in;                // data is retrievable
-    bool fg_all_data_in;
+    bool fg_all_data_in = false;
 
     // CAN bus params ==============
     long            id;

@@ -200,12 +200,11 @@ bool RadarController::dataIn()
         }
         break;
     case RADAR::INPUT_SOURCE::TXT:
-//        std::cout<<re.vr->current_frame_count<<"\t"<<re.tr->current_frame_count<<std::endl;
-
         fg_data_in = true;
         std::string text_raw;
         QString text, text_frame, text_id, text_bin;
-        if (re.tr->file >> text_raw) {
+        re.tr->file >> text_raw;
+        if (!text_raw.empty()) {
             text = QString::fromStdString(text_raw);
             text_frame = text.section(",", 0, 0);
             text_id = text.section(",", 1, 1);
@@ -218,8 +217,10 @@ bool RadarController::dataIn()
             else
                 re.tr->current_frame_count = text_frame.toInt();
         }
-        else
+        else {
             emit dataEnd();
+            return true;
+        }
         break;
     }
 
@@ -227,12 +228,13 @@ bool RadarController::dataIn()
 
     if (id == 0x53F) {
         if (input_mode == RADAR::INPUT_SOURCE::TXT) {
-//            For synchronization replay
+            // For synchronization replay
             if (re.tr->fg_loaded && re.vr->fg_loaded)
-                if (!re.vr->fg_data_end && re.vr->current_frame_count < re.tr->current_frame_count)
+                if (re.vr->current_frame_count < re.tr->current_frame_count)
                     return false;
-            fg_all_data_in = true;
+//            std::cout<<re.vr->current_frame_count<<"\t"<<re.tr->current_frame_count<<std::endl;
         }
+        fg_all_data_in = true;
         return true;
     }
     else
@@ -244,7 +246,10 @@ bool RadarController::dataIn()
 int RadarController::dataExec()
 {
     // dataIn() returns true when id == 0x53F
-    while (!dataIn()) {}
+    while (!dataIn()) {
+        if (!fg_all_data_in)
+            return RADAR::STATUS::NO_INPUT;
+    }
 
     velocityEstimation();
 

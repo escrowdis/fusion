@@ -792,18 +792,18 @@ void MainWindow::threadProcessing()
 #ifdef multi_thread
         if (fg_capturing && !f_sv.isRunning()) {
             f_sv = QtConcurrent::run(si, &SensorInfo::svDataExec);
-            f_sv_status = f_sv;
+            f_sv_status = f_sv.result();
         }
         if (fg_acquiring && !f_lrf.isRunning()) {
             f_lrf = QtConcurrent::run(si, &SensorInfo::lrfDataExec);
-            f_lrf_status = f_lrf;
+            f_lrf_status = f_lrf.result();
         }
         if (fg_buffering && si->lrf->bufNotFull() && !f_lrf_buf.isRunning()) {
             f_lrf_buf = QtConcurrent::run(si, &SensorInfo::lrfBufExec);
         }
         if (fg_retrieving && !f_radar.isRunning()) {
             f_radar = QtConcurrent::run(si, &SensorInfo::radarDataExec);
-            f_radar_status = f_radar;
+            f_radar_status = f_radar.result();
         }
         if (!f_fused.isRunning() && (fg_capturing || fg_retrieving )) {
             f_fused = QtConcurrent::run(this, &MainWindow::dataFused);
