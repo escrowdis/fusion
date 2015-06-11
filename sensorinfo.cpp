@@ -657,7 +657,6 @@ void SensorInfo::dataProcess(bool fg_sv, bool fg_radar)
 void SensorInfo::drawFusedTopView(bool fg_sv, bool fg_radar, bool fg_sv_each)
 {
     stereo_vision::objectInfo *d_sv = sv->objects_display;
-    RadarController::objectTrackingInfo *d_radar = rc->objects_display;
 
     bool fg_update = false;
     if (t.elapsed() > time_gap) {
@@ -674,6 +673,25 @@ void SensorInfo::drawFusedTopView(bool fg_sv, bool fg_radar, bool fg_sv_each)
     int device = SENSOR::SV;
     float scale = 30.0;
     if (fg_sv) {
+        // every pixel
+        if (fg_sv_each) {
+            cv::Scalar color_pixel = sensors[device].color;
+            color_pixel[3] = 100;
+            lock_f_topview.lockForWrite();
+            for (int r = 0; r < IMG_H; r++) {
+                for (int c = 0; c < IMG_W; c++) {
+                    if (sv->data[r][c].disp > 0) {
+                        SensorBase::PC pc = SensorBase::PC(sqrt(pow((double)(sv->data[r][c].Z), 2) + pow((double)(sv->data[r][c].X), 2)),
+                                                           atan(1.0 * sv->data[r][c].X / (1.0 * sv->data[r][c].Z)) * 180.0 / CV_PI);
+                        cv::Point plot_pt = point2FusedTopView(sensors[device].pos_pixel, pc);
+                        cv::circle(fused_topview, plot_pt, 1, color_pixel, -1, 8, 0);
+                    }
+                }
+            }
+            lock_f_topview.unlock();
+        }
+
+        // objects
         lock_f_sv.lockForWrite();
         if (sv->img_r_L.empty())
             sv->img_detected_display = cv::Mat::zeros(IMG_H, IMG_W, CV_8UC3);
