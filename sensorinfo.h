@@ -114,6 +114,11 @@ public:
 
     int test_range;
 
+    // Analysis ===============
+    int range_filter_min;
+    int range_filter_max;
+    // Analysis =============== End
+
 private:
     // sensor location
     struct sensorLocation {

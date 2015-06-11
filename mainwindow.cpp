@@ -509,9 +509,7 @@ void MainWindow::dataFused()
     bool fg_sv = ui->checkBox_fusion_sv->isChecked() && si->sv->fusedTopview();
     bool fg_sv_each_pixel = ui->checkBox_fused_sv_plot_every_pixel->isChecked();
     bool fg_radar = ui->checkBox_fusion_radar->isChecked() && si->rc->fusedTopview();
-    lock_future.lockForRead();
     bool fg_data_update = f_sv_status == SV::STATUS::OK || f_radar_status == RADAR::STATUS::OK;
-    lock_future.unlock();
     bool fg_fusion = ui->checkBox_fusion_data->isChecked();
     bool fg_om = ui->checkBox_ot->isChecked();
     bool fg_ot_kf = ui->checkBox_ot->isChecked() && ui->checkBox_ot_kf->isChecked();
@@ -793,25 +791,19 @@ void MainWindow::threadProcessing()
         // sv
 #ifdef multi_thread
         if (fg_capturing && !f_sv.isRunning()) {
-            lock_future.lockForWrite();
             f_sv = QtConcurrent::run(si, &SensorInfo::svDataExec);
             f_sv_status = f_sv;
-            lock_future.unlock();
         }
         if (fg_acquiring && !f_lrf.isRunning()) {
-            lock_future.lockForWrite();
             f_lrf = QtConcurrent::run(si, &SensorInfo::lrfDataExec);
             f_lrf_status = f_lrf;
-            lock_future.unlock();
         }
         if (fg_buffering && si->lrf->bufNotFull() && !f_lrf_buf.isRunning()) {
             f_lrf_buf = QtConcurrent::run(si, &SensorInfo::lrfBufExec);
         }
         if (fg_retrieving && !f_radar.isRunning()) {
-            lock_future.lockForWrite();
             f_radar = QtConcurrent::run(si, &SensorInfo::radarDataExec);
             f_radar_status = f_radar;
-            lock_future.unlock();
         }
         if (!f_fused.isRunning() && (fg_capturing || fg_retrieving )) {
             f_fused = QtConcurrent::run(this, &MainWindow::dataFused);
@@ -1792,4 +1784,14 @@ void MainWindow::on_checkBox_ot_clicked(bool checked)
 void MainWindow::on_checkBox_ca_astar_clicked(bool checked)
 {
 
+}
+
+void MainWindow::on_horizontalSlider_ana_range_filter_min_valueChanged(int value)
+{
+    si->range_filter_min = value;
+}
+
+void MainWindow::on_horizontalSlider_ana_range_filter_max_valueChanged(int value)
+{
+    si->range_filter_max = value;
 }

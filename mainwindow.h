@@ -18,10 +18,6 @@
 #include <QDir>
 extern QDir project_path;
 
-// thread control
-#include <QReadWriteLock>
-extern QReadWriteLock lock_future;
-
 // recording
 #include "recording/recording.h"
 extern recording re;
@@ -375,6 +371,8 @@ private slots:
     void on_checkBox_ca_clicked(bool checked);
     void on_checkBox_ot_clicked(bool checked);
     void on_checkBox_ca_astar_clicked(bool checked);
+    void on_horizontalSlider_ana_range_filter_min_valueChanged(int value);
+    void on_horizontalSlider_ana_range_filter_max_valueChanged(int value);
 };
 
 // Mouse control ==========

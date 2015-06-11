@@ -36,7 +36,7 @@ RadarController::RadarController() : TopView(1, 100, 20470, 102.3, 31900, 600, 9
 
     update_count = 3;
 
-    time_gap = 50;
+    time_gap = 10;
     t.start();
 }
 
