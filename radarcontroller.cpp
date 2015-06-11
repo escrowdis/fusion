@@ -246,10 +246,13 @@ bool RadarController::dataIn()
 int RadarController::dataExec()
 {
     // dataIn() returns true when id == 0x53F
-    while (!dataIn()) {
-        if (!fg_all_data_in)
-            return RADAR::STATUS::NO_INPUT;
-    }
+    while (!dataIn()) {}
+    // flush buf data. The data retrieving freq. can't be higher than sampleing rate, so I flush the rest of them. //**//
+    canFlushReceiveQueue(h);
+
+    // For txt
+    if (!fg_all_data_in)
+        return RADAR::STATUS::NO_INPUT;
 
     velocityEstimation();
 
