@@ -200,10 +200,6 @@ bool RadarController::dataIn()
         }
         break;
     case RADAR::INPUT_SOURCE::TXT:
-        // For synchronization replay
-        if (re.tr->fg_loaded && re.vr->fg_loaded)
-            if (!re.vr->fg_data_end && re.vr->current_frame_count < re.tr->current_frame_count)
-                return false;
 //        std::cout<<re.vr->current_frame_count<<"\t"<<re.tr->current_frame_count<<std::endl;
 
         fg_data_in = true;
@@ -230,7 +226,13 @@ bool RadarController::dataIn()
     retrievingData();
 
     if (id == 0x53F) {
-        fg_all_data_in = true;
+        if (input_mode == RADAR::INPUT_SOURCE::TXT) {
+//            For synchronization replay
+            if (re.tr->fg_loaded && re.vr->fg_loaded)
+                if (!re.vr->fg_data_end && re.vr->current_frame_count < re.tr->current_frame_count)
+                    return false;
+            fg_all_data_in = true;
+        }
         return true;
     }
     else
