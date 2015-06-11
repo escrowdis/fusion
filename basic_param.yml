@@ -12,7 +12,7 @@ topView:
    row_interval_radar: 12
    col_interval_radar: 20
 laserRangeFinder:
-   port: 3
+   port: 2
    baudRate: 3
    mapScale: 1
    resolution: cm

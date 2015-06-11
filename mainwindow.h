@@ -18,6 +18,10 @@
 #include <QDir>
 extern QDir project_path;
 
+// thread control
+#include <QReadWriteLock>
+extern QReadWriteLock lock_future;
+
 // recording
 #include "recording/recording.h"
 extern recording re;
@@ -81,6 +85,7 @@ private:
     stereo_vision::camParam* fin_cam_param;
     stereo_vision::matchParamSGBM* fin_SGBM;
     stereo_vision::matchParamBM* fin_BM;
+    int fin_lrf_port, fin_lrf_baud_rate, fin_lrf_scale, fin_lrf_res;
 
     void paramRead();                   // read params from basic_param.yml
 

@@ -3,6 +3,8 @@
 
 // thread control
 #include <QReadWriteLock>
+QReadWriteLock lock_future;
+
 QReadWriteLock lock_sv;
 QReadWriteLock lock_sv_data;
 QReadWriteLock lock_sv_object;

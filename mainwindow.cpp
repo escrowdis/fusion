@@ -79,7 +79,7 @@ MainWindow::MainWindow(QWidget *parent) :
     QObject::connect(si->lrf, SIGNAL(updateGUI(double *, cv::Mat *)), this, SLOT(lrfDisplay(double *, cv::Mat *)));
     
     // display
-    display_lrf = cv::Mat::zeros(800, 800, CV_8UC3);
+    ui->label_lrf_data_BG->setPixmap(QPixmap::fromImage(QImage::QImage(si->lrf->display_lrf_BG.data, si->lrf->display_lrf_BG.cols, si->lrf->display_lrf_BG.rows, si->lrf->display_lrf_BG.step, QImage::Format_RGB888)).scaled(LRF_MAP_WIDTH, LRF_MAP_HEIGHT));
 
     // 3D display
     display_lrf_3D.clear();
@@ -313,14 +313,21 @@ void MainWindow::paramRead()
     ui->spinBox_radar_topview_c->setValue((int) n["col_interval_radar"]);
 
     n = fs["laserRangeFinder"];
-    ui->comboBox_lrf_com->setCurrentIndex((int) n["port"]);
-    ui->comboBox_lrf_baudRate->setCurrentIndex((int) n["baudRate"]);
-    ui->spinBox_lrf_scale->setValue((double) n["mapScale"]);
+    fin_lrf_port = (int) n["port"];
+    fin_lrf_baud_rate = (int) n["baudRate"];
+    fin_lrf_scale = (double) n["mapScale"];
+    ui->comboBox_lrf_com->setCurrentIndex(fin_lrf_port);
+    ui->comboBox_lrf_baudRate->setCurrentIndex(fin_lrf_baud_rate);
+    ui->spinBox_lrf_scale->setValue(fin_lrf_scale);
     std::string res = (std::string) n["resolution"];
-    if (res == "cm")
+    if (res == "cm") {
+        fin_lrf_res = 0;
         ui->radioButton_lrf_res_cm->setChecked(true);
-    else if (res == "mm")
+    }
+    else if (res == "mm") {
+        fin_lrf_res = 1;
         ui->radioButton_lrf_res_mm->setChecked(true);
+    }
 
     n = fs["stereoParamSGBM"];
     fin_SGBM->pre_filter_cap = (int)(n["pre_filter_cap"]);
@@ -407,6 +414,12 @@ void MainWindow::paramWrite()
 void MainWindow::paramUpdate()
 {
     // Unconsidered: topView, laserRangeFinder
+    int cur_lrf_res;
+    if (ui->radioButton_lrf_res_cm->isChecked())
+        cur_lrf_res = 0;
+    else if (ui->radioButton_lrf_res_mm->isChecked())
+        cur_lrf_res = 1;
+
     if (fin_cam_param->port_L           != ui->comboBox_cam_device_index_L->currentIndex() ||
         fin_cam_param->port_R           != ui->comboBox_cam_device_index_R->currentIndex() ||
         fin_cam_param->cam_focal_length != ui->comboBox_camera_focal_length->currentIndex() ||
@@ -428,7 +441,11 @@ void MainWindow::paramUpdate()
         fin_BM->texture_thresh          != si->sv->param_bm->texture_thresh ||
         fin_BM->uniquenese_ratio        != si->sv->param_bm->uniquenese_ratio ||
         fin_BM->speckle_window_size     != si->sv->param_bm->speckle_window_size ||
-        fin_BM->speckle_range           != si->sv->param_bm->speckle_range) {
+        fin_BM->speckle_range           != si->sv->param_bm->speckle_range ||
+        fin_lrf_port                    != ui->comboBox_lrf_com->currentIndex() ||
+        fin_lrf_baud_rate               != ui->comboBox_lrf_baudRate->currentIndex() ||
+        fin_lrf_scale                   != ui->spinBox_lrf_scale->value() ||
+        fin_lrf_res                     != cur_lrf_res) {
         QMessageBox::StandardButton reply = QMessageBox::question(0, "New change", "Parameters were changed, save the new ones?", QMessageBox::Yes | QMessageBox::No);
         if (reply == QMessageBox::Yes)
             paramWrite();
@@ -492,7 +509,9 @@ void MainWindow::dataFused()
     bool fg_sv = ui->checkBox_fusion_sv->isChecked() && si->sv->fusedTopview();
     bool fg_sv_each_pixel = ui->checkBox_fused_sv_plot_every_pixel->isChecked();
     bool fg_radar = ui->checkBox_fusion_radar->isChecked() && si->rc->fusedTopview();
+    lock_future.lockForRead();
     bool fg_data_update = f_sv_status == SV::STATUS::OK || f_radar_status == RADAR::STATUS::OK;
+    lock_future.unlock();
     bool fg_fusion = ui->checkBox_fusion_data->isChecked();
     bool fg_om = ui->checkBox_ot->isChecked();
     bool fg_ot_kf = ui->checkBox_ot->isChecked() && ui->checkBox_ot_kf->isChecked();
@@ -569,31 +588,7 @@ void MainWindow::on_pushButton_lrf_open_clicked()
 void MainWindow::lrfDisplay(double *lrf_data, cv::Mat *display_lrf)
 {
     // display
-//    cv::Mat display_lrf = cv::Mat::zeros(800, 800, CV_8UC3);
-    display_lrf->setTo(0);
-    double angle = 0.0;
-
-//    for (int i = 0 ; i < LENGTH_DATA; ++i)
-//        if (lrf_data[i] == -1)
-//            return;
-
-    lock_lrf.lockForRead();
-    for (int i = 0; i < LENGTH_DATA; ++i) {
-        double r = lrf_data[i];
-        double x = r * cos(angle * CV_PI / 180.0);
-        double y = r * sin(angle * CV_PI / 180.0);
-
-        cv::circle(*display_lrf, cv::Point(x / ui->spinBox_lrf_scale->value() + 400, 800 - (y / ui->spinBox_lrf_scale->value() + 100)), 1, cv::Scalar(0, 0, 255), -1);
-        if (LENGTH_DATA / 2 == i)
-            cv::circle(*display_lrf, cv::Point(x / ui->spinBox_lrf_scale->value() + 400, 800 - (y / ui->spinBox_lrf_scale->value() + 100)), 5, cv::Scalar(0, 255, 0), -1);
-
-        angle += RESOLUTION;
-    }
-
-    ui->label_lrf_data->setPixmap(QPixmap::fromImage(QImage::QImage(display_lrf->data, display_lrf->cols, display_lrf->rows, display_lrf->step, QImage::Format_RGB888)).scaled(IMG_DIS_W, IMG_DIS_H));
-    lock_lrf.unlock();
-//    cv::imshow("image", display_lrf);
-    cv::waitKey(10);
+    ui->label_lrf_data->setPixmap(QPixmap::fromImage(QImage::QImage(display_lrf->data, display_lrf->cols, display_lrf->rows, display_lrf->step, QImage::Format_RGBA8888)).scaled(IMG_W, IMG_W));
 
     if (fg_lrf_record) {
         lock_lrf.lockForWrite();
@@ -798,19 +793,25 @@ void MainWindow::threadProcessing()
         // sv
 #ifdef multi_thread
         if (fg_capturing && !f_sv.isRunning()) {
+            lock_future.lockForWrite();
             f_sv = QtConcurrent::run(si, &SensorInfo::svDataExec);
             f_sv_status = f_sv;
+            lock_future.unlock();
         }
         if (fg_acquiring && !f_lrf.isRunning()) {
+            lock_future.lockForWrite();
             f_lrf = QtConcurrent::run(si, &SensorInfo::lrfDataExec);
             f_lrf_status = f_lrf;
+            lock_future.unlock();
         }
         if (fg_buffering && si->lrf->bufNotFull() && !f_lrf_buf.isRunning()) {
             f_lrf_buf = QtConcurrent::run(si, &SensorInfo::lrfBufExec);
         }
         if (fg_retrieving && !f_radar.isRunning()) {
+            lock_future.lockForWrite();
             f_radar = QtConcurrent::run(si, &SensorInfo::radarDataExec);
             f_radar_status = f_radar;
+            lock_future.unlock();
         }
         if (!f_fused.isRunning() && (fg_capturing || fg_retrieving )) {
             f_fused = QtConcurrent::run(this, &MainWindow::dataFused);
@@ -1766,8 +1767,8 @@ void MainWindow::on_checkBox_fusion_radar_clicked(bool checked)
 
 void MainWindow::on_spinBox_lrf_scale_valueChanged(int arg1)
 {
-//    if (fg_acquiring)
-//        si->lrf->scale_ratio = arg1;
+    if (fg_acquiring)
+        si->lrf->scale_ratio = arg1;
 }
 
 void MainWindow::on_checkBox_ca_clicked(bool checked)
@@ -1790,4 +1791,5 @@ void MainWindow::on_checkBox_ot_clicked(bool checked)
 
 void MainWindow::on_checkBox_ca_astar_clicked(bool checked)
 {
+
 }
