@@ -63,6 +63,8 @@ public:
 
     int dataFusedSize() {return size_data_fused;}
 
+    void resetTrackingInfo();
+
     ObjectTracking* ot_fused;
 
     CollisionAvoidance* ca;
@@ -105,7 +107,7 @@ public:
 
     void updateFusedTopView();
 
-    void dataExec(bool fg_sv, bool fg_radar, bool fg_data_update, bool fg_fusion, bool fg_om, bool fg_ot_kf, bool fg_ca_astar, bool fg_sv_each);
+    void dataExec(bool fg_sv, bool fg_radar, bool fg_data_update, bool fg_fusion, bool fg_om, bool fg_ot, bool fg_ot_trajectory, bool fg_ot_kf, bool fg_ca_astar, bool fg_sv_each);
 
     void zoomOutFusedTopView();
 
@@ -151,20 +153,21 @@ private:
     void dataProcess(bool fg_sv, bool fg_radar);    // fused topview and fusion information process
 
     // Object matching ========
-    void resetObjectTrackingInfo(ObjectTracking::objectTrackingInfo &src);
+    void resetMatchedInfo(ObjectTracking::objectTrackingInfo &src);
 
-    void moveTrackingInfo(ObjectTracking::objectTrackingInfo &src, ObjectTracking::objectTrackingInfo &dst);
+    void connectMatchedInfo(ObjectTracking::objectTrackingInfo &src, ObjectTracking::objectTrackingInfo &dst);
 
     void dataMatching();
 
     std::vector<std::pair<int, int> > matching_result;
     // Object matching ======== End
+    cv::RNG rng;
 
     void dataTracking();
 
     void dataCollisionAvoidance();
 
-    void drawFusedTopView(bool fg_sv, bool fg_radar, bool fg_sv_each);
+    void drawFusedTopView(bool fg_sv, bool fg_radar, bool fg_sv_each, bool fg_ot_trajectory, bool fg_ot_kf);
 
     int range_precision;
 

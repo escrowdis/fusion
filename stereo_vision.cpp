@@ -11,7 +11,7 @@ stereo_vision::stereo_vision() : TopView(20, 200, 3000, 19.8, 1080, 750, 270, 12
     fg_calib = false;
     fg_stereoMatch = false;
     fg_reproject = false;
-    fg_tracking = false;
+    fg_tracking = true;
     fg_topview_plot_points = false;
     fg_ground_filter = true;
 
@@ -66,6 +66,12 @@ stereo_vision::stereo_vision() : TopView(20, 200, 3000, 19.8, 1080, 750, 270, 12
     img_detected_display = cv::Mat::zeros(IMG_H, IMG_W, CV_8UC3);
 
     matchParamInitialize(match_mode);
+
+    // object macthing
+    initializeObjectMatching(obj_nums);
+    setErrorThresholdX(300);
+    setErrorThresholdZ(500, max_distance);
+    setThresholdBha(0.3);
 
     time_gap = 50;
     t.start();
@@ -801,8 +807,10 @@ int stereo_vision::dataExec()
 //                    objectRecognition();
 
                 // object tracking
-                if (fg_tracking)
-                    objectMatching();
+                dataMatching();
+                if (fg_tracking) {
+                    velocityEstimation();
+                }
 #ifdef debug_info_sv_time_proc
                 std::cout<<ttt.restart()<<"\t";
 #endif
@@ -909,7 +917,7 @@ void stereo_vision::pointProjectTopView()
 void stereo_vision::resetBlob()
 {
     for (int i = 0; i < obj_nums; i++)
-        resetObjectInfo(objects[i]);
+        resetMatchedInfo(objects[i]);
 }
 
 void stereo_vision::blob(int thresh_pts_num)
@@ -980,10 +988,12 @@ void stereo_vision::blob(int thresh_pts_num)
     }
 
     for (int i= 0; i < obj_nums; i++) {
+        lock_sv_object.lockForRead();
         if (objects[i].pts_num >= thresh_pts_num) {
             objects[i].labeled = true;
             detected_obj++;
         }
+        lock_sv_object.unlock();
     }
 
 #ifdef debug_info_sv_blob_data
@@ -1132,51 +1142,72 @@ void stereo_vision::pointProjectImage()
     }
 }
 
-void stereo_vision::objectMatching()
+void stereo_vision::velocityEstimation()
 {
-//    // Object matching: a) Bha. dist. of H color space, b) bias of X & Z of WCS location
-//    // Comparison of H color space image using Bhattacharyya distance with Bubble search
-//    resetObjMatching();
-//    // Extract histogram of H color space
-//    lock_sv_object.lockForRead();
-//    for (int i = 0; i < obj_nums; i++) {
-//        if (objects[i].labeled) {
-//            fg_om_existed = true;
-//            om[i].labeled = true;
-//            om[i].match_type = MATCH_TYPE::RANGE_BHA;
-//            om_obj_num++;
-//            om[i].pc = objects[i].pc;
-//            om[i].center = objects[i].center;
-//            cv::Mat img_hsv = cv::Mat(objects[i].img.rows, objects[i].img.cols, CV_8UC3);
-//            om[i].img = objects[i].img.clone();
-//            cv::cvtColor(objects[i].img, img_hsv, cv::COLOR_BGR2HSV);
-//            splitOneOut(0, img_hsv, &om[i].H_img);
-//            cv::calcHist(&om[i].H_img, 1, 0, cv::Mat(), om[i].H_hist, 1, &hist_size, &hist_ranges, true, false);
-//            cv::normalize(om[i].H_hist, om[i].H_hist, hist_ranges[0], hist_ranges[1], cv::NORM_MINMAX, -1, cv::Mat());
-//        }
-//    }
-//#ifdef debug_info_object_matching_img
-//    comp = img_detected.clone();
-//#endif
-//    lock_sv_object.unlock();
-
-//    matching_result.clear();
-//    matching_result = Matching();
-
-//    lock_sv_object.lockForWrite();
-//    for (int k = 0; k < matching_result.size(); k++) {
-//        int id_old = matching_result[k].first;
-//        int id = matching_result[k].second;
-//        moveInfo(objects[id_old], objects[id]);
-//        // velocity estimation
-//        cv::Point2f p1 = cv::Point2f(objects[id].avg_X / 100.0, objects[id].avg_Z / 100.0);
-//        cv::Point2f p2 = cv::Point2f(objects_display[id].avg_X / 100.0, objects_display[id].avg_Z / 100.0);
-//        objects[id].vel = SensorBase::velEstimation(p1, p2, time_proc);
-//    }
-//    lock_sv_object.unlock();
+    // vel & acc
+    lock_sv_object.lockForWrite();
+    for (int k = 0; k < obj_nums; k++) {
+        if (objects[k].labeled) {
+            cv::Point2f p1 = cv::Point2f(objects[k].avg_X / 100.0, objects[k].avg_Z / 100.0);
+            cv::Point2f p2 = cv::Point2f(objects_display[k].avg_X / 100.0, objects_display[k].avg_Z / 100.0);
+            objects[k].vel = SensorBase::velEstimation(p1, p2, time_proc);
+        }
+        else
+            objects[k].vel = cv::Point2f(0.0, 0.0);
+    }
+    lock_sv_object.unlock();
 }
 
-void stereo_vision::resetObjectInfo(objectInfo &src)
+void stereo_vision::dataMatching()
+{
+    // Object matching: a) Bha. dist. of H color space, b) bias of X & Z of WCS location
+    // Comparison of H color space image using Bhattacharyya distance with Bubble search
+    resetObjMatching();
+    // Extract histogram of H color space
+    lock_sv_object.lockForRead();
+    for (int k = 0; k < obj_nums; k++) {
+        if (objects[k].labeled) {
+            fg_om_existed = true;
+            om[k].labeled = true;
+            om[k].match_type = MATCH_TYPE::RANGE_BHA;
+            om_obj_num++;
+            om[k].pc = objects[k].pc;
+            om[k].center = objects[k].center;
+            cv::Mat img_hsv = cv::Mat(objects[k].img.rows, objects[k].img.cols, CV_8UC3);
+            om[k].img = objects[k].img.clone();
+            cv::cvtColor(objects[k].img, img_hsv, cv::COLOR_BGR2HSV);
+            splitOneOut(0, img_hsv, &om[k].H_img);
+            cv::calcHist(&om[k].H_img, 1, 0, cv::Mat(), om[k].H_hist, 1, &hist_size, &hist_ranges, true, false);
+            cv::normalize(om[k].H_hist, om[k].H_hist, hist_ranges[0], hist_ranges[1], cv::NORM_MINMAX, -1, cv::Mat());
+        }
+    }
+    lock_sv_object.unlock();
+
+#ifdef debug_info_object_matching_img
+    comp = img_detected.clone();
+#endif
+
+    matching_result.clear();
+    matching_result = Matching();
+
+    for (int k = 0; k < matching_result.size(); k++) {
+        int id = matching_result[k].first;
+        int id_prev = matching_result[k].second;
+        if (id != id_prev) {
+            if (objects[id_prev].labeled) {
+                for (int j = 0; j < obj_nums; j++) {
+                    if (!objects[j].labeled) {
+                        connectMatchedInfo(objects[id_prev], objects[j]);
+                        break;
+                    }
+                }
+            }
+            connectMatchedInfo(objects[id], objects[id_prev]);
+        }
+    }
+}
+
+void stereo_vision::resetMatchedInfo(objectInfo &src)
 {
     src.pts_num = 0;
     src.labeled = false;
@@ -1191,7 +1222,7 @@ void stereo_vision::resetObjectInfo(objectInfo &src)
     src.img.release();
 }
 
-void stereo_vision::moveInfo(objectInfo &src, objectInfo &dst)
+void stereo_vision::connectMatchedInfo(objectInfo &src, objectInfo &dst)
 {
     dst.labeled     = src.labeled;
     dst.avg_X       = src.avg_X;
@@ -1213,7 +1244,7 @@ void stereo_vision::moveInfo(objectInfo &src, objectInfo &dst)
     dst.pc_world    = src.pc_world;
     dst.vel         = src.vel;
 
-    resetObjectInfo(src);
+    resetMatchedInfo(*&src);
 }
 
 void stereo_vision::updateDataForDisplay()

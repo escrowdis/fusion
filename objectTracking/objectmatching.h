@@ -33,6 +33,12 @@ public:
 
     void splitOneOut(int channel, cv::Mat src, cv::Mat *dst);
 
+    virtual void resetMatchedInfo() {}
+
+    virtual void connectMatchedInfo() {}
+
+    virtual void dataMatching() {}
+
     std::vector<std::pair<int, int> > Matching();
 
     std::vector<std::pair<int, int> > matchingList; // store result of matching

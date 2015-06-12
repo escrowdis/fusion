@@ -93,16 +93,16 @@ public:
         float angle;                    // azimuth degree. Middle is zero. From -51.2 to 51.1. (degree)
         bool bridge_object;             // non-functional
         bool grouping_changed;
-        float lat_rate;
+        float lat_rate;                 // + is counter clockwise. (m/s)
         int med_range_mode;
         bool oncoming;
-        float range;                    // (m)
-        float range_accel;
-        float range_rate;
+        float range;                    // + is away. (m)
+        float range_accel;              // + is away. (m/s^2)
+        float range_rate;               // + is away. (m/s)
         bool rolling_count;
         int status;
         float width;                    // non-functional
-        double x;                       // radar coordinates system (cm)
+        double x;                       // radar coordinates system (m)
         double y;
         double z;
 
@@ -117,7 +117,13 @@ public:
         // WCS ===============
         PC pc_world;                    // (cm)
 
+        // vel & acc
         cv::Point2f vel;                // (m/s)
+        cv::Point2f pos_prev1t = cv::Point2f(0.0, 0.0);
+        cv::Point2f pos_prev2t = cv::Point2f(0.0, 0.0);
+        cv::Point2f pos_prev3t = cv::Point2f(0.0, 0.0);
+        int time_proc_prev2t_1t = -1;
+        int time_proc_prev3t_2t = -1;
     };
 
 private:

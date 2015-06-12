@@ -45,6 +45,8 @@ public:
 
         cv::Mat img;                    // object's image
 
+        std::pair<int, int> center;     // Center point of object in image (row, col)
+
         // FUSED TOPVIEW -----
         cv::Rect rect_f;
 
@@ -79,7 +81,9 @@ public:
     {
         std::vector<objectTrackingInfo> info;
 
-        std::vector <cv::Point> trajectory;
+        std::vector <SensorBase::PC> trajectory;
+
+        cv::Scalar color_trajectory;
 
         int missed_count;               // detected object was missed for X counts
 

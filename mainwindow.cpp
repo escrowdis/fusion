@@ -512,12 +512,14 @@ void MainWindow::dataFused()
     bool fg_data_update = f_sv_status == SV::STATUS::OK || f_radar_status == RADAR::STATUS::OK;
     bool fg_fusion = ui->checkBox_fusion_data->isChecked();
     bool fg_om = ui->checkBox_ot->isChecked();
-    bool fg_ot_kf = ui->checkBox_ot->isChecked() && ui->checkBox_ot_kf->isChecked();
-    bool fg_ot_pf = ui->checkBox_ot->isChecked() && ui->checkBox_ot_pf->isChecked();
+    bool fg_ot = ui->checkBox_ot->isChecked();
+    bool fg_ot_trajectory = fg_ot && ui->checkBox_ot_trajectory->isChecked();
+    bool fg_ot_kf = fg_ot && ui->checkBox_ot_kf->isChecked();
+    bool fg_ot_pf = fg_ot && ui->checkBox_ot_pf->isChecked();
     bool fg_ca_astar = ui->checkBox_ca->isChecked() && ui->checkBox_ca_astar->isChecked();
     bool fg_ca_vfh = ui->checkBox_ca->isChecked() && ui->checkBox_ca_vfh->isChecked();
 
-    si->dataExec(fg_sv, fg_radar, fg_data_update, fg_fusion, fg_om, fg_ot_kf, fg_ca_astar, fg_sv_each_pixel);
+    si->dataExec(fg_sv, fg_radar, fg_data_update, fg_fusion, fg_om, fg_ot, fg_ot_trajectory, fg_ot_kf, fg_ca_astar, fg_sv_each_pixel);
 }
 
 void MainWindow::fusedDisplay(cv::Mat *fused_topview, cv::Mat *img_detected_display)
@@ -753,6 +755,7 @@ void MainWindow::on_pushButton_cam_step_clicked()
     }
 
     int stat = si->svDataExec();
+    dataFused();
     if (stat == SV::STATUS::NO_INPUT) {
         reportError("sv", "Warning.", "No data is capturable.");
         fg_capturing = false;
@@ -1512,6 +1515,8 @@ void MainWindow::on_pushButton_start_all_clicked()
     if (!svDataIn() || !radarDataIn())
         return;
 
+    si->resetTrackingInfo();
+
     if (si->sv->input_mode == SV::INPUT_SOURCE::CAM && si->rc->input_mode == RADAR::INPUT_SOURCE::ESR) {
         inputType(INPUT_TYPE::DEVICE);
 
@@ -1777,7 +1782,10 @@ void MainWindow::on_checkBox_ot_clicked(bool checked)
 #ifdef debug_info_sv_object_matching_img
     cv::namedWindow("Comp", cv::WINDOW_AUTOSIZE);
 #endif
+}
 
+void MainWindow::on_checkBox_sv_matching_clicked(bool checked)
+{
     si->sv->fg_tracking = checked;
 }
 
@@ -1795,3 +1803,4 @@ void MainWindow::on_horizontalSlider_ana_range_filter_max_valueChanged(int value
 {
     si->range_filter_max = value;
 }
+

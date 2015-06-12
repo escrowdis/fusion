@@ -30,7 +30,7 @@ extern recording re;
 #endif
 
 // object matching
-//#include "objectTracking/objectmatching.h"
+#include "objectTracking/objectmatching.h"
 
 // topview
 #include "topview.h"
@@ -69,7 +69,7 @@ enum INPUT_SOURCE {
 };
 }
 
-class stereo_vision : public QObject, public TopView, protected SensorBase//, private ObjectMatching
+class stereo_vision : public QObject, public TopView, protected SensorBase, private ObjectMatching
 {
     Q_OBJECT
 
@@ -330,6 +330,7 @@ public:
 
         PC pc_world;                    // (cm)
 
+        // vel & acc
         cv::Point2f vel;                // velocity of object (m/s)
 
         objectInfo() {
@@ -354,16 +355,20 @@ private:
 
     objectInfo* object_tmp;
 
-    std::vector<std::pair<int, int> > matching_result;
-
-    void objectMatching();
-
-    void resetObjectInfo(objectInfo &src);
-
-    void moveInfo(objectInfo &src, objectInfo &dst);
+    void velocityEstimation();
 
     void updateDataForDisplay();
     // object information ========== End
+
+    // Object matching ========
+    void dataMatching();
+
+    void resetMatchedInfo(objectInfo &src);
+
+    void connectMatchedInfo(objectInfo &src, objectInfo &dst);
+
+    std::vector<std::pair<int, int> > matching_result;
+    // Object matching ======== End
 
     // object params ===============
     int detected_obj;                   // Amount of detected object

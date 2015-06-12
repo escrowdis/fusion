@@ -24,7 +24,7 @@
      </rect>
     </property>
     <property name="currentIndex">
-     <number>3</number>
+     <number>4</number>
     </property>
     <widget class="QWidget" name="tab">
      <attribute name="title">
@@ -411,7 +411,7 @@
       <property name="geometry">
        <rect>
         <x>140</x>
-        <y>280</y>
+        <y>290</y>
         <width>75</width>
         <height>51</height>
        </rect>
@@ -425,7 +425,7 @@ calibration</string>
       <property name="geometry">
        <rect>
         <x>140</x>
-        <y>330</y>
+        <y>340</y>
         <width>75</width>
         <height>51</height>
        </rect>
@@ -441,24 +441,14 @@ parameters</string>
         <x>20</x>
         <y>180</y>
         <width>201</width>
-        <height>81</height>
+        <height>101</height>
        </rect>
       </property>
       <layout class="QGridLayout" name="gridLayout_17">
-       <item row="0" column="1">
-        <widget class="QCheckBox" name="checkBox_pseudo_color">
-         <property name="text">
-          <string>Pseudo-color</string>
-         </property>
-         <property name="checked">
-          <bool>true</bool>
-         </property>
-        </widget>
-       </item>
        <item row="1" column="0">
         <widget class="QCheckBox" name="checkBox_do_depth">
          <property name="text">
-          <string>Do Depth</string>
+          <string>Do depth</string>
          </property>
          <property name="checked">
           <bool>true</bool>
@@ -468,14 +458,24 @@ parameters</string>
        <item row="0" column="0">
         <widget class="QCheckBox" name="checkBox_do_calibration">
          <property name="text">
-          <string>Do Calibration</string>
+          <string>Do calibration</string>
          </property>
          <property name="checked">
           <bool>true</bool>
          </property>
         </widget>
        </item>
-       <item row="2" column="1">
+       <item row="0" column="1">
+        <widget class="QCheckBox" name="checkBox_sv_topview">
+         <property name="text">
+          <string>Top view</string>
+         </property>
+         <property name="checked">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="1">
         <widget class="QCheckBox" name="checkBox_sv_reproject">
          <property name="text">
           <string>Detected obj.</string>
@@ -485,10 +485,30 @@ parameters</string>
          </property>
         </widget>
        </item>
-       <item row="1" column="1">
-        <widget class="QCheckBox" name="checkBox_sv_topview">
+       <item row="2" column="1">
+        <widget class="QCheckBox" name="checkBox_sv_ground_filter">
          <property name="text">
-          <string>Top view</string>
+          <string>Ground filter</string>
+         </property>
+         <property name="checked">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="0">
+        <widget class="QCheckBox" name="checkBox_pseudo_color">
+         <property name="text">
+          <string>Pseudo-color</string>
+         </property>
+         <property name="checked">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item row="3" column="1">
+        <widget class="QCheckBox" name="checkBox_sv_matching">
+         <property name="text">
+          <string>Object matching</string>
          </property>
          <property name="checked">
           <bool>true</bool>
@@ -614,22 +634,6 @@ parameters</string>
         </layout>
        </item>
       </layout>
-     </widget>
-     <widget class="QCheckBox" name="checkBox_sv_ground_filter">
-      <property name="geometry">
-       <rect>
-        <x>230</x>
-        <y>360</y>
-        <width>91</width>
-        <height>16</height>
-       </rect>
-      </property>
-      <property name="text">
-       <string>Ground filter</string>
-      </property>
-      <property name="checked">
-       <bool>true</bool>
-      </property>
      </widget>
     </widget>
     <widget class="QWidget" name="tab_4">
@@ -1020,6 +1024,9 @@ parameters</string>
       <property name="text">
        <string>Tracking</string>
       </property>
+      <property name="checked">
+       <bool>true</bool>
+      </property>
      </widget>
      <widget class="QCheckBox" name="checkBox_ca_astar">
       <property name="geometry">
@@ -1086,6 +1093,22 @@ parameters</string>
        <string>Collision Avoidance</string>
       </property>
      </widget>
+     <widget class="QCheckBox" name="checkBox_ot_trajectory">
+      <property name="geometry">
+       <rect>
+        <x>30</x>
+        <y>70</y>
+        <width>91</width>
+        <height>16</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Trajectory</string>
+      </property>
+      <property name="checked">
+       <bool>true</bool>
+      </property>
+     </widget>
     </widget>
    </widget>
    <widget class="QWidget" name="layoutWidget">
@@ -1120,7 +1143,7 @@ parameters</string>
      </rect>
     </property>
     <property name="currentIndex">
-     <number>0</number>
+     <number>1</number>
     </property>
     <widget class="QWidget" name="tab_7">
      <attribute name="title">

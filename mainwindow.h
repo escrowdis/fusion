@@ -373,6 +373,7 @@ private slots:
     void on_checkBox_ca_astar_clicked(bool checked);
     void on_horizontalSlider_ana_range_filter_min_valueChanged(int value);
     void on_horizontalSlider_ana_range_filter_max_valueChanged(int value);
+    void on_checkBox_sv_matching_clicked(bool checked);
 };
 
 // Mouse control ==========

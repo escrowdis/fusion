@@ -29,6 +29,9 @@
 //#define debug_info_object_matching_others
 //#define debug_info_object_matching_data_extract
 
+// OBJECT TRACKING =============
+//#define debug_info_object_tracking
+
 // FUSION ====================== (You may comment "#define multi_thread")
 //#define debug_info_fusion
 
