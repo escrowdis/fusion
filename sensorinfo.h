@@ -36,7 +36,8 @@ enum {
 namespace VEHICLE {
 enum {
     CART,
-    CAR
+    CAR,
+    TRACTOR
 };
 }
 
@@ -125,7 +126,7 @@ private:
     // sensor location
     struct sensorLocation {
         // sensor's position based on the center of vehicle. (cm) forward is x+, lateral right is y+.
-        cv::Point pos;
+        cv::Point2f pos;
 
         // Orientation of sensor (degree). Forward is set as zero and counting clockwisely.
         float theta;
@@ -228,6 +229,8 @@ private:
         int length_pixel;                           // (pixel)
 
         int head_pos;                               // (cm)
+
+        int head_pos_pixel;                         // (pixel)
 
         cv::Rect rect;                              // (pixel)
 

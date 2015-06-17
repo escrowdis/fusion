@@ -72,6 +72,7 @@ void SensorInfo::initialFusedTopView(int range_pixel)
     vehicle.length_pixel = vehicle.length * ratio;
 
     vehicle.head_pos = vehicle.length / 2;
+    vehicle.head_pos_pixel = vehicle.head_pos * ratio;
 
     // find max & min detection range in all sensors, so this function shall be called after initialization of all sensors
     max_detection_range = rc->max_distance;
@@ -92,7 +93,7 @@ void SensorInfo::initialFusedTopView(int range_pixel)
 
     sensors[sensor].angle_half_fov = sv->view_angle * 0.5 * CV_PI / 180.0;
 
-    sensors[sensor].location.pos = cv::Point(0, 51);
+    sensors[sensor].location.pos = cv::Point2f(0, 29.5);
 
     sensors[sensor].location.theta = 0.0;
 
@@ -105,7 +106,7 @@ void SensorInfo::initialFusedTopView(int range_pixel)
 
     sensors[sensor].angle_half_fov = rc->view_angle * 0.5 * CV_PI / 180.0;
 
-    sensors[sensor].location.pos = cv::Point(0, vehicle.head_pos);
+    sensors[sensor].location.pos = cv::Point2f(0, vehicle.head_pos);
 
     sensors[sensor].location.theta = 0.0;
 
@@ -118,6 +119,12 @@ void SensorInfo::updateFusedTopView()
     ratio = 1.0 * detection_range_pixel / detection_range;
 
     vehicle.VCP = cv::Point(detection_range_pixel, detection_range_pixel);
+
+    vehicle.width_pixel = vehicle.width * ratio;
+
+    vehicle.length_pixel = vehicle.length * ratio;
+
+    vehicle.head_pos_pixel = vehicle.head_pos * ratio;
 
     vehicle.rect = cv::Rect(vehicle.VCP.x - (int)(vehicle.width_pixel / 2.0), vehicle.VCP.y - (int)(vehicle.length_pixel / 2.0),
                             vehicle.width_pixel, vehicle.length_pixel);
@@ -184,8 +191,8 @@ void SensorInfo::chooseVehicle(int vehicle_type)
         vehicle.length = 43;
         vehicle.head_pos = vehicle.length / 2;
 
-        sensors[SENSOR::SV].location.pos = cv::Point(0, 29.5);
-        sensors[SENSOR::RADAR].location.pos = cv::Point(0, vehicle.head_pos);
+        sensors[SENSOR::SV].location.pos = cv::Point2f(0, 29.5);
+        sensors[SENSOR::RADAR].location.pos = cv::Point2f(0, vehicle.head_pos);
         break;
     case VEHICLE::CAR:
         // choose car: TOYOTA Camry
@@ -193,8 +200,16 @@ void SensorInfo::chooseVehicle(int vehicle_type)
         vehicle.length = 485;
         vehicle.head_pos = vehicle.length / 2;
 
-        sensors[SENSOR::SV].location.pos = cv::Point(0, 75);
-        sensors[SENSOR::RADAR].location.pos = cv::Point(0, vehicle.head_pos);
+        sensors[SENSOR::SV].location.pos = cv::Point2f(0, 75);
+        sensors[SENSOR::RADAR].location.pos = cv::Point2f(0, vehicle.head_pos);
+        break;
+    case VEHICLE::TRACTOR:
+        vehicle.width = 125;
+        vehicle.length = 295;
+        vehicle.head_pos = vehicle.length / 2;
+
+        sensors[SENSOR::SV].location.pos = cv::Point2f(-16.5, 302 - vehicle.length / 2);
+        sensors[SENSOR::RADAR].location.pos = cv::Point2f(0, 301 - vehicle.length / 2);
         break;
     }
 
@@ -823,7 +838,7 @@ SensorBase::PC SensorInfo::coordinateTransform(int type, cv::Point sensor_pos, S
     case CT_SCS2WCS:
         double x_world, z_world; // (cm)
         x_world = (double)(range * sin(angle * CV_PI / 180.0) + sensor_pos.x);
-        z_world = (double)(range * cos(angle * CV_PI / 180.0) + sensor_pos.y - vehicle.head_pos);
+        z_world = (double)(range * cos(angle * CV_PI / 180.0) + sensor_pos.y - vehicle.head_pos_pixel);
 
         pc_out.angle = atan(x_world / z_world);
         pc_out.range = sqrt(pow(x_world, 2) + pow(z_world, 2));

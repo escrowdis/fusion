@@ -488,6 +488,14 @@ void MainWindow::on_radioButton_vehicle_car_clicked()
     updateFusedTopView();
 }
 
+void MainWindow::on_radioButton_vehicle_tractor_clicked()
+{
+    si->chooseVehicle(VEHICLE::TRACTOR);
+
+    f_fused.waitForFinished();
+    updateFusedTopView();
+}
+
 void MainWindow::wheelEvent(QWheelEvent *ev)
 {
     // vertical middle button
