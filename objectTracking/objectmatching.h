@@ -29,7 +29,7 @@ public:
 
     void setErrorThresholdZ(double max_err_z, double max_distance_z);
 
-    void setErrorThresholdX(double thresh_err_x);
+    void setErrorThresholdX(double max_err_x);
 
     void splitOneOut(int channel, cv::Mat src, cv::Mat *dst);
 
@@ -86,11 +86,13 @@ private:
     bool fg_initialized = false;
 
     // Used for SV only
-    double thresh_Bha = 0.3; //**// tuned params 20150528
+    //**// tuned params 20150528
+    double thresh_Bha = 0.3;
     double max_distance_z = 3000;
     double max_err_z = 500;
+    double max_err_x = 300;
     cv::Mat map_thresh_err_z;
-    double thresh_err_x = 300;  //**// tuned params 20150528
+    cv::Mat map_thresh_err_x;
 
     // check if there's any object detected
     bool fg_om_prev_existed;

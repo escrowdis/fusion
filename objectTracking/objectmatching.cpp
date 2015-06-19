@@ -44,9 +44,9 @@ void ObjectMatching::setErrorThresholdZ(double max_err_z, double max_distance_z)
     this->max_distance_z = max_distance_z;
 }
 
-void ObjectMatching::setErrorThresholdX(double thresh_err_x)
+void ObjectMatching::setErrorThresholdX(double max_err_x)
 {
-    this->thresh_err_x = thresh_err_x;
+    this->max_err_x = max_err_x;
 }
 
 void ObjectMatching::splitOneOut(int channel, cv::Mat src, cv::Mat *dst)
@@ -78,15 +78,21 @@ void ObjectMatching::resetMatchingInfo(objectMatchingInfo &src)
 
 void ObjectMatching::moveOm(objectMatchingInfo &src, objectMatchingInfo &dst)
 {
-    dst.labeled      = src.labeled;
-    dst.match_type   = src.match_type;
-    dst.center       = src.center;
-    dst.err_pos      = src.err_pos;
-    dst.fg_Bha_check = src.fg_Bha_check;
-    dst.H_hist       = src.H_hist.clone();
-    dst.H_img        = src.H_img.clone();
-    dst.img          = src.img.clone();
-    dst.pc           = src.pc;
+    dst.labeled        = src.labeled;
+    dst.match_type     = src.match_type;
+    dst.center.first   = src.center.first;
+    dst.center.second  = src.center.second;
+    dst.err_pos.first  = src.err_pos.first;
+    dst.err_pos.second = src.err_pos.second;
+    dst.fg_Bha_check   = src.fg_Bha_check;
+    dst.H_hist.release();
+    dst.H_img.release();
+    dst.img.release();
+    dst.H_hist         = src.H_hist.clone();
+    dst.H_img          = src.H_img.clone();
+    dst.img            = src.img.clone();
+    dst.pc.range       = src.pc.range;
+    dst.pc.angle       = src.pc.angle;
 
     resetMatchingInfo(src);
 }
@@ -98,6 +104,7 @@ void ObjectMatching::resetObjMatching()
     fg_om_existed = false;
     map_Bha_corr_id_r.clear();
     map_Bha_corr_id_c.clear();
+    map_thresh_err_x.release();
     map_thresh_err_z.release();
     for (int i = 0; i < om_size; i++)
         resetMatchingInfo(om[i]);
@@ -106,10 +113,8 @@ void ObjectMatching::resetObjMatching()
 
 std::vector<std::pair<int, int> > ObjectMatching::Matching()
 {
-    if (!fg_initialized) {
-        matchingList.clear();
+    if (!fg_initialized)
         return matchingList;
-    }
     // Object matching: a) Bha. dist. of H color space, b) bias of X & Z of WCS location
     // Comparison of H color space image using Bhattacharyya distance with Bubble search
     // record detected object's id
@@ -130,6 +135,7 @@ std::vector<std::pair<int, int> > ObjectMatching::Matching()
         cv::Mat map_err_pos_x = cv::Mat(om_prev_obj_num, om_obj_num, CV_64F, cv::Scalar(1.1));
         cv::Mat map_err_pos_z = cv::Mat(om_prev_obj_num, om_obj_num, CV_64F, cv::Scalar(1.1));
         cv::Mat map_match_type = cv::Mat(om_prev_obj_num, om_obj_num, CV_32S, cv::Scalar(-1));
+        map_thresh_err_x = cv::Mat(om_prev_obj_num, 1, CV_64F, cv::Scalar(0.0));
         map_thresh_err_z = cv::Mat(om_obj_num, 1, CV_64F, cv::Scalar(0.0));
         for (int m = 0; m < map_Bha_corr_id_r.size(); m++) {
             for (int n = 0; n < map_Bha_corr_id_c.size(); n++) {
@@ -141,10 +147,10 @@ std::vector<std::pair<int, int> > ObjectMatching::Matching()
                     map_Bha.ptr<double>(m)[n] = cv::compareHist(om_prev[id_prev].H_hist, om[id].H_hist, cv::HISTCMP_BHATTACHARYYA);
                     map_match_type.ptr<int>(m)[n] = MATCH_TYPE::RANGE_BHA;
                 }
-                else if (om_prev[id_prev].match_type == MATCH_TYPE::RANGE_ONLY || om[id].match_type == MATCH_TYPE::RANGE_ONLY)
+                else
                     map_match_type.ptr<int>(m)[n] = MATCH_TYPE::RANGE_ONLY;
 
-                // WCS location comparison
+                // WCS location comparison (X, Z)
                 std::pair<double, double> pc, pc_prev;
                 pc_prev.first = om_prev[id_prev].pc.range * sin(om_prev[id_prev].pc.angle * CV_PI / 180.0);
                 pc_prev.second = om_prev[id_prev].pc.range * cos(om_prev[id_prev].pc.angle * CV_PI / 180.0);
@@ -153,13 +159,16 @@ std::vector<std::pair<int, int> > ObjectMatching::Matching()
                 map_err_pos_x.ptr<double>(m)[n] = fabs(pc.first - pc_prev.first);
                 map_err_pos_z.ptr<double>(m)[n] = fabs(pc.second - pc_prev.second);
 
+                double ratio = pc.second / max_distance_z;
                 if (m == 0)
-                    map_thresh_err_z.ptr<double>(n)[0] = pc.second * max_err_z / max_distance_z;
+                    map_thresh_err_z.ptr<double>(n)[0] = max_err_z * ratio;
+                if (n == 0)
+                    map_thresh_err_x.ptr<double>(m)[0] = max_err_x;
             }
         }
 
 #ifdef debug_info_object_matching_others
-        std::cout<<"Bha map\n";
+        std::cout<<"===============\nBha map\n";
         for (int m = 0; m < map_Bha_corr_id_r.size(); m++) {
             for (int n = 0; n < map_Bha_corr_id_c.size(); n++) {
                 std::cout<<map_Bha.ptr<double>(m)[n]<<"\t\t";
@@ -193,11 +202,13 @@ std::vector<std::pair<int, int> > ObjectMatching::Matching()
             min_count.y = -1;
             for (int r = 0; r < om_prev_obj_num; r++) {
                 for (int c = 0; c < om_obj_num; c++) {
-                    if (check_map_Bha_r.at<bool>(r) == true || check_map_Bha_c.at<bool>(c) == true)
+                    if (check_map_Bha_r.at<bool>(r, 0) == true || check_map_Bha_c.at<bool>(c, 0) == true)
                         continue;
                     if (map_match_type.ptr<int>(r)[c] == MATCH_TYPE::RANGE_BHA) {
-                        if (Bha_min > map_Bha.ptr<double>(r)[c]) {
+                        double val = sqrt(pow(map_err_pos_x.ptr<double>(r)[c], 2) + pow(map_err_pos_z.ptr<double>(r)[c], 2));
+                        if (Bha_min > map_Bha.ptr<double>(r)[c] && range_min > val) {
                             Bha_min = map_Bha.ptr<double>(r)[c];
+                            range_min = val;
                             min_count.x = r;
                             min_count.y = c;
                         }
@@ -215,11 +226,17 @@ std::vector<std::pair<int, int> > ObjectMatching::Matching()
             if (min_count.x == -1 || min_count.y == -1)
                 continue;
             // Check if the object satisfies the threshold
-            // [RANGE_BHA] if Bha. dist. is less than threshold, it's probably a successful match.
+            // [RANGE_BHA] if Bha. dist. and range are less than specific thresholds, it's probably a successful match.
             // [RANGE] if range is less than threshold, it's probably a sucessful match.
+//            if (map_Bha.ptr<double>(min_count.x)[min_count.y] > thresh_Bha)
+//                qDebug()<<"bha out";
+//            if (map_err_pos_x.ptr<double>(min_count.x)[min_count.y] > map_thresh_err_x.ptr<double>(min_count.x)[0])
+//                qDebug()<<"err x out";
+//            if (map_err_pos_z.ptr<double>(min_count.x)[min_count.y] > map_thresh_err_z.ptr<double>(min_count.y)[0])
+//                qDebug()<<"err z out";
             if ((map_match_type.ptr<int>(min_count.x)[min_count.y] == MATCH_TYPE::RANGE_BHA && map_Bha.ptr<double>(min_count.x)[min_count.y] <= thresh_Bha ||
                  map_match_type.ptr<int>(min_count.x)[min_count.y] == MATCH_TYPE::RANGE_ONLY) &&
-                    map_err_pos_x.ptr<double>(min_count.x)[min_count.y] <= thresh_err_x &&
+                    map_err_pos_x.ptr<double>(min_count.x)[min_count.y] <= map_thresh_err_x.ptr<double>(min_count.x)[0] &&
                     map_err_pos_z.ptr<double>(min_count.x)[min_count.y] <= map_thresh_err_z.ptr<double>(min_count.y)[0]) {
                 sort_min.push_back(min_count);
             }
@@ -234,17 +251,17 @@ std::vector<std::pair<int, int> > ObjectMatching::Matching()
             if (id != id_prev) {
                 if (om[id_prev].labeled) {
                     for (int j = 0; j < om_size; j++) {
-                        if (!om[j].labeled) {
-                            matchingList.push_back(std::pair<int, int>(id_prev, j));
+                         if (!om[j].labeled) {
                             moveOm(om[id_prev], om[j]);
+                            map_Bha_corr_id_r[sort_min[i].x] = j;
                             break;
                         }
                     }
                 }
-                matchingList.push_back(std::pair<int, int>(id, id_prev));
                 moveOm(om[id], om[id_prev]);
+                map_Bha_corr_id_c[sort_min[i].y] = id_prev;
             }
-            map_Bha_corr_id_c[sort_min[i].y] = id_prev;
+            matchingList.push_back(std::pair<int, int>(id, id_prev));
         }
 
 #ifdef debug_info_object_matching_others
@@ -273,6 +290,7 @@ std::vector<std::pair<int, int> > ObjectMatching::Matching()
             cv::putText(comp_mix, "Now", cv::Point(0, 1.1 * comp.rows), cv::FONT_HERSHEY_DUPLEX, 1, cv::Scalar(0, 255, 0, 255));
             cv::line(comp_mix, cv::Point(0, comp.rows), cv::Point(comp.cols, comp.rows), cv::Scalar(0, 0, 255), 1, 8, 0);
         }
+
         for (int i = 0 ; i < sort_min.size(); i++) {
             if (!comp_prev.empty()) {
                 cv::Point p1, p2;
@@ -282,6 +300,19 @@ std::vector<std::pair<int, int> > ObjectMatching::Matching()
                 cv::putText(comp_mix, QString::number(map_Bha_corr_id_c[sort_min[i].y]).toStdString(), p2, cv::FONT_HERSHEY_DUPLEX, 1, cv::Scalar(0, 0, 255));
             }
         }
+#ifdef debug_info_object_matching_others
+        std::cout<<"Pos X-Z map\n";
+        for (int i = 0 ; i < sort_min.size(); i++) {
+            if (!comp_prev.empty()) {
+                cv::Point p1, p2;
+                p1 = cv::Point(om_prev[map_Bha_corr_id_r[sort_min[i].x]].center.second, om_prev[map_Bha_corr_id_r[sort_min[i].x]].center.first);
+                p2 = cv::Point(om[map_Bha_corr_id_c[sort_min[i].y]].center.second, om[map_Bha_corr_id_c[sort_min[i].y]].center.first + comp.rows);
+                std::cout<<p1.x<<", "<<p1.y<<" <-> "<<p2.x<<", "<<p2.y<<"\t";
+            }
+        }
+        std::cout<<std::endl;
+#endif
+
         if (!comp_prev.empty()) {
             cv::namedWindow("Comp");
             cv::imshow("Comp", comp_mix);

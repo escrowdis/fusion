@@ -23,9 +23,10 @@ public:
     };
 
     // Conversion between polar and Cartesian
+    static cv::Point2f polar2Cartf(PC pc_in);
     static cv::Point polar2Cart(PC pc_in);
     static PC cart2Polar(cv::Point pt_in);
-    static cv::Point2f velEstimation(cv::Point2f p_now, cv::Point2f p_prev, int time_proc);
+    static cv::Point2f velEstimation(cv::Point2f p_now, cv::Point2f p_prev, double time_proc);
 
 };
 

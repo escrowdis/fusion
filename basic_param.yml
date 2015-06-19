@@ -26,10 +26,10 @@ stereoParamSGBM:
    speckle_range: 15
 stereoParamBM:
    pre_filter_size: 63
-   pre_filter_cap: 11
-   SAD_window_size: 33
+   pre_filter_cap: 8
+   SAD_window_size: 27
    min_disp: 0
-   num_of_disp: 64
+   num_of_disp: 80
    texture_thresh: 16
    uniquenese_ratio: 5
    speckle_window_size: 41

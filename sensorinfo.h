@@ -108,7 +108,7 @@ public:
 
     void updateFusedTopView();
 
-    void dataExec(bool fg_sv, bool fg_radar, bool fg_data_update, bool fg_fusion, bool fg_om, bool fg_ot, bool fg_ot_trajectory, bool fg_ot_kf, bool fg_ca_astar, bool fg_sv_each);
+    void dataExec(bool fg_sv, bool fg_radar, bool fg_data_update, bool fg_fusion, bool fg_om, bool fg_ot, bool fg_ot_trajectory, bool fg_ot_trajectory_smoothing, bool fg_ot_kf, bool fg_ca_astar, bool fg_sv_each);
 
     void zoomOutFusedTopView();
 
@@ -145,11 +145,15 @@ private:
     void resetFusion();
 
     int closest_radar_id;
+    std::vector<int> cri;                           // array of closest_radar's id
+    std::pair<int, double> *related_radar;
     double U_D;                                     // max distance error (cm)
     double R_sv;                                    // (cm)
+    double thresh_dist_ratio;
     double closest_radar_distance;
     cv::Point2d sv_pos;
     cv::Point2d radar_pos_closest;
+    SensorBase::PC radar_mean;
 
     void dataProcess(bool fg_sv, bool fg_radar);    // fused topview and fusion information process
 
@@ -168,7 +172,7 @@ private:
 
     void dataCollisionAvoidance();
 
-    void drawFusedTopView(bool fg_sv, bool fg_radar, bool fg_sv_each, bool fg_ot_trajectory, bool fg_ot_kf);
+    void drawFusedTopView(bool fg_sv, bool fg_radar, bool fg_sv_each, bool fg_ot_trajectory, bool fg_ot_trajectory_smoothing, bool fg_ot_kf);
 
     int range_precision;
 

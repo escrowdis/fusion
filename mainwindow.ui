@@ -1032,7 +1032,7 @@ parameters</string>
       <property name="geometry">
        <rect>
         <x>170</x>
-        <y>110</y>
+        <y>130</y>
         <width>73</width>
         <height>16</height>
        </rect>
@@ -1045,7 +1045,7 @@ parameters</string>
       <property name="geometry">
        <rect>
         <x>170</x>
-        <y>140</y>
+        <y>160</y>
         <width>73</width>
         <height>16</height>
        </rect>
@@ -1057,7 +1057,7 @@ parameters</string>
      <widget class="QCheckBox" name="checkBox_ot_kf">
       <property name="geometry">
        <rect>
-        <x>120</x>
+        <x>170</x>
         <y>40</y>
         <width>91</width>
         <height>16</height>
@@ -1070,7 +1070,7 @@ parameters</string>
      <widget class="QCheckBox" name="checkBox_ot_pf">
       <property name="geometry">
        <rect>
-        <x>120</x>
+        <x>170</x>
         <y>70</y>
         <width>91</width>
         <height>16</height>
@@ -1084,7 +1084,7 @@ parameters</string>
       <property name="geometry">
        <rect>
         <x>30</x>
-        <y>110</y>
+        <y>130</y>
         <width>121</width>
         <height>16</height>
        </rect>
@@ -1104,6 +1104,22 @@ parameters</string>
       </property>
       <property name="text">
        <string>Trajectory</string>
+      </property>
+      <property name="checked">
+       <bool>true</bool>
+      </property>
+     </widget>
+     <widget class="QCheckBox" name="checkBox_ot_trajectory_smoothing">
+      <property name="geometry">
+       <rect>
+        <x>50</x>
+        <y>100</y>
+        <width>71</width>
+        <height>16</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>smoothing</string>
       </property>
       <property name="checked">
        <bool>true</bool>
@@ -1143,7 +1159,7 @@ parameters</string>
      </rect>
     </property>
     <property name="currentIndex">
-     <number>1</number>
+     <number>3</number>
     </property>
     <widget class="QWidget" name="tab_7">
      <attribute name="title">
@@ -1519,11 +1535,18 @@ parameters</string>
        <rect>
         <x>810</x>
         <y>10</y>
-        <width>111</width>
+        <width>154</width>
         <height>18</height>
        </rect>
       </property>
       <layout class="QGridLayout" name="gridLayout_22">
+       <item row="0" column="1">
+        <widget class="QRadioButton" name="radioButton_vehicle_car">
+         <property name="text">
+          <string>Car</string>
+         </property>
+        </widget>
+       </item>
        <item row="0" column="0">
         <widget class="QRadioButton" name="radioButton_vehicle_cart">
          <property name="text">
@@ -1534,21 +1557,108 @@ parameters</string>
          </property>
         </widget>
        </item>
-       <item row="0" column="1">
-        <widget class="QRadioButton" name="radioButton_vehicle_car">
+       <item row="0" column="2">
+        <widget class="QRadioButton" name="radioButton_vehicle_tractor">
          <property name="text">
-          <string>Car</string>
+          <string>Tractor</string>
          </property>
         </widget>
        </item>
       </layout>
      </widget>
+     <widget class="QLabel" name="label_gui_BG">
+      <property name="geometry">
+       <rect>
+        <x>680</x>
+        <y>520</y>
+        <width>340</width>
+        <height>290</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>BG</string>
+      </property>
+     </widget>
+     <widget class="QLabel" name="label_gui_vehicle">
+      <property name="geometry">
+       <rect>
+        <x>810</x>
+        <y>640</y>
+        <width>80</width>
+        <height>150</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Vehicle</string>
+      </property>
+     </widget>
+     <widget class="QLabel" name="label_gui_sign">
+      <property name="geometry">
+       <rect>
+        <x>910</x>
+        <y>730</y>
+        <width>50</width>
+        <height>50</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>warning
+sign</string>
+      </property>
+     </widget>
+     <widget class="QLabel" name="label_gui_approaching">
+      <property name="geometry">
+       <rect>
+        <x>825</x>
+        <y>560</y>
+        <width>50</width>
+        <height>50</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>approaching</string>
+      </property>
+     </widget>
+     <widget class="QLabel" name="label_gui_left_oncoming">
+      <property name="geometry">
+       <rect>
+        <x>750</x>
+        <y>610</y>
+        <width>50</width>
+        <height>50</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>left
+coming</string>
+      </property>
+     </widget>
+     <widget class="QLabel" name="label_gui_right_oncoming">
+      <property name="geometry">
+       <rect>
+        <x>900</x>
+        <y>610</y>
+        <width>50</width>
+        <height>50</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>right
+coming</string>
+      </property>
+     </widget>
+     <zorder>label_gui_BG</zorder>
      <zorder>layoutWidget</zorder>
      <zorder>label_fusion_BG</zorder>
      <zorder>label_fusion</zorder>
      <zorder>checkBox_fused_sv_plot_every_pixel</zorder>
      <zorder>label_sv_detected_display</zorder>
      <zorder>layoutWidget</zorder>
+     <zorder>label_gui_vehicle</zorder>
+     <zorder>label_gui_sign</zorder>
+     <zorder>label_gui_approaching</zorder>
+     <zorder>label_gui_left_oncoming</zorder>
+     <zorder>label_gui_right_oncoming</zorder>
     </widget>
    </widget>
    <widget class="QWidget" name="layoutWidget">
@@ -2085,7 +2195,7 @@ parameters</string>
      </item>
     </layout>
    </widget>
-   <widget class="QPushButton" name="pushButton">
+   <widget class="QPushButton" name="pushButton_step_all">
     <property name="geometry">
      <rect>
       <x>260</x>

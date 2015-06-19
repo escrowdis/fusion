@@ -118,11 +118,11 @@ public:
         PC pc_world;                    // (cm)
 
         // vel & acc
-        cv::Point2f vel;                // (m/s)
-        cv::Point2f pos_prev1t = cv::Point2f(0.0, 0.0);
+        cv::Point2f vel;                // (cm/s)
+        cv::Point2f pos_prev1t = cv::Point2f(0.0, 0.0);     // (cm)
         cv::Point2f pos_prev2t = cv::Point2f(0.0, 0.0);
         cv::Point2f pos_prev3t = cv::Point2f(0.0, 0.0);
-        int time_proc_prev2t_1t = -1;
+        int time_proc_prev2t_1t = -1;                       // (sec)
         int time_proc_prev3t_2t = -1;
     };
 

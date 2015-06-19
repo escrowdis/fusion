@@ -11,5 +11,11 @@
         <file>icon/stop_b1.png</file>
         <file>icon/load_data.png</file>
         <file>icon/start.png</file>
+        <file>icon/arrow_approaching.png</file>
+        <file>icon/arrow_left_oncoming.png</file>
+        <file>icon/arrow_right_oncoming.png</file>
+        <file>icon/car1.png</file>
+        <file>icon/warning.png</file>
+        <file>icon/gui_BG_road.png</file>
     </qresource>
 </RCC>

@@ -1128,7 +1128,7 @@ void stereo_vision::pointProjectImage()
         if (objects[i].labeled && objects[i].br != std::pair<int, int>(-1, -1) && objects[i].tl != std::pair<int, int>(-1, -1)) {
             // find center of rect
             objects[i].center = std::pair<int, int>(0.5 * (objects[i].tl.first + objects[i].br.first), 0.5 * (objects[i].tl.second + objects[i].br.second));
-            objects[i].pc.angle = atan(1.0 * (objects[i].avg_X) / objects[i].avg_Z) * 180.0 / CV_PI;
+            objects[i].pc.angle = atan((objects[i].avg_X) / objects[i].avg_Z) * 180.0 / CV_PI;
             objects[i].pc.range = sqrt(pow((double)(objects[i].avg_Z), 2) + pow((double)(objects[i].avg_X), 2));
             cv::Rect rect_tmp = cv::Rect(objects[i].tl.second, objects[i].tl.first, (objects[i].br.second - objects[i].tl.second), (objects[i].br.first - objects[i].tl.first));
             objects[i].img = img_r_L_tmp(rect_tmp);
@@ -1145,12 +1145,33 @@ void stereo_vision::pointProjectImage()
 void stereo_vision::velocityEstimation()
 {
     // vel & acc
+    for (int _id = 0; _id < obj_nums; _id++) {
+        objects[_id].pos_prev5t.x = objects[_id].pos_prev4t.x;
+        objects[_id].pos_prev5t.y = objects[_id].pos_prev4t.y;
+        objects[_id].pos_prev4t.x = objects[_id].pos_prev3t.x;
+        objects[_id].pos_prev4t.y = objects[_id].pos_prev3t.y;
+        objects[_id].pos_prev3t.x = objects[_id].pos_prev2t.x;
+        objects[_id].pos_prev3t.y = objects[_id].pos_prev2t.y;
+        objects[_id].pos_prev2t.x = objects[_id].pos_prev1t.x;
+        objects[_id].pos_prev2t.y = objects[_id].pos_prev1t.y;
+        objects[_id].pos_prev1t.x = objects[_id].avg_X;
+        objects[_id].pos_prev1t.y = objects[_id].avg_Z;
+        objects[_id].time_proc_prev5t_4t = objects[_id].time_proc_prev4t_3t;
+        objects[_id].time_proc_prev4t_3t = objects[_id].time_proc_prev3t_2t;
+        objects[_id].time_proc_prev3t_2t = objects[_id].time_proc_prev2t_1t;
+        objects[_id].time_proc_prev2t_1t = time_proc;
+    }
+    // vel & acc
     lock_sv_object.lockForWrite();
     for (int k = 0; k < obj_nums; k++) {
-        if (objects[k].labeled) {
-            cv::Point2f p1 = cv::Point2f(objects[k].avg_X / 100.0, objects[k].avg_Z / 100.0);
-            cv::Point2f p2 = cv::Point2f(objects_display[k].avg_X / 100.0, objects_display[k].avg_Z / 100.0);
-            objects[k].vel = SensorBase::velEstimation(p1, p2, time_proc);
+        if (objects[k].labeled &&
+                objects[k].pos_prev5t.x != 0.0  && objects[k].pos_prev5t.y != 0.0) {
+            cv::Point2f p1 = cv::Point2f(objects[k].pos_prev1t.x, objects[k].pos_prev1t.y);
+            cv::Point2f p2 = cv::Point2f(objects[k].pos_prev5t.x, objects[k].pos_prev5t.y);
+            int avg_time_proc = objects[k].time_proc_prev5t_4t + objects[k].time_proc_prev4t_3t + objects[k].time_proc_prev3t_2t + objects[k].time_proc_prev2t_1t;
+            objects[k].vel = SensorBase::velEstimation(p1, p2, avg_time_proc);
+//            qDebug()<<k<<"vel"<<objects[k].vel.x * 3.6<<objects[k].vel.y * 3.6;
+//            qDebug()<<"  prev3t"<<p1.x<<p1.y<<"prev1t"<<p2.x<<p2.y<<"time"<<avg_time_proc;
         }
         else
             objects[k].vel = cv::Point2f(0.0, 0.0);
@@ -1211,9 +1232,9 @@ void stereo_vision::resetMatchedInfo(objectInfo &src)
 {
     src.pts_num = 0;
     src.labeled = false;
-    src.avg_X = 0;
-    src.avg_Y = 0;
-    src.avg_Z = 0;
+    src.avg_X = 0.0;
+    src.avg_Y = 0.0;
+    src.avg_Z = 0.0;
     src.rect_tl = cv::Point(img_col, img_row);
     src.rect_br = cv::Point(0, 0);
     src.tl = std::pair<int, int>(-1, -1);
@@ -1250,7 +1271,56 @@ void stereo_vision::connectMatchedInfo(objectInfo &src, objectInfo &dst)
 void stereo_vision::updateDataForDisplay()
 {
     lock_sv_object.lockForWrite();
+
     std::swap(objects, objects_display);
+    for (int i = 0; i < obj_nums; i++) {
+        objects[i].pos_prev5t.x = objects_display[i].pos_prev5t.x;
+        objects[i].pos_prev5t.y = objects_display[i].pos_prev5t.y;
+        objects[i].pos_prev4t.x = objects_display[i].pos_prev4t.x;
+        objects[i].pos_prev4t.y = objects_display[i].pos_prev4t.y;
+        objects[i].pos_prev3t.x = objects_display[i].pos_prev3t.x;
+        objects[i].pos_prev3t.y = objects_display[i].pos_prev3t.y;
+        objects[i].pos_prev2t.x = objects_display[i].pos_prev2t.x;
+        objects[i].pos_prev2t.y = objects_display[i].pos_prev2t.y;
+        objects[i].pos_prev1t.x = objects_display[i].pos_prev1t.x;
+        objects[i].pos_prev1t.y = objects_display[i].pos_prev1t.y;
+        objects[i].time_proc_prev5t_4t = objects_display[i].time_proc_prev5t_4t;
+        objects[i].time_proc_prev4t_3t = objects_display[i].time_proc_prev4t_3t;
+        objects[i].time_proc_prev3t_2t = objects_display[i].time_proc_prev3t_2t;
+        objects[i].time_proc_prev2t_1t = objects_display[i].time_proc_prev2t_1t;
+    }
+//    for (int k = 0; k < obj_nums; k++) {
+//        objects_display[k].pts_num = objects[k].pts_num;
+//        objects_display[k].labeled = objects[k].labeled;
+//        objects_display[k].avg_Z   = objects[k].avg_Z  ;
+//        objects_display[k].avg_X   = objects[k].avg_X  ;
+//        objects_display[k].avg_Y   = objects[k].avg_Y  ;
+//        objects_display[k].rect_tl.x = objects[k].rect_tl.x;
+//        objects_display[k].rect_tl.y = objects[k].rect_tl.y;
+//        objects_display[k].rect_br.x = objects[k].rect_br.x;
+//        objects_display[k].rect_br.y = objects[k].rect_br.y;
+//        objects_display[k].tl.first    = objects[k].tl.first     ;
+//        objects_display[k].tl.second    = objects[k].tl.second     ;
+//        objects_display[k].br.first    = objects[k].br.first     ;
+//        objects_display[k].br.second    = objects[k].br.second     ;
+//        objects_display[k].center.first = objects[k].center.first ;
+//        objects_display[k].center.second = objects[k].center.second ;
+//        cv::Scalar color = objects[k].color;
+//        objects_display[k].color = color;
+//        objects_display[k].img.release();
+//        objects_display[k].img = objects[k].img.clone();
+//        objects_display[k].rect = cv::Rect(objects[k].rect.tl().x, objects[k].rect.tl().y, objects[k].rect.width, objects[k].rect.height);
+//        objects_display[k].pc.range = objects[k].pc.range;
+//        objects_display[k].pc.angle = objects[k].pc.angle;
+//        objects_display[k].rect_f = cv::Rect(objects[k].rect_f.tl().x, objects[k].rect_f.tl().y, objects[k].rect_f.width, objects[k].rect_f.height);
+//        objects_display[k].plot_pt_f.x = objects[k].plot_pt_f.x;
+//        objects_display[k].plot_pt_f.y = objects[k].plot_pt_f.y;
+//        objects_display[k].rect_world = cv::Rect(objects[k].rect_world.tl().x, objects[k].rect_world.tl().y, objects[k].rect_world.width, objects[k].rect_world.height);
+//        objects_display[k].pc_world.range = objects[k].pc_world.range;
+//        objects_display[k].pc_world.angle = objects[k].pc_world.angle;
+//        objects_display[k].vel.x   = objects[k].vel.x    ;
+//        objects_display[k].vel.y   = objects[k].vel.y    ;
+//    }
     lock_sv_object.unlock();
 }
 

@@ -38,6 +38,22 @@ MainWindow::MainWindow(QWidget *parent) :
 
     ui->setupUi(this);
 
+    // GUI
+    QImage gui_BG, gui_car, gui_left_oncoming, gui_right_oncoming, gui_approaching, gui_sign;
+    gui_BG.load(":/icon/gui_BG_road.png");
+    gui_car.load(":/icon/car1.png");
+    gui_left_oncoming.load(":/icon/arrow_left_oncoming.png");
+    gui_right_oncoming.load(":/icon/arrow_right_oncoming.png");
+    gui_approaching.load(":/icon/arrow_approaching.png");
+    gui_sign.load(":/icon/warning.png");
+
+    ui->label_gui_BG->setPixmap(QPixmap::fromImage(gui_BG));
+    ui->label_gui_vehicle->setPixmap(QPixmap::fromImage(gui_car));
+    ui->label_gui_approaching->setPixmap(QPixmap::fromImage(gui_approaching));
+    ui->label_gui_left_oncoming->setPixmap(QPixmap::fromImage(gui_left_oncoming));
+    ui->label_gui_right_oncoming->setPixmap(QPixmap::fromImage(gui_right_oncoming));
+    ui->label_gui_sign->setPixmap(QPixmap::fromImage(gui_sign));
+
     // Recording
     label_file_loaded = new QLabel();
     ui->statusBar->addWidget(label_file_loaded);
@@ -522,12 +538,13 @@ void MainWindow::dataFused()
     bool fg_om = ui->checkBox_ot->isChecked();
     bool fg_ot = ui->checkBox_ot->isChecked();
     bool fg_ot_trajectory = fg_ot && ui->checkBox_ot_trajectory->isChecked();
+    bool fg_ot_trajectory_smoothing = ui->checkBox_ot_trajectory->isChecked() && ui->checkBox_ot_trajectory_smoothing->isChecked();
     bool fg_ot_kf = fg_ot && ui->checkBox_ot_kf->isChecked();
     bool fg_ot_pf = fg_ot && ui->checkBox_ot_pf->isChecked();
     bool fg_ca_astar = ui->checkBox_ca->isChecked() && ui->checkBox_ca_astar->isChecked();
     bool fg_ca_vfh = ui->checkBox_ca->isChecked() && ui->checkBox_ca_vfh->isChecked();
 
-    si->dataExec(fg_sv, fg_radar, fg_data_update, fg_fusion, fg_om, fg_ot, fg_ot_trajectory, fg_ot_kf, fg_ca_astar, fg_sv_each_pixel);
+    si->dataExec(fg_sv, fg_radar, fg_data_update, fg_fusion, fg_om, fg_ot, fg_ot_trajectory, fg_ot_trajectory_smoothing, fg_ot_kf, fg_ca_astar, fg_sv_each_pixel);
 }
 
 void MainWindow::fusedDisplay(cv::Mat *fused_topview, cv::Mat *img_detected_display)
@@ -1784,6 +1801,7 @@ void MainWindow::on_checkBox_ca_clicked(bool checked)
 
 void MainWindow::on_checkBox_ot_clicked(bool checked)
 {
+    ui->checkBox_ot_trajectory->setEnabled(checked);
     ui->checkBox_ot_kf->setEnabled(checked);
     ui->checkBox_ot_pf->setEnabled(checked);
 
@@ -1812,3 +1830,54 @@ void MainWindow::on_horizontalSlider_ana_range_filter_max_valueChanged(int value
     si->range_filter_max = value;
 }
 
+
+void MainWindow::on_pushButton_step_all_clicked()
+{
+    if (!svDataIn() || !radarDataIn())
+        return;
+
+    si->resetTrackingInfo();
+
+    if (si->sv->input_mode == SV::INPUT_SOURCE::CAM && si->rc->input_mode == RADAR::INPUT_SOURCE::ESR) {
+        inputType(INPUT_TYPE::DEVICE);
+
+        if (!fg_capturing)
+            on_pushButton_cam_open_clicked();
+
+        if (!fg_retrieving) {
+            on_pushButton_radar_open_clicked();
+            si->rc->busOn();
+            on_pushButton_radar_write_clicked();
+        }
+    }
+    else
+        inputType(INPUT_TYPE::RECORDING);
+
+    if (!fg_capturing) {
+        fg_capturing = true;
+    }
+    if (!fg_retrieving) {
+        fg_retrieving = true;
+    }
+
+    if (fg_capturing) {
+        f_sv_status = si->svDataExec();
+    }
+    if (fg_acquiring) {
+        f_lrf_status = si->lrfDataExec();
+    }
+    if (fg_buffering && si->lrf->bufNotFull()) {
+        si->lrfBufExec();
+    }
+    if (fg_retrieving) {
+        f_radar_status = si->radarDataExec();
+    }
+    if (fg_capturing || fg_retrieving ) {
+        dataFused();
+    }
+}
+
+void MainWindow::on_checkBox_ot_trajectory_clicked(bool checked)
+{
+    ui->checkBox_ot_trajectory_smoothing->setEnabled(checked);
+}

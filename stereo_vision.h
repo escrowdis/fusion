@@ -300,11 +300,9 @@ public:
 
         bool labeled;                   // filtered object
 
-        int avg_Z;                      // average depth
-
-        int avg_X;
-
-        int avg_Y;
+        float avg_Z;                      // average depth of t
+        float avg_X;
+        float avg_Y;
 
         cv::Point rect_tl, rect_br;
 
@@ -331,14 +329,23 @@ public:
         PC pc_world;                    // (cm)
 
         // vel & acc
-        cv::Point2f vel;                // velocity of object (m/s)
+        cv::Point2f vel;                // velocity of object (cm/s)
+        cv::Point2f pos_prev1t = cv::Point2f(0.0, 0.0);     // (cm)
+        cv::Point2f pos_prev2t = cv::Point2f(0.0, 0.0);
+        cv::Point2f pos_prev3t = cv::Point2f(0.0, 0.0);
+        cv::Point2f pos_prev4t = cv::Point2f(0.0, 0.0);
+        cv::Point2f pos_prev5t = cv::Point2f(0.0, 0.0);
+        int time_proc_prev2t_1t = -1;                       // (sec)
+        int time_proc_prev3t_2t = -1;
+        int time_proc_prev4t_3t = -1;
+        int time_proc_prev5t_4t = -1;
 
         objectInfo() {
             pts_num = 0;
             labeled = false;
-            avg_Z = 0;
-            avg_X = 0;
-            avg_Y = 0;
+            avg_Z = 0.0;
+            avg_X = 0.0;
+            avg_Y = 0.0;
             rect_tl = cv::Point(-1, -1);
             rect_br = cv::Point(-1, -1);
             tl = std::pair<int, int>(-1, -1);

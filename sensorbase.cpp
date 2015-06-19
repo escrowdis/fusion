@@ -4,6 +4,11 @@ SensorBase::SensorBase()
 {
 }
 
+cv::Point2f SensorBase::polar2Cartf(SensorBase::PC pc_in)
+{
+    return cv::Point2f(pc_in.range * sin(pc_in.angle * CV_PI / 180.0), (pc_in.range * cos(pc_in.angle * CV_PI / 180.0)));
+}
+
 cv::Point SensorBase::polar2Cart(SensorBase::PC pc_in)
 {
     return cv::Point((int)(pc_in.range * sin(pc_in.angle * CV_PI / 180.0)), (int)((pc_in.range * cos(pc_in.angle * CV_PI / 180.0))));
@@ -20,7 +25,7 @@ SensorBase::PC SensorBase::cart2Polar(cv::Point pt_in)
     return SensorBase::PC(sqrt(pow(pt_in.x, 2) + pow(pt_in.y, 2)), angle);
 }
 
-cv::Point2f SensorBase::velEstimation(cv::Point2f p_now, cv::Point2f p_prev, int time_proc)
+cv::Point2f SensorBase::velEstimation(cv::Point2f p_now, cv::Point2f p_prev, double time_proc)
 {
     // (m/frame) -> (m/s)
     float frame2sec = 1000.0 / (1.0 * time_proc);

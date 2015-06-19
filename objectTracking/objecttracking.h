@@ -55,7 +55,7 @@ public:
         // WCS ===============
         SensorBase::PC pc;              // (cm)
 
-        cv::Point pos;                  // position at WCS (cm)
+        cv::Point2f pos;                // position at WCS (cm)
 
         cv::Rect rect;                  // (cm)
 
@@ -68,11 +68,11 @@ public:
 
             id = cv::Point3i(-1, -1, -1);
 
-            pos = cv::Point(-1, -1);
+            pos = cv::Point(-1.0, -1.0);
 
-            vel = cv::Point2f(0, 0);
+            vel = cv::Point2f(0.0, 0.0);
 
-            acc = cv::Point2f(0, 0);
+            acc = cv::Point2f(0.0, 0.0);
         }
     };
 
@@ -82,6 +82,8 @@ public:
         std::vector<objectTrackingInfo> info;
 
         std::vector <SensorBase::PC> trajectory;
+
+        std::vector <SensorBase::PC> trajectory_kf;
 
         cv::Scalar color_trajectory;
 
