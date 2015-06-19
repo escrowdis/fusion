@@ -144,16 +144,13 @@ private:
 
     void resetFusion();
 
-    int closest_radar_id;
     std::vector<int> cri;                           // array of closest_radar's id
-    std::pair<int, double> *related_radar;
     double U_D;                                     // max distance error (cm)
     double R_sv;                                    // (cm)
-    double thresh_dist_ratio;
-    double closest_radar_distance;
     cv::Point2d sv_pos;
-    cv::Point2d radar_pos_closest;
     SensorBase::PC radar_mean;
+    cv::Point radar_plot_pt_f;
+    cv::Point2f radar_vel;
 
     void dataProcess(bool fg_sv, bool fg_radar);    // fused topview and fusion information process
 

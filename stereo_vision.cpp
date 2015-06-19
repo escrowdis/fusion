@@ -1245,25 +1245,34 @@ void stereo_vision::resetMatchedInfo(objectInfo &src)
 
 void stereo_vision::connectMatchedInfo(objectInfo &src, objectInfo &dst)
 {
-    dst.labeled     = src.labeled;
-    dst.avg_X       = src.avg_X;
-    dst.avg_Y       = src.avg_Y;
-    dst.avg_Z       = src.avg_Z;
-    dst.rect_tl     = src.rect_tl;
-    dst.rect_br     = src.rect_br;
-    dst.tl          = src.tl;
-    dst.br          = src.br;
-    dst.center      = src.center;
-    dst.color       = src.color;
+    dst.labeled        = src.labeled;
+    dst.avg_X          = src.avg_X;
+    dst.avg_Y          = src.avg_Y;
+    dst.avg_Z          = src.avg_Z;
+    dst.rect_tl.x      = src.rect_tl.x;
+    dst.rect_tl.y      = src.rect_tl.y;
+    dst.rect_br.x      = src.rect_br.x;
+    dst.rect_br.y      = src.rect_br.y;
+    dst.tl.first       = src.tl.first;
+    dst.tl.second      = src.tl.second;
+    dst.br.first       = src.br.first;
+    dst.br.second      = src.br.second;
+    dst.center.first   = src.center.first;
+    dst.center.second  = src.center.second;
+    dst.color          = cv::Scalar(src.color);
     dst.img.release();
-    dst.img         = src.img.clone();
-    dst.pc          = src.pc;
-    dst.rect        = src.rect;
-    dst.rect_f      = src.rect_f;
-    dst.plot_pt_f   = src.plot_pt_f;
-    dst.rect_world  = src.rect_world;
-    dst.pc_world    = src.pc_world;
-    dst.vel         = src.vel;
+    dst.img            = src.img.clone();
+    dst.pc.range       = src.pc.range;
+    dst.pc.angle       = src.pc.angle;
+    dst.rect           = cv::Rect(src.rect.tl().x, src.rect.tl().y, src.rect.width, src.rect.height);
+    dst.rect_f         = cv::Rect(src.rect_f.tl().x, src.rect_f.tl().y, src.rect_f.width, src.rect_f.height);
+    dst.plot_pt_f.x    = src.plot_pt_f.x;
+    dst.plot_pt_f.y    = src.plot_pt_f.y;
+    dst.rect_world     = cv::Rect(src.rect_world.tl().x, src.rect_world.tl().y, src.rect_world.width, src.rect_world.height);
+    dst.pc_world.range = src.pc_world.range;
+    dst.pc_world.angle = src.pc_world.angle;
+    dst.vel.x          = src.vel.x;
+    dst.vel.y          = src.vel.y;
 
     resetMatchedInfo(*&src);
 }

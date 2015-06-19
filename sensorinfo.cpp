@@ -286,9 +286,9 @@ void SensorInfo::dataExec(bool fg_sv, bool fg_radar, bool fg_data_update, bool f
 void SensorInfo::resetMatchedInfo(ObjectTracking::objectTrackingInfo &src)
 {
     src.det_mode = DETECT_MODE::NO_DETECT;
-    src.id.x = -1;
-    src.id.y = -1;
-    src.id.z = -1;
+    src.ids.fused = -1;
+    src.ids.sv = -1;
+    src.ids.radar.clear();
     src.img.release();
     src.pc = SensorBase::PC(0.0, 0.0);
     src.pos = cv::Point(-1.0, -1.0);
@@ -299,9 +299,11 @@ void SensorInfo::resetMatchedInfo(ObjectTracking::objectTrackingInfo &src)
 void SensorInfo::connectMatchedInfo(ObjectTracking::objectTrackingInfo &src, ObjectTracking::objectTrackingInfo &dst)
 {
     dst.det_mode      = src.det_mode;
-    dst.id.x          = src.id.x;
-    dst.id.y          = src.id.y;
-    dst.id.z          = src.id.z;
+    dst.ids.fused     = src.ids.fused;
+    dst.ids.sv        = src.ids.sv;
+    dst.ids.radar.clear();
+    for (int i = 0; i < src.ids.radar.size(); i++)
+        dst.ids.radar.push_back(src.ids.radar[i]);
     dst.img.release();
     dst.img           = src.img.clone();
     dst.rect_f        = cv::Rect(src.rect_f.tl().x, src.rect_f.tl().y, src.rect_f.width, src.rect_f.height);
@@ -365,14 +367,14 @@ void SensorInfo::dataMatching()
         int id = matching_result[k].first;
         int id_prev = matching_result[k].second;
         if (id != id_prev) {
-            if (data_fused[id_prev].det_mode != DETECT_MODE::NO_DETECT) {
-                for (int j = 0; j < size_data_fused; j++) {
-                    if (!data_fused[j].det_mode != DETECT_MODE::NO_DETECT) {
-                        connectMatchedInfo(data_fused[id_prev], data_fused[j]);
-                        break;
-                    }
-                }
-            }
+//            if (data_fused[id_prev].det_mode != DETECT_MODE::NO_DETECT) {
+//                for (int j = 0; j < size_data_fused; j++) {
+//                    if (!data_fused[j].det_mode != DETECT_MODE::NO_DETECT) {
+//                        connectMatchedInfo(data_fused[id_prev], data_fused[j]);
+//                        break;
+//                    }
+//                }
+//            }
             connectMatchedInfo(data_fused[id], data_fused[id_prev]);
         }
     }
@@ -392,21 +394,31 @@ void SensorInfo::dataTracking()
 
             int cur_obj = ot_fused->ti[m].info.size() - 1;
             lock_data_fused.lockForRead();
-            //**// if t = 0, only SV but when t = 1, SV-RADAR?
-            if (ot_fused->ti[m].info[cur_obj].id.y == data_fused[p].id.y &&
-                    ot_fused->ti[m].info[cur_obj].id.z == data_fused[p].id.z) {
-                fg_new_obj = false;
-                conti_id = m;
-                break;
+            for (int i = 0; i < data_fused[p].ids.radar.size(); i++) {
+                for (int j = 0; j < ot_fused->ti[m].info[cur_obj].ids.radar.size(); j++) {
+                    if (ot_fused->ti[m].info[cur_obj].ids.radar[j] == data_fused[p].ids.radar[i]) {
+                        if (ot_fused->ti[m].info[cur_obj].ids.sv == data_fused[p].ids.sv) {
+                            fg_new_obj = false;
+                            conti_id = m;
+                            break;
+                        }
+                    }
+                }
+                if (!fg_new_obj)
+                    break;
             }
+            if (!fg_new_obj)
+                break;
             lock_data_fused.unlock();
         }
 
         lock_data_fused.lockForRead();
         ObjectTracking::objectTrackingInfo info_new;
-        info_new.id.x = conti_id;
-        info_new.id.y = data_fused[p].id.y;
-        info_new.id.z = data_fused[p].id.z;
+        info_new.ids.fused = conti_id;
+        info_new.ids.sv = data_fused[p].ids.sv;
+        info_new.ids.radar.clear();
+        for (int i = 0; i < data_fused[p].ids.radar.size(); i++)
+            info_new.ids.radar.push_back(data_fused[p].ids.radar[i]);
         info_new.det_mode = data_fused[p].det_mode;
         info_new.img = data_fused[p].img.clone();
         info_new.rect_f = data_fused[p].rect_f;
@@ -489,7 +501,7 @@ void SensorInfo::dataTracking()
         // new object
         else {
             ObjectTracking::objectTracking ti_new;
-            info_new.id.x = ti_new.info.size();
+            info_new.ids.fused = ti_new.info.size();
             ti_new.info.push_back(info_new);
             ti_new.track_status = TRACK_STATUS::NEW_TARGET;
             ti_new.fg_update = true;
@@ -627,18 +639,13 @@ void SensorInfo::dataProcess(bool fg_sv, bool fg_radar)
             if (!d_sv[k].labeled) continue;
 
             cri.clear();
-            closest_radar_id = -1;
-            radar_mean = SensorBase::PC();
-            double deviation_x, deviation_z, deviation;
+            double deviation_x, deviation_z, deviation, deviation_tmp;
             if (fg_fusion) {
                 U_D = 800;    // max distance error (cm) //**// tuned param
-                thresh_dist_ratio = 0.0;
                 R_sv = pow(U_D * d_sv[k].pc_world.range / (1.0 * sv->max_distance), 2);  // (cm)
-                closest_radar_distance = 100000000.0;
                 sv_pos = SensorBase::polar2Cart(d_sv[k].pc_world);
                 //                std::cout<<"SV: "<<sv_pos.x<<" "<<sv_pos.y<<std::endl;
                 for (int m = 0; m < rc->objSize(); m++) {
-                    deviation = closest_radar_distance;
                     if (d_radar[m].status >= rc->obj_status_filtered && !d_radar[m].fg_fused) {
                         if (d_radar[m].pc_world.angle < -1 * sensors[SENSOR::SV].angle_half_fov ||
                                 d_radar[m].pc_world.angle > sensors[SENSOR::SV].angle_half_fov ||
@@ -650,31 +657,37 @@ void SensorInfo::dataProcess(bool fg_sv, bool fg_radar)
                         deviation = deviation_x + deviation_z;
                         //                        std::cout<<deviation<<" "<<closest_radar_distance<<" "<<R_sv<<std::endl;
                         //                        std::cout<<"RADAR: "<<radar_pos.x<<" "<<radar_pos.y<<std::endl;
-                        bool fg_within_rect = radar_pos.x <= d_sv[k].rect_world.br().x && radar_pos.x >= d_sv[k].rect_world.tl().x &&
-                                radar_pos.y <= d_sv[k].rect_world.br().y && radar_pos.y >= d_sv[k].rect_world.tl().y;
-                        bool fg_within_thresh = deviation < closest_radar_distance && deviation < R_sv;
-                        double dist_ratio = std::fabs((radar_pos.y - sv_pos.y) / (radar_pos.x - sv_pos.x));
-                        bool fg_ratio = dist_ratio > thresh_dist_ratio;
-                        if ((fg_within_rect || fg_within_thresh) && fg_ratio) {
+                        // 1. within rect
+                        if (d_radar[m].plot_pt_f.x <= d_sv[k].rect_f.br().x && d_radar[m].plot_pt_f.x >= d_sv[k].rect_f.tl().x &&
+                                d_radar[m].plot_pt_f.y <= d_sv[k].rect_f.br().y && d_radar[m].plot_pt_f.y >= d_sv[k].rect_f.tl().y) {
                             cri.push_back(m);
-                            thresh_dist_ratio = dist_ratio;
-                            closest_radar_id = m;
-                            closest_radar_distance = deviation;
-                            radar_pos_closest.x = radar_pos.x;
-                            radar_pos_closest.y = radar_pos.y;
-                            //                            std::cout<<"dist. "<<sv_pos.x<<" "<<sv_pos.y<<"\t"<<radar_pos.x<<" "<<radar_pos.y<<std::endl;
+                        }
+                        // 2. within range
+                        if (deviation < R_sv) {
+                            bool fg_closest = true;
+                            for (int p = 0; p < sv->objSize(); p++) {
+                                if (p == k) continue;
+                                cv::Point2d sv_pos_tmp = SensorBase::polar2Cart(d_sv[p].pc_world);
+                                deviation_tmp = pow((radar_pos.x - sv_pos_tmp.x), 2) + pow((radar_pos.y - sv_pos_tmp.y), 2);
+                                if (deviation_tmp < deviation) {
+                                    fg_closest = false;
+                                    break;
+                                }
+                            }
+                            if (fg_closest) {
+                                cri.push_back(m);
+                            }
                         }
                     }
                 }
-                //                std::cout<<"deviation"<<deviation<<"closest dist. "<<radar_pos_closest.x<<" "<<radar_pos_closest.y<<std::endl;
             }
 
             // un-fused - stereo vision
-            if (closest_radar_id == -1) {
+            if (cri.empty()) {
                 data_fused[count].det_mode = DETECT_MODE::SV_ONLY;
-                data_fused[count].id.x = count;
-                data_fused[count].id.y = k;
-                data_fused[count].id.z = -1;
+                data_fused[count].ids.fused = count;
+                data_fused[count].ids.sv = k;
+                data_fused[count].ids.radar.clear();
                 data_fused[count].img = d_sv[k].img.clone();
                 data_fused[count].rect_f = d_sv[k].rect_f;
                 data_fused[count].plot_pt_f = d_sv[k].plot_pt_f;
@@ -686,34 +699,43 @@ void SensorInfo::dataProcess(bool fg_sv, bool fg_radar)
                 count++;
             }
             // fusion data
-            else if (fg_fusion && closest_radar_id != -1){
-                //                std::cout<<"fused id: [sv] "<<k<<" [esr] "<<closest_radar_id<<std::endl;
+            else if (fg_fusion && !cri.empty()) {
                 float ratio_radar = 0.9;
                 float ratio_sv = 0.1;
                 data_fused[count].det_mode = DETECT_MODE::SV_RADAR;
-                data_fused[count].id.x = count;
-                data_fused[count].id.y = k;
-                data_fused[count].id.z = closest_radar_id;
+                data_fused[count].ids.fused = count;
+                data_fused[count].ids.sv = k;
+                data_fused[count].ids.radar.clear();
+                for (int i = 0; i < cri.size(); i++)
+                    data_fused[count].ids.radar.push_back(cri[i]);
                 data_fused[count].img = d_sv[k].img.clone();
+                radar_mean = SensorBase::PC();
+                radar_plot_pt_f = cv::Point(0, 0);
+                radar_vel = cv::Point2f(0.0, 0.0);
                 for (int p = 0; p < cri.size(); p++) {
                     radar_mean.range += d_radar[cri[p]].pc_world.range;
                     radar_mean.angle += d_radar[cri[p]].pc_world.angle;
+                    radar_plot_pt_f.x += d_radar[cri[p]].plot_pt_f.x;
+                    radar_plot_pt_f.y += d_radar[cri[p]].plot_pt_f.y;
+                    radar_vel.x += d_radar[cri[p]].vel.x;
+                    radar_vel.y += d_radar[cri[p]].vel.y;
                     d_radar[cri[p]].fg_fused = true;
                 }
                 radar_mean.range /= (1.0 * cri.size());
                 radar_mean.angle /= (1.0 * cri.size());
+                radar_plot_pt_f.x = (1.0 * radar_plot_pt_f.x) / (1.0 * cri.size());
+                radar_plot_pt_f.y = (1.0 * radar_plot_pt_f.y) / (1.0 * cri.size());
+                radar_vel.x /= (1.0 * cri.size());
+                radar_vel.y /= (1.0 * cri.size());
                 data_fused[count].pc = SensorBase::PC(ratio_sv * d_sv[k].pc_world.range + ratio_radar * radar_mean.range,
                                                       ratio_sv * d_sv[k].pc_world.angle + ratio_radar * radar_mean.angle);
-                //                data_fused[count].pc = SensorBase::PC(ratio_sv * d_sv[k].pc_world.range + ratio_radar * d_radar[closest_radar_id].pc_world.range,
-                //                                                                      ratio_sv * d_sv[k].pc_world.angle + ratio_radar * d_radar[closest_radar_id].pc_world.angle);
                 data_fused[count].pos = SensorBase::polar2Cartf(data_fused[count].pc);
                 data_fused[count].center = std::pair<int, int>(d_sv[k].center.first, d_sv[k].center.second);
-                data_fused[count].plot_pt_f = ratio_sv * d_sv[k].plot_pt_f + ratio_radar * d_radar[closest_radar_id].plot_pt_f;
+                data_fused[count].plot_pt_f = ratio_sv * d_sv[k].plot_pt_f + ratio_radar * radar_plot_pt_f;
                 cv::Point tl_new = cv::Point(data_fused[count].plot_pt_f.x - 0.5 * d_sv[k].rect_f.width, data_fused[count].plot_pt_f.y - 0.5 * d_sv[k].rect_f.height);
                 data_fused[count].rect_f = cv::Rect(tl_new.x, tl_new.y, d_sv[k].rect_f.width, d_sv[k].rect_f.height);
-                data_fused[count].vel = ratio_sv * d_sv[k].vel + ratio_radar * d_radar[closest_radar_id].vel;
+                data_fused[count].vel = ratio_sv * d_sv[k].vel + ratio_radar * radar_vel;
                 data_fused[count].rect = d_sv[k].rect_world;
-                //                d_radar[closest_radar_id].fg_fused = true;
                 count++;
             }
         }
@@ -724,9 +746,9 @@ void SensorInfo::dataProcess(bool fg_sv, bool fg_radar)
         for (int m = 0; m < rc->objSize(); m++) {
             if (d_radar[m].status >= rc->obj_status_filtered && !d_radar[m].fg_fused) {
                 data_fused[count].det_mode = DETECT_MODE::RADAR_ONLY;
-                data_fused[count].id.x = count;
-                data_fused[count].id.y = -1;
-                data_fused[count].id.z = m;
+                data_fused[count].ids.fused = count;
+                data_fused[count].ids.sv = -1;
+                data_fused[count].ids.radar.push_back(m);
                 data_fused[count].img = NULL;
                 data_fused[count].rect_f = cv::Rect();
                 data_fused[count].plot_pt_f = d_radar[m].plot_pt_f;

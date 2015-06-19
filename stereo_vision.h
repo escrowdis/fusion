@@ -324,7 +324,7 @@ public:
         cv::Point plot_pt_f;            // (pixel)
 
         // WCS ===============
-        cv::Rect rect_world;            // (cm)
+        cv::Rect rect_world;            // (cm) //**// unused
 
         PC pc_world;                    // (cm)
 

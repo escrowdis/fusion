@@ -41,7 +41,7 @@ public:
 
     std::vector<std::pair<int, int> > Matching();
 
-    std::vector<std::pair<int, int> > matchingList; // store result of matching
+    std::vector<std::pair<int, int> > matchingList; // store result of matching (id, id_prev)
 
     // histogram calculation used
     int hist_size;
@@ -85,6 +85,12 @@ public:
 private:
     bool fg_initialized = false;
 
+    // comparison params ===========
+    cv::Mat map_Bha;
+    cv::Mat map_err_pos_x;
+    cv::Mat map_err_pos_z;
+    cv::Mat map_match_type;
+
     // Used for SV only
     //**// tuned params 20150528
     double thresh_Bha = 0.3;
@@ -93,6 +99,7 @@ private:
     double max_err_x = 300;
     cv::Mat map_thresh_err_z;
     cv::Mat map_thresh_err_x;
+    // comparison params =========== End
 
     // check if there's any object detected
     bool fg_om_prev_existed;

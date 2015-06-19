@@ -36,11 +36,20 @@ public:
 
     void reset();
 
+    struct identities {
+        int fused;
+
+        int sv;
+
+        std::vector<int> radar;
+    };
+
     // object tracking information
     struct objectTrackingInfo
     {
         int det_mode;                   // detected by what kinds of sensors
 
+        identities ids;
         cv::Point3i id;                 // each sensors' id for fusion (fused, sv, radar)
 
         cv::Mat img;                    // object's image

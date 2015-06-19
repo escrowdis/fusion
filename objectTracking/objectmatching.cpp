@@ -29,6 +29,10 @@ void ObjectMatching::initializeObjectMatching(int size)
     om_prev = new objectMatchingInfo[size];
     om_size = size;
     om_prev_size = size;
+    for (int i = 0; i < om_size; i++)
+        resetMatchingInfo(om[i]);
+    for (int i = 0; i < om_prev_size; i++)
+        resetMatchingInfo(om_prev[i]);
 
     fg_initialized = true;
 }
@@ -94,7 +98,7 @@ void ObjectMatching::moveOm(objectMatchingInfo &src, objectMatchingInfo &dst)
     dst.pc.range       = src.pc.range;
     dst.pc.angle       = src.pc.angle;
 
-    resetMatchingInfo(src);
+    resetMatchingInfo(*&src);
 }
 
 void ObjectMatching::resetObjMatching()
@@ -104,6 +108,10 @@ void ObjectMatching::resetObjMatching()
     fg_om_existed = false;
     map_Bha_corr_id_r.clear();
     map_Bha_corr_id_c.clear();
+    map_Bha.release();
+    map_err_pos_x.release();
+    map_err_pos_z.release();
+    map_match_type.release();
     map_thresh_err_x.release();
     map_thresh_err_z.release();
     for (int i = 0; i < om_size; i++)
@@ -119,22 +127,24 @@ std::vector<std::pair<int, int> > ObjectMatching::Matching()
     // Comparison of H color space image using Bhattacharyya distance with Bubble search
     // record detected object's id
     for (int m = 0; m < om_prev_size; m++)
-        if (om_prev[m].labeled) {
+        if (om_prev[m].labeled)
             map_Bha_corr_id_r.push_back(m);
-        }
     for (int m = 0; m < om_size; m++)
-        if (om[m].labeled) {
+        if (om[m].labeled)
             map_Bha_corr_id_c.push_back(m);
-        }
     om_prev_obj_num = map_Bha_corr_id_r.size();
     om_obj_num = map_Bha_corr_id_c.size();
+#ifdef debug_info_object_matching_others
+        std::cout<<"===============\n";
+        std::cout<<"size: om "<<om_obj_num<<" om_prev "<<om_prev_obj_num<<std::endl;
+#endif
 
     // Bhattacharyya distance
     if (fg_om_existed && fg_om_prev_existed) {
-        cv::Mat map_Bha = cv::Mat(om_prev_obj_num, om_obj_num, CV_64F, cv::Scalar(1.1));
-        cv::Mat map_err_pos_x = cv::Mat(om_prev_obj_num, om_obj_num, CV_64F, cv::Scalar(1.1));
-        cv::Mat map_err_pos_z = cv::Mat(om_prev_obj_num, om_obj_num, CV_64F, cv::Scalar(1.1));
-        cv::Mat map_match_type = cv::Mat(om_prev_obj_num, om_obj_num, CV_32S, cv::Scalar(-1));
+        map_Bha = cv::Mat(om_prev_obj_num, om_obj_num, CV_64F, cv::Scalar(1.1));
+        map_err_pos_x = cv::Mat(om_prev_obj_num, om_obj_num, CV_64F, cv::Scalar(1.1));
+        map_err_pos_z = cv::Mat(om_prev_obj_num, om_obj_num, CV_64F, cv::Scalar(1.1));
+        map_match_type = cv::Mat(om_prev_obj_num, om_obj_num, CV_32S, cv::Scalar(-1));
         map_thresh_err_x = cv::Mat(om_prev_obj_num, 1, CV_64F, cv::Scalar(0.0));
         map_thresh_err_z = cv::Mat(om_obj_num, 1, CV_64F, cv::Scalar(0.0));
         for (int m = 0; m < map_Bha_corr_id_r.size(); m++) {
@@ -168,7 +178,7 @@ std::vector<std::pair<int, int> > ObjectMatching::Matching()
         }
 
 #ifdef debug_info_object_matching_others
-        std::cout<<"===============\nBha map\n";
+        std::cout<<"Bha map\n";
         for (int m = 0; m < map_Bha_corr_id_r.size(); m++) {
             for (int n = 0; n < map_Bha_corr_id_c.size(); n++) {
                 std::cout<<map_Bha.ptr<double>(m)[n]<<"\t\t";
@@ -197,16 +207,17 @@ std::vector<std::pair<int, int> > ObjectMatching::Matching()
         cv::Mat_<bool> check_map_Bha_c = cv::Mat_<bool>(om_obj_num, 1, false);
         for (int p = 0; p < om_prev_obj_num; p++) {
             Bha_min = 2.0;   // The max. of Bha. Dist. is 1.0, so greater than 1.0 is ok.
-            range_min = 10000000.0;
+            range_min = 1000000000.0;
             min_count.x = -1;
             min_count.y = -1;
             for (int r = 0; r < om_prev_obj_num; r++) {
                 for (int c = 0; c < om_obj_num; c++) {
                     if (check_map_Bha_r.at<bool>(r, 0) == true || check_map_Bha_c.at<bool>(c, 0) == true)
                         continue;
+                    //**// better solution? range error can't be normalized.
                     if (map_match_type.ptr<int>(r)[c] == MATCH_TYPE::RANGE_BHA) {
                         double val = sqrt(pow(map_err_pos_x.ptr<double>(r)[c], 2) + pow(map_err_pos_z.ptr<double>(r)[c], 2));
-                        if (Bha_min > map_Bha.ptr<double>(r)[c] && range_min > val) {
+                        if (Bha_min > map_Bha.ptr<double>(r)[c] || range_min > val) {
                             Bha_min = map_Bha.ptr<double>(r)[c];
                             range_min = val;
                             min_count.x = r;
@@ -223,7 +234,7 @@ std::vector<std::pair<int, int> > ObjectMatching::Matching()
                     }
                 }
             }
-            if (min_count.x == -1 || min_count.y == -1)
+            if (min_count.x == -1 && min_count.x == -1)
                 continue;
             // Check if the object satisfies the threshold
             // [RANGE_BHA] if Bha. dist. and range are less than specific thresholds, it's probably a successful match.
@@ -244,25 +255,6 @@ std::vector<std::pair<int, int> > ObjectMatching::Matching()
             check_map_Bha_c.at<bool>(min_count.y) = true;
         }
 
-        // store corresponding matching result, id is followed by previous id
-        for (int i = 0 ; i < sort_min.size(); i++) {
-            int id = map_Bha_corr_id_c[sort_min[i].y];
-            int id_prev = map_Bha_corr_id_r[sort_min[i].x];
-            if (id != id_prev) {
-                if (om[id_prev].labeled) {
-                    for (int j = 0; j < om_size; j++) {
-                         if (!om[j].labeled) {
-                            moveOm(om[id_prev], om[j]);
-                            map_Bha_corr_id_r[sort_min[i].x] = j;
-                            break;
-                        }
-                    }
-                }
-                moveOm(om[id], om[id_prev]);
-                map_Bha_corr_id_c[sort_min[i].y] = id_prev;
-            }
-            matchingList.push_back(std::pair<int, int>(id, id_prev));
-        }
 
 #ifdef debug_info_object_matching_others
         for (int i = 0 ; i < sort_min.size(); i++) {
@@ -321,6 +313,14 @@ std::vector<std::pair<int, int> > ObjectMatching::Matching()
         comp_prev = comp.clone();
         comp.release();
 #endif
+
+        // store corresponding matching result, id is followed by previous id
+        for (int i = 0; i < sort_min.size(); i++) {
+            int id = map_Bha_corr_id_c[sort_min[i].y];
+            int id_prev = map_Bha_corr_id_r[sort_min[i].x];
+            moveOm(om[id], om[id_prev]);
+            matchingList.push_back(std::pair<int, int>(id, id_prev));
+        }
     }
 
     // push om to om_prev
