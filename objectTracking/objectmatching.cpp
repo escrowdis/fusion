@@ -6,12 +6,17 @@ ObjectMatching::ObjectMatching()
     hist_ranges = new float[]({1, 360});
     fg_om_existed = false;
     fg_om_prev_existed = false;
+
+#ifdef debug_info_object_matching_img
+    cv::namedWindow("Comp", cv::WINDOW_AUTOSIZE);
+#endif
 }
 
 ObjectMatching::~ObjectMatching()
 {
     if (fg_initialized) {
         delete[] om;
+        delete[] om_tmp;
         delete[] om_prev;
     }
 }
@@ -21,11 +26,13 @@ void ObjectMatching::initializeObjectMatching(int size)
     if (fg_initialized) {
         if (size != om_size || size != om_prev_size) {
             delete[] om;
+            delete[] om_tmp;
             delete[] om_prev;
             fg_initialized = false;
         }
     }
     om = new objectMatchingInfo[size];
+    om_tmp = new objectMatchingInfo[size];
     om_prev = new objectMatchingInfo[size];
     om_size = size;
     om_prev_size = size;
@@ -84,19 +91,19 @@ void ObjectMatching::moveOm(objectMatchingInfo &src, objectMatchingInfo &dst)
 {
     dst.labeled        = src.labeled;
     dst.match_type     = src.match_type;
-    dst.center.first   = src.center.first;
-    dst.center.second  = src.center.second;
-    dst.err_pos.first  = src.err_pos.first;
-    dst.err_pos.second = src.err_pos.second;
-    dst.fg_Bha_check   = src.fg_Bha_check;
-    dst.H_hist.release();
-    dst.H_img.release();
-    dst.img.release();
-    dst.H_hist         = src.H_hist.clone();
-    dst.H_img          = src.H_img.clone();
-    dst.img            = src.img.clone();
     dst.pc.range       = src.pc.range;
     dst.pc.angle       = src.pc.angle;
+    dst.err_pos.first  = src.err_pos.first;
+    dst.err_pos.second = src.err_pos.second;
+    dst.img.release();
+    dst.H_img.release();
+    dst.H_hist.release();
+    dst.img            = src.img.clone();
+    dst.H_img          = src.H_img.clone();
+    dst.H_hist         = src.H_hist.clone();
+    dst.fg_Bha_check   = src.fg_Bha_check;
+    dst.center.first   = src.center.first;
+    dst.center.second  = src.center.second;
 
     resetMatchingInfo(*&src);
 }
@@ -119,7 +126,7 @@ void ObjectMatching::resetObjMatching()
     om_obj_num = 0;
 }
 
-std::vector<std::pair<int, int> > ObjectMatching::Matching()
+std::vector<ObjectMatching::matchedResult> ObjectMatching::Matching()
 {
     if (!fg_initialized)
         return matchingList;
@@ -127,11 +134,13 @@ std::vector<std::pair<int, int> > ObjectMatching::Matching()
     // Comparison of H color space image using Bhattacharyya distance with Bubble search
     // record detected object's id
     for (int m = 0; m < om_prev_size; m++)
-        if (om_prev[m].labeled)
+        if (om_prev[m].labeled) {
             map_Bha_corr_id_r.push_back(m);
+        }
     for (int m = 0; m < om_size; m++)
-        if (om[m].labeled)
+        if (om[m].labeled) {
             map_Bha_corr_id_c.push_back(m);
+        }
     om_prev_obj_num = map_Bha_corr_id_r.size();
     om_obj_num = map_Bha_corr_id_c.size();
 #ifdef debug_info_object_matching_others
@@ -166,8 +175,8 @@ std::vector<std::pair<int, int> > ObjectMatching::Matching()
                 pc_prev.second = om_prev[id_prev].pc.range * cos(om_prev[id_prev].pc.angle * CV_PI / 180.0);
                 pc.first = om[id].pc.range * sin(om[id].pc.angle * CV_PI / 180.0);
                 pc.second = om[id].pc.range * cos(om[id].pc.angle * CV_PI / 180.0);
-                map_err_pos_x.ptr<double>(m)[n] = fabs(pc.first - pc_prev.first);
-                map_err_pos_z.ptr<double>(m)[n] = fabs(pc.second - pc_prev.second);
+                map_err_pos_x.ptr<double>(m)[n] = fabs((pc.first - pc_prev.first));
+                map_err_pos_z.ptr<double>(m)[n] = fabs((pc.second - pc_prev.second));
 
                 double ratio = pc.second / max_distance_z;
                 if (m == 0)
@@ -215,8 +224,8 @@ std::vector<std::pair<int, int> > ObjectMatching::Matching()
                     if (check_map_Bha_r.at<bool>(r, 0) == true || check_map_Bha_c.at<bool>(c, 0) == true)
                         continue;
                     //**// better solution? range error can't be normalized.
+                    double val = sqrt(pow(map_err_pos_x.ptr<double>(r)[c], 2) + pow(map_err_pos_z.ptr<double>(r)[c], 2));
                     if (map_match_type.ptr<int>(r)[c] == MATCH_TYPE::RANGE_BHA) {
-                        double val = sqrt(pow(map_err_pos_x.ptr<double>(r)[c], 2) + pow(map_err_pos_z.ptr<double>(r)[c], 2));
                         if (Bha_min > map_Bha.ptr<double>(r)[c] || range_min > val) {
                             Bha_min = map_Bha.ptr<double>(r)[c];
                             range_min = val;
@@ -225,7 +234,6 @@ std::vector<std::pair<int, int> > ObjectMatching::Matching()
                         }
                     }
                     else if (map_match_type.ptr<int>(r)[c] == MATCH_TYPE::RANGE_ONLY) {
-                        double val = sqrt(pow(map_err_pos_x.ptr<double>(r)[c], 2) + pow(map_err_pos_z.ptr<double>(r)[c], 2));
                         if (range_min > val) {
                             range_min = val;
                             min_count.x = r;
@@ -239,12 +247,6 @@ std::vector<std::pair<int, int> > ObjectMatching::Matching()
             // Check if the object satisfies the threshold
             // [RANGE_BHA] if Bha. dist. and range are less than specific thresholds, it's probably a successful match.
             // [RANGE] if range is less than threshold, it's probably a sucessful match.
-//            if (map_Bha.ptr<double>(min_count.x)[min_count.y] > thresh_Bha)
-//                qDebug()<<"bha out";
-//            if (map_err_pos_x.ptr<double>(min_count.x)[min_count.y] > map_thresh_err_x.ptr<double>(min_count.x)[0])
-//                qDebug()<<"err x out";
-//            if (map_err_pos_z.ptr<double>(min_count.x)[min_count.y] > map_thresh_err_z.ptr<double>(min_count.y)[0])
-//                qDebug()<<"err z out";
             if ((map_match_type.ptr<int>(min_count.x)[min_count.y] == MATCH_TYPE::RANGE_BHA && map_Bha.ptr<double>(min_count.x)[min_count.y] <= thresh_Bha ||
                  map_match_type.ptr<int>(min_count.x)[min_count.y] == MATCH_TYPE::RANGE_ONLY) &&
                     map_err_pos_x.ptr<double>(min_count.x)[min_count.y] <= map_thresh_err_x.ptr<double>(min_count.x)[0] &&
@@ -255,8 +257,53 @@ std::vector<std::pair<int, int> > ObjectMatching::Matching()
             check_map_Bha_c.at<bool>(min_count.y) = true;
         }
 
+        // store corresponding matching result, id is followed by previous id
+#ifdef debug_info_object_matching_others
+        std::cout<<"==============="<<std::endl;
+#endif
+        for (int i = 0; i < map_Bha_corr_id_c.size(); i++) {
+            int id = map_Bha_corr_id_c[i];
+            int prev_id = -1;
+            for (int j = 0; j < sort_min.size(); j++) {
+                if (map_Bha_corr_id_c[sort_min[j].y] == id) {
+                    prev_id = map_Bha_corr_id_r[sort_min[j].x];
+#ifdef debug_info_object_matching_others
+                    std::cout<<"matched "<<map_Bha_corr_id_c[sort_min[j].y]<<" "<<id<<
+                              " obs. id "<<om[id].obstacle_id<<" range "<<om[id].pc.range<<
+                              " previous id "<<map_Bha_corr_id_r[sort_min[j].x]<<" previous obs. id "<<om_prev[map_Bha_corr_id_r[sort_min[j].x]].obstacle_id<<std::endl;
+#endif
+                    break;
+                }
+            }
+            matchingList.push_back(matchedResult(id, prev_id));
+        }
+#ifdef debug_info_object_matching_others
+        std::cout<<"==============="<<std::endl;
+#endif
 
 #ifdef debug_info_object_matching_others
+        // SV check =============
+        std::cout<<"\nmatched\n";
+        for (int i = 0; i < sort_min.size(); i++) {
+            int id = map_Bha_corr_id_c[sort_min[i].y];
+            int id_prev = map_Bha_corr_id_r[sort_min[i].x];
+            std::cout<<"prev "<<id_prev<<", now "<<id<<std::endl;
+        }
+
+        std::cout<<"OM============\nBefore: \n";
+        for (int i = 0; i < om_prev_size; i++) {
+            if (om_prev[i].labeled) {
+                std::cout<<"label: "<<i<<std::endl;
+            }
+        }
+        std::cout<<"After: \n";
+        for (int i = 0; i < om_size; i++) {
+            if (om[i].labeled) {
+                std::cout<<"label: "<<i<<std::endl;
+            }
+        }
+        // ======================
+
         for (int i = 0 ; i < sort_min.size(); i++) {
             std::cout<<"prev "<<sort_min[i].x<<" ("<<map_Bha_corr_id_r[sort_min[i].x]<<
                        "), now "<<sort_min[i].y<<" ("<<map_Bha_corr_id_c[sort_min[i].y]<<")\t";
@@ -280,16 +327,28 @@ std::vector<std::pair<int, int> > ObjectMatching::Matching()
             comp.copyTo(comp_mix(cv::Rect(0, comp.rows, comp.cols, comp.rows)));
             cv::putText(comp_mix, "Previous", cv::Point(0, 0.1 * comp.rows), cv::FONT_HERSHEY_DUPLEX, 1, cv::Scalar(0, 255, 0, 255));
             cv::putText(comp_mix, "Now", cv::Point(0, 1.1 * comp.rows), cv::FONT_HERSHEY_DUPLEX, 1, cv::Scalar(0, 255, 0, 255));
-            cv::line(comp_mix, cv::Point(0, comp.rows), cv::Point(comp.cols, comp.rows), cv::Scalar(0, 0, 255), 1, 8, 0);
+            cv::line(comp_mix, cv::Point(0, comp.rows), cv::Point(comp.cols, comp.rows), cv::Scalar(255, 255, 255), 1, 8, 0);
         }
 
+        // draw matched result of previous and now
+        for (int i = 0; i < om_prev_size; i++) {
+            if (om_prev[i].labeled) {
+                cv::Point p1 = cv::Point(om_prev[i].center.second, om_prev[i].center.first );
+                cv::putText(comp_mix, QString::number(i).toStdString(), p1, cv::FONT_HERSHEY_DUPLEX, 1, cv::Scalar(0, 255, 0));
+            }
+        }
+        for (int i = 0; i < om_size; i++) {
+            if (om[i].labeled) {
+                cv::Point p2 = cv::Point(om[i].center.second, om[i].center.first + comp.rows);
+                cv::putText(comp_mix, QString::number(i).toStdString(), p2, cv::FONT_HERSHEY_DUPLEX, 1, cv::Scalar(0, 255, 0));
+            }
+        }
         for (int i = 0 ; i < sort_min.size(); i++) {
             if (!comp_prev.empty()) {
                 cv::Point p1, p2;
                 p1 = cv::Point(om_prev[map_Bha_corr_id_r[sort_min[i].x]].center.second, om_prev[map_Bha_corr_id_r[sort_min[i].x]].center.first);
                 p2 = cv::Point(om[map_Bha_corr_id_c[sort_min[i].y]].center.second, om[map_Bha_corr_id_c[sort_min[i].y]].center.first + comp.rows);
-                cv::line(comp_mix, p1, p2, cv::Scalar(255, 0, 0), 2, 8, 0);
-                cv::putText(comp_mix, QString::number(map_Bha_corr_id_c[sort_min[i].y]).toStdString(), p2, cv::FONT_HERSHEY_DUPLEX, 1, cv::Scalar(0, 0, 255));
+                cv::line(comp_mix, p1, p2, cv::Scalar(255, 255, 255), 2, 8, 0);
             }
         }
 #ifdef debug_info_object_matching_others
@@ -306,26 +365,19 @@ std::vector<std::pair<int, int> > ObjectMatching::Matching()
 #endif
 
         if (!comp_prev.empty()) {
-            cv::namedWindow("Comp");
             cv::imshow("Comp", comp_mix);
         }
         comp_prev.release();
         comp_prev = comp.clone();
         comp.release();
 #endif
-
-        // store corresponding matching result, id is followed by previous id
-        for (int i = 0; i < sort_min.size(); i++) {
-            int id = map_Bha_corr_id_c[sort_min[i].y];
-            int id_prev = map_Bha_corr_id_r[sort_min[i].x];
-            moveOm(om[id], om[id_prev]);
-            matchingList.push_back(std::pair<int, int>(id, id_prev));
-        }
     }
 
     // push om to om_prev
     om_prev_obj_num = om_obj_num;
-    std::swap(om_prev, om);
+    for (int i = 0; i < om_size; i++) {
+        moveOm(om[i], om_prev[i]);
+    }
 
     return matchingList;
 }

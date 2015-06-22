@@ -62,7 +62,9 @@ public:
 
     ObjectTracking::objectTrackingInfo *data_fused;
 
-    int dataFusedSize() {return size_data_fused;}
+    ObjectTracking::objectTrackingInfo *data_fused_tmp;
+
+    ObjectTracking::objectTrackingInfo *data_fused_prev;
 
     void resetTrackingInfo();
 
@@ -161,11 +163,11 @@ private:
 
     void dataMatching();
 
-    std::vector<std::pair<int, int> > matching_result;
+    std::vector<matchedResult> matching_result;
     // Object matching ======== End
     cv::RNG rng;
 
-    void dataTracking();
+    void dataTracking(bool fg_sv, bool fg_radar);
 
     void dataCollisionAvoidance();
 
@@ -221,15 +223,15 @@ private:
     struct vehicleInfo {
         cv::Point VCP;                              // fused topview vehicle current position (pixel)
 
-        int width;                                  // average vehicle's size (cm)
+        double width;                               // average vehicle's size (cm)
 
-        int length;                                 // (cm)
+        double length;                              // (cm)
 
         int width_pixel;                            // (pixel)
 
         int length_pixel;                           // (pixel)
 
-        int head_pos;                               // (cm)
+        double head_pos;                            // (cm)
 
         int head_pos_pixel;                         // (pixel)
 

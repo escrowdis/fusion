@@ -4,9 +4,9 @@ SensorBase::SensorBase()
 {
 }
 
-cv::Point2f SensorBase::polar2Cartf(SensorBase::PC pc_in)
+cv::Point2d SensorBase::polar2Cartf(SensorBase::PC pc_in)
 {
-    return cv::Point2f(pc_in.range * sin(pc_in.angle * CV_PI / 180.0), (pc_in.range * cos(pc_in.angle * CV_PI / 180.0)));
+    return cv::Point2d(pc_in.range * sin(pc_in.angle * CV_PI / 180.0), (pc_in.range * cos(pc_in.angle * CV_PI / 180.0)));
 }
 
 cv::Point SensorBase::polar2Cart(SensorBase::PC pc_in)

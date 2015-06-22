@@ -38,7 +38,6 @@ stereo_vision::stereo_vision() : TopView(20, 200, 3000, 19.8, 1080, 750, 270, 12
     param_sgbm = new matchParamSGBM;
     param_bm = new matchParamBM;
 
-    object_tmp = new objectInfo();
     objects = new objectInfo[obj_nums];
     objects_display = new objectInfo[obj_nums];
 
@@ -92,7 +91,6 @@ stereo_vision::~stereo_vision()
     }
     delete[] data;
 
-    delete object_tmp;
     delete[] objects;
     delete[] objects_display;
 
@@ -1212,20 +1210,13 @@ void stereo_vision::dataMatching()
     matching_result = Matching();
 
     for (int k = 0; k < matching_result.size(); k++) {
-        int id = matching_result[k].first;
-        int id_prev = matching_result[k].second;
-        if (id != id_prev) {
-            if (objects[id_prev].labeled) {
-                for (int j = 0; j < obj_nums; j++) {
-                    if (!objects[j].labeled) {
-                        connectMatchedInfo(objects[id_prev], objects[j]);
-                        break;
-                    }
-                }
-            }
-            connectMatchedInfo(objects[id], objects[id_prev]);
-        }
+        int id = matching_result[k].id;
+        objects[id].prev_id = matching_result[k].prev_id;
     }
+
+//    for (int k = 0; k < obj_nums; k++)
+//        if (objects_display[k].labeled)
+//            qDebug()<<k<<objects_display[k].avg_Z;
 }
 
 void stereo_vision::resetMatchedInfo(objectInfo &src)
@@ -1273,6 +1264,7 @@ void stereo_vision::connectMatchedInfo(objectInfo &src, objectInfo &dst)
     dst.pc_world.angle = src.pc_world.angle;
     dst.vel.x          = src.vel.x;
     dst.vel.y          = src.vel.y;
+    dst.prev_id        = src.prev_id;
 
     resetMatchedInfo(*&src);
 }
@@ -1281,8 +1273,8 @@ void stereo_vision::updateDataForDisplay()
 {
     lock_sv_object.lockForWrite();
 
-    std::swap(objects, objects_display);
     for (int i = 0; i < obj_nums; i++) {
+        connectMatchedInfo(objects[i], objects_display[i]);
         objects[i].pos_prev5t.x = objects_display[i].pos_prev5t.x;
         objects[i].pos_prev5t.y = objects_display[i].pos_prev5t.y;
         objects[i].pos_prev4t.x = objects_display[i].pos_prev4t.x;

@@ -49,8 +49,9 @@ public:
     {
         int det_mode;                   // detected by what kinds of sensors
 
-        identities ids;
-        cv::Point3i id;                 // each sensors' id for fusion (fused, sv, radar)
+        int prev_id;
+
+        identities ids;                 // each sensors' id for fusion (fused, sv, <vector>radar)
 
         cv::Mat img;                    // object's image
 
@@ -74,8 +75,6 @@ public:
 
         objectTrackingInfo() {
             det_mode = DETECT_MODE::NO_DETECT;
-
-            id = cv::Point3i(-1, -1, -1);
 
             pos = cv::Point(-1.0, -1.0);
 

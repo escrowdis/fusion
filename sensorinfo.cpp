@@ -12,6 +12,10 @@ SensorInfo::SensorInfo()
     lrf = new lrf_controller();
     size_data_fused = sv->objSize() + rc->objSize();
     data_fused = new ObjectTracking::objectTrackingInfo[size_data_fused];
+    data_fused_tmp = new ObjectTracking::objectTrackingInfo[size_data_fused];
+#ifdef debug_info_object_matching_img_fusion
+    data_fused_prev = new ObjectTracking::objectTrackingInfo[size_data_fused];
+#endif
 
     fg_fusion = false;
 
@@ -43,6 +47,9 @@ SensorInfo::SensorInfo()
 #ifdef debug_info_object_tracking
     cv::namedWindow("Trajectory", cv::WINDOW_AUTOSIZE);
 #endif
+#ifdef debug_info_object_matching_img_fusion
+    cv::namedWindow("fusion matched comparision", cv::WINDOW_AUTOSIZE);
+#endif
 }
 
 SensorInfo::~SensorInfo()
@@ -51,6 +58,10 @@ SensorInfo::~SensorInfo()
     delete rc;
     delete lrf;
     delete[] data_fused;
+    delete[] data_fused_tmp;
+#ifdef debug_info_object_matching_img_fusion
+    delete[] data_fused_prev;
+#endif
     delete ot_fused;
     delete ca;
     delete[] sensors;
@@ -91,7 +102,7 @@ void SensorInfo::initialFusedTopView(int range_pixel)
     int sensor = SENSOR::SV;
     sensors[sensor].color = cv::Scalar(255, 0, 0, 255);
 
-    sensors[sensor].angle_half_fov = sv->view_angle * 0.5 * CV_PI / 180.0;
+    sensors[sensor].angle_half_fov = sv->view_angle * 0.5;
 
     sensors[sensor].location.pos = cv::Point2f(0, 29.5);
 
@@ -104,7 +115,7 @@ void SensorInfo::initialFusedTopView(int range_pixel)
     sensor = SENSOR::RADAR;
     sensors[sensor].color = cv::Scalar(0, 0, 255, 255);
 
-    sensors[sensor].angle_half_fov = rc->view_angle * 0.5 * CV_PI / 180.0;
+    sensors[sensor].angle_half_fov = rc->view_angle * 0.5;
 
     sensors[sensor].location.pos = cv::Point2f(0, vehicle.head_pos);
 
@@ -151,8 +162,8 @@ void SensorInfo::updateFusedTopView()
     int shift_x, shift_y;
     device = SENSOR::SV;
     sensor_pos = cv::Point(vehicle.VCP.x + sensors[device].pos_pixel.x, vehicle.VCP.y - sensors[device].pos_pixel.y);
-    shift_x = detection_range_pixel * sin(sensors[device].angle_half_fov);
-    shift_y = detection_range_pixel * cos(sensors[device].angle_half_fov);
+    shift_x = detection_range_pixel * sin(sensors[device].angle_half_fov * CV_PI / 180.0);
+    shift_y = detection_range_pixel * cos(sensors[device].angle_half_fov * CV_PI / 180.0);
     pos_fov_r = cv::Point(sensor_pos.x + shift_x, sensor_pos.y - shift_y);
     pos_fov_l = cv::Point(sensor_pos.x - shift_x, sensor_pos.y - shift_y);
     cv::line(fused_topview_BG, sensor_pos, pos_fov_r, sensors[device].color_fov, 1, 8, 0);
@@ -161,20 +172,20 @@ void SensorInfo::updateFusedTopView()
     // FOV - ESR
     device = SENSOR::RADAR;
     sensor_pos = cv::Point(vehicle.VCP.x + sensors[device].pos_pixel.x, vehicle.VCP.y - sensors[device].pos_pixel.y);
-    shift_x = detection_range_pixel * sin(sensors[device].angle_half_fov);
-    shift_y = detection_range_pixel * cos(sensors[device].angle_half_fov);
+    shift_x = detection_range_pixel * sin(sensors[device].angle_half_fov * CV_PI / 180.0);
+    shift_y = detection_range_pixel * cos(sensors[device].angle_half_fov * CV_PI / 180.0);
     pos_fov_r = cv::Point(sensor_pos.x + shift_x, sensor_pos.y - shift_y);
     pos_fov_l = cv::Point(sensor_pos.x - shift_x, sensor_pos.y - shift_y);
     cv::line(fused_topview_BG, sensor_pos, pos_fov_r, sensors[device].color_fov, 1, 8, 0);
     cv::line(fused_topview_BG, sensor_pos, pos_fov_l, sensors[device].color_fov, 1, 8, 0);
 
     // 30 m
-    float distance = sv->max_distance * ratio;
+    float distance = (sv->max_distance + vehicle.length / 2) * ratio;
     if (distance <= detection_range_pixel)
         cv::circle(fused_topview_BG, vehicle.VCP, distance, rc->color_line, 1, 8, 0);
 
     // 5 m
-    distance = 500 * ratio;
+    distance = (500 + vehicle.length / 2)* ratio;
     if (distance <= detection_range_pixel)
         cv::circle(fused_topview_BG, vehicle.VCP, distance, rc->color_line, 1, 8, 0);
 
@@ -250,7 +261,7 @@ void SensorInfo::zoomInFusedTopView()
 
 void SensorInfo::resetFusion()
 {
-    for (int p = 0; p < dataFusedSize(); p++)
+    for (int p = 0; p < size_data_fused; p++)
         resetMatchedInfo(data_fused[p]);
 }
 
@@ -271,11 +282,11 @@ void SensorInfo::dataExec(bool fg_sv, bool fg_radar, bool fg_data_update, bool f
 
         dataProcess(fg_sv, fg_radar);
 
-        if (fg_om && (!fg_sv && fg_radar))
+        if (fg_om && this->fg_fusion)
             dataMatching();
 
         if (fg_ot)
-            dataTracking();
+            dataTracking(fg_sv, fg_radar);
 
         dataCollisionAvoidance();
     }
@@ -291,33 +302,34 @@ void SensorInfo::resetMatchedInfo(ObjectTracking::objectTrackingInfo &src)
     src.ids.radar.clear();
     src.img.release();
     src.pc = SensorBase::PC(0.0, 0.0);
-    src.pos = cv::Point(-1.0, -1.0);
+    src.pos = cv::Point2f(-1.0, -1.0);
     src.vel = cv::Point2f(0.0, 0.0);
     src.acc = cv::Point2f(0.0, 0.0);
 }
 
 void SensorInfo::connectMatchedInfo(ObjectTracking::objectTrackingInfo &src, ObjectTracking::objectTrackingInfo &dst)
 {
-    dst.det_mode      = src.det_mode;
-    dst.ids.fused     = src.ids.fused;
-    dst.ids.sv        = src.ids.sv;
+    dst.det_mode       = src.det_mode;
+    dst.ids.fused      = src.ids.fused;
+    dst.ids.sv         = src.ids.sv;
     dst.ids.radar.clear();
     for (int i = 0; i < src.ids.radar.size(); i++)
         dst.ids.radar.push_back(src.ids.radar[i]);
     dst.img.release();
-    dst.img           = src.img.clone();
-    dst.rect_f        = cv::Rect(src.rect_f.tl().x, src.rect_f.tl().y, src.rect_f.width, src.rect_f.height);
-    dst.plot_pt_f.x   = src.plot_pt_f.x;
-    dst.plot_pt_f.y   = src.plot_pt_f.y;
-    dst.pc.range      = src.pc.range;
-    dst.pc.angle      = src.pc.angle;
-    dst.pos.x         = src.pos.x;
-    dst.pos.y         = src.pos.y;
-    dst.rect          = cv::Rect(src.rect.tl().x, src.rect.tl().y, src.rect.width, src.rect.height);
-    dst.vel.x         = src.vel.x;
-    dst.vel.y         = src.vel.y;
-    dst.acc.x         = src.acc.x;
-    dst.acc.y         = src.acc.y;
+    dst.img            = src.img.clone();
+    dst.rect_f         = cv::Rect(src.rect_f.tl().x, src.rect_f.tl().y, src.rect_f.width, src.rect_f.height);
+    dst.plot_pt_f.x    = src.plot_pt_f.x;
+    dst.plot_pt_f.y    = src.plot_pt_f.y;
+    dst.pc.range       = src.pc.range;
+    dst.pc.angle       = src.pc.angle;
+    dst.pos.x          = src.pos.x;
+    dst.pos.y          = src.pos.y;
+    dst.rect           = cv::Rect(src.rect.tl().x, src.rect.tl().y, src.rect.width, src.rect.height);
+    dst.vel.x          = src.vel.x;
+    dst.vel.y          = src.vel.y;
+    dst.acc.x          = src.acc.x;
+    dst.acc.y          = src.acc.y;
+    dst.prev_id        = src.prev_id;
 
     resetMatchedInfo(*&src);
 }
@@ -363,63 +375,151 @@ void SensorInfo::dataMatching()
     matching_result.clear();
     matching_result = Matching();
 
+//    qDebug()<<"before";
+//    for (int p = 0; p < size_data_fused; p++) {
+//        if (data_fused[p].pos.y != -1)
+//            qDebug()<<p<<data_fused[p].pos.y;
+//    }
+
+//    for (int p = 0; p < size_data_fused; p++)
+//        resetMatchedInfo(data_fused_tmp[p]);
     for (int k = 0; k < matching_result.size(); k++) {
-        int id = matching_result[k].first;
-        int id_prev = matching_result[k].second;
-        if (id != id_prev) {
+        int id = matching_result[k].id;
+        data_fused[id].prev_id = matching_result[k].prev_id;
+        qDebug()<<"Matched now"<<id<<"prev"<<matching_result[k].prev_id;
+//        connectMatchedInfo(data_fused[id], data_fused_tmp[obstacle_id]);
+//        data_fused_tmp[obstacle_id].ids.fused = obstacle_id;
+//        data_fused_tmp[obstacle_id].matched_status = matching_result[k].matched_status;
+    }
+//    for (int p = 0; p < size_data_fused; p++) {
+//        resetMatchedInfo(data_fused[p]);
+//        connectMatchedInfo(data_fused_tmp[p], data_fused[p]);
+//    }
+#ifdef debug_info_object_matching_img_fusion
+    cv::Mat fused_topview_cp = fused_topview.clone();
+    for (int p = 0; p < size_data_fused; p++) {
+        if (data_fused[p].det_mode != DETECT_MODE::NO_DETECT && data_fused_prev[p].det_mode != DETECT_MODE::NO_DETECT) {
+            if (data_fused[p].prev_id != -1) {
+                cv::circle(fused_topview_cp, data_fused_prev[p].plot_pt_f, 3, cv::Scalar(0, 0, 255, 255), -1, 8, 0);
+                cv::line(fused_topview_cp, data_fused[p].plot_pt_f, data_fused_prev[data_fused[p].prev_id].plot_pt_f, cv::Scalar(255, 255, 255, 255), 2, 8, 0);
+            }
+            else
+                cv::circle(fused_topview_cp, data_fused[p].plot_pt_f, 2, cv::Scalar(0, 255, 255, 255), -1, 8, 0);
+        }
+    }
+    cv::imshow("fusion matched comparision", fused_topview_cp);
+
+    for (int p = 0; p < size_data_fused; p++) {
+    data_fused_prev[p].det_mode      = data_fused[p].det_mode;
+    data_fused_prev[p].ids.fused     = data_fused[p].ids.fused;
+    data_fused_prev[p].ids.sv        = data_fused[p].ids.sv;
+    data_fused_prev[p].ids.radar.clear();
+    for (int i = 0; i < data_fused[p].ids.radar.size(); i++)
+        data_fused_prev[p].ids.radar.push_back(data_fused[p].ids.radar[i]);
+    data_fused_prev[p].img.release();
+    data_fused_prev[p].img           = data_fused[p].img.clone();
+    data_fused_prev[p].rect_f        = cv::Rect(data_fused[p].rect_f.tl().x, data_fused[p].rect_f.tl().y, data_fused[p].rect_f.width, data_fused[p].rect_f.height);
+    data_fused_prev[p].plot_pt_f.x   = data_fused[p].plot_pt_f.x;
+    data_fused_prev[p].plot_pt_f.y   = data_fused[p].plot_pt_f.y;
+    data_fused_prev[p].pc.range      = data_fused[p].pc.range;
+    data_fused_prev[p].pc.angle      = data_fused[p].pc.angle;
+    data_fused_prev[p].pos.x         = data_fused[p].pos.x;
+    data_fused_prev[p].pos.y         = data_fused[p].pos.y;
+    data_fused_prev[p].rect          = cv::Rect(data_fused[p].rect.tl().x, data_fused[p].rect.tl().y, data_fused[p].rect.width, data_fused[p].rect.height);
+    data_fused_prev[p].vel.x         = data_fused[p].vel.x;
+    data_fused_prev[p].vel.y         = data_fused[p].vel.y;
+    data_fused_prev[p].acc.x         = data_fused[p].acc.x;
+    data_fused_prev[p].acc.y         = data_fused[p].acc.y;
+    }
+#endif
+
+//    qDebug()<<"after";
+//    for (int p = 0; p < size_data_fused; p++) {
+//        if (data_fused[p].pos.y != -1)
+//            qDebug()<<p<<data_fused[p].pos.y;
+//    }
+
+//    qDebug()<<"=========\nsize: "<<matching_result.size();
+//    for (int k = 0; k < matching_result.size(); k++) {
+//        int id = matching_result[k].first;
+//        int id_prev = matching_result[k].second;
+//        if (id != id_prev) {
 //            if (data_fused[id_prev].det_mode != DETECT_MODE::NO_DETECT) {
-//                for (int j = 0; j < size_data_fused; j++) {
-//                    if (!data_fused[j].det_mode != DETECT_MODE::NO_DETECT) {
-//                        connectMatchedInfo(data_fused[id_prev], data_fused[j]);
+//                for (int p = 0; p < matching_result.size(); p++) {
+//                    //**// what if data_fused[matching_result[p].second] was existed?
+//                    if (matching_result[p].first == id_prev) {
+//                        connectMatchedInfo(data_fused[id_prev], data_fused[matching_result[p].second]);
 //                        break;
 //                    }
 //                }
 //            }
-            connectMatchedInfo(data_fused[id], data_fused[id_prev]);
-        }
-    }
+//            connectMatchedInfo(data_fused[id], data_fused[id_prev]);
+//        }
+//        qDebug()<<data_fused[id_prev].det_mode<<"\t"<<id<<id_prev<<"\t"<<data_fused[id_prev].pos.y;
+//    }
 }
 
-void SensorInfo::dataTracking()
+void SensorInfo::dataTracking(bool fg_sv, bool fg_radar)
 {
     for (int m = 0; m < ot_fused->ti.size(); m++)
         ot_fused->ti[m].fg_update = false;
     for (int p = 0 ; p < size_data_fused; p++) {
+        lock_data_fused.lockForRead();
         if (data_fused[p].det_mode == DETECT_MODE::NO_DETECT) continue;
+        lock_data_fused.unlock();
         bool fg_new_obj = true;
         int conti_id = -1;
+        if (data_fused[p].prev_id != -1) {
         for (int m = 0; m < ot_fused->ti.size(); m++) {
             if (ot_fused->ti[m].track_status == TRACK_STATUS::NO_TARGET || ot_fused->ti[m].fg_update)
                 continue;
 
             int cur_obj = ot_fused->ti[m].info.size() - 1;
             lock_data_fused.lockForRead();
-            for (int i = 0; i < data_fused[p].ids.radar.size(); i++) {
-                for (int j = 0; j < ot_fused->ti[m].info[cur_obj].ids.radar.size(); j++) {
-                    if (ot_fused->ti[m].info[cur_obj].ids.radar[j] == data_fused[p].ids.radar[i]) {
-                        if (ot_fused->ti[m].info[cur_obj].ids.sv == data_fused[p].ids.sv) {
-                            fg_new_obj = false;
-                            conti_id = m;
-                            break;
-                        }
-                    }
-                }
-                if (!fg_new_obj)
+            // SV only
+            if (fg_sv && !fg_radar) {
+                if (ot_fused->ti[m].info[cur_obj].ids.sv == data_fused[p].prev_id) {
+//                    qDebug()<<"sv checked"<<m<<p<<ot_fused->ti[m].info[cur_obj].ids.sv;
+                    fg_new_obj = false;
+                    conti_id = m;
                     break;
+                }
             }
-            if (!fg_new_obj)
-                break;
+            // FUSION mode
+            else {
+                if (ot_fused->ti[m].info[cur_obj].ids.fused == data_fused[p].prev_id) {
+                    fg_new_obj = false;
+                    conti_id = m;
+                    break;
+                }
+
+//                else if (!data_fused[p].ids.radar.empty()) {
+//                    for (int i = 0; i < data_fused[p].ids.radar.size(); i++) {
+//                        for (int j = 0; j < ot_fused->ti[m].info[cur_obj].ids.radar.size(); j++) {
+//                            if (ot_fused->ti[m].info[cur_obj].ids.radar[j] == data_fused[p].ids.radar[i]) {
+//                                fg_new_obj = false;
+//                                conti_id = m;
+//                                break;
+//                            }
+//                        }
+//                        if (!fg_new_obj)
+//                            break;
+//                    }
+//                }
+            }
             lock_data_fused.unlock();
+        }
         }
 
         lock_data_fused.lockForRead();
         ObjectTracking::objectTrackingInfo info_new;
-        info_new.ids.fused = conti_id;
+        info_new.ids.fused = data_fused[p].ids.fused;
         info_new.ids.sv = data_fused[p].ids.sv;
         info_new.ids.radar.clear();
         for (int i = 0; i < data_fused[p].ids.radar.size(); i++)
             info_new.ids.radar.push_back(data_fused[p].ids.radar[i]);
         info_new.det_mode = data_fused[p].det_mode;
+        info_new.prev_id = data_fused[p].prev_id;
         info_new.img = data_fused[p].img.clone();
         info_new.rect_f = data_fused[p].rect_f;
         info_new.plot_pt_f = data_fused[p].plot_pt_f;
@@ -434,7 +534,7 @@ void SensorInfo::dataTracking()
             ot_fused->ti[conti_id].info.push_back(info_new);
             ot_fused->ti[conti_id].track_status = TRACK_STATUS::UPDATE_TARGET;
             ot_fused->ti[conti_id].fg_update = true;
-            ot_fused->ti[conti_id].trajectory.push_back(SensorBase::PC(info_new.pc.range, info_new.pc.angle * 180 / CV_PI));
+            ot_fused->ti[conti_id].trajectory.push_back(SensorBase::PC(info_new.pc.range, info_new.pc.angle));
 
             // Kalman filter
             int last = ot_fused->ti[conti_id].info.size() - 1;
@@ -510,7 +610,7 @@ void SensorInfo::dataTracking()
             int b = rng.uniform(0, 256);
             ti_new.color_trajectory = cv::Scalar(b, g, r, 255);
             ti_new.trajectory.clear();
-            ti_new.trajectory.push_back(SensorBase::PC(info_new.pc.range, info_new.pc.angle * 180 / CV_PI));
+            ti_new.trajectory.push_back(SensorBase::PC(info_new.pc.range, info_new.pc.angle));
             cv::setIdentity(ti_new.kf.kf_core.measurementMatrix);
             cv::setIdentity(ti_new.kf.kf_core.processNoiseCov, cv::Scalar::all(1e-5));
             cv::setIdentity(ti_new.kf.kf_core.measurementNoiseCov, cv::Scalar::all(1e-1));
@@ -643,33 +743,39 @@ void SensorInfo::dataProcess(bool fg_sv, bool fg_radar)
             if (fg_fusion) {
                 U_D = 800;    // max distance error (cm) //**// tuned param
                 R_sv = pow(U_D * d_sv[k].pc_world.range / (1.0 * sv->max_distance), 2);  // (cm)
-                sv_pos = SensorBase::polar2Cart(d_sv[k].pc_world);
+                sv_pos = SensorBase::polar2Cartf(d_sv[k].pc_world);
                 //                std::cout<<"SV: "<<sv_pos.x<<" "<<sv_pos.y<<std::endl;
                 for (int m = 0; m < rc->objSize(); m++) {
                     if (d_radar[m].status >= rc->obj_status_filtered && !d_radar[m].fg_fused) {
                         if (d_radar[m].pc_world.angle < -1 * sensors[SENSOR::SV].angle_half_fov ||
                                 d_radar[m].pc_world.angle > sensors[SENSOR::SV].angle_half_fov ||
-                                d_radar[m].pc_world.range * sin(d_radar[m].pc_world.angle) > sv->max_distance)
+                                d_radar[m].pc_world.range * sin(d_radar[m].pc_world.angle * CV_PI / 180.0) > sv->max_distance)
                             continue;
-                        cv::Point2d radar_pos = SensorBase::polar2Cart(d_radar[m].pc_world);
+                        cv::Point2d radar_pos = SensorBase::polar2Cartf(d_radar[m].pc_world);
                         deviation_x = pow((radar_pos.x - sv_pos.x), 2);
                         deviation_z = pow((radar_pos.y - sv_pos.y), 2);
                         deviation = deviation_x + deviation_z;
-                        //                        std::cout<<deviation<<" "<<closest_radar_distance<<" "<<R_sv<<std::endl;
-                        //                        std::cout<<"RADAR: "<<radar_pos.x<<" "<<radar_pos.y<<std::endl;
+//                        std::cout<<deviation<<" "<<closest_radar_distance<<" "<<R_sv<<std::endl;
+//                        std::cout<<"RADAR: "<<radar_pos.x<<" "<<radar_pos.y<<std::endl;
+                        double related_ratio = abs(radar_pos.y - sv_pos.y) / abs(radar_pos.x - sv_pos.x);
+                        double slope = 2.0;
                         // 1. within rect
-                        if (d_radar[m].plot_pt_f.x <= d_sv[k].rect_f.br().x && d_radar[m].plot_pt_f.x >= d_sv[k].rect_f.tl().x &&
-                                d_radar[m].plot_pt_f.y <= d_sv[k].rect_f.br().y && d_radar[m].plot_pt_f.y >= d_sv[k].rect_f.tl().y) {
+                        if (d_radar[m].plot_pt_f.x <= (int)(d_sv[k].rect_f.br().x) && d_radar[m].plot_pt_f.x >= (int)(d_sv[k].rect_f.tl().x) &&
+                                d_radar[m].plot_pt_f.y <= (int)(d_sv[k].rect_f.br().y) && d_radar[m].plot_pt_f.y >= (int)(d_sv[k].rect_f.tl().y)) {
                             cri.push_back(m);
                         }
                         // 2. within range
-                        if (deviation < R_sv) {
+                        else if ((deviation < R_sv && (related_ratio >= slope || radar_pos.x - sv_pos.x == 0.0)) ||
+                                (deviation < 0.5 * R_sv && related_ratio < slope)) {
+//                        if (deviation < R_sv) {
+//                            qDebug()<<deviation<<related_ratio<<"\t"<<sv_pos.x<<sv_pos.y<<radar_pos.x<<radar_pos.y;
                             bool fg_closest = true;
                             for (int p = 0; p < sv->objSize(); p++) {
-                                if (p == k) continue;
-                                cv::Point2d sv_pos_tmp = SensorBase::polar2Cart(d_sv[p].pc_world);
-                                deviation_tmp = pow((radar_pos.x - sv_pos_tmp.x), 2) + pow((radar_pos.y - sv_pos_tmp.y), 2);
-                                if (deviation_tmp < deviation) {
+                                if (p == k || !d_sv[p].labeled) continue;
+                                cv::Point2d sv_pos_tmp = SensorBase::polar2Cartf(d_sv[p].pc_world);
+                                double related_ratio_tmp = abs(radar_pos.y - sv_pos_tmp.y) / abs(radar_pos.x - sv_pos_tmp.x);
+                                deviation_tmp = pow(radar_pos.x - sv_pos_tmp.x, 2) + pow(radar_pos.y - sv_pos_tmp.y, 2);
+                                if (deviation_tmp < deviation && related_ratio < related_ratio_tmp) {
                                     fg_closest = false;
                                     break;
                                 }
@@ -685,6 +791,9 @@ void SensorInfo::dataProcess(bool fg_sv, bool fg_radar)
             // un-fused - stereo vision
             if (cri.empty()) {
                 data_fused[count].det_mode = DETECT_MODE::SV_ONLY;
+                // SV only
+                if (fg_sv && !fg_radar)
+                    data_fused[count].prev_id = d_sv[k].prev_id;
                 data_fused[count].ids.fused = count;
                 data_fused[count].ids.sv = k;
                 data_fused[count].ids.radar.clear();
@@ -780,7 +889,6 @@ void SensorInfo::drawFusedTopView(bool fg_sv, bool fg_radar, bool fg_sv_each, bo
     // Sensor - Stereo vision
     std::string tag;
     int device = SENSOR::SV;
-    float scale = 1.0;
     if (fg_sv) {
         // every pixel
         if (fg_sv_each) {
@@ -825,74 +933,112 @@ void SensorInfo::drawFusedTopView(bool fg_sv, bool fg_radar, bool fg_sv_each, bo
 
     // Fusion
     lock_f_topview.lockForWrite();
-    for (int p = 0 ; p < dataFusedSize(); p++) {
-        //            int device;
-//        int dilate = 5;
-//        if (data_fused[p].vel.y <= 0)
-//            thickness = dilate;
-//        else
-//            thickness = 2;
-        switch (data_fused[p].det_mode) {
+    for (int p = 0; p < ot_fused->ti.size(); p++) {
+        int last = ot_fused->ti[p].info.size() - 1;
+        if (last < 0 || !ot_fused->ti[p].fg_update) continue;
+        if (fg_ot_trajectory) {
+            for (int i = 1; i < ot_fused->ti[p].info.size(); i++) {
+                cv::line(fused_topview, ot_fused->ti[p].info[i].plot_pt_f, ot_fused->ti[p].info[i - 1].plot_pt_f, ot_fused->ti[p].color_trajectory, 1, 8, 0);
+            }
+        }
+        cv::Scalar color_pt;
+        cv::Point pos_text;
+        cv::Scalar color_rect = cv::Scalar(255, 255, 0, 255);
+        switch (ot_fused->ti[p].info[last].det_mode) {
         case DETECT_MODE::SV_RADAR:
-            tag = QString::number(data_fused[p].pc.range / 100, 'g', range_precision).toStdString();
-            cv::circle(fused_topview, data_fused[p].plot_pt_f, thickness + 2, cv::Scalar(139, 0, 139, 255), -1, 8, 0);
-            cv::rectangle(fused_topview, data_fused[p].rect_f, cv::Scalar(255, 255, 0, 255), 1, 8, 0);
-            cv::putText(fused_topview, tag, cv::Point(data_fused[p].plot_pt_f.x - 50, data_fused[p].plot_pt_f.y), font, font_size, cv::Scalar(139, 0, 139, 255), font_thickness);
+            cv::rectangle(fused_topview, ot_fused->ti[p].info[last].rect_f, color_rect, 1, 8, 0);
+            color_pt = cv::Scalar(139, 0, 139, 255);
+            pos_text = cv::Point(ot_fused->ti[p].info[last].plot_pt_f.x - 50, ot_fused->ti[p].info[last].plot_pt_f.y);
             break;
         case DETECT_MODE::SV_ONLY:
             device = SENSOR::SV;
-            tag = QString::number(p).toStdString() + ", " + QString::number(data_fused[p].pc.range / 100, 'g', range_precision).toStdString();
-            cv::circle(fused_topview, data_fused[p].plot_pt_f, thickness, sensors[device].color, -1, 8, 0);
-            cv::rectangle(fused_topview, data_fused[p].rect_f, cv::Scalar(255, 255, 0, 255), 1, 8, 0);
-            cv::putText(fused_topview, tag, data_fused[p].plot_pt_f, font, font_size, sensors[device].color, font_thickness);
+            cv::rectangle(fused_topview, ot_fused->ti[p].info[last].rect_f, color_rect, 1, 8, 0);
+            color_pt = sensors[device].color;
+            pos_text = ot_fused->ti[p].info[last].plot_pt_f;
             break;
         case DETECT_MODE::RADAR_ONLY:
             device = SENSOR::RADAR;
-            tag = QString::number(p).toStdString() + ", " + QString::number(data_fused[p].pc.range / 100, 'g', range_precision).toStdString();
-            cv::circle(fused_topview, data_fused[p].plot_pt_f, thickness, sensors[device].color, -1, 8, 0);
-            // display range and id
-            if (data_fused[p].pc.angle <= sensors[SENSOR::SV].angle_half_fov &&
-                    data_fused[p].pc.angle >= -1 * sensors[SENSOR::SV].angle_half_fov && data_fused[p].pc.range < 3000 ||
-                    data_fused[p].pc.range < 500) {
-                cv::putText(fused_topview, tag, cv::Point(data_fused[p].plot_pt_f.x, data_fused[p].plot_pt_f.y + 15), font, font_size, sensors[device].color, font_thickness);
-            }
+            color_pt = sensors[device].color;
+            pos_text = ot_fused->ti[p].info[last].plot_pt_f;
             break;
         }
-        if (data_fused[p].det_mode != DETECT_MODE::NO_DETECT)
-            drawArrow(fused_topview, data_fused[p].plot_pt_f, 2 * data_fused[p].plot_pt_f - cv::Point(data_fused[p].plot_pt_f.x + scale * ratio * data_fused[p].vel.x, data_fused[p].plot_pt_f.y - scale * ratio * data_fused[p].vel.y), 5, 30, cv::Scalar(255, 255, 0, 255), 1, 8);
+        tag = QString::number(p).toStdString() + ", " + QString::number(ot_fused->ti[p].info[last].pc.range / 100, 'g', range_precision).toStdString();
+        cv::circle(fused_topview, ot_fused->ti[p].info[last].plot_pt_f, 2, color_pt, -1, 8, 0);
+        cv::putText(fused_topview, tag, pos_text, font, font_size, color_pt, font_thickness);
     }
     lock_f_topview.unlock();
 
-    if (fg_ot_trajectory) {
-        // trajectory path
-        for (int m = 0; m < ot_fused->ti.size(); m++) {
-            for (int n = 1; n < ot_fused->ti[m].trajectory.size(); n++) {
-                if (fg_ot_trajectory_smoothing) {
-                    if (ot_fused->ti[m].fg_update & n > 5) {
-                        cv::Point p1 = point2FusedTopView(ot_fused->ti[m].trajectory[n]);
-                        cv::Point p2 = point2FusedTopView(ot_fused->ti[m].trajectory[n - 1]);
-                        cv::Point p3 = point2FusedTopView(ot_fused->ti[m].trajectory[n - 2]);
-                        cv::Point p4 = point2FusedTopView(ot_fused->ti[m].trajectory[n - 3]);
-                        cv::Point p5 = point2FusedTopView(ot_fused->ti[m].trajectory[n - 4]);
-                        cv::Point p6 = point2FusedTopView(ot_fused->ti[m].trajectory[n - 5]);
-                        cv::Point p1_smooth = cv::Point((p1.x + p2.x + p3.x + p4.x + p5.x) / 5, (p1.y + p2.y + p3.y + p4.y + p5.y) / 5);
-                        cv::Point p2_smooth = cv::Point((p2.x + p3.x + p4.x + p5.x + p6.x) / 5, (p2.y + p3.y + p4.y + p5.y + p6.y) / 5);
-                        cv::line(fused_topview, p1_smooth,  p2_smooth, ot_fused->ti[m].color_trajectory, 1, 8, 0);
-                    }
-                }
-                else {
-                    if (ot_fused->ti[m].fg_update) {
-                        cv::Point p1 = point2FusedTopView(ot_fused->ti[m].trajectory[n]);
-                        cv::Point p2 = point2FusedTopView(ot_fused->ti[m].trajectory[n - 1]);
-                        cv::line(fused_topview, p1,  p2, ot_fused->ti[m].color_trajectory, 1, 8, 0);
-                    }
-                }
-            }
-        }
-#ifdef debug_info_object_tracking
-        cv::imshow("Trajectory", fused_topview);
-#endif
-    }
+//    lock_f_topview.lockForWrite();
+//    lock_data_fused.lockForRead();
+//    for (int p = 0; p < size_data_fused; p++) {
+//        //            int device;
+////        int dilate = 5;
+////        if (data_fused[p].vel.y <= 0)
+////            thickness = dilate;
+////        else
+////            thickness = 2;
+//        switch (data_fused[p].det_mode) {
+//        case DETECT_MODE::SV_RADAR:
+//            tag = QString::number(p).toStdString() + ", " + QString::number(data_fused[p].pc.range / 100, 'g', range_precision).toStdString();
+//            cv::circle(fused_topview, data_fused[p].plot_pt_f, thickness + 2, cv::Scalar(139, 0, 139, 255), -1, 8, 0);
+//            cv::rectangle(fused_topview, data_fused[p].rect_f, cv::Scalar(255, 255, 0, 255), 1, 8, 0);
+//            cv::putText(fused_topview, tag, cv::Point(data_fused[p].plot_pt_f.x - 50, data_fused[p].plot_pt_f.y), font, font_size, cv::Scalar(139, 0, 139, 255), font_thickness);
+//            break;
+//        case DETECT_MODE::SV_ONLY:
+//            device = SENSOR::SV;
+//            tag = QString::number(p).toStdString() + ", " + QString::number(data_fused[p].pc.range / 100, 'g', range_precision).toStdString();
+//            cv::circle(fused_topview, data_fused[p].plot_pt_f, thickness, sensors[device].color, -1, 8, 0);
+//            cv::rectangle(fused_topview, data_fused[p].rect_f, cv::Scalar(255, 255, 0, 255), 1, 8, 0);
+//            cv::putText(fused_topview, tag, data_fused[p].plot_pt_f, font, font_size, sensors[device].color, font_thickness);
+//            break;
+//        case DETECT_MODE::RADAR_ONLY:
+//            device = SENSOR::RADAR;
+//            tag = QString::number(p).toStdString() + ", " + QString::number(data_fused[p].pc.range / 100, 'g', range_precision).toStdString();
+//            cv::circle(fused_topview, data_fused[p].plot_pt_f, thickness, sensors[device].color, -1, 8, 0);
+//            // display range and id
+////            if (data_fused[p].pc.angle <= sensors[SENSOR::SV].angle_half_fov &&
+////                    data_fused[p].pc.angle >= -1 * sensors[SENSOR::SV].angle_half_fov && data_fused[p].pc.range < 3000 ||
+////                    data_fused[p].pc.range < 500) {
+//                cv::putText(fused_topview, tag, cv::Point(data_fused[p].plot_pt_f.x, data_fused[p].plot_pt_f.y + 15), font, font_size, sensors[device].color, font_thickness);
+////            }
+//            break;
+//        }
+////        if (data_fused[p].det_mode != DETECT_MODE::NO_DETECT)
+////            drawArrow(fused_topview, data_fused[p].plot_pt_f, 2 * data_fused[p].plot_pt_f - cv::Point(data_fused[p].plot_pt_f.x + scale * ratio * data_fused[p].vel.x, data_fused[p].plot_pt_f.y - scale * ratio * data_fused[p].vel.y), 5, 30, cv::Scalar(255, 255, 0, 255), 1, 8);
+//    }
+//    lock_data_fused.unlock();
+//    lock_f_topview.unlock();
+
+//    if (fg_ot_trajectory) {
+//        // trajectory path
+//        for (int m = 0; m < ot_fused->ti.size(); m++) {
+//            for (int n = 1; n < ot_fused->ti[m].trajectory.size(); n++) {
+//                if (fg_ot_trajectory_smoothing) {
+//                    if (ot_fused->ti[m].fg_update & n > 5) {
+//                        cv::Point p1 = point2FusedTopView(ot_fused->ti[m].trajectory[n]);
+//                        cv::Point p2 = point2FusedTopView(ot_fused->ti[m].trajectory[n - 1]);
+//                        cv::Point p3 = point2FusedTopView(ot_fused->ti[m].trajectory[n - 2]);
+//                        cv::Point p4 = point2FusedTopView(ot_fused->ti[m].trajectory[n - 3]);
+//                        cv::Point p5 = point2FusedTopView(ot_fused->ti[m].trajectory[n - 4]);
+//                        cv::Point p6 = point2FusedTopView(ot_fused->ti[m].trajectory[n - 5]);
+//                        cv::Point p1_smooth = cv::Point((p1.x + p2.x + p3.x + p4.x + p5.x) / 5, (p1.y + p2.y + p3.y + p4.y + p5.y) / 5);
+//                        cv::Point p2_smooth = cv::Point((p2.x + p3.x + p4.x + p5.x + p6.x) / 5, (p2.y + p3.y + p4.y + p5.y + p6.y) / 5);
+//                        cv::line(fused_topview, p1_smooth,  p2_smooth, ot_fused->ti[m].color_trajectory, 1, 8, 0);
+//                    }
+//                }
+//                else {
+//                    if (ot_fused->ti[m].fg_update) {
+//                        cv::Point p1 = point2FusedTopView(ot_fused->ti[m].trajectory[n]);
+//                        cv::Point p2 = point2FusedTopView(ot_fused->ti[m].trajectory[n - 1]);
+//                        cv::line(fused_topview, p1,  p2, ot_fused->ti[m].color_trajectory, 1, 8, 0);
+//                    }
+//                }
+//            }
+//        }
+//#ifdef debug_info_object_tracking
+//        cv::imshow("Trajectory", fused_topview);
+//#endif
+//    }
 
     // Kalman filter
     if (fg_ot_kf) {
@@ -941,7 +1087,7 @@ SensorBase::PC SensorInfo::coordinateTransform(int type, cv::Point sensor_pos, S
         x_world = (double)(range * sin(angle * CV_PI / 180.0) + sensor_pos.x);
         z_world = (double)(range * cos(angle * CV_PI / 180.0) + sensor_pos.y - vehicle.head_pos_pixel);
 
-        pc_out.angle = atan(x_world / z_world);
+        pc_out.angle = atan(x_world / z_world) * 180.0 / CV_PI;
         pc_out.range = sqrt(pow(x_world, 2) + pow(z_world, 2));
         break;
     case CT_WCS2SCS:

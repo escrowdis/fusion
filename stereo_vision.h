@@ -340,6 +340,8 @@ public:
         int time_proc_prev4t_3t = -1;
         int time_proc_prev5t_4t = -1;
 
+        int prev_id;
+
         objectInfo() {
             pts_num = 0;
             labeled = false;
@@ -360,8 +362,6 @@ public:
 private:
     objectInfo* objects;                // filtered objects
 
-    objectInfo* object_tmp;
-
     void velocityEstimation();
 
     void updateDataForDisplay();
@@ -374,7 +374,7 @@ private:
 
     void connectMatchedInfo(objectInfo &src, objectInfo &dst);
 
-    std::vector<std::pair<int, int> > matching_result;
+    std::vector<matchedResult> matching_result;  // store result of matching (id, obstacle id)
     // Object matching ======== End
 
     // object params ===============

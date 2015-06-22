@@ -39,9 +39,20 @@ public:
 
     virtual void dataMatching() {}
 
-    std::vector<std::pair<int, int> > Matching();
+    struct matchedResult {
+        int id;
 
-    std::vector<std::pair<int, int> > matchingList; // store result of matching (id, id_prev)
+        int prev_id;
+
+        matchedResult(int id, int prev_id) {
+            this->id = id;
+            this->prev_id = prev_id;
+        }
+    };
+
+    std::vector<matchedResult> Matching();
+
+    std::vector<matchedResult> matchingList; // store result of matching (id, prev_id). if prev_id = -1, it's new object
 
     // histogram calculation used
     int hist_size;
@@ -76,6 +87,7 @@ public:
     };
 
     objectMatchingInfo *om;
+    objectMatchingInfo *om_tmp;
     objectMatchingInfo *om_prev;
 
 #ifdef debug_info_object_matching_img

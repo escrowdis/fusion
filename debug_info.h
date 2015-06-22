@@ -28,6 +28,7 @@
 //#define debug_info_object_matching_img
 //#define debug_info_object_matching_others
 //#define debug_info_object_matching_data_extract
+#define debug_info_object_matching_img_fusion
 
 // OBJECT TRACKING =============
 //#define debug_info_object_tracking

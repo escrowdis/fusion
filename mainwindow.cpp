@@ -530,9 +530,9 @@ void MainWindow::wheelEvent(QWheelEvent *ev)
 
 void MainWindow::dataFused()
 {
-    bool fg_sv = ui->checkBox_fusion_sv->isChecked() && si->sv->fusedTopview();
+    bool fg_sv = ui->checkBox_fusion_sv->isChecked() && si->sv->fusedTopview() && (fg_capturing || re.vr->fg_loaded);
     bool fg_sv_each_pixel = ui->checkBox_fused_sv_plot_every_pixel->isChecked();
-    bool fg_radar = ui->checkBox_fusion_radar->isChecked() && si->rc->fusedTopview();
+    bool fg_radar = ui->checkBox_fusion_radar->isChecked() && si->rc->fusedTopview() && (fg_retrieving || re.tr->fg_loaded);
     bool fg_data_update = f_sv_status == SV::STATUS::OK || f_radar_status == RADAR::STATUS::OK;
     bool fg_fusion = ui->checkBox_fusion_data->isChecked();
     bool fg_om = ui->checkBox_ot->isChecked();
@@ -1802,6 +1802,7 @@ void MainWindow::on_checkBox_ca_clicked(bool checked)
 void MainWindow::on_checkBox_ot_clicked(bool checked)
 {
     ui->checkBox_ot_trajectory->setEnabled(checked);
+    ui->checkBox_ot_trajectory_smoothing->setEnabled(checked);
     ui->checkBox_ot_kf->setEnabled(checked);
     ui->checkBox_ot_pf->setEnabled(checked);
 

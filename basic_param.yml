@@ -27,7 +27,7 @@ stereoParamSGBM:
 stereoParamBM:
    pre_filter_size: 63
    pre_filter_cap: 8
-   SAD_window_size: 27
+   SAD_window_size: 33
    min_disp: 0
    num_of_disp: 80
    texture_thresh: 16
