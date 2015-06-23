@@ -37,11 +37,9 @@ public:
     void reset();
 
     struct identities {
-        int fused;
+        int prev;
 
-        int sv;
-
-        std::vector<int> radar;
+        int now;
     };
 
     // object tracking information

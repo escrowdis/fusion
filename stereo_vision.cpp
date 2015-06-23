@@ -1169,7 +1169,6 @@ void stereo_vision::dataMatching()
 
     for (int k = 0; k < matching_result.size(); k++) {
         int id = matching_result[k].id;
-        objects[id].prev_id = matching_result[k].prev_id;
     }
 }
 
@@ -1216,7 +1215,6 @@ void stereo_vision::connectMatchedInfo(objectInfo &src, objectInfo &dst)
     dst.rect_world     = cv::Rect(src.rect_world.tl().x, src.rect_world.tl().y, src.rect_world.width, src.rect_world.height);
     dst.pc_world.range = src.pc_world.range;
     dst.pc_world.angle = src.pc_world.angle;
-    dst.prev_id        = src.prev_id;
 
     resetMatchedInfo(*&src);
 }

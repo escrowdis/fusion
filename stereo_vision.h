@@ -328,8 +328,6 @@ public:
 
         PC pc_world;                    // (cm)
 
-        int prev_id;
-
         objectInfo() {
             pts_num = 0;
             labeled = false;

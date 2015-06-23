@@ -197,10 +197,10 @@ void SensorInfo::updateFusedData()
 {
     lock_ot_fused.lockForWrite();
     for (int i = 0; i < ot_fused->ti.size(); i++) {
-        if (ot_fused->ti[i])
+        if (ot_fused->ti[i].track_status == TRACK_STATUS::NO_TARGET) continue;
         for (int j = 0; j < ot_fused->ti[i].info.size(); j++) {
             ot_fused->ti[i].info[j].plot_pt_f = point2FusedTopView(ot_fused->ti[i].info[j].pc);
-            //**// how about rect? 20150623
+            //**// rect won't change as well? 20150623
         }
     }
     lock_ot_fused.unlock();
@@ -308,9 +308,7 @@ void SensorInfo::dataExec()
 void SensorInfo::resetMatchedInfo(ObjectTracking::objectTrackingInfo &src)
 {
     src.det_mode = DETECT_MODE::NO_DETECT;
-    src.ids.fused = -1;
-    src.ids.sv = -1;
-    src.ids.radar.clear();
+    src.ids.now = -1;
     src.img.release();
     src.H_hist.release();
     src.pc = SensorBase::PC(0.0, 0.0);
@@ -320,11 +318,7 @@ void SensorInfo::resetMatchedInfo(ObjectTracking::objectTrackingInfo &src)
 void SensorInfo::connectMatchedInfo(ObjectTracking::objectTrackingInfo &src, ObjectTracking::objectTrackingInfo &dst)
 {
     dst.det_mode       = src.det_mode;
-    dst.ids.fused      = src.ids.fused;
-    dst.ids.sv         = src.ids.sv;
-    dst.ids.radar.clear();
-    for (int i = 0; i < src.ids.radar.size(); i++)
-        dst.ids.radar.push_back(src.ids.radar[i]);
+    dst.ids.now      = src.ids.now;
     dst.img.release();
     dst.H_hist.release();
     dst.img            = src.img.clone();
@@ -336,7 +330,7 @@ void SensorInfo::connectMatchedInfo(ObjectTracking::objectTrackingInfo &src, Obj
     dst.pc.angle       = src.pc.angle;
     dst.pos.x          = src.pos.x;
     dst.pos.y          = src.pos.y;
-    dst.prev_id        = src.prev_id;
+    dst.ids.prev       = src.ids.prev;
 
     resetMatchedInfo(*&src);
 }
@@ -385,7 +379,7 @@ void SensorInfo::dataMatching()
 
     for (int k = 0; k < matching_result.size(); k++) {
         int id = matching_result[k].id;
-        data_fused[id].prev_id = matching_result[k].prev_id;
+        data_fused[id].ids.prev = matching_result[k].prev_id;
 #ifdef debug_info_object_matching_fusion_others
         qDebug()<<"Matched now"<<id<<"prev"<<matching_result[k].prev_id;
 #endif
@@ -394,9 +388,9 @@ void SensorInfo::dataMatching()
     cv::Mat fused_topview_cp = fused_topview.clone();
     for (int p = 0; p < size_data_fused; p++) {
         if (data_fused[p].det_mode != DETECT_MODE::NO_DETECT && data_fused_prev[p].det_mode != DETECT_MODE::NO_DETECT) {
-            if (data_fused[p].prev_id != -1) {
+            if (data_fused[p].ids.prev != -1) {
                 cv::circle(fused_topview_cp, data_fused_prev[p].plot_pt_f, 3, cv::Scalar(0, 0, 255, 255), -1, 8, 0);
-                cv::line(fused_topview_cp, data_fused[p].plot_pt_f, data_fused_prev[data_fused[p].prev_id].plot_pt_f, cv::Scalar(255, 255, 255, 255), 2, 8, 0);
+                cv::line(fused_topview_cp, data_fused[p].plot_pt_f, data_fused_prev[data_fused[p].ids.prev].plot_pt_f, cv::Scalar(255, 255, 255, 255), 2, 8, 0);
             }
             else
                 cv::circle(fused_topview_cp, data_fused[p].plot_pt_f, 2, cv::Scalar(0, 255, 255, 255), -1, 8, 0);
@@ -406,7 +400,7 @@ void SensorInfo::dataMatching()
 
     for (int p = 0; p < size_data_fused; p++) {
     data_fused_prev[p].det_mode      = data_fused[p].det_mode;
-    data_fused_prev[p].ids.fused     = data_fused[p].ids.fused;
+    data_fused_prev[p].ids.now     = data_fused[p].ids.now;
     data_fused_prev[p].ids.sv        = data_fused[p].ids.sv;
     data_fused_prev[p].ids.radar.clear();
     for (int i = 0; i < data_fused[p].ids.radar.size(); i++)
@@ -438,10 +432,10 @@ void SensorInfo::dataTracking()
         lock_data_fused.unlock();
         lock_ot_fused.lockForWrite();
 #ifdef debug_info_object_matching_fusion_others
-        qDebug()<<"================"<<p<<data_fused[p].prev_id;
+        qDebug()<<"================"<<p<<data_fused[p].ids.prev;
 #endif
         // new or non-continuous obstacle
-        if (data_fused[p].prev_id == -1) {
+        if (data_fused[p].ids.prev == -1) {
             // new: go ahead & non-continous obstacle: compare again with missed_count is grater than 0.
             for (int m = 0; m < ot_fused->ti.size(); m++) {
                 if (ot_fused->ti[m].track_status == TRACK_STATUS::NO_TARGET || ot_fused->ti[m].fg_update)
@@ -496,7 +490,7 @@ void SensorInfo::dataTracking()
                     continue;
                 int cur_obj = ot_fused->ti[m].info.size() - 1;
                 lock_data_fused.lockForRead();
-                if (cur_obj >= 0 && ot_fused->ti[m].info[cur_obj].ids.fused == data_fused[p].prev_id) {
+                if (cur_obj >= 0 && ot_fused->ti[m].info[cur_obj].ids.now == data_fused[p].ids.prev) {
                     //**// radar data will randomly labeled @@ 20150623
                     std::pair<double, double> pc, pc_prev;
                     pc_prev.first = ot_fused->ti[m].info[cur_obj].pc.range * sin(ot_fused->ti[m].info[cur_obj].pc.angle * CV_PI / 180.0);
@@ -521,11 +515,7 @@ void SensorInfo::dataTracking()
 
         lock_data_fused.lockForRead();
         ObjectTracking::objectTrackingInfo info_new;
-        info_new.ids.fused = data_fused[p].ids.fused;
-        info_new.ids.sv = data_fused[p].ids.sv;
-        info_new.ids.radar.clear();
-        for (int i = 0; i < data_fused[p].ids.radar.size(); i++)
-            info_new.ids.radar.push_back(data_fused[p].ids.radar[i]);
+        info_new.ids.now = data_fused[p].ids.now;
         info_new.det_mode = data_fused[p].det_mode;
         info_new.img = data_fused[p].img.clone();
         info_new.H_hist = data_fused[p].H_hist.clone();
@@ -537,7 +527,7 @@ void SensorInfo::dataTracking()
         // update object
         if (!fg_new_obj) {
 #ifdef debug_info_object_matching_fusion_others
-            qDebug()<<"update"<<p<<ot_fused->ti[conti_id].info[ot_fused->ti[conti_id].info.size() - 1].ids.fused<<data_fused[p].ids.fused;
+            qDebug()<<"update"<<p<<ot_fused->ti[conti_id].info[ot_fused->ti[conti_id].info.size() - 1].ids.now<<data_fused[p].ids.now;
 #endif
             lock_ot_fused.lockForWrite();
             ot_fused->ti[conti_id].info.push_back(info_new);
@@ -618,7 +608,7 @@ void SensorInfo::dataTracking()
             ObjectTracking::objectTracking ti_new;
             ti_new.info.push_back(info_new);
 #ifdef debug_info_object_matching_fusion_others
-            qDebug()<<"push"<<p<<info_new.ids.fused<<ot_fused->ti.size();
+            qDebug()<<"push"<<p<<info_new.ids.now<<ot_fused->ti.size();
 #endif
             ti_new.track_status = TRACK_STATUS::NEW_TARGET;
             ti_new.fg_update = true;
@@ -816,12 +806,7 @@ void SensorInfo::dataProcess(bool fg_sv, bool fg_radar)
             // un-fused - stereo vision
             if (cri.empty()) {
                 data_fused[count].det_mode = DETECT_MODE::SV_ONLY;
-                // SV only
-//                if (fg_sv && !fg_radar)
-//                    data_fused[count].prev_id = d_sv[k].prev_id;
-                data_fused[count].ids.fused = count;
-                data_fused[count].ids.sv = k;
-                data_fused[count].ids.radar.clear();
+                data_fused[count].ids.now = count;
                 data_fused[count].img = d_sv[k].img.clone();
                 data_fused[count].rect_f = d_sv[k].rect_f;
                 data_fused[count].plot_pt_f = d_sv[k].plot_pt_f;
@@ -835,11 +820,7 @@ void SensorInfo::dataProcess(bool fg_sv, bool fg_radar)
                 float ratio_radar = 0.9;
                 float ratio_sv = 0.1;
                 data_fused[count].det_mode = DETECT_MODE::SV_RADAR;
-                data_fused[count].ids.fused = count;
-                data_fused[count].ids.sv = k;
-                data_fused[count].ids.radar.clear();
-                for (int i = 0; i < cri.size(); i++)
-                    data_fused[count].ids.radar.push_back(cri[i]);
+                data_fused[count].ids.now = count;
                 data_fused[count].img = d_sv[k].img.clone();
                 radar_mean = SensorBase::PC();
                 radar_plot_pt_f = cv::Point(0, 0);
@@ -872,9 +853,7 @@ void SensorInfo::dataProcess(bool fg_sv, bool fg_radar)
         for (int m = 0; m < rc->objSize(); m++) {
             if (d_radar[m].status >= rc->obj_status_filtered && !d_radar[m].fg_fused) {
                 data_fused[count].det_mode = DETECT_MODE::RADAR_ONLY;
-                data_fused[count].ids.fused = count;
-                data_fused[count].ids.sv = -1;
-                data_fused[count].ids.radar.push_back(m);
+                data_fused[count].ids.now = count;
                 data_fused[count].img = NULL;
                 data_fused[count].rect_f = cv::Rect();
                 data_fused[count].plot_pt_f = d_radar[m].plot_pt_f;
