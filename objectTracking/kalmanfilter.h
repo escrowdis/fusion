@@ -29,8 +29,6 @@ public:
 
         cv::Point statePt;
 
-        std::vector<cv::Point> obj_pos, kalman_pos;
-
         objectTrackingKF() {
             kf_core = cv::KalmanFilter(4, 2, 0);
             state = cv::Mat_<float>(4, 1);  // (x, y, Vx, Vy)

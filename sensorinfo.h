@@ -275,6 +275,7 @@ private:
     cv::Rect rectOnFusedTopView(cv::Point pt_pixel, cv::Rect rect_in);
     cv::Point point2FusedTopView(cv::Point sensor_pos, SensorBase::PC pc);
     cv::Point point2FusedTopView(SensorBase::PC pc_world);
+    cv::Point point2FusedTopView(cv::Point pos_world);
     // Fusion ================= End
 
 private slots:

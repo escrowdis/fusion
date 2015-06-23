@@ -3,6 +3,16 @@
 
 #include "opencv2/core.hpp"
 
+struct VEL_ESTI {
+    enum {
+        M_PER_FRAME2M_PER_SEC,
+        M_PER_FRAME2KM_PER_HR,
+        CM_PER_FRAME2CM_PER_SEC,
+        CM_PER_FRAME2M_PER_SEC,
+        CM_PER_FRAME2KM_PER_HR
+    };
+};
+
 class SensorBase
 {
 public:
@@ -25,8 +35,9 @@ public:
     // Conversion between polar and Cartesian
     static cv::Point2d polar2Cartf(PC pc_in);
     static cv::Point polar2Cart(PC pc_in);
+    SensorBase::PC cart2Polarf(cv::Point2f pt_in);
     static PC cart2Polar(cv::Point pt_in);
-    static cv::Point2f velEstimation(cv::Point2f p_now, cv::Point2f p_prev, double time_proc);
+    static cv::Point2f velEstimation(cv::Point2f p_now, cv::Point2f p_prev, float time_proc, int type);
 
 };
 

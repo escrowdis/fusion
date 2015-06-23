@@ -1171,10 +1171,6 @@ void stereo_vision::dataMatching()
         int id = matching_result[k].id;
         objects[id].prev_id = matching_result[k].prev_id;
     }
-
-//    for (int k = 0; k < obj_nums; k++)
-//        if (objects_display[k].labeled)
-//            qDebug()<<k<<objects_display[k].avg_Z;
 }
 
 void stereo_vision::resetMatchedInfo(objectInfo &src)
@@ -1228,42 +1224,8 @@ void stereo_vision::connectMatchedInfo(objectInfo &src, objectInfo &dst)
 void stereo_vision::updateDataForDisplay()
 {
     lock_sv_object.lockForWrite();
-
-    for (int i = 0; i < obj_nums; i++) {
+    for (int i = 0; i < obj_nums; i++)
         connectMatchedInfo(objects[i], objects_display[i]);
-    }
-//    for (int k = 0; k < obj_nums; k++) {
-//        objects_display[k].pts_num = objects[k].pts_num;
-//        objects_display[k].labeled = objects[k].labeled;
-//        objects_display[k].avg_Z   = objects[k].avg_Z  ;
-//        objects_display[k].avg_X   = objects[k].avg_X  ;
-//        objects_display[k].avg_Y   = objects[k].avg_Y  ;
-//        objects_display[k].rect_tl.x = objects[k].rect_tl.x;
-//        objects_display[k].rect_tl.y = objects[k].rect_tl.y;
-//        objects_display[k].rect_br.x = objects[k].rect_br.x;
-//        objects_display[k].rect_br.y = objects[k].rect_br.y;
-//        objects_display[k].tl.first    = objects[k].tl.first     ;
-//        objects_display[k].tl.second    = objects[k].tl.second     ;
-//        objects_display[k].br.first    = objects[k].br.first     ;
-//        objects_display[k].br.second    = objects[k].br.second     ;
-//        objects_display[k].center.first = objects[k].center.first ;
-//        objects_display[k].center.second = objects[k].center.second ;
-//        cv::Scalar color = objects[k].color;
-//        objects_display[k].color = color;
-//        objects_display[k].img.release();
-//        objects_display[k].img = objects[k].img.clone();
-//        objects_display[k].rect = cv::Rect(objects[k].rect.tl().x, objects[k].rect.tl().y, objects[k].rect.width, objects[k].rect.height);
-//        objects_display[k].pc.range = objects[k].pc.range;
-//        objects_display[k].pc.angle = objects[k].pc.angle;
-//        objects_display[k].rect_f = cv::Rect(objects[k].rect_f.tl().x, objects[k].rect_f.tl().y, objects[k].rect_f.width, objects[k].rect_f.height);
-//        objects_display[k].plot_pt_f.x = objects[k].plot_pt_f.x;
-//        objects_display[k].plot_pt_f.y = objects[k].plot_pt_f.y;
-//        objects_display[k].rect_world = cv::Rect(objects[k].rect_world.tl().x, objects[k].rect_world.tl().y, objects[k].rect_world.width, objects[k].rect_world.height);
-//        objects_display[k].pc_world.range = objects[k].pc_world.range;
-//        objects_display[k].pc_world.angle = objects[k].pc_world.angle;
-//        objects_display[k].vel.x   = objects[k].vel.x    ;
-//        objects_display[k].vel.y   = objects[k].vel.y    ;
-//    }
     lock_sv_object.unlock();
 }
 

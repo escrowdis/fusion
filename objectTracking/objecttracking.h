@@ -91,7 +91,7 @@ public:
 
         std::vector <SensorBase::PC> trajectory;
 
-        std::vector <SensorBase::PC> trajectory_kf;
+        std::vector <cv::Point> trajectory_kf;
 
         cv::Scalar color_trajectory;
 
@@ -113,6 +113,8 @@ public:
             info.reserve(200);
 
             trajectory.reserve(200);
+
+            trajectory_kf.reserve(200);
         }
     };
 

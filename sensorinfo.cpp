@@ -197,6 +197,7 @@ void SensorInfo::updateFusedData()
 {
     lock_ot_fused.lockForWrite();
     for (int i = 0; i < ot_fused->ti.size(); i++) {
+        if (ot_fused->ti[i])
         for (int j = 0; j < ot_fused->ti[i].info.size(); j++) {
             ot_fused->ti[i].info[j].plot_pt_f = point2FusedTopView(ot_fused->ti[i].info[j].pc);
             //**// how about rect? 20150623
@@ -382,28 +383,13 @@ void SensorInfo::dataMatching()
     matching_result.clear();
     matching_result = Matching();
 
-//    qDebug()<<"before";
-//    for (int p = 0; p < size_data_fused; p++) {
-//        if (data_fused[p].pos.y != -1)
-//            qDebug()<<p<<data_fused[p].pos.y;
-//    }
-
-//    for (int p = 0; p < size_data_fused; p++)
-//        resetMatchedInfo(data_fused_tmp[p]);
     for (int k = 0; k < matching_result.size(); k++) {
         int id = matching_result[k].id;
         data_fused[id].prev_id = matching_result[k].prev_id;
 #ifdef debug_info_object_matching_fusion_others
         qDebug()<<"Matched now"<<id<<"prev"<<matching_result[k].prev_id;
 #endif
-//        connectMatchedInfo(data_fused[id], data_fused_tmp[obstacle_id]);
-//        data_fused_tmp[obstacle_id].ids.fused = obstacle_id;
-//        data_fused_tmp[obstacle_id].matched_status = matching_result[k].matched_status;
     }
-//    for (int p = 0; p < size_data_fused; p++) {
-//        resetMatchedInfo(data_fused[p]);
-//        connectMatchedInfo(data_fused_tmp[p], data_fused[p]);
-//    }
 #ifdef debug_info_object_matching_fusion_img
     cv::Mat fused_topview_cp = fused_topview.clone();
     for (int p = 0; p < size_data_fused; p++) {
@@ -436,31 +422,6 @@ void SensorInfo::dataMatching()
     data_fused_prev[p].pos.y         = data_fused[p].pos.y;
     }
 #endif
-
-//    qDebug()<<"after";
-//    for (int p = 0; p < size_data_fused; p++) {
-//        if (data_fused[p].pos.y != -1)
-//            qDebug()<<p<<data_fused[p].pos.y;
-//    }
-
-//    qDebug()<<"=========\nsize: "<<matching_result.size();
-//    for (int k = 0; k < matching_result.size(); k++) {
-//        int id = matching_result[k].first;
-//        int id_prev = matching_result[k].second;
-//        if (id != id_prev) {
-//            if (data_fused[id_prev].det_mode != DETECT_MODE::NO_DETECT) {
-//                for (int p = 0; p < matching_result.size(); p++) {
-//                    //**// what if data_fused[matching_result[p].second] was existed?
-//                    if (matching_result[p].first == id_prev) {
-//                        connectMatchedInfo(data_fused[id_prev], data_fused[matching_result[p].second]);
-//                        break;
-//                    }
-//                }
-//            }
-//            connectMatchedInfo(data_fused[id], data_fused[id_prev]);
-//        }
-//        qDebug()<<data_fused[id_prev].det_mode<<"\t"<<id<<id_prev<<"\t"<<data_fused[id_prev].pos.y;
-//    }
 }
 
 void SensorInfo::dataTracking()
@@ -597,8 +558,8 @@ void SensorInfo::dataTracking()
 //                              ot_fused->ti[conti_id].info[i].pos.y;
 //                }
                 float time_proc = 1.0 * sv->time_proc;
-                cv::Point2f vel_prev2t_1t = cv::Point2f((pt_pre1t.x - pt_pre2t.x) / time_proc, (pt_pre1t.y - pt_pre2t.y) / time_proc);
-                cv::Point2f vel_prev1t_now = cv::Point2f((pt_now.x - pt_pre1t.x) / time_proc, (pt_now.y - pt_pre1t.y) / time_proc);
+                cv::Point2f vel_prev2t_1t = SensorBase::velEstimation(pt_pre1t, pt_pre2t, time_proc, VEL_ESTI::CM_PER_FRAME2M_PER_SEC);
+                cv::Point2f vel_prev1t_now = SensorBase::velEstimation(pt_now, pt_pre1t, time_proc, VEL_ESTI::CM_PER_FRAME2M_PER_SEC);
                 cv::Point2f acc = cv::Point2f((vel_prev1t_now.x - vel_prev2t_1t.x) / time_proc, (vel_prev1t_now.y - vel_prev2t_1t.y) / time_proc);
 #ifdef debug_info_object_tracking
                 std::cout<<conti_id<<std::endl;
@@ -607,12 +568,6 @@ void SensorInfo::dataTracking()
                            vel_prev2t_1t.x<<","<<vel_prev2t_1t.y<<"\tvel_prev1t_now: "<<
                            vel_prev1t_now.x<<","<<vel_prev1t_now.y<<std::endl;
 #endif
-                ot_fused->ti[conti_id].kf.kf_core.statePost.at<float>(0) = pt_pre2t.x + vel.x;
-                ot_fused->ti[conti_id].kf.kf_core.statePost.at<float>(1) = pt_pre2t.y + vel.y;
-                ot_fused->ti[conti_id].kf.statePt = cv::Point((int)(ot_fused->ti[conti_id].kf.kf_core.statePost.at<float>(0)), (int)(ot_fused->ti[conti_id].kf.kf_core.statePost.at<float>(1)));
-#ifdef debug_info_object_tracking
-                std::cout<<"statePt: "<<ot_fused->ti[conti_id].kf.statePt.x<<","<<ot_fused->ti[conti_id].kf.statePt.y<<std::endl;
-#endif
 
                 ot_fused->ti[conti_id].kf.prediction = ot_fused->ti[conti_id].kf.kf_core.predict();
                 ot_fused->ti[conti_id].kf.predictPt = cv::Point((int)(ot_fused->ti[conti_id].kf.prediction.at<float>(0)), (int)(ot_fused->ti[conti_id].kf.prediction.at<float>(1)));
@@ -620,10 +575,16 @@ void SensorInfo::dataTracking()
                 std::cout<<"predictPt: "<<ot_fused->ti[conti_id].kf.predictPt.x<<","<<ot_fused->ti[conti_id].kf.predictPt.y<<std::endl;
 #endif
 
-                ot_fused->ti[conti_id].kf.measurement.at<float>(0) = pt_pre1t.x;
-                ot_fused->ti[conti_id].kf.measurement.at<float>(1) = pt_pre1t.y;
+                ot_fused->ti[conti_id].kf.measurement.at<float>(0) = pt_now.x;
+                ot_fused->ti[conti_id].kf.measurement.at<float>(1) = pt_now.y;
+                ot_fused->ti[conti_id].kf.measurement += ot_fused->ti[conti_id].kf.kf_core.measurementMatrix * ot_fused->ti[conti_id].kf.state;
 
-                ot_fused->ti[conti_id].kf.kf_core.correct(ot_fused->ti[conti_id].kf.measurement);
+                ot_fused->ti[conti_id].kf.estimated = ot_fused->ti[conti_id].kf.kf_core.correct(ot_fused->ti[conti_id].kf.measurement);
+                ot_fused->ti[conti_id].kf.statePt = cv::Point(ot_fused->ti[conti_id].kf.estimated.at<float>(0), ot_fused->ti[conti_id].kf.estimated.at<float>(1));
+                ot_fused->ti[conti_id].trajectory_kf.push_back(ot_fused->ti[conti_id].kf.statePt);
+
+                randn(ot_fused->ti[conti_id].kf.processNoise, cv::Scalar(0), cv::Scalar::all(sqrt(ot_fused->ti[conti_id].kf.kf_core.processNoiseCov.at<float>(0, 0))));
+                ot_fused->ti[conti_id].kf.state = ot_fused->ti[conti_id].kf.kf_core.transitionMatrix * ot_fused->ti[conti_id].kf.state + ot_fused->ti[conti_id].kf.processNoise;
             }
 
 #ifdef debug_info_fusion
@@ -667,9 +628,15 @@ void SensorInfo::dataTracking()
             ti_new.color_trajectory = cv::Scalar(b, g, r, 255);
             ti_new.trajectory.clear();
             ti_new.trajectory.push_back(SensorBase::PC(info_new.pc.range, info_new.pc.angle));
+            ti_new.trajectory_kf.clear();
+            ti_new.kf.kf_core.statePre.at<float>(0) = info_new.pos.x;
+            ti_new.kf.kf_core.statePre.at<float>(1) = info_new.pos.y;
+            ti_new.kf.kf_core.statePre.at<float>(2) = 0.0;
+            ti_new.kf.kf_core.statePre.at<float>(3) = 0.0;
+            ti_new.kf.kf_core.transitionMatrix = (cv::Mat_<float>(4, 4) << 1,0,0,0,   0,1,0,0,  0,0,1,0,  0,0,0,1);
             cv::setIdentity(ti_new.kf.kf_core.measurementMatrix);
             cv::setIdentity(ti_new.kf.kf_core.processNoiseCov, cv::Scalar::all(1e-5));
-            cv::setIdentity(ti_new.kf.kf_core.measurementNoiseCov, cv::Scalar::all(1e-1));
+            cv::setIdentity(ti_new.kf.kf_core.measurementNoiseCov, cv::Scalar::all(1e-3));
             cv::setIdentity(ti_new.kf.kf_core.errorCovPost, cv::Scalar::all(1));
             ot_fused->ti.push_back(ti_new);
 #ifdef debug_info_fusion
@@ -1059,15 +1026,19 @@ void SensorInfo::drawFusedTopView(bool fg_sv, bool fg_radar, bool fg_sv_each, bo
         if (fg_ot_kf) {
             lock_ot_fused.lockForRead();
             for (int i = 0; i < ot_fused->ti.size(); i++) {
-                int last = ot_fused->ti[i].info.size() - 1;
-                if (last > 2) {
-                    cv::Point p1 = point2FusedTopView(SensorBase::cart2Polar(ot_fused->ti[i].kf.statePt));
-                    cv::Point p2 = point2FusedTopView(SensorBase::cart2Polar(ot_fused->ti[i].kf.predictPt));
-                    drawArrow(fused_topview, p1, p2, 5, 30, cv::Scalar(255, 100, 255, 255), 5, 8);
-                    //                qDebug()<<p1.x<<p1.y<<p2.x<<p2.y;
-                    //                qDebug()<<"\nHi\n"<<ot_fused->ti[i].kf.statePt.x<<ot_fused->ti[i].kf.statePt.y<<
-                    //                          ot_fused->ti[i].kf.predictPt.x<<ot_fused->ti[i].kf.predictPt.y;
+                if (!ot_fused->ti[i].fg_update) continue;
+                for (int j = 1; j < ot_fused->ti[i].trajectory_kf.size(); j++) {
+                    cv::line(fused_topview, point2FusedTopView(ot_fused->ti[i].trajectory_kf[j - 1]), point2FusedTopView(ot_fused->ti[i].trajectory_kf[j]), cv::Scalar(255, 255, 255, 255), 1);
                 }
+//                int last = ot_fused->ti[i].info.size() - 1;
+//                if (last > 2) {
+//                    cv::Point p1 = point2FusedTopView(SensorBase::cart2Polar(ot_fused->ti[i].kf.statePt));
+//                    cv::Point p2 = point2FusedTopView(SensorBase::cart2Polar(ot_fused->ti[i].kf.predictPt));
+//                    drawArrow(fused_topview, p1, p2, 5, 30, cv::Scalar(255, 100, 255, 255), 5, 8);
+//                    //                qDebug()<<p1.x<<p1.y<<p2.x<<p2.y;
+//                    //                qDebug()<<"\nHi\n"<<ot_fused->ti[i].kf.statePt.x<<ot_fused->ti[i].kf.statePt.y<<
+//                    //                          ot_fused->ti[i].kf.predictPt.x<<ot_fused->ti[i].kf.predictPt.y;
+//                }
             }
             lock_ot_fused.unlock();
         }
@@ -1137,6 +1108,14 @@ cv::Point SensorInfo::point2FusedTopView(SensorBase::PC pc_world)
     out_x = vehicle.VCP.x + (x_tmp * ratio);
     out_y = vehicle.VCP.y - (z_tmp * ratio);
 
+    return cv::Point(out_x, out_y);
+}
+
+cv::Point SensorInfo::point2FusedTopView(cv::Point pos_world)
+{
+    int out_x, out_y;
+    out_x = vehicle.VCP.x + (pos_world.x * ratio);
+    out_y = vehicle.VCP.y - (pos_world.y * ratio);
     return cv::Point(out_x, out_y);
 }
 
