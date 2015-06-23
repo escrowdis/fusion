@@ -64,6 +64,15 @@ public:
     // amount of detected object
     int om_obj_num;
 
+    // comparison params ===========
+    // Used for SV only
+    //**// tuned params 20150528
+    double thresh_Bha = 0.3;
+    double max_distance_z = 3000;
+    double max_err_z = 500;
+    double max_err_x = 300;
+    // comparison params =========== End
+
     struct objectMatchingInfo
     {
         bool labeled;
@@ -105,10 +114,6 @@ private:
 
     // Used for SV only
     //**// tuned params 20150528
-    double thresh_Bha = 0.3;
-    double max_distance_z = 3000;
-    double max_err_z = 500;
-    double max_err_x = 300;
     cv::Mat map_thresh_err_z;
     cv::Mat map_thresh_err_x;
     // comparison params =========== End

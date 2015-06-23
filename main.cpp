@@ -13,6 +13,7 @@ QReadWriteLock lock_radar;
 QReadWriteLock lock_f_sv;
 QReadWriteLock lock_f_topview;
 QReadWriteLock lock_data_fused;
+QReadWriteLock lock_ot_fused;
 
 #include <QDir>
 QDir project_path;

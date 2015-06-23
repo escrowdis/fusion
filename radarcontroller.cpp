@@ -254,8 +254,6 @@ int RadarController::dataExec()
     if (!fg_all_data_in)
         return RADAR::STATUS::NO_INPUT;
 
-    velocityEstimation();
-
     if (fg_all_data_in && fg_data_in) {
 
         pointDisplayFrontView();
@@ -271,37 +269,10 @@ int RadarController::dataExec()
     return RADAR::STATUS::DATA_NOT_ENOUGHT;
 }
 
-void RadarController::velocityEstimation()
-{
-    for (int m = 0; m < OBJECT_NUM; m++) {
-        if (objects[m].status >= obj_status_filtered &&
-                objects[m].pos_prev3t.x != 0.0  && objects[m].pos_prev3t.y != 0.0) {
-            cv::Point2f p1 = cv::Point2f(objects[m].pos_prev3t.x, objects[m].pos_prev3t.y);
-            cv::Point2f p2 = cv::Point2f(objects[m].pos_prev1t.x, objects[m].pos_prev1t.y);
-            int avg_time_proc = objects[m].time_proc_prev3t_2t + objects[m].time_proc_prev2t_1t;
-            objects[m].vel = SensorBase::velEstimation(p1, p2, avg_time_proc);
-//            qDebug()<<m<<"vel"<<objects[m].vel.x * 3.6<<objects[m].vel.y * 3.6;
-//            qDebug()<<"  prev3t"<<p1.x<<p1.y<<"prev1t"<<p2.x<<p2.y<<"time"<<avg_time_proc<<"separate: "<<objects[m].time_proc_prev3t_2t<<objects[m].time_proc_prev2t_1t;
-        }
-        else
-            objects[m].vel = cv::Point2f(0.0, 0.0);
-    }
-}
-
 void RadarController::updateDataForDisplay()
 {
     lock_radar.lockForWrite();
     std::swap(objects, objects_display);
-    for (int i = 0; i < OBJECT_NUM; i++) {
-        objects[i].pos_prev3t.x = objects_display[i].pos_prev3t.x;
-        objects[i].pos_prev3t.y = objects_display[i].pos_prev3t.y;
-        objects[i].pos_prev2t.x = objects_display[i].pos_prev2t.x;
-        objects[i].pos_prev2t.y = objects_display[i].pos_prev2t.y;
-        objects[i].pos_prev1t.x = objects_display[i].pos_prev1t.x;
-        objects[i].pos_prev1t.y = objects_display[i].pos_prev1t.y;
-        objects[i].time_proc_prev3t_2t = objects_display[i].time_proc_prev3t_2t;
-        objects[i].time_proc_prev2t_1t = objects_display[i].time_proc_prev2t_1t;
-    }
     lock_radar.unlock();
 }
 
@@ -396,17 +367,6 @@ void RadarController::retrievingData()
             objects[_id].x = 1.0 * objects[_id].range * sin(abs(objects[_id].angle));
             objects[_id].y = 0.0;
             objects[_id].z = objects[_id].range * cos(objects[_id].angle);
-
-            // vel & acc
-            objects[_id].pos_prev3t.x = objects[_id].pos_prev2t.x;
-            objects[_id].pos_prev3t.y = objects[_id].pos_prev2t.y;
-            objects[_id].pos_prev2t.x = objects[_id].pos_prev1t.x;
-            objects[_id].pos_prev2t.y = objects[_id].pos_prev1t.y;
-            cv::Point2f pt_tmp = SensorBase::polar2Cartf(SensorBase::PC(objects[_id].range * 100.0, objects[_id].angle));
-            objects[_id].pos_prev1t.x = pt_tmp.x;
-            objects[_id].pos_prev1t.y = pt_tmp.y;
-            objects[_id].time_proc_prev3t_2t = objects[_id].time_proc_prev2t_1t;
-            objects[_id].time_proc_prev2t_1t = time_proc;
 
 #ifdef debug_info_radar_data
             std::cout<<_id<<"\t\n"<<

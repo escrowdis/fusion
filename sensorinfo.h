@@ -3,6 +3,9 @@
 
 #include <opencv2/opencv.hpp>
 
+#include <QReadWriteLock>
+extern QReadWriteLock lock_ot_fused;
+
 // Laser range finder controller
 #include "lrf_controller.h"
 
@@ -72,6 +75,22 @@ public:
 
     CollisionAvoidance* ca;
 
+    // Status =================
+    bool fg_proc;
+    bool fg_sv;
+    bool fg_sv_each_pixel;
+    bool fg_radar;
+    bool fg_data_update;
+    bool fg_fusion;
+    bool fg_ot;
+    bool fg_ot_trajectory;
+    bool fg_ot_trajectory_smoothing;
+    bool fg_ot_kf;
+    bool fg_ot_pf;
+    bool fg_ca_astar;
+    bool fg_ca_vfh;
+    // Status ================= End
+
     // Sensors' information ===
     //!
     //! \brief Retrieving data from stereo vision.
@@ -110,7 +129,9 @@ public:
 
     void updateFusedTopView();
 
-    void dataExec(bool fg_sv, bool fg_radar, bool fg_data_update, bool fg_fusion, bool fg_om, bool fg_ot, bool fg_ot_trajectory, bool fg_ot_trajectory_smoothing, bool fg_ot_kf, bool fg_ca_astar, bool fg_sv_each);
+    void updateFusedData();
+
+    void dataExec();
 
     void zoomOutFusedTopView();
 
@@ -138,11 +159,7 @@ private:
     int time_gap;
 
     // Fusion =================
-    bool fg_fusion;
-
     int size_data_fused;
-
-    bool fg_ca_astar;
 
     void resetFusion();
 
@@ -167,7 +184,7 @@ private:
     // Object matching ======== End
     cv::RNG rng;
 
-    void dataTracking(bool fg_sv, bool fg_radar);
+    void dataTracking();
 
     void dataCollisionAvoidance();
 

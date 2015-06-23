@@ -328,18 +328,6 @@ public:
 
         PC pc_world;                    // (cm)
 
-        // vel & acc
-        cv::Point2f vel;                // velocity of object (cm/s)
-        cv::Point2f pos_prev1t = cv::Point2f(0.0, 0.0);     // (cm)
-        cv::Point2f pos_prev2t = cv::Point2f(0.0, 0.0);
-        cv::Point2f pos_prev3t = cv::Point2f(0.0, 0.0);
-        cv::Point2f pos_prev4t = cv::Point2f(0.0, 0.0);
-        cv::Point2f pos_prev5t = cv::Point2f(0.0, 0.0);
-        int time_proc_prev2t_1t = -1;                       // (sec)
-        int time_proc_prev3t_2t = -1;
-        int time_proc_prev4t_3t = -1;
-        int time_proc_prev5t_4t = -1;
-
         int prev_id;
 
         objectInfo() {
@@ -353,7 +341,6 @@ public:
             tl = std::pair<int, int>(-1, -1);
             br = std::pair<int, int>(-1, -1);
             center = std::pair<int, int>(-1, -1);
-            vel = cv::Point(0, 0);
         }
     };
 
@@ -361,8 +348,6 @@ public:
 
 private:
     objectInfo* objects;                // filtered objects
-
-    void velocityEstimation();
 
     void updateDataForDisplay();
     // object information ========== End

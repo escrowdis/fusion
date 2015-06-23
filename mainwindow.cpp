@@ -484,7 +484,9 @@ void MainWindow::updateFusedTopView()
 {
     si->updateFusedTopView();
     ui->label_fusion_BG->setPixmap(QPixmap::fromImage(QImage::QImage(si->fused_topview_BG.data, si->fused_topview_BG.cols, si->fused_topview_BG.rows, si->fused_topview_BG.step, QImage::Format_RGBA8888)));
+    si->updateFusedData();
 
+    si->fg_proc = false;
     dataFused();
 }
 
@@ -530,21 +532,20 @@ void MainWindow::wheelEvent(QWheelEvent *ev)
 
 void MainWindow::dataFused()
 {
-    bool fg_sv = ui->checkBox_fusion_sv->isChecked() && si->sv->fusedTopview() && (fg_capturing || re.vr->fg_loaded);
-    bool fg_sv_each_pixel = ui->checkBox_fused_sv_plot_every_pixel->isChecked();
-    bool fg_radar = ui->checkBox_fusion_radar->isChecked() && si->rc->fusedTopview() && (fg_retrieving || re.tr->fg_loaded);
-    bool fg_data_update = f_sv_status == SV::STATUS::OK || f_radar_status == RADAR::STATUS::OK;
-    bool fg_fusion = ui->checkBox_fusion_data->isChecked();
-    bool fg_om = ui->checkBox_ot->isChecked();
-    bool fg_ot = ui->checkBox_ot->isChecked();
-    bool fg_ot_trajectory = fg_ot && ui->checkBox_ot_trajectory->isChecked();
-    bool fg_ot_trajectory_smoothing = ui->checkBox_ot_trajectory->isChecked() && ui->checkBox_ot_trajectory_smoothing->isChecked();
-    bool fg_ot_kf = fg_ot && ui->checkBox_ot_kf->isChecked();
-    bool fg_ot_pf = fg_ot && ui->checkBox_ot_pf->isChecked();
-    bool fg_ca_astar = ui->checkBox_ca->isChecked() && ui->checkBox_ca_astar->isChecked();
-    bool fg_ca_vfh = ui->checkBox_ca->isChecked() && ui->checkBox_ca_vfh->isChecked();
+    si->fg_sv = ui->checkBox_fusion_sv->isChecked() && si->sv->fusedTopview() && (fg_capturing || re.vr->fg_loaded);
+    si->fg_sv_each_pixel = ui->checkBox_fused_sv_plot_every_pixel->isChecked();
+    si->fg_radar = ui->checkBox_fusion_radar->isChecked() && si->rc->fusedTopview() && (fg_retrieving || re.tr->fg_loaded);
+    si->fg_data_update = f_sv_status == SV::STATUS::OK || f_radar_status == RADAR::STATUS::OK;
+    si->fg_fusion = ui->checkBox_fusion_data->isChecked() && (si->fg_sv && si->fg_radar);
+    si->fg_ot = ui->checkBox_ot->isChecked();
+    si->fg_ot_trajectory = si->fg_ot && ui->checkBox_ot_trajectory->isChecked();
+    si->fg_ot_trajectory_smoothing = ui->checkBox_ot_trajectory->isChecked() && ui->checkBox_ot_trajectory_smoothing->isChecked();
+    si->fg_ot_kf = si->fg_ot && ui->checkBox_ot_kf->isChecked();
+    si->fg_ot_pf = si->fg_ot && ui->checkBox_ot_pf->isChecked();
+    si->fg_ca_astar = ui->checkBox_ca->isChecked() && ui->checkBox_ca_astar->isChecked() && (si->fg_sv || si->fg_radar);
+    si->fg_ca_vfh = ui->checkBox_ca->isChecked() && ui->checkBox_ca_vfh->isChecked();
 
-    si->dataExec(fg_sv, fg_radar, fg_data_update, fg_fusion, fg_om, fg_ot, fg_ot_trajectory, fg_ot_trajectory_smoothing, fg_ot_kf, fg_ca_astar, fg_sv_each_pixel);
+    si->dataExec();
 }
 
 void MainWindow::fusedDisplay(cv::Mat *fused_topview, cv::Mat *img_detected_display)
@@ -812,6 +813,7 @@ void MainWindow::threadCheck()
 void MainWindow::threadProcessing()
 {
     fg_running = true;
+    si->resetTrackingInfo();
 #ifndef multi_thread
     bool fg_sv = false, fg_radar = false;
 #endif
@@ -1540,8 +1542,6 @@ void MainWindow::on_pushButton_start_all_clicked()
     if (!svDataIn() || !radarDataIn())
         return;
 
-    si->resetTrackingInfo();
-
     if (si->sv->input_mode == SV::INPUT_SOURCE::CAM && si->rc->input_mode == RADAR::INPUT_SOURCE::ESR) {
         inputType(INPUT_TYPE::DEVICE);
 
@@ -1836,8 +1836,6 @@ void MainWindow::on_pushButton_step_all_clicked()
 {
     if (!svDataIn() || !radarDataIn())
         return;
-
-    si->resetTrackingInfo();
 
     if (si->sv->input_mode == SV::INPUT_SOURCE::CAM && si->rc->input_mode == RADAR::INPUT_SOURCE::ESR) {
         inputType(INPUT_TYPE::DEVICE);

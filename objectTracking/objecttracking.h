@@ -55,6 +55,8 @@ public:
 
         cv::Mat img;                    // object's image
 
+        cv::Mat H_hist;
+
         std::pair<int, int> center;     // Center point of object in image (row, col)
 
         // FUSED TOPVIEW -----
@@ -66,8 +68,6 @@ public:
         SensorBase::PC pc;              // (cm)
 
         cv::Point2f pos;                // position at WCS (cm)
-
-        cv::Rect rect;                  // (cm)
 
         cv::Point2f vel;                // velocity of object (cm/s)
 

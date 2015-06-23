@@ -804,11 +804,6 @@ int stereo_vision::dataExec()
 //                if (fg_recognition)
 //                    objectRecognition();
 
-                // object tracking
-                dataMatching();
-                if (fg_tracking) {
-                    velocityEstimation();
-                }
 #ifdef debug_info_sv_time_proc
                 std::cout<<ttt.restart()<<"\t";
 #endif
@@ -1140,43 +1135,6 @@ void stereo_vision::pointProjectImage()
     }
 }
 
-void stereo_vision::velocityEstimation()
-{
-    // vel & acc
-    for (int _id = 0; _id < obj_nums; _id++) {
-        objects[_id].pos_prev5t.x = objects[_id].pos_prev4t.x;
-        objects[_id].pos_prev5t.y = objects[_id].pos_prev4t.y;
-        objects[_id].pos_prev4t.x = objects[_id].pos_prev3t.x;
-        objects[_id].pos_prev4t.y = objects[_id].pos_prev3t.y;
-        objects[_id].pos_prev3t.x = objects[_id].pos_prev2t.x;
-        objects[_id].pos_prev3t.y = objects[_id].pos_prev2t.y;
-        objects[_id].pos_prev2t.x = objects[_id].pos_prev1t.x;
-        objects[_id].pos_prev2t.y = objects[_id].pos_prev1t.y;
-        objects[_id].pos_prev1t.x = objects[_id].avg_X;
-        objects[_id].pos_prev1t.y = objects[_id].avg_Z;
-        objects[_id].time_proc_prev5t_4t = objects[_id].time_proc_prev4t_3t;
-        objects[_id].time_proc_prev4t_3t = objects[_id].time_proc_prev3t_2t;
-        objects[_id].time_proc_prev3t_2t = objects[_id].time_proc_prev2t_1t;
-        objects[_id].time_proc_prev2t_1t = time_proc;
-    }
-    // vel & acc
-    lock_sv_object.lockForWrite();
-    for (int k = 0; k < obj_nums; k++) {
-        if (objects[k].labeled &&
-                objects[k].pos_prev5t.x != 0.0  && objects[k].pos_prev5t.y != 0.0) {
-            cv::Point2f p1 = cv::Point2f(objects[k].pos_prev1t.x, objects[k].pos_prev1t.y);
-            cv::Point2f p2 = cv::Point2f(objects[k].pos_prev5t.x, objects[k].pos_prev5t.y);
-            int avg_time_proc = objects[k].time_proc_prev5t_4t + objects[k].time_proc_prev4t_3t + objects[k].time_proc_prev3t_2t + objects[k].time_proc_prev2t_1t;
-            objects[k].vel = SensorBase::velEstimation(p1, p2, avg_time_proc);
-//            qDebug()<<k<<"vel"<<objects[k].vel.x * 3.6<<objects[k].vel.y * 3.6;
-//            qDebug()<<"  prev3t"<<p1.x<<p1.y<<"prev1t"<<p2.x<<p2.y<<"time"<<avg_time_proc;
-        }
-        else
-            objects[k].vel = cv::Point2f(0.0, 0.0);
-    }
-    lock_sv_object.unlock();
-}
-
 void stereo_vision::dataMatching()
 {
     // Object matching: a) Bha. dist. of H color space, b) bias of X & Z of WCS location
@@ -1262,8 +1220,6 @@ void stereo_vision::connectMatchedInfo(objectInfo &src, objectInfo &dst)
     dst.rect_world     = cv::Rect(src.rect_world.tl().x, src.rect_world.tl().y, src.rect_world.width, src.rect_world.height);
     dst.pc_world.range = src.pc_world.range;
     dst.pc_world.angle = src.pc_world.angle;
-    dst.vel.x          = src.vel.x;
-    dst.vel.y          = src.vel.y;
     dst.prev_id        = src.prev_id;
 
     resetMatchedInfo(*&src);
@@ -1275,20 +1231,6 @@ void stereo_vision::updateDataForDisplay()
 
     for (int i = 0; i < obj_nums; i++) {
         connectMatchedInfo(objects[i], objects_display[i]);
-        objects[i].pos_prev5t.x = objects_display[i].pos_prev5t.x;
-        objects[i].pos_prev5t.y = objects_display[i].pos_prev5t.y;
-        objects[i].pos_prev4t.x = objects_display[i].pos_prev4t.x;
-        objects[i].pos_prev4t.y = objects_display[i].pos_prev4t.y;
-        objects[i].pos_prev3t.x = objects_display[i].pos_prev3t.x;
-        objects[i].pos_prev3t.y = objects_display[i].pos_prev3t.y;
-        objects[i].pos_prev2t.x = objects_display[i].pos_prev2t.x;
-        objects[i].pos_prev2t.y = objects_display[i].pos_prev2t.y;
-        objects[i].pos_prev1t.x = objects_display[i].pos_prev1t.x;
-        objects[i].pos_prev1t.y = objects_display[i].pos_prev1t.y;
-        objects[i].time_proc_prev5t_4t = objects_display[i].time_proc_prev5t_4t;
-        objects[i].time_proc_prev4t_3t = objects_display[i].time_proc_prev4t_3t;
-        objects[i].time_proc_prev3t_2t = objects_display[i].time_proc_prev3t_2t;
-        objects[i].time_proc_prev2t_1t = objects_display[i].time_proc_prev2t_1t;
     }
 //    for (int k = 0; k < obj_nums; k++) {
 //        objects_display[k].pts_num = objects[k].pts_num;
