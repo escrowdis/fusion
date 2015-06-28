@@ -53,6 +53,11 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->label_gui_left_oncoming->setPixmap(QPixmap::fromImage(gui_left_oncoming));
     ui->label_gui_right_oncoming->setPixmap(QPixmap::fromImage(gui_right_oncoming));
     ui->label_gui_sign->setPixmap(QPixmap::fromImage(gui_sign));
+    ui->label_gui_approaching->setVisible(false);
+    ui->label_gui_left_oncoming->setVisible(false);
+    ui->label_gui_right_oncoming->setVisible(false);
+    ui->label_gui_sign->setVisible(false);
+    QObject::connect(si, SIGNAL(guiDisplay(int)), this, SLOT(guiDisplay(int)));
 
     // Recording
     label_file_loaded = new QLabel();
@@ -125,6 +130,7 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->label_disp->setStyleSheet("background-color:silver");
     ui->label_sv_detected->setStyleSheet("background-color:silver");
     ui->label_sv_frame_count->setVisible(false);
+    ui->label_sv_frame_count_2->setVisible(false);
 
     QObject::connect(si->sv, SIGNAL(updateGUI(cv::Mat *, cv::Mat *, cv::Mat *, cv::Mat *, cv::Mat *, cv::Mat *, int, int)), this, SLOT(svDisplay(cv::Mat *, cv::Mat *, cv::Mat *, cv::Mat *, cv::Mat *, cv::Mat *, int, int)));
     QObject::connect(si->sv, SIGNAL(videoEnd(void)), this, SLOT(videoIsEnd(void)));
@@ -539,7 +545,9 @@ void MainWindow::dataFused()
     si->fg_fusion = ui->checkBox_fusion_data->isChecked() && (si->fg_sv && si->fg_radar);
     si->fg_ot = ui->checkBox_ot->isChecked();
     si->fg_ot_trajectory = si->fg_ot && ui->checkBox_ot_trajectory->isChecked();
-    si->fg_ot_trajectory_smoothing = ui->checkBox_ot_trajectory->isChecked() && ui->checkBox_ot_trajectory_smoothing->isChecked();
+    si->fg_ot_trajectory_raw = ui->checkBox_ot_trajectory->isChecked() && ui->checkBox_ot_trajectory_raw->isChecked();
+    si->fg_ot_trajectory_kalman = ui->checkBox_ot_trajectory->isChecked() && ui->checkBox_ot_trajectory_kalman->isChecked();
+    si->fg_ot_vel = si->fg_ot && ui->checkBox_ot_vel->isChecked();
     si->fg_ot_kf = si->fg_ot && ui->checkBox_ot_kf->isChecked();
     si->fg_ot_pf = si->fg_ot && ui->checkBox_ot_pf->isChecked();
     si->fg_ca_astar = ui->checkBox_ca->isChecked() && ui->checkBox_ca_astar->isChecked() && (si->fg_sv || si->fg_radar);
@@ -685,10 +693,14 @@ void MainWindow::svDisplay(cv::Mat *img_L, cv::Mat *img_R, cv::Mat *disp, cv::Ma
     ui->label_cam_img_L->setPixmap(QPixmap::fromImage(QImage::QImage(img_L->data, img_L->cols, img_L->rows, img_L->step, QImage::Format_RGB888)).scaled(IMG_DIS_W, IMG_DIS_H));
     ui->label_cam_img_R->setPixmap(QPixmap::fromImage(QImage::QImage(img_R->data, img_R->cols, img_R->rows, img_R->step, QImage::Format_RGB888)).scaled(IMG_DIS_W, IMG_DIS_H));
     ui->label_sv_detected_obj->setText(QString::number(detected_obj));
-    if (si->sv->input_mode == SV::INPUT_SOURCE::VIDEO)
+    if (si->sv->input_mode == SV::INPUT_SOURCE::VIDEO) {
         ui->label_sv_frame_count->setText(QString::number(current_frame_count) + " / " + QString::number(sv_frame_count) + " frames");
-    else if (si->sv->input_mode == SV::INPUT_SOURCE::CAM)
+        ui->label_sv_frame_count_2->setText(QString::number(current_frame_count) + " / " + QString::number(sv_frame_count) + " frames");
+    }
+    else if (si->sv->input_mode == SV::INPUT_SOURCE::CAM) {
         ui->label_sv_frame_count->setText(QString::number(current_frame_count) + " frames");
+        ui->label_sv_frame_count_2->setText(QString::number(current_frame_count) + " frames");
+    }
 
     if (ui->checkBox_do_depth->isChecked()) {    
         lock_sv.lockForRead();
@@ -712,6 +724,7 @@ void MainWindow::svDisplay(cv::Mat *img_L, cv::Mat *img_R, cv::Mat *disp, cv::Ma
     ui->label_cam_img_R->update();
     ui->label_sv_detected_obj->update();
     ui->label_sv_frame_count->update();
+    ui->label_sv_frame_count_2->update();
     ui->label_disp->update();
     ui->label_top_view_sv->update();
     ui->label_sv_detected->update();
@@ -735,6 +748,7 @@ void MainWindow::on_pushButton_cam_open_clicked()
     camOpen();
     si->sv->input_mode = SV::INPUT_SOURCE::CAM;
     ui->label_sv_frame_count->setVisible(false);
+    ui->label_sv_frame_count_2->setVisible(false);
     on_pushButton_cam_step_clicked();
 }
 
@@ -1617,6 +1631,9 @@ void MainWindow::on_pushButton_sv_record_clicked()
         ui->pushButton_sv_record->setIcon(QIcon(":/icon/record_on.png"));
         ui->label_sv_frame_count->setText("0");
         ui->label_sv_frame_count->setVisible(true);
+        ui->label_sv_frame_count_2->setText("0");
+        ui->label_sv_frame_count_2->setVisible(true);
+
         re.start(RECORD_TYPE::VIDEO);
     }
     // record goes off
@@ -1624,6 +1641,7 @@ void MainWindow::on_pushButton_sv_record_clicked()
         ui->pushButton_sv_record->setIcon(QIcon(":/icon/record_off.png"));
         re.stop();
         ui->label_sv_frame_count->setVisible(false);
+        ui->label_sv_frame_count_2->setVisible(false);
     }
 }
 
@@ -1657,6 +1675,8 @@ void MainWindow::on_pushButton_all_record_clicked()
         ui->pushButton_all_record->setIcon(QIcon(":/icon/all_record_on.png"));
         ui->label_sv_frame_count->setText("0");
         ui->label_sv_frame_count->setVisible(true);
+        ui->label_sv_frame_count_2->setText("0");
+        ui->label_sv_frame_count_2->setVisible(true);
         re.start(RECORD_TYPE::ALL);
     }
     // record goes off
@@ -1666,6 +1686,7 @@ void MainWindow::on_pushButton_all_record_clicked()
         ui->pushButton_all_record->setIcon(QIcon(":/icon/all_record_off.png"));
         re.stop();
         ui->label_sv_frame_count->setVisible(false);
+        ui->label_sv_frame_count_2->setVisible(false);
     }
 }
 
@@ -1680,6 +1701,8 @@ void MainWindow::loadData(int record_type)
         sv_frame_count = re.vr->frame_count;
         ui->label_sv_frame_count->setText("0 / " + QString::number(sv_frame_count) + " frames");
         ui->label_sv_frame_count->setVisible(true);
+        ui->label_sv_frame_count_2->setText("0 / " + QString::number(sv_frame_count) + " frames");
+        ui->label_sv_frame_count_2->setVisible(true);
     }
 
     label_file_loaded->setText(file_loaded);
@@ -1802,7 +1825,9 @@ void MainWindow::on_checkBox_ca_clicked(bool checked)
 void MainWindow::on_checkBox_ot_clicked(bool checked)
 {
     ui->checkBox_ot_trajectory->setEnabled(checked);
-    ui->checkBox_ot_trajectory_smoothing->setEnabled(checked);
+    ui->checkBox_ot_trajectory_raw->setEnabled(checked);
+    ui->checkBox_ot_trajectory_kalman->setEnabled(checked);
+    ui->checkBox_ot_vel->setEnabled(checked);
     ui->checkBox_ot_kf->setEnabled(checked);
     ui->checkBox_ot_pf->setEnabled(checked);
 
@@ -1878,5 +1903,22 @@ void MainWindow::on_pushButton_step_all_clicked()
 
 void MainWindow::on_checkBox_ot_trajectory_clicked(bool checked)
 {
-    ui->checkBox_ot_trajectory_smoothing->setEnabled(checked);
+    ui->checkBox_ot_trajectory_raw->setEnabled(checked);
+    ui->checkBox_ot_trajectory_kalman->setEnabled(checked);
+}
+
+void MainWindow::guiDisplay(int type)
+{
+    ui->label_gui_sign->setVisible(true);
+    switch (type) {
+    case GUI::APPROACHING:
+        ui->label_gui_approaching->setVisible(true);
+        break;
+    case GUI::LEFT_ONCOMING:
+        ui->label_gui_left_oncoming->setVisible(true);
+        break;
+    case GUI::RIGHT_ONCOMING:
+        ui->label_gui_right_oncoming->setVisible(true);
+        break;
+    }
 }

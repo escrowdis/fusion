@@ -27,12 +27,13 @@
 // OBJECT MATCHING =============
 //#define debug_info_object_matching_img
 //#define debug_info_object_matching_others
-//#define debug_info_object_matching_data_extract
 //#define debug_info_object_matching_fusion_img
 //#define debug_info_object_matching_fusion_others
 
 // OBJECT TRACKING =============
 //#define debug_info_object_tracking
+//#define debug_info_object_tracking_vel
+//#define debug_info_object_tracking_trajectory
 
 // FUSION ====================== (You may comment "#define multi_thread")
 //#define debug_info_fusion

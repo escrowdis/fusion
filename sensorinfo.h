@@ -44,6 +44,14 @@ enum {
 };
 }
 
+namespace GUI {
+enum {
+    APPROACHING,
+    LEFT_ONCOMING,
+    RIGHT_ONCOMING
+};
+}
+
 //! SensorInfor class
 //!
 //! \brief This class deals with all the sensors' information and also fused one.
@@ -84,7 +92,9 @@ public:
     bool fg_fusion;
     bool fg_ot;
     bool fg_ot_trajectory;
-    bool fg_ot_trajectory_smoothing;
+    bool fg_ot_trajectory_raw;
+    bool fg_ot_trajectory_kalman;
+    bool fg_ot_vel;
     bool fg_ot_kf;
     bool fg_ot_pf;
     bool fg_ca_astar;
@@ -145,7 +155,7 @@ public:
     int range_filter_max;
     // Analysis =============== End
 
-private:
+private:    
     // sensor location
     struct sensorLocation {
         // sensor's position based on the center of vehicle. (cm) forward is x+, lateral right is y+.
@@ -162,6 +172,11 @@ private:
     int size_data_fused;
 
     void resetFusion();
+
+    // fusion param
+    double var_sv;
+    double var_radar;
+    double var_fused;
 
     std::vector<int> cri;                           // array of closest_radar's id
     double U_D;                                     // max distance error (cm)
@@ -188,7 +203,7 @@ private:
 
     void dataCollisionAvoidance();
 
-    void drawFusedTopView(bool fg_sv, bool fg_radar, bool fg_sv_each, bool fg_ot_trajectory, bool fg_ot_trajectory_smoothing, bool fg_ot_kf);
+    void drawFusedTopView(bool fg_sv, bool fg_radar, bool fg_sv_each, bool fg_ot_trajectory, bool fg_ot_trajectory_raw, bool fg_ot_trajectory_kalman, bool fg_ot_kf);
 
     int range_precision;
 

@@ -1032,7 +1032,7 @@ parameters</string>
       <property name="geometry">
        <rect>
         <x>170</x>
-        <y>130</y>
+        <y>210</y>
         <width>73</width>
         <height>16</height>
        </rect>
@@ -1045,7 +1045,7 @@ parameters</string>
       <property name="geometry">
        <rect>
         <x>170</x>
-        <y>160</y>
+        <y>240</y>
         <width>73</width>
         <height>16</height>
        </rect>
@@ -1084,7 +1084,7 @@ parameters</string>
       <property name="geometry">
        <rect>
         <x>30</x>
-        <y>130</y>
+        <y>210</y>
         <width>121</width>
         <height>16</height>
        </rect>
@@ -1109,7 +1109,7 @@ parameters</string>
        <bool>true</bool>
       </property>
      </widget>
-     <widget class="QCheckBox" name="checkBox_ot_trajectory_smoothing">
+     <widget class="QCheckBox" name="checkBox_ot_trajectory_raw">
       <property name="geometry">
        <rect>
         <x>50</x>
@@ -1119,7 +1119,39 @@ parameters</string>
        </rect>
       </property>
       <property name="text">
-       <string>smoothing</string>
+       <string>raw</string>
+      </property>
+      <property name="checked">
+       <bool>true</bool>
+      </property>
+     </widget>
+     <widget class="QCheckBox" name="checkBox_ot_vel">
+      <property name="geometry">
+       <rect>
+        <x>30</x>
+        <y>170</y>
+        <width>73</width>
+        <height>16</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Velocity</string>
+      </property>
+      <property name="checked">
+       <bool>true</bool>
+      </property>
+     </widget>
+     <widget class="QCheckBox" name="checkBox_ot_trajectory_kalman">
+      <property name="geometry">
+       <rect>
+        <x>50</x>
+        <y>130</y>
+        <width>71</width>
+        <height>16</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Kalman</string>
       </property>
       <property name="checked">
        <bool>true</bool>
@@ -1320,7 +1352,7 @@ parameters</string>
        </rect>
       </property>
       <property name="text">
-       <string/>
+       <string>Frame count</string>
       </property>
      </widget>
      <zorder>label_top_view_bg</zorder>
@@ -1647,6 +1679,19 @@ coming</string>
 coming</string>
       </property>
      </widget>
+     <widget class="QLabel" name="label_sv_frame_count_2">
+      <property name="geometry">
+       <rect>
+        <x>820</x>
+        <y>410</y>
+        <width>190</width>
+        <height>16</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Frame count</string>
+      </property>
+     </widget>
      <zorder>label_gui_BG</zorder>
      <zorder>layoutWidget</zorder>
      <zorder>label_fusion_BG</zorder>
@@ -1659,6 +1704,7 @@ coming</string>
      <zorder>label_gui_approaching</zorder>
      <zorder>label_gui_left_oncoming</zorder>
      <zorder>label_gui_right_oncoming</zorder>
+     <zorder>label_sv_frame_count_2</zorder>
     </widget>
    </widget>
    <widget class="QWidget" name="layoutWidget">

@@ -360,6 +360,11 @@ private slots:
     void on_radioButton_input_device_clicked();
     void on_radioButton_input_recording_clicked();
     // Recording ============== End
+
+    // GUI ====================
+    void guiDisplay(int);
+    // GUI ==================== End
+
     void on_lineEdit_sv_rig_height_returnPressed();
     void on_radioButton_vehicle_cart_clicked();
     void on_radioButton_vehicle_car_clicked();

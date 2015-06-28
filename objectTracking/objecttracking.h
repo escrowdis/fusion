@@ -12,7 +12,8 @@ namespace TRACK_STATUS {
 enum {
     NO_TARGET,
     NEW_TARGET,
-    UPDATE_TARGET
+    UPDATE_TARGET,
+    PREDICT_TARGET
 };
 }
 
@@ -118,7 +119,7 @@ public:
 
     std::vector<objectTracking> ti;     // object's tracking information
 
-    int thresh_count = 5;               // if object isn't update for this rounds, the data will be clear
+    int thresh_count = 16;               // if object isn't update for this rounds, the data will be clear
 
     void resetObjectTracking(objectTracking &src);
 

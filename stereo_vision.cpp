@@ -66,12 +66,6 @@ stereo_vision::stereo_vision() : TopView(20, 200, 3000, 19.8, 1080, 750, 270, 12
 
     matchParamInitialize(match_mode);
 
-    // object macthing
-    initializeObjectMatching(obj_nums);
-    setErrorThresholdX(300);
-    setErrorThresholdZ(500, max_distance);
-    setThresholdBha(0.3);
-
     time_gap = 50;
     t.start();
 
@@ -1132,43 +1126,6 @@ void stereo_vision::pointProjectImage()
             cv::putText(img_detected, distance_tag, cv::Point(objects[i].tl.second, objects[i].br.first - 5), cv::FONT_HERSHEY_COMPLEX_SMALL, 2, cv::Scalar(0, 0, 255), 2);
         }
         lock_sv_object.unlock();
-    }
-}
-
-void stereo_vision::dataMatching()
-{
-    // Object matching: a) Bha. dist. of H color space, b) bias of X & Z of WCS location
-    // Comparison of H color space image using Bhattacharyya distance with Bubble search
-    resetObjMatching();
-    // Extract histogram of H color space
-    lock_sv_object.lockForRead();
-    for (int k = 0; k < obj_nums; k++) {
-        if (objects[k].labeled) {
-            fg_om_existed = true;
-            om[k].labeled = true;
-            om[k].match_type = MATCH_TYPE::RANGE_BHA;
-            om_obj_num++;
-            om[k].pc = objects[k].pc;
-            om[k].center = objects[k].center;
-            cv::Mat img_hsv = cv::Mat(objects[k].img.rows, objects[k].img.cols, CV_8UC3);
-            om[k].img = objects[k].img.clone();
-            cv::cvtColor(objects[k].img, img_hsv, cv::COLOR_BGR2HSV);
-            splitOneOut(0, img_hsv, &om[k].H_img);
-            cv::calcHist(&om[k].H_img, 1, 0, cv::Mat(), om[k].H_hist, 1, &hist_size, &hist_ranges, true, false);
-            cv::normalize(om[k].H_hist, om[k].H_hist, hist_ranges[0], hist_ranges[1], cv::NORM_MINMAX, -1, cv::Mat());
-        }
-    }
-    lock_sv_object.unlock();
-
-#ifdef debug_info_object_matching_img
-    comp = img_detected.clone();
-#endif
-
-    matching_result.clear();
-    matching_result = Matching();
-
-    for (int k = 0; k < matching_result.size(); k++) {
-        int id = matching_result[k].id;
     }
 }
 

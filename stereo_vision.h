@@ -29,9 +29,6 @@ extern recording re;
 #include "opencv2/cudastereo.hpp"
 #endif
 
-// object matching
-#include "objectTracking/objectmatching.h"
-
 // topview
 #include "topview.h"
 
@@ -69,7 +66,7 @@ enum INPUT_SOURCE {
 };
 }
 
-class stereo_vision : public QObject, public TopView, protected SensorBase, private ObjectMatching
+class stereo_vision : public QObject, public TopView, protected SensorBase
 {
     Q_OBJECT
 
@@ -350,16 +347,6 @@ private:
     void updateDataForDisplay();
     // object information ========== End
 
-    // Object matching ========
-    void dataMatching();
-
-    void resetMatchedInfo(objectInfo &src);
-
-    void connectMatchedInfo(objectInfo &src, objectInfo &dst);
-
-    std::vector<matchedResult> matching_result;  // store result of matching (id, obstacle id)
-    // Object matching ======== End
-
     // object params ===============
     int detected_obj;                   // Amount of detected object
 
@@ -368,6 +355,10 @@ private:
     void resetBlob();
 
     void blob(int thresh_pts_num);
+
+    void resetMatchedInfo(objectInfo &src);
+
+    void connectMatchedInfo(objectInfo &src, objectInfo &dst);
     // object params =============== End
 
     // ground filtering ============

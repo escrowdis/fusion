@@ -269,8 +269,7 @@ std::vector<ObjectMatching::matchedResult> ObjectMatching::Matching()
                     prev_id = map_Bha_corr_id_r[sort_min[j].x];
 #ifdef debug_info_object_matching_others
                     std::cout<<"matched "<<map_Bha_corr_id_c[sort_min[j].y]<<" "<<id<<
-                              " obs. id "<<om[id].obstacle_id<<" range "<<om[id].pc.range<<
-                              " previous id "<<map_Bha_corr_id_r[sort_min[j].x]<<" previous obs. id "<<om_prev[map_Bha_corr_id_r[sort_min[j].x]].obstacle_id<<std::endl;
+                              " range "<<om[id].pc.range<<" previous id "<<map_Bha_corr_id_r[sort_min[j].x]<<std::endl;
 #endif
                     break;
                 }
