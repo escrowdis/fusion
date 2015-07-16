@@ -1012,150 +1012,179 @@ parameters</string>
      <attribute name="title">
       <string>Tracking</string>
      </attribute>
-     <widget class="QCheckBox" name="checkBox_ot">
+     <widget class="QGroupBox" name="groupBox_3">
       <property name="geometry">
        <rect>
-        <x>30</x>
-        <y>40</y>
-        <width>73</width>
-        <height>16</height>
+        <x>20</x>
+        <y>10</y>
+        <width>301</width>
+        <height>181</height>
        </rect>
       </property>
-      <property name="text">
-       <string>Tracking</string>
+      <property name="title">
+       <string>Object tracking</string>
       </property>
-      <property name="checked">
-       <bool>true</bool>
-      </property>
+      <widget class="QCheckBox" name="checkBox_ot_vel">
+       <property name="geometry">
+        <rect>
+         <x>20</x>
+         <y>150</y>
+         <width>73</width>
+         <height>16</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>Velocity</string>
+       </property>
+       <property name="checked">
+        <bool>true</bool>
+       </property>
+      </widget>
+      <widget class="QCheckBox" name="checkBox_ot_pf">
+       <property name="geometry">
+        <rect>
+         <x>160</x>
+         <y>50</y>
+         <width>91</width>
+         <height>16</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>Particle filter</string>
+       </property>
+      </widget>
+      <widget class="QCheckBox" name="checkBox_ot">
+       <property name="geometry">
+        <rect>
+         <x>20</x>
+         <y>20</y>
+         <width>73</width>
+         <height>16</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>Tracking</string>
+       </property>
+       <property name="checked">
+        <bool>true</bool>
+       </property>
+      </widget>
+      <widget class="QCheckBox" name="checkBox_ot_trajectory_kalman">
+       <property name="geometry">
+        <rect>
+         <x>40</x>
+         <y>110</y>
+         <width>71</width>
+         <height>16</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>Kalman</string>
+       </property>
+       <property name="checked">
+        <bool>true</bool>
+       </property>
+      </widget>
+      <widget class="QCheckBox" name="checkBox_ot_kf">
+       <property name="geometry">
+        <rect>
+         <x>160</x>
+         <y>20</y>
+         <width>91</width>
+         <height>16</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>Kalman filter</string>
+       </property>
+      </widget>
+      <widget class="QCheckBox" name="checkBox_ot_trajectory">
+       <property name="geometry">
+        <rect>
+         <x>20</x>
+         <y>50</y>
+         <width>91</width>
+         <height>16</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>Trajectory</string>
+       </property>
+       <property name="checked">
+        <bool>true</bool>
+       </property>
+      </widget>
+      <widget class="QCheckBox" name="checkBox_ot_trajectory_raw">
+       <property name="geometry">
+        <rect>
+         <x>40</x>
+         <y>80</y>
+         <width>71</width>
+         <height>16</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>raw</string>
+       </property>
+       <property name="checked">
+        <bool>true</bool>
+       </property>
+      </widget>
      </widget>
-     <widget class="QCheckBox" name="checkBox_ca_astar">
+     <widget class="QGroupBox" name="groupBox_4">
       <property name="geometry">
        <rect>
-        <x>170</x>
-        <y>210</y>
-        <width>73</width>
-        <height>16</height>
+        <x>20</x>
+        <y>200</y>
+        <width>301</width>
+        <height>101</height>
        </rect>
       </property>
-      <property name="text">
-       <string>A*</string>
+      <property name="title">
+       <string>Collision avoidance</string>
       </property>
-     </widget>
-     <widget class="QCheckBox" name="checkBox_ca_vfh">
-      <property name="geometry">
-       <rect>
-        <x>170</x>
-        <y>240</y>
-        <width>73</width>
-        <height>16</height>
-       </rect>
-      </property>
-      <property name="text">
-       <string>VFH</string>
-      </property>
-     </widget>
-     <widget class="QCheckBox" name="checkBox_ot_kf">
-      <property name="geometry">
-       <rect>
-        <x>170</x>
-        <y>40</y>
-        <width>91</width>
-        <height>16</height>
-       </rect>
-      </property>
-      <property name="text">
-       <string>Kalman filter</string>
-      </property>
-     </widget>
-     <widget class="QCheckBox" name="checkBox_ot_pf">
-      <property name="geometry">
-       <rect>
-        <x>170</x>
-        <y>70</y>
-        <width>91</width>
-        <height>16</height>
-       </rect>
-      </property>
-      <property name="text">
-       <string>Particle filter</string>
-      </property>
-     </widget>
-     <widget class="QCheckBox" name="checkBox_ca">
-      <property name="geometry">
-       <rect>
-        <x>30</x>
-        <y>210</y>
-        <width>121</width>
-        <height>16</height>
-       </rect>
-      </property>
-      <property name="text">
-       <string>Collision Avoidance</string>
-      </property>
-     </widget>
-     <widget class="QCheckBox" name="checkBox_ot_trajectory">
-      <property name="geometry">
-       <rect>
-        <x>30</x>
-        <y>70</y>
-        <width>91</width>
-        <height>16</height>
-       </rect>
-      </property>
-      <property name="text">
-       <string>Trajectory</string>
-      </property>
-      <property name="checked">
-       <bool>true</bool>
-      </property>
-     </widget>
-     <widget class="QCheckBox" name="checkBox_ot_trajectory_raw">
-      <property name="geometry">
-       <rect>
-        <x>50</x>
-        <y>100</y>
-        <width>71</width>
-        <height>16</height>
-       </rect>
-      </property>
-      <property name="text">
-       <string>raw</string>
-      </property>
-      <property name="checked">
-       <bool>true</bool>
-      </property>
-     </widget>
-     <widget class="QCheckBox" name="checkBox_ot_vel">
-      <property name="geometry">
-       <rect>
-        <x>30</x>
-        <y>170</y>
-        <width>73</width>
-        <height>16</height>
-       </rect>
-      </property>
-      <property name="text">
-       <string>Velocity</string>
-      </property>
-      <property name="checked">
-       <bool>true</bool>
-      </property>
-     </widget>
-     <widget class="QCheckBox" name="checkBox_ot_trajectory_kalman">
-      <property name="geometry">
-       <rect>
-        <x>50</x>
-        <y>130</y>
-        <width>71</width>
-        <height>16</height>
-       </rect>
-      </property>
-      <property name="text">
-       <string>Kalman</string>
-      </property>
-      <property name="checked">
-       <bool>true</bool>
-      </property>
+      <widget class="QCheckBox" name="checkBox_ca">
+       <property name="geometry">
+        <rect>
+         <x>20</x>
+         <y>30</y>
+         <width>121</width>
+         <height>16</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>Collision Avoidance</string>
+       </property>
+       <property name="checked">
+        <bool>true</bool>
+       </property>
+      </widget>
+      <widget class="QCheckBox" name="checkBox_ca_astar">
+       <property name="geometry">
+        <rect>
+         <x>160</x>
+         <y>30</y>
+         <width>73</width>
+         <height>16</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>A*</string>
+       </property>
+      </widget>
+      <widget class="QCheckBox" name="checkBox_ca_vfh">
+       <property name="geometry">
+        <rect>
+         <x>160</x>
+         <y>60</y>
+         <width>73</width>
+         <height>16</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>VFH</string>
+       </property>
+      </widget>
      </widget>
     </widget>
    </widget>

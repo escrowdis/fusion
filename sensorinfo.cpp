@@ -28,7 +28,7 @@ SensorInfo::SensorInfo()
     // object macthing
     initializeObjectMatching(size_data_fused);
     setErrorThresholdX(300);
-    setErrorThresholdZ(500, sv->max_distance);
+    setErrorThresholdZ(800, sv->max_distance);
     setThresholdBha(0.3);
 
     ca = new CollisionAvoidance();
@@ -866,7 +866,7 @@ void SensorInfo::dataProcess(bool fg_sv, bool fg_radar)
             cri.clear();
             double deviation_x, deviation_z, deviation, deviation_tmp;
             if (fg_fusion) {
-                U_D = 500;    // max distance error (cm) //**// tuned param
+                U_D = 800;    // max distance error (cm) //**// tuned param
                 R_sv = pow(U_D * d_sv[k].pc_world.range / (1.0 * sv->max_distance), 2);  // (cm)
                 sv_pos = SensorBase::polar2Cartf(d_sv[k].pc_world);
                 //                std::cout<<"SV: "<<sv_pos.x<<" "<<sv_pos.y<<std::endl;
@@ -1061,11 +1061,11 @@ void SensorInfo::drawFusedTopView(bool fg_sv, bool fg_radar, bool fg_sv_each, bo
                 tag = QString::number(p).toStdString() + ", " + QString::number(data_fused[p].pc.range / 100, 'g', range_precision).toStdString();
                 cv::circle(fused_topview, data_fused[p].plot_pt_f, thickness, sensors[device].color, -1, 8, 0);
                 // display range and id
-                //            if (data_fused[p].pc.angle <= sensors[SENSOR::SV].angle_half_fov &&
-                //                    data_fused[p].pc.angle >= -1 * sensors[SENSOR::SV].angle_half_fov && data_fused[p].pc.range < 3000 ||
-                //                    data_fused[p].pc.range < 500) {
-                cv::putText(fused_topview, tag, cv::Point(data_fused[p].plot_pt_f.x, data_fused[p].plot_pt_f.y + 15), font, font_size, sensors[device].color, font_thickness);
-                //            }
+                if (data_fused[p].pc.angle <= sensors[SENSOR::SV].angle_half_fov &&
+                        data_fused[p].pc.angle >= -1 * sensors[SENSOR::SV].angle_half_fov && data_fused[p].pc.range < 3000 ||
+                        data_fused[p].pc.range < 500) {
+                    cv::putText(fused_topview, tag, cv::Point(data_fused[p].plot_pt_f.x, data_fused[p].plot_pt_f.y + 15), font, font_size, sensors[device].color, font_thickness);
+                }
                 break;
             }
         }
@@ -1109,7 +1109,7 @@ void SensorInfo::drawFusedTopView(bool fg_sv, bool fg_radar, bool fg_sv_each, bo
             tag = QString::number(p).toStdString() + ", " + QString::number(ot_fused->ti[p].info[last].pc.range / 100, 'g', range_precision).toStdString();
             cv::circle(fused_topview, point2FusedTopView(ot_fused->ti[p].info[last].pc), 2, color_pt, -1, 8, 0);
             cv::putText(fused_topview, tag, pos_text, font, font_size, color_pt, font_thickness);
-            // raw / kf data velocity
+            // raw / kf data velocity -> processed in dataTracking()
             if (fg_ot_vel && last >= 2) {
                 float scale = 10.0;
                 cv::Point p1 = point2FusedTopView(ot_fused->ti[p].info[last].pc);
@@ -1120,7 +1120,7 @@ void SensorInfo::drawFusedTopView(bool fg_sv, bool fg_radar, bool fg_sv_each, bo
                     qDebug()<<"frame"<<re.vr->current_frame_count<<"id"<<p<<"vel"<<ot_fused->ti[p].info[last].vel.x<<ot_fused->ti[p].info[last].vel.y;
 #endif
                 drawArrow(fused_topview, p1, p2, 5, 30, cv::Scalar(255, 100, 255, 255), 2, 8);
-                tag = QString::number(ot_fused->ti[p].info[last].vel.y, 'g', 2).toStdString() + " m/s";
+                tag = QString::number(ot_fused->ti[p].info[last].vel.x, 'g', 2).toStdString() + ", " + QString::number(ot_fused->ti[p].info[last].vel.y, 'g', 2).toStdString() + " m/s";
                 lock_f_sv.lockForWrite();
                 cv::putText(fused_topview, tag, cv::Point(pos_text.x, pos_text.y + 20), font, font_size, color_pt, font_thickness);
                 lock_f_sv.unlock();
@@ -1137,19 +1137,64 @@ void SensorInfo::drawFusedTopView(bool fg_sv, bool fg_radar, bool fg_sv_each, bo
                 for (int j = 1; j < ot_fused->ti[i].trajectory_kf.size(); j++) {
                     cv::line(fused_topview, point2FusedTopView(ot_fused->ti[i].trajectory_kf[j - 1]), point2FusedTopView(ot_fused->ti[i].trajectory_kf[j]), cv::Scalar(255, 255, 255, 255), 1);
                 }
-//                int last = ot_fused->ti[i].info.size() - 1;
-//                if (fg_ot_vel && last >= 2) {
-//                    cv::Point p1 = point2FusedTopView(SensorBase::cart2Polar(ot_fused->ti[i].kf.statePt));
-//                    cv::Point p2 = point2FusedTopView(SensorBase::cart2Polar(ot_fused->ti[i].kf.predictPt));
-//                    drawArrow(fused_topview, p1, p2, 5, 30, cv::Scalar(255, 100, 255, 255), 5, 8);
-//                    //                qDebug()<<p1.x<<p1.y<<p2.x<<p2.y;
-//                    //                qDebug()<<"\nHi\n"<<ot_fused->ti[i].kf.statePt.x<<ot_fused->ti[i].kf.statePt.y<<
-//                    //                          ot_fused->ti[i].kf.predictPt.x<<ot_fused->ti[i].kf.predictPt.y;
-//                }
             }
             lock_ot_fused.unlock();
         }
     }
+
+    // Pre-collision warning
+    if (gui_display_time >= gui_display_max) {
+        emit guiDisplay(GUI::APPROACHING, false);
+        emit guiDisplay(GUI::LEFT_ONCOMING, false);
+        emit guiDisplay(GUI::RIGHT_ONCOMING, false);
+        gui_display_time = 0;
+    }
+    for (int p = 0; p < ot_fused->ti.size(); p++) {
+        int last = ot_fused->ti[p].info.size() - 1;
+        if (last < 0 || !ot_fused->ti[p].fg_update) continue;
+#ifdef debug_info_ca_pcw
+        qDebug()<<"pre-collision warning"<<ot_fused->ti[p].info[last].pc.range<<SensorBase::velUnitTransform(ot_fused->ti[p].info[last].vel, VEL_UNIT::M_PER_SEC2KM_PER_HR).y;
+#endif
+        cv::Point2f vel = SensorBase::velUnitTransform(ot_fused->ti[p].info[last].vel, VEL_UNIT::M_PER_SEC2KM_PER_HR);
+        // frontal collision
+        if ((ot_fused->ti[p].info[last].rect_f.tl().x >= (vehicle.VCP.x - 0.5 * vehicle.width_pixel) && ot_fused->ti[p].info[last].rect_f.tl().x <= (vehicle.VCP.x + 0.5 * vehicle.width_pixel)) ||
+                (ot_fused->ti[p].info[last].rect_f.br().x >= (vehicle.VCP.x - 0.5 * vehicle.width_pixel) && ot_fused->ti[p].info[last].rect_f.br().x <= (vehicle.VCP.x + 0.5 * vehicle.width_pixel))) {
+            if (ot_fused->ti[p].info[last].pc.range <= 200 ||
+                    (ot_fused->ti[p].info[last].pc.range <= 500 && vel.y < -5.0)) {
+#ifdef debug_info_ca_pcw
+                qDebug()<<"in frontal";
+#endif
+                emit guiDisplay(GUI::APPROACHING, true);
+            }
+        }
+        // frontal side collision
+        else {
+            if (ot_fused->ti[p].info[last].pc.range <= 500) {
+                bool fg_potential = false;
+                for (int j = 0; j < 5; j++) {
+                    cv::Point2f predict = cv::Point2f(ot_fused->ti[p].info[last].pos.x + j * ot_fused->ti[p].info[last].vel.x,
+                                                      ot_fused->ti[p].info[last].pos.y + j * ot_fused->ti[p].info[last].vel.y);
+                    if (predict.x >= -0.5 * vehicle.width && predict.x <= 0.5 * vehicle.width) {
+                        cv::circle(fused_topview, point2FusedTopView(predict), 3, cv::Scalar(255, 255, 255, 255), -1, 8, 0);
+                        fg_potential = true;
+                    }
+                }
+                if (!fg_potential) continue;
+#ifdef debug_info_ca_pcw
+                qDebug()<<"in frontal side";
+#endif
+                if (vel.x > 0 && ot_fused->ti[p].info[last].pc.angle < 5.0)
+                    emit guiDisplay(GUI::LEFT_ONCOMING, true);
+                if (vel.x < 0 && ot_fused->ti[p].info[last].pc.angle > 5.0)
+                    emit guiDisplay(GUI::RIGHT_ONCOMING, true);
+            }
+        }
+        // side collision
+//        if (ot_fused->ti[p].info.pc < ) {
+
+//        }
+    }
+    gui_display_time++;
 
     // Collision avoidance
     // A*

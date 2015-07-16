@@ -38,27 +38,6 @@ MainWindow::MainWindow(QWidget *parent) :
 
     ui->setupUi(this);
 
-    // GUI
-    QImage gui_BG, gui_car, gui_left_oncoming, gui_right_oncoming, gui_approaching, gui_sign;
-    gui_BG.load(":/icon/gui_BG_road.png");
-    gui_car.load(":/icon/car1.png");
-    gui_left_oncoming.load(":/icon/arrow_left_oncoming.png");
-    gui_right_oncoming.load(":/icon/arrow_right_oncoming.png");
-    gui_approaching.load(":/icon/arrow_approaching.png");
-    gui_sign.load(":/icon/warning.png");
-
-    ui->label_gui_BG->setPixmap(QPixmap::fromImage(gui_BG));
-    ui->label_gui_vehicle->setPixmap(QPixmap::fromImage(gui_car));
-    ui->label_gui_approaching->setPixmap(QPixmap::fromImage(gui_approaching));
-    ui->label_gui_left_oncoming->setPixmap(QPixmap::fromImage(gui_left_oncoming));
-    ui->label_gui_right_oncoming->setPixmap(QPixmap::fromImage(gui_right_oncoming));
-    ui->label_gui_sign->setPixmap(QPixmap::fromImage(gui_sign));
-    ui->label_gui_approaching->setVisible(false);
-    ui->label_gui_left_oncoming->setVisible(false);
-    ui->label_gui_right_oncoming->setVisible(false);
-    ui->label_gui_sign->setVisible(false);
-    QObject::connect(si, SIGNAL(guiDisplay(int)), this, SLOT(guiDisplay(int)));
-
     // Recording
     label_file_loaded = new QLabel();
     ui->statusBar->addWidget(label_file_loaded);
@@ -95,6 +74,27 @@ MainWindow::MainWindow(QWidget *parent) :
     // default setting ========================= End
 
     si = new SensorInfo();
+
+    // GUI
+    QImage gui_BG, gui_car, gui_left_oncoming, gui_right_oncoming, gui_approaching, gui_sign;
+    gui_BG.load(":/icon/gui_BG_road.png");
+    gui_car.load(":/icon/car1.png");
+    gui_left_oncoming.load(":/icon/arrow_left_oncoming.png");
+    gui_right_oncoming.load(":/icon/arrow_right_oncoming.png");
+    gui_approaching.load(":/icon/arrow_approaching.png");
+    gui_sign.load(":/icon/warning.png");
+
+    ui->label_gui_BG->setPixmap(QPixmap::fromImage(gui_BG));
+    ui->label_gui_vehicle->setPixmap(QPixmap::fromImage(gui_car));
+    ui->label_gui_approaching->setPixmap(QPixmap::fromImage(gui_approaching));
+    ui->label_gui_left_oncoming->setPixmap(QPixmap::fromImage(gui_left_oncoming));
+    ui->label_gui_right_oncoming->setPixmap(QPixmap::fromImage(gui_right_oncoming));
+    ui->label_gui_sign->setPixmap(QPixmap::fromImage(gui_sign));
+    ui->label_gui_approaching->setVisible(false);
+    ui->label_gui_left_oncoming->setVisible(false);
+    ui->label_gui_right_oncoming->setVisible(false);
+    ui->label_gui_sign->setVisible(false);
+    QObject::connect(si, SIGNAL(guiDisplay(int, bool)), this, SLOT(guiDisplay(int, bool)));
 
     // Laser range finder ======================
     QObject::connect(si->lrf, SIGNAL(updateGUI(double *, cv::Mat *)), this, SLOT(lrfDisplay(double *, cv::Mat *)));
@@ -1907,18 +1907,24 @@ void MainWindow::on_checkBox_ot_trajectory_clicked(bool checked)
     ui->checkBox_ot_trajectory_kalman->setEnabled(checked);
 }
 
-void MainWindow::guiDisplay(int type)
+void MainWindow::guiDisplay(int type, bool fg_on)
 {
-    ui->label_gui_sign->setVisible(true);
+    ui->label_gui_sign->setVisible(fg_on);
     switch (type) {
     case GUI::APPROACHING:
-        ui->label_gui_approaching->setVisible(true);
+        ui->label_gui_approaching->setVisible(fg_on);
+        ui->label_gui_approaching->update();
         break;
     case GUI::LEFT_ONCOMING:
-        ui->label_gui_left_oncoming->setVisible(true);
+        ui->label_gui_left_oncoming->setVisible(fg_on);
+        ui->label_gui_left_oncoming->update();
         break;
     case GUI::RIGHT_ONCOMING:
-        ui->label_gui_right_oncoming->setVisible(true);
+        ui->label_gui_right_oncoming->setVisible(fg_on);
+        ui->label_gui_right_oncoming->update();
         break;
     }
+    ui->label_gui_sign->update();
+    qApp->sendPostedEvents();
+    qApp->processEvents();
 }

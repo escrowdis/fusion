@@ -203,6 +203,8 @@ private:
 
     void dataCollisionAvoidance();
 
+    int gui_display_time;
+    int gui_display_max = 20;
     void drawFusedTopView(bool fg_sv, bool fg_radar, bool fg_sv_each, bool fg_ot_trajectory, bool fg_ot_trajectory_raw, bool fg_ot_trajectory_kalman, bool fg_ot_kf);
 
     int range_precision;
@@ -298,6 +300,8 @@ private slots:
 
 signals:
     void updateGUI(cv::Mat *fused_topview, cv::Mat *img_detected_display);
+
+    void guiDisplay(int type, bool fg_on);
 };
 
 #endif // SENSORINFO_H

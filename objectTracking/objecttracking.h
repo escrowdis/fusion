@@ -68,7 +68,9 @@ public:
 
         cv::Point2f pos;                // position at WCS (cm)
 
-        cv::Point2f vel;                // velocity of object (cm/s)
+        cv::Rect rect;                  // rect (cm) //**// unused
+
+        cv::Point2f vel;                // velocity of object (m/s)
 
         cv::Point2f acc;                // acceleration of object (cm/s^2)
 

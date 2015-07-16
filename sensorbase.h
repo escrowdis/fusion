@@ -13,6 +13,15 @@ struct VEL_ESTI {
     };
 };
 
+struct VEL_UNIT {
+    enum {
+        M_PER_SEC2KM_PER_HR,
+        CM_PER_SEC2KM_PER_HR,
+        KM_PER_HR2M_PRE_SEC,
+        KM_PER_HR2CM_PER_SEC
+    };
+};
+
 class SensorBase
 {
 public:
@@ -37,6 +46,7 @@ public:
     static cv::Point polar2Cart(PC pc_in);
     static SensorBase::PC cart2Polarf(cv::Point2f pt_in);
     static PC cart2Polar(cv::Point pt_in);
+    static cv::Point2f velUnitTransform(cv::Point2f src, int type);
     static cv::Point2f velEstimation(cv::Point2f p_now, cv::Point2f p_prev, float time_proc, int type);
 
 };

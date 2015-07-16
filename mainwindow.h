@@ -362,7 +362,7 @@ private slots:
     // Recording ============== End
 
     // GUI ====================
-    void guiDisplay(int);
+    void guiDisplay(int type, bool fg_on);
     // GUI ==================== End
 
     void on_lineEdit_sv_rig_height_returnPressed();
