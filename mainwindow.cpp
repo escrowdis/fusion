@@ -182,6 +182,14 @@ MainWindow::MainWindow(QWidget *parent) :
     QObject::connect(ui->label_sv_detected, SIGNAL(mXY(int, int)), this, SLOT(mouseXY(int, int)));
     // ========================================= End
 
+        // rig selection (before initialFusedTopView())
+        if (ui->radioButton_vehicle_cart->isChecked())
+            on_radioButton_vehicle_cart_clicked();
+        else if (ui->radioButton_vehicle_car->isChecked())
+            on_radioButton_vehicle_car_clicked();
+        else if (ui->radioButton_vehicle_tractor->isChecked())
+            on_radioButton_vehicle_tractor_clicked();
+
     re.setParentFolder("data");
 }
 

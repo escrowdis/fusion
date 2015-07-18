@@ -5,7 +5,7 @@
 
 #include "opencv2/opencv.hpp"
 
-#include "sensorbase.h"
+#include "../sensorbase.h"
 
 namespace MATCH_TYPE {
 enum {

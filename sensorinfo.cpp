@@ -27,8 +27,8 @@ SensorInfo::SensorInfo()
 
     // object macthing
     initializeObjectMatching(size_data_fused);
-    setErrorThresholdX(300);
-    setErrorThresholdZ(800, sv->max_distance);
+    setErrorThresholdX(100);
+    setErrorThresholdZ(500, sv->max_distance);
     setThresholdBha(0.3);
 
     ca = new CollisionAvoidance();
@@ -81,9 +81,6 @@ void SensorInfo::initialFusedTopView(int range_pixel)
 
     ratio = 1.0 * detection_range_pixel / sv->max_distance;
 
-    // use cart as default
-    vehicle.width = 43;
-    vehicle.length = 43;
     vehicle.width_pixel = vehicle.width * ratio;
     vehicle.length_pixel = vehicle.length * ratio;
 
@@ -109,10 +106,6 @@ void SensorInfo::initialFusedTopView(int range_pixel)
 
     sensors[sensor].angle_half_fov = sv->view_angle * 0.5;
 
-    sensors[sensor].location.pos = cv::Point2f(0, 29.5);
-
-    sensors[sensor].location.theta = 0.0;
-
     QColor pic_color_sv = QColor(sensors[sensor].color[0], sensors[sensor].color[1], sensors[sensor].color[2]);
     pic_sv.fill(pic_color_sv);
 
@@ -121,10 +114,6 @@ void SensorInfo::initialFusedTopView(int range_pixel)
     sensors[sensor].color = cv::Scalar(0, 0, 255, 255);
 
     sensors[sensor].angle_half_fov = rc->view_angle * 0.5;
-
-    sensors[sensor].location.pos = cv::Point2f(0, vehicle.head_pos);
-
-    sensors[sensor].location.theta = 0.0;
 
     QColor pic_color_radar = QColor(sensors[sensor].color[0], sensors[sensor].color[1], sensors[sensor].color[2]);
     pic_radar.fill(pic_color_radar);
@@ -221,7 +210,9 @@ void SensorInfo::chooseVehicle(int vehicle_type)
         vehicle.head_pos = vehicle.length / 2;
 
         sensors[SENSOR::SV].location.pos = cv::Point2f(0, 29.5);
+        sensors[SENSOR::SV].location.theta = 0.0;
         sensors[SENSOR::RADAR].location.pos = cv::Point2f(0, vehicle.head_pos);
+        sensors[SENSOR::RADAR].location.theta = 0.0;
         break;
     case VEHICLE::CAR:
         // choose car: TOYOTA Camry
@@ -230,7 +221,9 @@ void SensorInfo::chooseVehicle(int vehicle_type)
         vehicle.head_pos = vehicle.length / 2;
 
         sensors[SENSOR::SV].location.pos = cv::Point2f(0, 75);
+        sensors[SENSOR::SV].location.theta = 0.0;
         sensors[SENSOR::RADAR].location.pos = cv::Point2f(0, vehicle.head_pos);
+        sensors[SENSOR::RADAR].location.theta = 0.0;
         break;
     case VEHICLE::TRACTOR:
         vehicle.width = 125;
@@ -238,7 +231,9 @@ void SensorInfo::chooseVehicle(int vehicle_type)
         vehicle.head_pos = vehicle.length / 2;
 
         sensors[SENSOR::SV].location.pos = cv::Point2f(-16.5, 302 - vehicle.length / 2);
+        sensors[SENSOR::SV].location.theta = 0.0;
         sensors[SENSOR::RADAR].location.pos = cv::Point2f(0, 301 - vehicle.length / 2);
+        sensors[SENSOR::RADAR].location.theta = 0.0;
         break;
     }
 
@@ -540,7 +535,7 @@ void SensorInfo::dataTracking()
                 qDebug()<<"Raw traj."<<re.vr->current_frame_count<<SensorBase::polar2Cart(info_new.pc).x<<SensorBase::polar2Cart(info_new.pc).y;
 #endif
 
-            // velocity & acceleration estimation & Kalman filter
+            // raw data's velocity and acceleration estimation
             int last = ot_fused->ti[conti_id].info.size() - 1;
             if (last >= 2) {
                 // velocity & acceleration estimation
@@ -548,11 +543,11 @@ void SensorInfo::dataTracking()
                 cv::Point2f pt_pre2t = ot_fused->ti[conti_id].info[last - 2].pos;
                 cv::Point2f pt_pre1t = ot_fused->ti[conti_id].info[last - 1].pos;
                 cv::Point2f pt_now = ot_fused->ti[conti_id].info[last].pos;
-                //                qDebug()<<"size"<<last<<pt_pre2t.x<<pt_pre2t.y<<pt_pre1t.x<<pt_pre1t.y;
-                //                for(int i = 0; i < last + 1; i++) {
-                //                    qDebug()<<ot_fused->ti[conti_id].info[i].pos.x<<
-                //                              ot_fused->ti[conti_id].info[i].pos.y;
-                //                }
+//                qDebug()<<"size"<<last<<pt_pre2t.x<<pt_pre2t.y<<pt_pre1t.x<<pt_pre1t.y;
+//                for(int i = 0; i < last + 1; i++) {
+//                    qDebug()<<ot_fused->ti[conti_id].info[i].pos.x<<
+//                              ot_fused->ti[conti_id].info[i].pos.y;
+//                }
                 float time_proc = 1.0 * sv->time_proc;
                 cv::Point2f vel_prev2t_1t = SensorBase::velEstimation(pt_pre1t, pt_pre2t, time_proc, VEL_ESTI::CM_PER_FRAME2M_PER_SEC);
                 cv::Point2f vel_prev1t_now = SensorBase::velEstimation(pt_now, pt_pre1t, time_proc, VEL_ESTI::CM_PER_FRAME2M_PER_SEC);
@@ -569,34 +564,40 @@ void SensorInfo::dataTracking()
                            vel_prev1t_now.x<<","<<vel_prev1t_now.y<<std::endl;
 #endif
 
-                // Kalman filter
-                if (fg_ot_kf) {
+
+            }
+            // Kalman filter and its velocity and acceleration estimation
+            if (fg_ot_kf) {
+                if (last >= 0) {
                     ot_fused->ti[conti_id].kf.prediction = ot_fused->ti[conti_id].kf.kf_core.predict();
                     ot_fused->ti[conti_id].kf.predictPt = cv::Point((int)(ot_fused->ti[conti_id].kf.prediction.at<float>(0)), (int)(ot_fused->ti[conti_id].kf.prediction.at<float>(1)));
 #ifdef debug_info_object_tracking
                     std::cout<<"predictPt: "<<ot_fused->ti[conti_id].kf.predictPt.x<<","<<ot_fused->ti[conti_id].kf.predictPt.y<<std::endl;
 #endif
 
-                    ot_fused->ti[conti_id].kf.measurement.at<float>(0) = pt_now.x;
-                    ot_fused->ti[conti_id].kf.measurement.at<float>(1) = pt_now.y;
+                    ot_fused->ti[conti_id].kf.measurement.at<float>(0) = ot_fused->ti[conti_id].info[last].pos.x;
+                    ot_fused->ti[conti_id].kf.measurement.at<float>(1) = ot_fused->ti[conti_id].info[last].pos.y;
                     ot_fused->ti[conti_id].kf.measurement += ot_fused->ti[conti_id].kf.kf_core.measurementMatrix * ot_fused->ti[conti_id].kf.state;
-
                     ot_fused->ti[conti_id].kf.estimated = ot_fused->ti[conti_id].kf.kf_core.correct(ot_fused->ti[conti_id].kf.measurement);
-                    ot_fused->ti[conti_id].kf.statePt = cv::Point(ot_fused->ti[conti_id].kf.estimated.at<float>(0), ot_fused->ti[conti_id].kf.estimated.at<float>(1));
+                    int x = ot_fused->ti[conti_id].kf.estimated.at<float>(0);
+                    int y = ot_fused->ti[conti_id].kf.estimated.at<float>(1);
+                    ot_fused->ti[conti_id].kf.statePt = cv::Point((int)(ot_fused->ti[conti_id].kf.estimated.at<float>(0)), (int)(ot_fused->ti[conti_id].kf.estimated.at<float>(1)));
+                    //**// sometimes the value will overflow 20150717
                     ot_fused->ti[conti_id].trajectory_kf.push_back(ot_fused->ti[conti_id].kf.statePt);
 #ifdef debug_info_object_tracking_trajectory
                     if (conti_id == 0 && fg_ot_kf)
                         qDebug()<<"Kalman traj."<<re.vr->current_frame_count<<ot_fused->ti[conti_id].kf.statePt.x<<ot_fused->ti[conti_id].kf.statePt.y;
 #endif
                     int last_kf = ot_fused->ti[conti_id].trajectory_kf.size() - 1;
+                    // velocity & acceleration estimation
                     if (last_kf >= 2) {
                         // (cm), (m/s), (m/s^2)
-                        cv::Point2f pt_pre2t = cv::Point2f(ot_fused->ti[conti_id].trajectory_kf[last_kf - 2]);
-                        cv::Point2f pt_pre1t = cv::Point2f(ot_fused->ti[conti_id].trajectory_kf[last_kf - 1]);
-                        cv::Point2f pt_now = cv::Point2f(ot_fused->ti[conti_id].trajectory_kf[last_kf]);
+                        cv::Point2f pt_pre2t_kf = cv::Point2f(ot_fused->ti[conti_id].trajectory_kf[last_kf - 2]);
+                        cv::Point2f pt_pre1t_kf = cv::Point2f(ot_fused->ti[conti_id].trajectory_kf[last_kf - 1]);
+                        cv::Point2f pt_now_kf = cv::Point2f(ot_fused->ti[conti_id].trajectory_kf[last_kf]);
                         float time_proc = 1.0 * sv->time_proc;
-                        cv::Point2f vel_prev2t_1t = SensorBase::velEstimation(pt_pre1t, pt_pre2t, time_proc, VEL_ESTI::CM_PER_FRAME2M_PER_SEC);
-                        cv::Point2f vel_prev1t_now = SensorBase::velEstimation(pt_now, pt_pre1t, time_proc, VEL_ESTI::CM_PER_FRAME2M_PER_SEC);
+                        cv::Point2f vel_prev2t_1t = SensorBase::velEstimation(pt_pre1t_kf, pt_pre2t_kf, time_proc, VEL_ESTI::CM_PER_FRAME2M_PER_SEC);
+                        cv::Point2f vel_prev1t_now = SensorBase::velEstimation(pt_now_kf, pt_pre1t_kf, time_proc, VEL_ESTI::CM_PER_FRAME2M_PER_SEC);
                         cv::Point2f acc = cv::Point2f((vel_prev1t_now.x - vel_prev2t_1t.x) / time_proc, (vel_prev1t_now.y - vel_prev2t_1t.y) / time_proc);
                         ot_fused->ti[conti_id].info[last].vel.x = vel_prev1t_now.x;
                         ot_fused->ti[conti_id].info[last].vel.y = vel_prev1t_now.y;
@@ -654,7 +655,7 @@ void SensorInfo::dataTracking()
             ti_new.kf.kf_core.statePre.at<float>(1) = info_new.pos.y;
             ti_new.kf.kf_core.statePre.at<float>(2) = 0.0;
             ti_new.kf.kf_core.statePre.at<float>(3) = 0.0;
-            ti_new.kf.kf_core.transitionMatrix = (cv::Mat_<float>(4, 4) << 1,0,0,0,   0,1,0,0,  0,0,1,0,  0,0,0,1);
+            ti_new.kf.kf_core.transitionMatrix = (cv::Mat_<float>(4, 4) << 1,0,1,0,   0,1,0,1,  0,0,1,0,  0,0,0,1);
             cv::setIdentity(ti_new.kf.kf_core.measurementMatrix);
             cv::setIdentity(ti_new.kf.kf_core.processNoiseCov, cv::Scalar::all(1e-5));
             cv::setIdentity(ti_new.kf.kf_core.measurementNoiseCov, cv::Scalar::all(1e-3));
@@ -1134,9 +1135,15 @@ void SensorInfo::drawFusedTopView(bool fg_sv, bool fg_radar, bool fg_sv_each, bo
             lock_ot_fused.lockForRead();
             for (int i = 0; i < ot_fused->ti.size(); i++) {
                 if (!ot_fused->ti[i].fg_update) continue;
-                for (int j = 1; j < ot_fused->ti[i].trajectory_kf.size(); j++) {
-                    cv::line(fused_topview, point2FusedTopView(ot_fused->ti[i].trajectory_kf[j - 1]), point2FusedTopView(ot_fused->ti[i].trajectory_kf[j]), cv::Scalar(255, 255, 255, 255), 1);
+                // trajectory ploting
+                if (ot_fused->ti[i].trajectory_kf.size() >= 2) {
+                    for (int j = 1; j < ot_fused->ti[i].trajectory_kf.size(); j++) {
+                        cv::line(fused_topview, point2FusedTopView(ot_fused->ti[i].trajectory_kf[j - 1]), point2FusedTopView(ot_fused->ti[i].trajectory_kf[j]), cv::Scalar(255, 255, 255, 255), 1);
+                    }
                 }
+                // predicted point
+                if (ot_fused->ti[i].trajectory_kf.size() > 0)
+                    cv::circle(fused_topview, point2FusedTopView(ot_fused->ti[i].kf.predictPt), 2, cv::Scalar(255, 255, 255, 255), -1, 8, 0);
             }
             lock_ot_fused.unlock();
         }
