@@ -579,10 +579,7 @@ void SensorInfo::dataTracking()
                     ot_fused->ti[conti_id].kf.measurement.at<float>(1) = ot_fused->ti[conti_id].info[last].pos.y;
                     ot_fused->ti[conti_id].kf.measurement += ot_fused->ti[conti_id].kf.kf_core.measurementMatrix * ot_fused->ti[conti_id].kf.state;
                     ot_fused->ti[conti_id].kf.estimated = ot_fused->ti[conti_id].kf.kf_core.correct(ot_fused->ti[conti_id].kf.measurement);
-                    int x = ot_fused->ti[conti_id].kf.estimated.at<float>(0);
-                    int y = ot_fused->ti[conti_id].kf.estimated.at<float>(1);
                     ot_fused->ti[conti_id].kf.statePt = cv::Point((int)(ot_fused->ti[conti_id].kf.estimated.at<float>(0)), (int)(ot_fused->ti[conti_id].kf.estimated.at<float>(1)));
-                    //**// sometimes the value will overflow 20150717
                     ot_fused->ti[conti_id].trajectory_kf.push_back(ot_fused->ti[conti_id].kf.statePt);
 #ifdef debug_info_object_tracking_trajectory
                     if (conti_id == 0 && fg_ot_kf)
@@ -655,6 +652,10 @@ void SensorInfo::dataTracking()
             ti_new.kf.kf_core.statePre.at<float>(1) = info_new.pos.y;
             ti_new.kf.kf_core.statePre.at<float>(2) = 0.0;
             ti_new.kf.kf_core.statePre.at<float>(3) = 0.0;
+            ti_new.kf.state.at<float>(0) = 0.0;
+            ti_new.kf.state.at<float>(1) = 0.0;
+            ti_new.kf.state.at<float>(2) = 0.0;
+            ti_new.kf.state.at<float>(3) = 0.0;
             ti_new.kf.kf_core.transitionMatrix = (cv::Mat_<float>(4, 4) << 1,0,1,0,   0,1,0,1,  0,0,1,0,  0,0,0,1);
             cv::setIdentity(ti_new.kf.kf_core.measurementMatrix);
             cv::setIdentity(ti_new.kf.kf_core.processNoiseCov, cv::Scalar::all(1e-5));
