@@ -182,13 +182,13 @@ MainWindow::MainWindow(QWidget *parent) :
     QObject::connect(ui->label_sv_detected, SIGNAL(mXY(int, int)), this, SLOT(mouseXY(int, int)));
     // ========================================= End
 
-        // rig selection (before initialFusedTopView())
-        if (ui->radioButton_vehicle_cart->isChecked())
-            on_radioButton_vehicle_cart_clicked();
-        else if (ui->radioButton_vehicle_car->isChecked())
-            on_radioButton_vehicle_car_clicked();
-        else if (ui->radioButton_vehicle_tractor->isChecked())
-            on_radioButton_vehicle_tractor_clicked();
+    // rig selection (before initialFusedTopView())
+    if (ui->radioButton_vehicle_cart->isChecked())
+        on_radioButton_vehicle_cart_clicked();
+    else if (ui->radioButton_vehicle_car->isChecked())
+        on_radioButton_vehicle_car_clicked();
+    else if (ui->radioButton_vehicle_tractor->isChecked())
+        on_radioButton_vehicle_tractor_clicked();
 
     re.setParentFolder("data");
 }
@@ -560,6 +560,7 @@ void MainWindow::dataFused()
     si->fg_ot_pf = si->fg_ot && ui->checkBox_ot_pf->isChecked();
     si->fg_ca_astar = ui->checkBox_ca->isChecked() && ui->checkBox_ca_astar->isChecked() && (si->fg_sv || si->fg_radar);
     si->fg_ca_vfh = ui->checkBox_ca->isChecked() && ui->checkBox_ca_vfh->isChecked();
+    si->fg_fused_region_display_only = ui->checkBox_fused_region_display_only->isChecked();
 
     si->dataExec();
 }

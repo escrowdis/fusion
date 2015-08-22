@@ -29,7 +29,7 @@ stereoParamBM:
    pre_filter_cap: 8
    SAD_window_size: 33
    min_disp: 0
-   num_of_disp: 112
+   num_of_disp: 64
    texture_thresh: 16
    uniquenese_ratio: 5
    speckle_window_size: 41

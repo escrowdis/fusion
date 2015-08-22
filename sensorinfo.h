@@ -99,6 +99,7 @@ public:
     bool fg_ot_pf;
     bool fg_ca_astar;
     bool fg_ca_vfh;
+    bool fg_fused_region_display_only;
     // Status ================= End
 
     // Sensors' information ===
@@ -205,7 +206,7 @@ private:
 
     int gui_display_time;
     int gui_display_max = 20;
-    void drawFusedTopView(bool fg_sv, bool fg_radar, bool fg_sv_each, bool fg_ot_trajectory, bool fg_ot_trajectory_raw, bool fg_ot_trajectory_kalman, bool fg_ot_kf);
+    void drawFusedTopView(bool fg_sv, bool fg_radar, bool fg_sv_each, bool fg_ot_trajectory, bool fg_ot_trajectory_raw, bool fg_ot_trajectory_kalman, bool fg_ot_kf, bool fg_fused_region_display_only);
 
     int range_precision;
 

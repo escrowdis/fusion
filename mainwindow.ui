@@ -1037,7 +1037,7 @@ parameters</string>
         <string>Velocity</string>
        </property>
        <property name="checked">
-        <bool>true</bool>
+        <bool>false</bool>
        </property>
       </widget>
       <widget class="QCheckBox" name="checkBox_ot_pf">
@@ -1114,7 +1114,7 @@ parameters</string>
         <string>Trajectory</string>
        </property>
        <property name="checked">
-        <bool>true</bool>
+        <bool>false</bool>
        </property>
       </widget>
       <widget class="QCheckBox" name="checkBox_ot_trajectory_raw">
@@ -1503,7 +1503,7 @@ parameters</string>
       <property name="geometry">
        <rect>
         <x>810</x>
-        <y>50</y>
+        <y>40</y>
         <width>151</width>
         <height>56</height>
        </rect>
@@ -1562,7 +1562,7 @@ parameters</string>
           <string>Fusion</string>
          </property>
          <property name="checked">
-          <bool>true</bool>
+          <bool>false</bool>
          </property>
         </widget>
        </item>
@@ -1571,8 +1571,8 @@ parameters</string>
      <widget class="QCheckBox" name="checkBox_fused_sv_plot_every_pixel">
       <property name="geometry">
        <rect>
-        <x>820</x>
-        <y>120</y>
+        <x>810</x>
+        <y>102</y>
         <width>109</width>
         <height>16</height>
        </rect>
@@ -1617,7 +1617,7 @@ parameters</string>
           <string>Cart</string>
          </property>
          <property name="checked">
-          <bool>false</bool>
+          <bool>true</bool>
          </property>
         </widget>
        </item>
@@ -1627,7 +1627,7 @@ parameters</string>
           <string>Tractor</string>
          </property>
          <property name="checked">
-          <bool>true</bool>
+          <bool>false</bool>
          </property>
         </widget>
        </item>
@@ -1727,6 +1727,19 @@ coming</string>
        <string>Frame count</string>
       </property>
      </widget>
+     <widget class="QCheckBox" name="checkBox_fused_region_display_only">
+      <property name="geometry">
+       <rect>
+        <x>810</x>
+        <y>122</y>
+        <width>151</width>
+        <height>16</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Display fusion region only</string>
+      </property>
+     </widget>
      <zorder>label_gui_BG</zorder>
      <zorder>layoutWidget</zorder>
      <zorder>label_fusion_BG</zorder>
@@ -1740,6 +1753,7 @@ coming</string>
      <zorder>label_gui_left_oncoming</zorder>
      <zorder>label_gui_right_oncoming</zorder>
      <zorder>label_sv_frame_count_2</zorder>
+     <zorder>checkBox_fused_region_display_only</zorder>
     </widget>
    </widget>
    <widget class="QWidget" name="layoutWidget">

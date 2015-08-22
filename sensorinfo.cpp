@@ -27,7 +27,7 @@ SensorInfo::SensorInfo()
 
     // object macthing
     initializeObjectMatching(size_data_fused);
-    setErrorThresholdX(100);
+    setErrorThresholdX(200);
     setErrorThresholdZ(500, sv->max_distance);
     setThresholdBha(0.3);
 
@@ -301,7 +301,7 @@ void SensorInfo::dataExec()
         dataCollisionAvoidance();
     }
 
-    drawFusedTopView(fg_sv, fg_radar, fg_sv_each_pixel, fg_ot_trajectory, fg_ot_trajectory_raw, fg_ot_trajectory_kalman, fg_ot_kf);
+    drawFusedTopView(fg_sv, fg_radar, fg_sv_each_pixel, fg_ot_trajectory, fg_ot_trajectory_raw, fg_ot_trajectory_kalman, fg_ot_kf, fg_fused_region_display_only);
     fg_proc = true;
 }
 
@@ -582,8 +582,8 @@ void SensorInfo::dataTracking()
                     ot_fused->ti[conti_id].kf.statePt = cv::Point((int)(ot_fused->ti[conti_id].kf.estimated.at<float>(0)), (int)(ot_fused->ti[conti_id].kf.estimated.at<float>(1)));
                     ot_fused->ti[conti_id].trajectory_kf.push_back(ot_fused->ti[conti_id].kf.statePt);
 #ifdef debug_info_object_tracking_trajectory
-                    if (conti_id == 0 && fg_ot_kf)
-                        qDebug()<<"Kalman traj."<<re.vr->current_frame_count<<ot_fused->ti[conti_id].kf.statePt.x<<ot_fused->ti[conti_id].kf.statePt.y;
+                    if ((conti_id == 154 || conti_id == 155) && fg_ot_kf)
+                        qDebug()<<"Kalman traj."<<re.vr->current_frame_count<<ot_fused->ti[conti_id].kf.statePt.x<<ot_fused->ti[conti_id].kf.statePt.y<<"\t"<<ot_fused->ti[conti_id].kf.predictPt.x<<ot_fused->ti[conti_id].kf.predictPt.y;
 #endif
                     int last_kf = ot_fused->ti[conti_id].trajectory_kf.size() - 1;
                     // velocity & acceleration estimation
@@ -980,7 +980,7 @@ void SensorInfo::dataProcess(bool fg_sv, bool fg_radar)
     }
 }
 
-void SensorInfo::drawFusedTopView(bool fg_sv, bool fg_radar, bool fg_sv_each, bool fg_ot_trajectory, bool fg_ot_trajectory_raw, bool fg_ot_trajectory_kalman, bool fg_ot_kf)
+void SensorInfo::drawFusedTopView(bool fg_sv, bool fg_radar, bool fg_sv_each, bool fg_ot_trajectory, bool fg_ot_trajectory_raw, bool fg_ot_trajectory_kalman, bool fg_ot_kf, bool fg_fused_region_display_only)
 {
     stereo_vision::objectInfo *d_sv = sv->objects_display;
 
@@ -1081,6 +1081,9 @@ void SensorInfo::drawFusedTopView(bool fg_sv, bool fg_radar, bool fg_sv_each, bo
         lock_ot_fused.lockForRead();
         for (int p = 0; p < ot_fused->ti.size(); p++) {
             int last = ot_fused->ti[p].info.size() - 1;
+            if (fg_fused_region_display_only && (ot_fused->ti[p].info[last].pc.angle < -sensors[SENSOR::SV].angle_half_fov ||
+                    ot_fused->ti[p].info[last].pc.angle > sensors[SENSOR::SV].angle_half_fov))
+                continue;
             if (last < 0 || !ot_fused->ti[p].fg_update) continue;
             if (fg_ot_trajectory_raw) {
                 for (int i = 1; i < ot_fused->ti[p].info.size(); i++) {
@@ -1111,9 +1114,21 @@ void SensorInfo::drawFusedTopView(bool fg_sv, bool fg_radar, bool fg_sv_each, bo
             tag = QString::number(p).toStdString() + ", " + QString::number(ot_fused->ti[p].info[last].pc.range / 100, 'g', range_precision).toStdString();
             cv::circle(fused_topview, point2FusedTopView(ot_fused->ti[p].info[last].pc), 2, color_pt, -1, 8, 0);
             cv::putText(fused_topview, tag, pos_text, font, font_size, color_pt, font_thickness);
+
+//            if (p == 7)
+//                qDebug()<<ot_fused->ti[p].info[last].pos.x<<ot_fused->ti[p].info[last].pos.y;
+
+//            if (ot_fused->ti[p].info[last].pos.y > 2700 && ot_fused->ti[p].info[last].pos.y < 3300 &&
+//                    ot_fused->ti[p].info[last].pos.x > -200 && ot_fused->ti[p].info[last].pos.x < 200) {
+//                if (ot_fused->ti[p].info[last].det_mode == DETECT_MODE::SV_ONLY)
+//                    qDebug()<<"SV\t"<<ot_fused->ti[p].info[last].pos.x<<ot_fused->ti[p].info[last].pos.y;
+//                else if (ot_fused->ti[p].info[last].det_mode == DETECT_MODE::RADAR_ONLY)
+//                    qDebug()<<"RADAR\t"<<ot_fused->ti[p].info[last].pos.x<<ot_fused->ti[p].info[last].pos.y;
+//            }
+
             // raw / kf data velocity -> processed in dataTracking()
             if (fg_ot_vel && last >= 2) {
-                float scale = 10.0;
+                float scale = 30.0;
                 cv::Point p1 = point2FusedTopView(ot_fused->ti[p].info[last].pc);
                 cv::Point v = scale * ot_fused->ti[p].info[last].vel;
                 cv::Point p2 = cv::Point(p1.x + v.x, p1.y - v.y);
@@ -1135,6 +1150,10 @@ void SensorInfo::drawFusedTopView(bool fg_sv, bool fg_radar, bool fg_sv_each, bo
         if (fg_ot_kf && fg_ot_trajectory_kalman) {
             lock_ot_fused.lockForRead();
             for (int i = 0; i < ot_fused->ti.size(); i++) {
+                int last = ot_fused->ti[i].info.size() - 1;
+                if (fg_fused_region_display_only && (ot_fused->ti[i].info[last].pc.angle < -sensors[SENSOR::SV].angle_half_fov ||
+                        ot_fused->ti[i].info[last].pc.angle > sensors[SENSOR::SV].angle_half_fov))
+                    continue;
                 if (!ot_fused->ti[i].fg_update) continue;
                 // trajectory ploting
                 if (ot_fused->ti[i].trajectory_kf.size() >= 2) {

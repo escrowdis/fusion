@@ -603,7 +603,9 @@ bool stereo_vision::vDispCalculation()
         pt1.y = pt1.x * (-1 * cos(theta) / sin (theta)) + rho / sin(theta);
         pt2.x = v_disp.cols;
         pt2.y = pt2.x * (-1 * cos(theta) / sin (theta)) + rho / sin(theta);
-        cv::line(v_disp_display, pt1, pt2, cv::Scalar(0, 0, 255), 1, 8, 0);
+        if (rho >= thresh_rho_min && theta >= angle_min && theta <= angle_max) {
+            cv::line(v_disp_display, pt1, pt2, cv::Scalar(0, 0, 255), 1, 8, 0);
+        }
     }
     float rho = fitted_line[0], theta = fitted_line[1];
     cv::Point pt1, pt2;
