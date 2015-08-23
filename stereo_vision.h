@@ -297,7 +297,7 @@ public:
 
         bool labeled;                   // filtered object
 
-        float avg_Z;                      // average depth of t
+        float avg_Z;                      // average depth of t (cm)
         float avg_X;
         float avg_Y;
 

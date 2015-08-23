@@ -41,10 +41,14 @@ SensorInfo::SensorInfo()
     t.restart();
     time_gap = 30;
 
-    // fusion params
-    var_sv = pow(0.2260, 2);
-    var_radar = pow(0.0204, 2);
-    var_fused = var_sv * var_radar / (var_sv + var_radar);
+    param_p[0] = 0.28;
+    param_p[1] = 10.23;
+    param_p[2] = 0.437;
+    param_p[3] = 10.86;
+    param_u[0] = 2.86;
+    param_u[1] = 0.102;
+    param_u[2] = 22.216;
+    param_u[3] = 0.047;
 
 #ifdef debug_info_ca_astar
     cv::namedWindow("A* result", cv::WINDOW_AUTOSIZE);
@@ -139,7 +143,7 @@ void SensorInfo::updateFusedTopView()
     fused_topview_BG.setTo(cv::Scalar(0, 0, 0, 0));
 
     // topview
-    cv::circle(fused_topview_BG, vehicle.VCP, detection_range_pixel, rc->color_BG, -1, 8, 0);
+//    cv::circle(fused_topview_BG, vehicle.VCP, detection_range_pixel, rc->color_BG, -1, 8, 0);
 
     // max detection range [now]
     cv::putText(fused_topview_BG, QString::number((int)detection_range).toStdString() + " cm", cv::Point(vehicle.VCP.x + 0.65 * detection_range_pixel, vehicle.VCP.y  - 0.8 * detection_range_pixel), cv::FONT_HERSHEY_COMPLEX_SMALL, 1, rc->color_line, 1);
@@ -929,15 +933,14 @@ void SensorInfo::dataProcess(bool fg_sv, bool fg_radar)
             }
             // fusion data
             else if (fg_fusion && !cri.empty()) {
-                double var_sv = pow(0.2260, 2);
-                double var_radar = pow(0.0204, 2);
-                double var_fused = var_sv * var_radar / (var_sv + var_radar);
                 data_fused[count].det_mode = DETECT_MODE::SV_RADAR;
                 data_fused[count].ids.now = count;
                 data_fused[count].img = d_sv[k].img.clone();
                 radar_mean = SensorBase::PC();
                 radar_plot_pt_f = cv::Point(0, 0);
                 radar_vel = cv::Point2f(0.0, 0.0);
+                // averaging radar data
+//                qDebug()<<"wait for processed radar amount"<<cri.size();
                 for (int p = 0; p < cri.size(); p++) {
                     radar_mean.range += d_radar[cri[p]].pc_world.range;
                     radar_mean.angle += d_radar[cri[p]].pc_world.angle;
@@ -949,12 +952,30 @@ void SensorInfo::dataProcess(bool fg_sv, bool fg_radar)
                 radar_mean.angle /= (1.0 * cri.size());
                 radar_plot_pt_f.x = (1.0 * radar_plot_pt_f.x) / (1.0 * cri.size());
                 radar_plot_pt_f.y = (1.0 * radar_plot_pt_f.y) / (1.0 * cri.size());
-                data_fused[count].pc = SensorBase::PC((d_sv[k].pc_world.range / var_sv + radar_mean.range / var_radar) * var_fused,
-                                                      (d_sv[k].pc_world.angle / var_sv + radar_mean.angle / var_radar) * var_fused);
-                data_fused[count].pos = SensorBase::polar2Cartf(data_fused[count].pc);
+                // fusion params
+                double sv_x = (double)(d_sv[k].avg_X / 100.0);
+                double sv_z = (double)(d_sv[k].avg_Z / 100.0);
+                double radar_x = radar_mean.range * sin(radar_mean.angle / 180.0 * CV_PI) / 100.0;
+                double radar_z = radar_mean.range * cos(radar_mean.angle / 180.0 * CV_PI) / 100.0;
+                var_sv[0] = pow(param_p[0] * sv_z + param_p[1], 2);
+                var_sv[1] = pow(param_u[2] * exp(param_u[3] * sv_z), 2);
+                var_radar[0] = pow(param_u[0] * exp(param_u[1] * radar_z), 2);
+                var_radar[1] = pow(param_p[2] * radar_z + param_p[3], 2);
+                var_fused[0] = var_sv[0] * var_radar[0] / (var_sv[0] + var_radar[0]);
+                var_fused[1] = var_sv[1] * var_radar[1] / (var_sv[1] + var_radar[1]);
+#ifdef debug_info_fusion
+                qDebug()<<"fusion model param\t"<<
+                          "\tDistance\t"<<"variance_x\t"<<"variance_z\n"<<
+                          "SV\t"<<sv_z<<"\t\t"<<var_sv[0]<<"\t"<<var_sv[1]<<"\n"<<
+                          "ESR\t"<<radar_z<<"\t\t"<<var_radar[0]<<"\t"<<var_radar[1];
+#endif
+                // fusion model calculation
+                data_fused[count].pos = cv::Point2d((sv_x / var_sv[0] + radar_x / var_radar[0]) * var_fused[0] * 100.0,
+                        (sv_z / var_sv[1] + radar_z / var_radar[1]) * var_fused[1] * 100.0);
+                data_fused[count].pc = SensorBase::cart2Polarf(data_fused[count].pos);
                 data_fused[count].center = std::pair<int, int>(d_sv[k].center.first, d_sv[k].center.second);
-                data_fused[count].plot_pt_f = cv::Point((d_sv[k].plot_pt_f.x / var_sv + radar_plot_pt_f.x / var_radar) * var_fused,
-                                                        (d_sv[k].plot_pt_f.y / var_sv + radar_plot_pt_f.y / var_radar) * var_fused);
+                data_fused[count].plot_pt_f = cv::Point((d_sv[k].plot_pt_f.x / var_sv[0] + radar_plot_pt_f.x / var_radar[0]) * var_fused[0],
+                                                        (d_sv[k].plot_pt_f.y / var_sv[1] + radar_plot_pt_f.y / var_radar[1]) * var_fused[1]);
                 cv::Point tl_new = cv::Point(data_fused[count].plot_pt_f.x - 0.5 * d_sv[k].rect_f.width, data_fused[count].plot_pt_f.y - 0.5 * d_sv[k].rect_f.height);
                 data_fused[count].rect_f = cv::Rect(tl_new.x, tl_new.y, d_sv[k].rect_f.width, d_sv[k].rect_f.height);
                 count++;

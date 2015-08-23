@@ -174,10 +174,12 @@ private:
 
     void resetFusion();
 
-    // fusion param
-    double var_sv;
-    double var_radar;
-    double var_fused;
+    // fusion param (x, z)
+    double var_sv[2];
+    double var_radar[2];
+    double var_fused[2];
+    double param_p[4];
+    double param_u[4];
 
     std::vector<int> cri;                           // array of closest_radar's id
     double U_D;                                     // max distance error (cm)
