@@ -100,6 +100,7 @@ public:
     bool fg_ca_astar;
     bool fg_ca_vfh;
     bool fg_fused_region_display_only;
+    bool fg_display_literature_mode;
     // Status ================= End
 
     // Sensors' information ===
@@ -207,7 +208,7 @@ private:
     void dataCollisionAvoidance();
 
     int gui_display_time;
-    int gui_display_max = 20;
+    int gui_display_max = 20;                       // threshold for updating gui of pre-collision warning
     void drawFusedTopView(bool fg_sv, bool fg_radar, bool fg_sv_each, bool fg_ot_trajectory, bool fg_ot_trajectory_raw, bool fg_ot_trajectory_kalman, bool fg_ot_kf, bool fg_fused_region_display_only);
 
     int range_precision;
