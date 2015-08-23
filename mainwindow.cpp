@@ -561,6 +561,7 @@ void MainWindow::dataFused()
     si->fg_ca_astar = ui->checkBox_ca->isChecked() && ui->checkBox_ca_astar->isChecked() && (si->fg_sv || si->fg_radar);
     si->fg_ca_vfh = ui->checkBox_ca->isChecked() && ui->checkBox_ca_vfh->isChecked();
     si->fg_fused_region_display_only = ui->checkBox_fused_region_display_only->isChecked();
+    si->fg_display_literature_mode = ui->checkBox_display_literature_mode->isChecked();
 
     si->dataExec();
 }

@@ -143,7 +143,8 @@ void SensorInfo::updateFusedTopView()
     fused_topview_BG.setTo(cv::Scalar(0, 0, 0, 0));
 
     // topview
-//    cv::circle(fused_topview_BG, vehicle.VCP, detection_range_pixel, rc->color_BG, -1, 8, 0);
+    if (!fg_display_literature_mode)
+        cv::circle(fused_topview_BG, vehicle.VCP, detection_range_pixel, rc->color_BG, -1, 8, 0);
 
     // max detection range [now]
     cv::putText(fused_topview_BG, QString::number((int)detection_range).toStdString() + " cm", cv::Point(vehicle.VCP.x + 0.65 * detection_range_pixel, vehicle.VCP.y  - 0.8 * detection_range_pixel), cv::FONT_HERSHEY_COMPLEX_SMALL, 1, rc->color_line, 1);
@@ -1061,6 +1062,12 @@ void SensorInfo::drawFusedTopView(bool fg_sv, bool fg_radar, bool fg_sv_each, bo
         }
     }
 
+    cv::Scalar color_fusion = cv::Scalar(139, 0, 139, 255);
+    cv::Scalar color_rect;
+    if (fg_display_literature_mode)
+        color_rect = cv::Scalar(255, 0, 0, 255);
+    else
+        color_rect = cv::Scalar(255, 255, 0, 255);
     // un-tracking mode (tracking button not checked)
     if (!fg_ot) {
         lock_f_topview.lockForWrite();
@@ -1069,15 +1076,15 @@ void SensorInfo::drawFusedTopView(bool fg_sv, bool fg_radar, bool fg_sv_each, bo
             switch (data_fused[p].det_mode) {
             case DETECT_MODE::SV_RADAR:
                 tag = QString::number(p).toStdString() + ", " + QString::number(data_fused[p].pc.range / 100, 'g', range_precision).toStdString();
-                cv::circle(fused_topview, data_fused[p].plot_pt_f, thickness + 2, cv::Scalar(139, 0, 139, 255), -1, 8, 0);
-                cv::rectangle(fused_topview, data_fused[p].rect_f, cv::Scalar(255, 255, 0, 255), 1, 8, 0);
-                cv::putText(fused_topview, tag, cv::Point(data_fused[p].plot_pt_f.x - 50, data_fused[p].plot_pt_f.y), font, font_size, cv::Scalar(139, 0, 139, 255), font_thickness);
+                cv::circle(fused_topview, data_fused[p].plot_pt_f, thickness + 2, color_fusion, -1, 8, 0);
+                cv::rectangle(fused_topview, data_fused[p].rect_f, color_rect, 1, 8, 0);
+                cv::putText(fused_topview, tag, cv::Point(data_fused[p].plot_pt_f.x - 50, data_fused[p].plot_pt_f.y), font, font_size, color_fusion, font_thickness);
                 break;
             case DETECT_MODE::SV_ONLY:
                 device = SENSOR::SV;
                 tag = QString::number(p).toStdString() + ", " + QString::number(data_fused[p].pc.range / 100, 'g', range_precision).toStdString();
                 cv::circle(fused_topview, data_fused[p].plot_pt_f, thickness, sensors[device].color, -1, 8, 0);
-                cv::rectangle(fused_topview, data_fused[p].rect_f, cv::Scalar(255, 255, 0, 255), 1, 8, 0);
+                cv::rectangle(fused_topview, data_fused[p].rect_f, color_rect, 1, 8, 0);
                 cv::putText(fused_topview, tag, data_fused[p].plot_pt_f, font, font_size, sensors[device].color, font_thickness);
                 break;
             case DETECT_MODE::RADAR_ONLY:
@@ -1114,11 +1121,10 @@ void SensorInfo::drawFusedTopView(bool fg_sv, bool fg_radar, bool fg_sv_each, bo
             }
             cv::Scalar color_pt;
             cv::Point pos_text;
-            cv::Scalar color_rect = cv::Scalar(255, 255, 0, 255);
             switch (ot_fused->ti[p].info[last].det_mode) {
             case DETECT_MODE::SV_RADAR:
                 cv::rectangle(fused_topview, ot_fused->ti[p].info[last].rect_f, color_rect, 1, 8, 0);
-                color_pt = cv::Scalar(139, 0, 139, 255);
+                color_pt = color_fusion;
                 pos_text = cv::Point(ot_fused->ti[p].info[last].plot_pt_f.x - 50, ot_fused->ti[p].info[last].plot_pt_f.y);
                 break;
             case DETECT_MODE::SV_ONLY:
@@ -1150,7 +1156,7 @@ void SensorInfo::drawFusedTopView(bool fg_sv, bool fg_radar, bool fg_sv_each, bo
 
             // raw / kf data velocity -> processed in dataTracking()
             if (fg_ot_vel && last >= 2) {
-                float scale = 30.0;
+                float scale = 5.0;
                 cv::Point p1 = point2FusedTopView(ot_fused->ti[p].info[last].pc);
                 cv::Point v = scale * ot_fused->ti[p].info[last].vel;
                 cv::Point p2 = cv::Point(p1.x + v.x, p1.y - v.y);
@@ -1160,9 +1166,9 @@ void SensorInfo::drawFusedTopView(bool fg_sv, bool fg_radar, bool fg_sv_each, bo
 #endif
                 drawArrow(fused_topview, p1, p2, 5, 30, cv::Scalar(255, 100, 255, 255), 2, 8);
                 tag = QString::number(ot_fused->ti[p].info[last].vel.x, 'g', 2).toStdString() + ", " + QString::number(ot_fused->ti[p].info[last].vel.y, 'g', 2).toStdString() + " m/s";
-                lock_f_sv.lockForWrite();
-                cv::putText(fused_topview, tag, cv::Point(pos_text.x, pos_text.y + 20), font, font_size, color_pt, font_thickness);
-                lock_f_sv.unlock();
+//                lock_f_sv.lockForWrite();
+//                cv::putText(fused_topview, tag, cv::Point(pos_text.x, pos_text.y + 20), font, font_size, color_pt, font_thickness);
+//                lock_f_sv.unlock();
             }
         }
         lock_ot_fused.unlock();
@@ -1170,6 +1176,11 @@ void SensorInfo::drawFusedTopView(bool fg_sv, bool fg_radar, bool fg_sv_each, bo
 
         // Kalman filter
         if (fg_ot_kf && fg_ot_trajectory_kalman) {
+            cv::Scalar color_traj;
+            if (fg_display_literature_mode)
+                color_traj = cv::Scalar(0, 0, 0, 255);
+            else
+                color_traj = cv::Scalar(255, 255, 255, 255);
             lock_ot_fused.lockForRead();
             for (int i = 0; i < ot_fused->ti.size(); i++) {
                 int last = ot_fused->ti[i].info.size() - 1;
@@ -1180,12 +1191,12 @@ void SensorInfo::drawFusedTopView(bool fg_sv, bool fg_radar, bool fg_sv_each, bo
                 // trajectory ploting
                 if (ot_fused->ti[i].trajectory_kf.size() >= 2) {
                     for (int j = 1; j < ot_fused->ti[i].trajectory_kf.size(); j++) {
-                        cv::line(fused_topview, point2FusedTopView(ot_fused->ti[i].trajectory_kf[j - 1]), point2FusedTopView(ot_fused->ti[i].trajectory_kf[j]), cv::Scalar(255, 255, 255, 255), 1);
+                        cv::line(fused_topview, point2FusedTopView(ot_fused->ti[i].trajectory_kf[j - 1]), point2FusedTopView(ot_fused->ti[i].trajectory_kf[j]), color_traj, 1);
                     }
                 }
                 // predicted point
                 if (ot_fused->ti[i].trajectory_kf.size() > 0)
-                    cv::circle(fused_topview, point2FusedTopView(ot_fused->ti[i].kf.predictPt), 2, cv::Scalar(255, 255, 255, 255), -1, 8, 0);
+                    cv::circle(fused_topview, point2FusedTopView(ot_fused->ti[i].kf.predictPt), 2, color_traj, -1, 8, 0);
             }
             lock_ot_fused.unlock();
         }

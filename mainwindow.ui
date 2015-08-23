@@ -24,7 +24,7 @@
      </rect>
     </property>
     <property name="currentIndex">
-     <number>3</number>
+     <number>4</number>
     </property>
     <widget class="QWidget" name="tab">
      <attribute name="title">
@@ -790,7 +790,7 @@ parameters</string>
       <property name="geometry">
        <rect>
         <x>20</x>
-        <y>20</y>
+        <y>30</y>
         <width>251</width>
         <height>261</height>
        </rect>
@@ -1007,6 +1007,19 @@ parameters</string>
        </property>
       </widget>
      </widget>
+     <widget class="QCheckBox" name="checkBox_display_literature_mode">
+      <property name="geometry">
+       <rect>
+        <x>20</x>
+        <y>5</y>
+        <width>111</width>
+        <height>16</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Literature mode</string>
+      </property>
+     </widget>
     </widget>
     <widget class="QWidget" name="tab_9">
      <attribute name="title">
@@ -1114,7 +1127,7 @@ parameters</string>
         <string>Trajectory</string>
        </property>
        <property name="checked">
-        <bool>false</bool>
+        <bool>true</bool>
        </property>
       </widget>
       <widget class="QCheckBox" name="checkBox_ot_trajectory_raw">
@@ -1562,7 +1575,7 @@ parameters</string>
           <string>Fusion</string>
          </property>
          <property name="checked">
-          <bool>false</bool>
+          <bool>true</bool>
          </property>
         </widget>
        </item>
