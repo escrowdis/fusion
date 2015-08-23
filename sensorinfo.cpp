@@ -964,15 +964,16 @@ void SensorInfo::dataProcess(bool fg_sv, bool fg_radar)
                 var_fused[0] = var_sv[0] * var_radar[0] / (var_sv[0] + var_radar[0]);
                 var_fused[1] = var_sv[1] * var_radar[1] / (var_sv[1] + var_radar[1]);
 #ifdef debug_info_fusion
-                qDebug()<<"fusion model param\t"<<
+                qDebug()<<"fusion model param\n"<<
                           "\tDistance\t"<<"variance_x\t"<<"variance_z\n"<<
                           "SV\t"<<sv_z<<"\t\t"<<var_sv[0]<<"\t"<<var_sv[1]<<"\n"<<
-                          "ESR\t"<<radar_z<<"\t\t"<<var_radar[0]<<"\t"<<var_radar[1];
+                          "ESR\t"<<radar_z<<"\t"<<var_radar[0]<<"\t"<<var_radar[1];
 #endif
                 // fusion model calculation
                 data_fused[count].pos = cv::Point2d((sv_x / var_sv[0] + radar_x / var_radar[0]) * var_fused[0] * 100.0,
                         (sv_z / var_sv[1] + radar_z / var_radar[1]) * var_fused[1] * 100.0);
                 data_fused[count].pc = SensorBase::cart2Polarf(data_fused[count].pos);
+                data_fused[count].pc.angle = data_fused[count].pc.angle * 180.0 / CV_PI;
                 data_fused[count].center = std::pair<int, int>(d_sv[k].center.first, d_sv[k].center.second);
                 data_fused[count].plot_pt_f = cv::Point((d_sv[k].plot_pt_f.x / var_sv[0] + radar_plot_pt_f.x / var_radar[0]) * var_fused[0],
                                                         (d_sv[k].plot_pt_f.y / var_sv[1] + radar_plot_pt_f.y / var_radar[1]) * var_fused[1]);
