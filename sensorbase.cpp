@@ -4,34 +4,46 @@ SensorBase::SensorBase()
 {
 }
 
-cv::Point2d SensorBase::polar2Cartf(SensorBase::PC pc_in)
+cv::Point2d SensorBase::polar2Cartf(SensorBase::PC pc_in, int unit_in)
 {
-    return cv::Point2d(pc_in.range * sin(pc_in.angle * CV_PI / 180.0), (pc_in.range * cos(pc_in.angle * CV_PI / 180.0)));
+    double angle = pc_in.angle;
+    if (unit_in == ANGLE_UNIT::DEGREE)
+        angle = angle * CV_PI / 180.0;
+    return cv::Point2d(pc_in.range * sin(angle), (pc_in.range * cos(angle)));
 }
 
-cv::Point SensorBase::polar2Cart(SensorBase::PC pc_in)
+cv::Point SensorBase::polar2Cart(SensorBase::PC pc_in, int unit_in)
 {
-    return cv::Point((int)(pc_in.range * sin(pc_in.angle * CV_PI / 180.0)), (int)((pc_in.range * cos(pc_in.angle * CV_PI / 180.0))));
+    double angle = pc_in.angle;
+    if (unit_in == ANGLE_UNIT::DEGREE)
+        angle = angle * CV_PI / 180.0;
+    return cv::Point((int)(pc_in.range * sin(angle)), (int)((pc_in.range * cos(angle))));
 }
 
-SensorBase::PC SensorBase::cart2Polarf(cv::Point2f pt_in)
+SensorBase::PC SensorBase::cart2Polarf(cv::Point2f pt_in, int unit)
 {
     float angle;
     if (pt_in.y == 0)
         angle = CV_PI / 2;
     else
         angle = atan(pt_in.x / pt_in.y);
+
+    if (unit == ANGLE_UNIT::DEGREE)
+        angle = angle * 180.0 / CV_PI;
 
     return SensorBase::PC(sqrt(pow(pt_in.x, 2) + pow(pt_in.y, 2)), angle);
 }
 
-SensorBase::PC SensorBase::cart2Polar(cv::Point pt_in)
+SensorBase::PC SensorBase::cart2Polar(cv::Point pt_in, int unit)
 {
     float angle;
     if (pt_in.y == 0)
         angle = CV_PI / 2;
     else
         angle = atan(pt_in.x / pt_in.y);
+
+    if (unit == ANGLE_UNIT::DEGREE)
+        angle = angle * 180.0 / CV_PI;
 
     return SensorBase::PC(sqrt(pow(pt_in.x, 2) + pow(pt_in.y, 2)), angle);
 }

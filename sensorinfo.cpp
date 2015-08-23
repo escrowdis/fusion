@@ -875,7 +875,7 @@ void SensorInfo::dataProcess(bool fg_sv, bool fg_radar)
             if (fg_fusion) {
                 U_D = 800;    // max distance error (cm) //**// tuned param
                 R_sv = pow(U_D * d_sv[k].pc_world.range / (1.0 * sv->max_distance), 2);  // (cm)
-                sv_pos = SensorBase::polar2Cartf(d_sv[k].pc_world);
+                sv_pos = SensorBase::polar2Cartf(d_sv[k].pc_world, ANGLE_UNIT::DEGREE);
                 //                std::cout<<"SV: "<<sv_pos.x<<" "<<sv_pos.y<<std::endl;
                 for (int m = 0; m < rc->objSize(); m++) {
                     if (d_radar[m].status >= rc->obj_status_filtered && !d_radar[m].fg_fused) {
@@ -883,7 +883,7 @@ void SensorInfo::dataProcess(bool fg_sv, bool fg_radar)
                                 d_radar[m].pc_world.angle > sensors[SENSOR::SV].angle_half_fov ||
                                 d_radar[m].pc_world.range * sin(d_radar[m].pc_world.angle * CV_PI / 180.0) > sv->max_distance)
                             continue;
-                        cv::Point2d radar_pos = SensorBase::polar2Cartf(d_radar[m].pc_world);
+                        cv::Point2d radar_pos = SensorBase::polar2Cartf(d_radar[m].pc_world, ANGLE_UNIT::DEGREE);
                         deviation_x = pow((radar_pos.x - sv_pos.x), 2);
                         deviation_z = pow((radar_pos.y - sv_pos.y), 2);
                         deviation = deviation_x + deviation_z;
@@ -904,7 +904,7 @@ void SensorInfo::dataProcess(bool fg_sv, bool fg_radar)
                             bool fg_closest = true;
                             for (int p = 0; p < sv->objSize(); p++) {
                                 if (p == k || !d_sv[p].labeled) continue;
-                                cv::Point2d sv_pos_tmp = SensorBase::polar2Cartf(d_sv[p].pc_world);
+                                cv::Point2d sv_pos_tmp = SensorBase::polar2Cartf(d_sv[p].pc_world, ANGLE_UNIT::DEGREE);
                                 double related_ratio_tmp = abs(radar_pos.y - sv_pos_tmp.y) / abs(radar_pos.x - sv_pos_tmp.x);
                                 deviation_tmp = pow(radar_pos.x - sv_pos_tmp.x, 2) + pow(radar_pos.y - sv_pos_tmp.y, 2);
                                 if (deviation_tmp < deviation && related_ratio < related_ratio_tmp) {
@@ -928,7 +928,7 @@ void SensorInfo::dataProcess(bool fg_sv, bool fg_radar)
                 data_fused[count].rect_f = d_sv[k].rect_f;
                 data_fused[count].plot_pt_f = d_sv[k].plot_pt_f;
                 data_fused[count].pc = d_sv[k].pc_world;
-                data_fused[count].pos = SensorBase::polar2Cartf(data_fused[count].pc);
+                data_fused[count].pos = SensorBase::polar2Cartf(data_fused[count].pc, ANGLE_UNIT::DEGREE);
                 data_fused[count].center = std::pair<int, int>(d_sv[k].center.first, d_sv[k].center.second);
                 count++;
             }
@@ -973,8 +973,7 @@ void SensorInfo::dataProcess(bool fg_sv, bool fg_radar)
                 // fusion model calculation
                 data_fused[count].pos = cv::Point2d((sv_x / var_sv[0] + radar_x / var_radar[0]) * var_fused[0] * 100.0,
                         (sv_z / var_sv[1] + radar_z / var_radar[1]) * var_fused[1] * 100.0);
-                data_fused[count].pc = SensorBase::cart2Polarf(data_fused[count].pos);
-                data_fused[count].pc.angle = data_fused[count].pc.angle * 180.0 / CV_PI;
+                data_fused[count].pc = SensorBase::cart2Polarf(data_fused[count].pos, ANGLE_UNIT::DEGREE);
                 data_fused[count].center = std::pair<int, int>(d_sv[k].center.first, d_sv[k].center.second);
                 data_fused[count].plot_pt_f = cv::Point((d_sv[k].plot_pt_f.x / var_sv[0] + radar_plot_pt_f.x / var_radar[0]) * var_fused[0],
                                                         (d_sv[k].plot_pt_f.y / var_sv[1] + radar_plot_pt_f.y / var_radar[1]) * var_fused[1]);
@@ -995,7 +994,7 @@ void SensorInfo::dataProcess(bool fg_sv, bool fg_radar)
                 data_fused[count].rect_f = cv::Rect();
                 data_fused[count].plot_pt_f = d_radar[m].plot_pt_f;
                 data_fused[count].pc = d_radar[m].pc_world;
-                data_fused[count].pos = SensorBase::polar2Cartf(data_fused[count].pc);
+                data_fused[count].pos = SensorBase::polar2Cartf(data_fused[count].pc, ANGLE_UNIT::DEGREE);
                 d_radar[m].fg_fused = true;
                 count++;
             }
