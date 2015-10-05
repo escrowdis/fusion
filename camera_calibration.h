@@ -29,11 +29,10 @@ private:
     // Record images for calibration
     std::vector<std::vector<cv::Point3f> > supposePts;
     std::vector<std::vector<cv::Point2f> > PatternPts;
-    cv::Size patternSize;       // Number of corner
-    cv::Size2f gridSize;          // Size of grid
+    cv::Size patternSize;           ///< Number of corner
+    cv::Size2f gridSize;            ///< Size of grid
 
-    // Output parameter
-    cv::Mat  intrinsicMat, distortionMat;
+    cv::Mat  intrinsicMat, distortionMat;   ///< Output parameter
 
 signals:
     void saveImage();

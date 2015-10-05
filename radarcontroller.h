@@ -43,6 +43,9 @@ enum INPUT_SOURCE {
 };
 }
 
+//!
+//! \brief The RadarController class
+//!
 class RadarController : public QObject, public TopView, protected SensorBase
 {
     Q_OBJECT
@@ -52,14 +55,31 @@ public:
 
     ~RadarController();
 
+    //!
+    //! \brief open the radar w/ CAN Bus
+    //! \return
+    //!
     bool open();
 
+    //!
+    //! \brief write msg into the radar
+    //! \return
+    //!
     bool write();
 
+    //!
+    //! \brief busOn starts communication interface
+    //!
     void busOn();
 
+    //!
+    //! \brief busOff closes communication interface
+    //!
     void busOff();
 
+    //!
+    //! \brief retrievingData starts retrieving data
+    //!
     void retrievingData();
 
     int dataExec();
@@ -70,17 +90,21 @@ public:
 
     bool isOpened() {return fg_data_in;}
 
+    //!
+    //! \brief objSize
+    //! \return Max. storable object's size
+    //!
     int objSize() {return OBJECT_NUM;}
 
     int time_proc;
 
     // status
-    int input_mode;                     // process time of all exec.
+    int input_mode;                     ///< process time of all exec.
 
     // tableView used
     QStandardItem* item;
 
-    bool fg_topview;                    // check wether project to topview
+    bool fg_topview;                    ///< check wether project to topview
 
     // smoothing for displaying
     int current_count;
@@ -90,32 +114,32 @@ public:
     // object params ===============
     struct objectTrackingInfo{
         // SENSOR ============
-        float angle;                    // azimuth degree. Middle is zero. From -51.2 to 51.1. (degree)
-        bool bridge_object;             // non-functional
+        float angle;                    ///< azimuth degree. Middle is zero. From -51.2 to 51.1. (degree)
+        bool bridge_object;             ///< non-functional
         bool grouping_changed;
-        float lat_rate;                 // + is counter clockwise. (m/s)
+        float lat_rate;                 ///< + is counter clockwise. (m/s)
         int med_range_mode;
         bool oncoming;
-        float range;                    // + is away. (m)
-        float range_accel;              // + is away. (m/s^2)
-        float range_rate;               // + is away. (m/s)
+        float range;                    ///< + is away. (m)
+        float range_accel;              ///< + is away. (m/s^2)
+        float range_rate;               ///< + is away. (m/s)
         bool rolling_count;
         int status;
-        float width;                    // non-functional
-        double x;                       // radar coordinates system (m)
+        float width;                    ///< non-functional
+        double x;                       ///< radar coordinates system (m)
         double y;
         double z;
 
-        bool fg_fused;                  // Is object fused with stereo vision or not
+        bool fg_fused;                  ///< Is object fused with stereo vision or not
 
         // TOPVIEW -----------
         PC pc;
 
         // FUSED TOPVIEW -----
-        cv::Point plot_pt_f;            // (pixel)
+        cv::Point plot_pt_f;            ///< (pixel)
 
         // WCS ===============
-        PC pc_world;                    // (cm)
+        PC pc_world;                    ///< (cm)
     };
 
 private:
@@ -129,7 +153,7 @@ public:
 
     int detected_obj;
 
-    int obj_status_filtered;            // depends on the status (CAN_TX_TRACK_STATUS)
+    int obj_status_filtered;            ///< depends on the status (CAN_TX_TRACK_STATUS)
 
     // radar frontview image
     cv::Mat img_radar;
@@ -149,30 +173,30 @@ private:
 
     bool dataIn();
 
-    QTime t_p;                          // process time of all exec.
+    QTime t_p;                          ///< process time of all exec.
 
     const static long id_esr = 0x4F1;
     const static int dlc_esr = 8;
 
     canHandle h;
-    canStatus stat;                 // current CAN status
+    canStatus stat;                     ///< current CAN status
 
-    QTime t;                        // control gui not to update too fast
+    QTime t;                            ///< control gui not to update too fast
     int time_gap;
 
-    bool fg_read;                   // reading data
-    bool fg_data_in;                // data is retrievable
+    bool fg_read;                       ///< reading data
+    bool fg_data_in;                    ///< data is retrievable
     bool fg_all_data_in = false;
 
     // CAN bus params ==============
-    long            id;
-    unsigned char   can_data[8];
-    unsigned int    dlc;
+    long            id;                         ///< CAN bus id
+    unsigned char   can_data[8];                ///< CAN bus info.
+    unsigned int    dlc;                        ///< data length
     unsigned int    flag;
     DWORD           time;
 
-    std::bitset<8> b;
-    std::string bin;
+    std::bitset<8> b;                           ///< received data (bitset)
+    std::string bin;                            ///< received data (string)
     std::bitset<6> b_track_lat_rate;
     std::bitset<1> b_track_grouping_changed;
     std::bitset<1> b_track_oncoming;
@@ -188,7 +212,7 @@ private:
     // ============================= End
 
     // 2D image display ============
-    int img_rows;               // frontview image size
+    int img_rows;               ///< frontview image size
 
     int img_cols;
 
@@ -196,9 +220,9 @@ private:
 
     int short_length_half, long_length_half;
 
-    cv::Point img_center;       // object's center
+    cv::Point img_center;       ///< object's center
 
-    cv::Point obj_rect;         // object's rect size
+    cv::Point obj_rect;         ///< object's rect size
 
     void drawFrontView();
 

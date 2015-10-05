@@ -24,7 +24,7 @@
      </rect>
     </property>
     <property name="currentIndex">
-     <number>4</number>
+     <number>3</number>
     </property>
     <widget class="QWidget" name="tab">
      <attribute name="title">
@@ -955,6 +955,9 @@ parameters</string>
        <string>Trajectory</string>
       </property>
       <widget class="QSlider" name="horizontalSlider_ana_range_filter_min">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
        <property name="geometry">
         <rect>
          <x>30</x>
@@ -991,6 +994,9 @@ parameters</string>
        </property>
       </widget>
       <widget class="QSlider" name="horizontalSlider_ana_range_filter_max">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
        <property name="geometry">
         <rect>
          <x>30</x>

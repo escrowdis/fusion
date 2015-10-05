@@ -1,0 +1,588 @@
+\hypertarget{class_sensor_info}{}\section{Sensor\+Info Class Reference}
+\label{class_sensor_info}\index{Sensor\+Info@{Sensor\+Info}}
+
+
+This class deals with all the sensors\textquotesingle{} information and the fused result.  
+
+
+
+
+{\ttfamily \#include $<$sensorinfo.\+h$>$}
+
+Inheritance diagram for Sensor\+Info\+:\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[height=2.000000cm]{class_sensor_info}
+\end{center}
+\end{figure}
+\subsection*{Classes}
+\begin{DoxyCompactItemize}
+\item 
+struct \hyperlink{struct_sensor_info_1_1sensor_information}{sensor\+Information}
+\begin{DoxyCompactList}\small\item\em The \hyperlink{struct_sensor_info_1_1sensor_information}{sensor\+Information} struct is the information of objects detected by different sensors. Based on fused topview. \end{DoxyCompactList}\item 
+struct \hyperlink{struct_sensor_info_1_1sensor_location}{sensor\+Location}
+\begin{DoxyCompactList}\small\item\em $<$ sensor location \end{DoxyCompactList}\item 
+struct \hyperlink{struct_sensor_info_1_1vehicle_info}{vehicle\+Info}
+\begin{DoxyCompactList}\small\item\em The \hyperlink{struct_sensor_info_1_1vehicle_info}{vehicle\+Info} struct to save the vehicle\textquotesingle{}s basic info. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\subsection*{Signals}
+\begin{DoxyCompactItemize}
+\item 
+\hypertarget{class_sensor_info_a4319ce78ed6efa273de1353d7dc687ae}{}void {\bfseries update\+G\+U\+I} (cv\+::\+Mat $\ast$\hyperlink{class_sensor_info_a8862f0f8415919416a94165f31542222}{fused\+\_\+topview}, cv\+::\+Mat $\ast$img\+\_\+detected\+\_\+display)\label{class_sensor_info_a4319ce78ed6efa273de1353d7dc687ae}
+
+\item 
+\hypertarget{class_sensor_info_a41a6018d7dfa24a65dfa3510c730765c}{}void {\bfseries gui\+Display} (int type, bool fg\+\_\+on)\label{class_sensor_info_a41a6018d7dfa24a65dfa3510c730765c}
+
+\end{DoxyCompactItemize}
+\subsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\hypertarget{class_sensor_info_a5cf4cd38a1a4779612aa15b78a516b20}{}void \hyperlink{class_sensor_info_a5cf4cd38a1a4779612aa15b78a516b20}{reset\+Tracking\+Info} ()\label{class_sensor_info_a5cf4cd38a1a4779612aa15b78a516b20}
+
+\begin{DoxyCompactList}\small\item\em clear std\+::vector$<$object\+Tracking$>$ ti \end{DoxyCompactList}\item 
+int \hyperlink{class_sensor_info_ad3aceaec34ba17e59bebc8c37679e4d7}{sv\+Data\+Exec} ()
+\begin{DoxyCompactList}\small\item\em Retrieving data from stereo vision. \end{DoxyCompactList}\item 
+int \hyperlink{class_sensor_info_aba48141526605d2b9a39585b1221293d}{radar\+Data\+Exec} ()
+\begin{DoxyCompactList}\small\item\em Retrieving data from radar. \end{DoxyCompactList}\item 
+bool \hyperlink{class_sensor_info_abc177db051acc8cec5e06261042baa3a}{lrf\+Data\+Exec} ()
+\begin{DoxyCompactList}\small\item\em Retrieving data from laser rangefinder. \end{DoxyCompactList}\item 
+\hypertarget{class_sensor_info_a7ad4246a8f17cee7e95dc9e3f2762e15}{}void \hyperlink{class_sensor_info_a7ad4246a8f17cee7e95dc9e3f2762e15}{lrf\+Buf\+Exec} ()\label{class_sensor_info_a7ad4246a8f17cee7e95dc9e3f2762e15}
+
+\begin{DoxyCompactList}\small\item\em Retrieving lrf data to buf. \end{DoxyCompactList}\item 
+void \hyperlink{class_sensor_info_adf375036103c9b7e3a3bf10b472ca6be}{choose\+Vehicle} (int vehicle\+\_\+type)
+\begin{DoxyCompactList}\small\item\em choose\+Vehicle to modify topview\textquotesingle{}s setting with different vehicles \end{DoxyCompactList}\item 
+void \hyperlink{class_sensor_info_aa8031ea5907d5822d21d964044ac6f11}{initial\+Fused\+Top\+View} (int range\+\_\+pixel)
+\begin{DoxyCompactList}\small\item\em initial\+Fused\+Top\+View \end{DoxyCompactList}\item 
+\hypertarget{class_sensor_info_a949ffd6e8141a1ea36a81daf18773bbe}{}void \hyperlink{class_sensor_info_a949ffd6e8141a1ea36a81daf18773bbe}{update\+Fused\+Top\+View} ()\label{class_sensor_info_a949ffd6e8141a1ea36a81daf18773bbe}
+
+\begin{DoxyCompactList}\small\item\em update\+Fused\+Top\+View Update the fused topview w/ different detection range \end{DoxyCompactList}\item 
+void \hyperlink{class_sensor_info_a84c1404a225b5795af3b8383753daf2a}{update\+Fused\+Data} ()
+\begin{DoxyCompactList}\small\item\em update\+Fused\+Data Transform data from P\+C to display coordinates \end{DoxyCompactList}\item 
+\hypertarget{class_sensor_info_aeeb4f996917547ec595735a593123fb2}{}void \hyperlink{class_sensor_info_aeeb4f996917547ec595735a593123fb2}{data\+Exec} ()\label{class_sensor_info_aeeb4f996917547ec595735a593123fb2}
+
+\begin{DoxyCompactList}\small\item\em data\+Exec Fusion main function \end{DoxyCompactList}\item 
+\hypertarget{class_sensor_info_abdf7ecd5f4cfdc2ebe9dadaf3723339f}{}void \hyperlink{class_sensor_info_abdf7ecd5f4cfdc2ebe9dadaf3723339f}{zoom\+Out\+Fused\+Top\+View} ()\label{class_sensor_info_abdf7ecd5f4cfdc2ebe9dadaf3723339f}
+
+\begin{DoxyCompactList}\small\item\em zoom\+Out\+Fused\+Top\+View to zoom out the detecting range of fused topview \end{DoxyCompactList}\item 
+\hypertarget{class_sensor_info_a1bf4f300f920de29385b5747e1e5759f}{}void \hyperlink{class_sensor_info_a1bf4f300f920de29385b5747e1e5759f}{zoom\+In\+Fused\+Top\+View} ()\label{class_sensor_info_a1bf4f300f920de29385b5747e1e5759f}
+
+\begin{DoxyCompactList}\small\item\em zoom\+In\+Fused\+Top\+View to zoom in the detecting range of fused topview \end{DoxyCompactList}\end{DoxyCompactItemize}
+\subsection*{Public Attributes}
+\begin{DoxyCompactItemize}
+\item 
+\hypertarget{class_sensor_info_a4e3f1250f396a7229a9d2195429ab95c}{}\hyperlink{classstereo__vision}{stereo\+\_\+vision} $\ast$ \hyperlink{class_sensor_info_a4e3f1250f396a7229a9d2195429ab95c}{sv}\label{class_sensor_info_a4e3f1250f396a7229a9d2195429ab95c}
+
+\begin{DoxyCompactList}\small\item\em pointer of class \hyperlink{classstereo__vision}{stereo\+\_\+vision} \end{DoxyCompactList}\item 
+\hypertarget{class_sensor_info_a3138edb6c3a02a2c0b31a3f70afa74ba}{}\hyperlink{class_radar_controller}{Radar\+Controller} $\ast$ \hyperlink{class_sensor_info_a3138edb6c3a02a2c0b31a3f70afa74ba}{rc}\label{class_sensor_info_a3138edb6c3a02a2c0b31a3f70afa74ba}
+
+\begin{DoxyCompactList}\small\item\em pointer of class \hyperlink{class_radar_controller}{Radar\+Controller} \end{DoxyCompactList}\item 
+\hypertarget{class_sensor_info_a237508ffb14be65b71a5578da5f4e01c}{}\hyperlink{classlrf__controller}{lrf\+\_\+controller} $\ast$ \hyperlink{class_sensor_info_a237508ffb14be65b71a5578da5f4e01c}{lrf}\label{class_sensor_info_a237508ffb14be65b71a5578da5f4e01c}
+
+\begin{DoxyCompactList}\small\item\em pointer of class \hyperlink{classlrf__controller}{lrf\+\_\+controller} \end{DoxyCompactList}\item 
+\hypertarget{class_sensor_info_a75484cb15fb13e0ce29c0e9dd99d2c2b}{}Object\+Tracking\+::object\+Tracking\+Info $\ast$ \hyperlink{class_sensor_info_a75484cb15fb13e0ce29c0e9dd99d2c2b}{data\+\_\+fused}\label{class_sensor_info_a75484cb15fb13e0ce29c0e9dd99d2c2b}
+
+\begin{DoxyCompactList}\small\item\em fused information (single) \end{DoxyCompactList}\item 
+\hypertarget{class_sensor_info_aec5c17cd1b09659a924021bb58826192}{}Object\+Tracking $\ast$ \hyperlink{class_sensor_info_aec5c17cd1b09659a924021bb58826192}{ot\+\_\+fused}\label{class_sensor_info_aec5c17cd1b09659a924021bb58826192}
+
+\begin{DoxyCompactList}\small\item\em tracking fused data (continuous) \end{DoxyCompactList}\item 
+\hypertarget{class_sensor_info_af9aa110890f48a9bd2cd44e960c3ef60}{}Collision\+Avoidance $\ast$ \hyperlink{class_sensor_info_af9aa110890f48a9bd2cd44e960c3ef60}{ca}\label{class_sensor_info_af9aa110890f48a9bd2cd44e960c3ef60}
+
+\begin{DoxyCompactList}\small\item\em pointer of class Collision\+Avoidance \end{DoxyCompactList}\item 
+\hypertarget{class_sensor_info_a1970954c71534f432c13165864a3efca}{}bool \hyperlink{class_sensor_info_a1970954c71534f432c13165864a3efca}{fg\+\_\+proc}\label{class_sensor_info_a1970954c71534f432c13165864a3efca}
+
+\begin{DoxyCompactList}\small\item\em wether fusion function is processing \end{DoxyCompactList}\item 
+\hypertarget{class_sensor_info_a207a7b13dd2fe49ca4a5cd7f5c183004}{}bool \hyperlink{class_sensor_info_a207a7b13dd2fe49ca4a5cd7f5c183004}{fg\+\_\+sv}\label{class_sensor_info_a207a7b13dd2fe49ca4a5cd7f5c183004}
+
+\begin{DoxyCompactList}\small\item\em check if the sv is processing and need to be processed in fusion function \end{DoxyCompactList}\item 
+\hypertarget{class_sensor_info_af0b67a69fa0c2d346b8f0e4b72f7d84f}{}bool \hyperlink{class_sensor_info_af0b67a69fa0c2d346b8f0e4b72f7d84f}{fg\+\_\+sv\+\_\+each\+\_\+pixel}\label{class_sensor_info_af0b67a69fa0c2d346b8f0e4b72f7d84f}
+
+\begin{DoxyCompactList}\small\item\em plot all the pixel information in the fused topview or not \end{DoxyCompactList}\item 
+\hypertarget{class_sensor_info_aa526e31c8b20b439088564a9b2bb86e9}{}bool \hyperlink{class_sensor_info_aa526e31c8b20b439088564a9b2bb86e9}{fg\+\_\+radar}\label{class_sensor_info_aa526e31c8b20b439088564a9b2bb86e9}
+
+\begin{DoxyCompactList}\small\item\em check if the radar is processing and need to be processed in fusion function \end{DoxyCompactList}\item 
+\hypertarget{class_sensor_info_a20a40d7fe32d657e543cc241c6aa98ab}{}bool \hyperlink{class_sensor_info_a20a40d7fe32d657e543cc241c6aa98ab}{fg\+\_\+data\+\_\+update}\label{class_sensor_info_a20a40d7fe32d657e543cc241c6aa98ab}
+
+\begin{DoxyCompactList}\small\item\em check status of sensors is processing or not \end{DoxyCompactList}\item 
+\hypertarget{class_sensor_info_a231c2936351dc2325334f0988bde478c}{}bool \hyperlink{class_sensor_info_a231c2936351dc2325334f0988bde478c}{fg\+\_\+fusion}\label{class_sensor_info_a231c2936351dc2325334f0988bde478c}
+
+\begin{DoxyCompactList}\small\item\em check for run fusion function \end{DoxyCompactList}\item 
+\hypertarget{class_sensor_info_aeed9690aa611953f6ea450c63767b138}{}bool \hyperlink{class_sensor_info_aeed9690aa611953f6ea450c63767b138}{fg\+\_\+ot}\label{class_sensor_info_aeed9690aa611953f6ea450c63767b138}
+
+\begin{DoxyCompactList}\small\item\em check for object tracking \end{DoxyCompactList}\item 
+\hypertarget{class_sensor_info_a9317c7c2d9e06d47ba292e7784fd2b2d}{}bool \hyperlink{class_sensor_info_a9317c7c2d9e06d47ba292e7784fd2b2d}{fg\+\_\+ot\+\_\+trajectory}\label{class_sensor_info_a9317c7c2d9e06d47ba292e7784fd2b2d}
+
+\begin{DoxyCompactList}\small\item\em check for displaying trajectory on fused topview or not \end{DoxyCompactList}\item 
+\hypertarget{class_sensor_info_a4ce1e5a2e2568e32c48f3a8aaddd298c}{}bool \hyperlink{class_sensor_info_a4ce1e5a2e2568e32c48f3a8aaddd298c}{fg\+\_\+ot\+\_\+trajectory\+\_\+raw}\label{class_sensor_info_a4ce1e5a2e2568e32c48f3a8aaddd298c}
+
+\begin{DoxyCompactList}\small\item\em check for displaying raw traj. \end{DoxyCompactList}\item 
+\hypertarget{class_sensor_info_a72d293d7c4f782bda708990a24e33cd4}{}bool \hyperlink{class_sensor_info_a72d293d7c4f782bda708990a24e33cd4}{fg\+\_\+ot\+\_\+trajectory\+\_\+kalman}\label{class_sensor_info_a72d293d7c4f782bda708990a24e33cd4}
+
+\begin{DoxyCompactList}\small\item\em check for displaying Kalman filtered traj. \end{DoxyCompactList}\item 
+\hypertarget{class_sensor_info_a81403b882ea7e5fec8aa58e7432f0b24}{}bool \hyperlink{class_sensor_info_a81403b882ea7e5fec8aa58e7432f0b24}{fg\+\_\+ot\+\_\+vel}\label{class_sensor_info_a81403b882ea7e5fec8aa58e7432f0b24}
+
+\begin{DoxyCompactList}\small\item\em check for displaying velocity \end{DoxyCompactList}\item 
+\hypertarget{class_sensor_info_a8d65786045ff99eddfc80f8db962e19d}{}bool \hyperlink{class_sensor_info_a8d65786045ff99eddfc80f8db962e19d}{fg\+\_\+ot\+\_\+kf}\label{class_sensor_info_a8d65786045ff99eddfc80f8db962e19d}
+
+\begin{DoxyCompactList}\small\item\em check for running Kalaman filter \end{DoxyCompactList}\item 
+\hypertarget{class_sensor_info_a11d1247334e1bbb62a0fd8eca9c6addc}{}bool \hyperlink{class_sensor_info_a11d1247334e1bbb62a0fd8eca9c6addc}{fg\+\_\+ot\+\_\+pf}\label{class_sensor_info_a11d1247334e1bbb62a0fd8eca9c6addc}
+
+\begin{DoxyCompactList}\small\item\em \mbox{[}unused\mbox{]} for running particle filter \end{DoxyCompactList}\item 
+\hypertarget{class_sensor_info_ac5aae66f8cbfb76ef869f1b474c64707}{}bool \hyperlink{class_sensor_info_ac5aae66f8cbfb76ef869f1b474c64707}{fg\+\_\+ca\+\_\+astar}\label{class_sensor_info_ac5aae66f8cbfb76ef869f1b474c64707}
+
+\begin{DoxyCompactList}\small\item\em check for running A$\ast$ algo. \end{DoxyCompactList}\item 
+\hypertarget{class_sensor_info_a52869f08515c02e4ad3e1b1c8f07577e}{}bool \hyperlink{class_sensor_info_a52869f08515c02e4ad3e1b1c8f07577e}{fg\+\_\+ca\+\_\+vfh}\label{class_sensor_info_a52869f08515c02e4ad3e1b1c8f07577e}
+
+\begin{DoxyCompactList}\small\item\em check for running V\+F\+H algo. \end{DoxyCompactList}\item 
+\hypertarget{class_sensor_info_ac8296477bcba77644ce34fac1b7087a9}{}bool \hyperlink{class_sensor_info_ac8296477bcba77644ce34fac1b7087a9}{fg\+\_\+fused\+\_\+region\+\_\+display\+\_\+only}\label{class_sensor_info_ac8296477bcba77644ce34fac1b7087a9}
+
+\begin{DoxyCompactList}\small\item\em check for displaying only sensors\textquotesingle{} overlapped region \end{DoxyCompactList}\item 
+\hypertarget{class_sensor_info_acb3b875ad574515cbb67c06a23fc74c1}{}bool \hyperlink{class_sensor_info_acb3b875ad574515cbb67c06a23fc74c1}{fg\+\_\+display\+\_\+literature\+\_\+mode}\label{class_sensor_info_acb3b875ad574515cbb67c06a23fc74c1}
+
+\begin{DoxyCompactList}\small\item\em displaying mode change button \end{DoxyCompactList}\item 
+\hypertarget{class_sensor_info_a1b395f161a1e8fa5562f4e48f0ca2865}{}Q\+Pixmap \hyperlink{class_sensor_info_a1b395f161a1e8fa5562f4e48f0ca2865}{pic\+\_\+sv}\label{class_sensor_info_a1b395f161a1e8fa5562f4e48f0ca2865}
+
+\begin{DoxyCompactList}\small\item\em display color of S\+V sensor \end{DoxyCompactList}\item 
+\hypertarget{class_sensor_info_a528cfd0ab5a94093f2e3767ea765c988}{}Q\+Pixmap \hyperlink{class_sensor_info_a528cfd0ab5a94093f2e3767ea765c988}{pic\+\_\+radar}\label{class_sensor_info_a528cfd0ab5a94093f2e3767ea765c988}
+
+\begin{DoxyCompactList}\small\item\em display color of R\+A\+D\+A\+R sensor \end{DoxyCompactList}\item 
+\hypertarget{class_sensor_info_a23eb32e568652541c7aa6b32097f43b8}{}cv\+::\+Mat \hyperlink{class_sensor_info_a23eb32e568652541c7aa6b32097f43b8}{fused\+\_\+topview\+\_\+\+B\+G}\label{class_sensor_info_a23eb32e568652541c7aa6b32097f43b8}
+
+\begin{DoxyCompactList}\small\item\em background of fused topview \end{DoxyCompactList}\item 
+\hypertarget{class_sensor_info_a8862f0f8415919416a94165f31542222}{}cv\+::\+Mat \hyperlink{class_sensor_info_a8862f0f8415919416a94165f31542222}{fused\+\_\+topview}\label{class_sensor_info_a8862f0f8415919416a94165f31542222}
+
+\begin{DoxyCompactList}\small\item\em foreground of fused topview \end{DoxyCompactList}\end{DoxyCompactItemize}
+\subsection*{Private Types}
+\begin{DoxyCompactItemize}
+\item 
+enum \{ \hyperlink{class_sensor_info_a1507edd91570cb8c0d44ccd944c41d4ba305da288a7f76e78e827842b7fb6a1ce}{C\+T\+\_\+\+W\+C\+S2\+S\+C\+S}, 
+\hyperlink{class_sensor_info_a1507edd91570cb8c0d44ccd944c41d4ba14fc288aa74a572019a88d1596930454}{C\+T\+\_\+\+S\+C\+S2\+W\+C\+S}
+ \}
+\end{DoxyCompactItemize}
+\subsection*{Private Slots}
+\begin{DoxyCompactItemize}
+\item 
+void \hyperlink{class_sensor_info_af10798b424236b1ccb456a5a0b004d38}{draw\+Arrow} (cv\+::\+Mat \&img, cv\+::\+Point p\+Start, cv\+::\+Point p\+End, int len, int alpha, cv\+::\+Scalar \&color, int \hyperlink{class_sensor_info_a6219a61c1556e2acb5d9c0a9b32f6b02}{thickness}=1, int line\+Type=8)
+\begin{DoxyCompactList}\small\item\em draw\+Arrow \end{DoxyCompactList}\end{DoxyCompactItemize}
+\subsection*{Private Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+void \hyperlink{class_sensor_info_a3ed48f9d9d629f385b26cc490e33950f}{reset\+Fusion} ()
+\begin{DoxyCompactList}\small\item\em reset\+Fusion to reset \end{DoxyCompactList}\item 
+void \hyperlink{class_sensor_info_a6b51dff8a9c8f958bd883d882afc6efb}{data\+Process} (bool \hyperlink{class_sensor_info_a207a7b13dd2fe49ca4a5cd7f5c183004}{fg\+\_\+sv}, bool \hyperlink{class_sensor_info_aa526e31c8b20b439088564a9b2bb86e9}{fg\+\_\+radar})
+\begin{DoxyCompactList}\small\item\em data\+Process to fused topview and fusion information process \end{DoxyCompactList}\item 
+void \hyperlink{class_sensor_info_a9916b2b7cd6af21de4ee6654be72bf6e}{reset\+Matched\+Info} (Object\+Tracking\+::object\+Tracking\+Info \&src)
+\begin{DoxyCompactList}\small\item\em reset\+Matched\+Info \end{DoxyCompactList}\item 
+void \hyperlink{class_sensor_info_aec57ab5b262ee80c9c257e7c216e07dc}{connect\+Matched\+Info} (Object\+Tracking\+::object\+Tracking\+Info \&src, Object\+Tracking\+::object\+Tracking\+Info \&dst)
+\begin{DoxyCompactList}\small\item\em connect\+Matched\+Info to hard copy info. from src to dst and then erase src \end{DoxyCompactList}\item 
+\hypertarget{class_sensor_info_ad226b2e50d1e7a871ffc43f3a28fe85a}{}void \hyperlink{class_sensor_info_ad226b2e50d1e7a871ffc43f3a28fe85a}{data\+Matching} ()\label{class_sensor_info_ad226b2e50d1e7a871ffc43f3a28fe85a}
+
+\begin{DoxyCompactList}\small\item\em data\+Matching to match the adjacent frame object using features. Object matching\+: a) Bha. dist. of H color space, b) bias of X \& Z of W\+C\+S location Comparison of H color space image using Bhattacharyya distance with Bubble search \end{DoxyCompactList}\item 
+\hypertarget{class_sensor_info_a3636d05f03ced4e9256eb9fb0fe25561}{}void \hyperlink{class_sensor_info_a3636d05f03ced4e9256eb9fb0fe25561}{data\+Tracking} ()\label{class_sensor_info_a3636d05f03ced4e9256eb9fb0fe25561}
+
+\begin{DoxyCompactList}\small\item\em data\+Tracking to use the matching result to sotrage the object info. \end{DoxyCompactList}\item 
+\hypertarget{class_sensor_info_aac27252b7430c306e78e19a617f1bc2d}{}void \hyperlink{class_sensor_info_aac27252b7430c306e78e19a617f1bc2d}{data\+Collision\+Avoidance} ()\label{class_sensor_info_aac27252b7430c306e78e19a617f1bc2d}
+
+\begin{DoxyCompactList}\small\item\em data\+Collision\+Avoidance to do the collision avoidance \end{DoxyCompactList}\item 
+void \hyperlink{class_sensor_info_ab35fa7516129114c548fcb12f37605c4}{draw\+Fused\+Top\+View} (bool \hyperlink{class_sensor_info_a207a7b13dd2fe49ca4a5cd7f5c183004}{fg\+\_\+sv}, bool \hyperlink{class_sensor_info_aa526e31c8b20b439088564a9b2bb86e9}{fg\+\_\+radar}, bool fg\+\_\+sv\+\_\+each, bool \hyperlink{class_sensor_info_a9317c7c2d9e06d47ba292e7784fd2b2d}{fg\+\_\+ot\+\_\+trajectory}, bool \hyperlink{class_sensor_info_a4ce1e5a2e2568e32c48f3a8aaddd298c}{fg\+\_\+ot\+\_\+trajectory\+\_\+raw}, bool \hyperlink{class_sensor_info_a72d293d7c4f782bda708990a24e33cd4}{fg\+\_\+ot\+\_\+trajectory\+\_\+kalman}, bool \hyperlink{class_sensor_info_a8d65786045ff99eddfc80f8db962e19d}{fg\+\_\+ot\+\_\+kf}, bool \hyperlink{class_sensor_info_ac8296477bcba77644ce34fac1b7087a9}{fg\+\_\+fused\+\_\+region\+\_\+display\+\_\+only})
+\begin{DoxyCompactList}\small\item\em draw\+Fused\+Top\+View \end{DoxyCompactList}\item 
+\hyperlink{struct_sensor_base_1_1_p_c}{Sensor\+Base\+::\+P\+C} \hyperlink{class_sensor_info_ac9705baab1609e71afe5b5599f2ab783}{coordinate\+Transform} (int type, cv\+::\+Point sensor\+\_\+pos, \hyperlink{struct_sensor_base_1_1_p_c}{Sensor\+Base\+::\+P\+C} pc\+\_\+in)
+\begin{DoxyCompactList}\small\item\em coordinate\+Transform. The transformation of coordinates system \end{DoxyCompactList}\item 
+\hypertarget{class_sensor_info_ac7b3c8df5b0b592711756d72c0f070c9}{}cv\+::\+Rect {\bfseries rect\+On\+Fused\+Top\+View} (cv\+::\+Point pt\+\_\+pixel, cv\+::\+Rect rect\+\_\+in)\label{class_sensor_info_ac7b3c8df5b0b592711756d72c0f070c9}
+
+\item 
+\hypertarget{class_sensor_info_ad1ca7e43a1110587b3bd5dfc2e456e04}{}cv\+::\+Point {\bfseries point2\+Fused\+Top\+View} (cv\+::\+Point sensor\+\_\+pos, \hyperlink{struct_sensor_base_1_1_p_c}{Sensor\+Base\+::\+P\+C} pc)\label{class_sensor_info_ad1ca7e43a1110587b3bd5dfc2e456e04}
+
+\item 
+\hypertarget{class_sensor_info_a3eaa24b9ef5c65b3ec657650c033239d}{}cv\+::\+Point {\bfseries point2\+Fused\+Top\+View} (\hyperlink{struct_sensor_base_1_1_p_c}{Sensor\+Base\+::\+P\+C} pc\+\_\+world)\label{class_sensor_info_a3eaa24b9ef5c65b3ec657650c033239d}
+
+\item 
+\hypertarget{class_sensor_info_ac8151e69e77059719163ddd0147df7c5}{}cv\+::\+Point {\bfseries point2\+Fused\+Top\+View} (cv\+::\+Point pos\+\_\+world)\label{class_sensor_info_ac8151e69e77059719163ddd0147df7c5}
+
+\end{DoxyCompactItemize}
+\subsection*{Private Attributes}
+\begin{DoxyCompactItemize}
+\item 
+\hypertarget{class_sensor_info_acec557aa13acf29cb6592b7b0810f52f}{}Q\+Time \hyperlink{class_sensor_info_acec557aa13acf29cb6592b7b0810f52f}{t}\label{class_sensor_info_acec557aa13acf29cb6592b7b0810f52f}
+
+\begin{DoxyCompactList}\small\item\em current thread processing time. Used for updating G\+U\+I. \end{DoxyCompactList}\item 
+\hypertarget{class_sensor_info_a79e684fb00f7bde838c618836e6ef4c7}{}int \hyperlink{class_sensor_info_a79e684fb00f7bde838c618836e6ef4c7}{time\+\_\+gap}\label{class_sensor_info_a79e684fb00f7bde838c618836e6ef4c7}
+
+\begin{DoxyCompactList}\small\item\em Threshold elapse of updating G\+U\+I. \end{DoxyCompactList}\item 
+\hypertarget{class_sensor_info_aa91a3251257f08cdff5de11523bb5bff}{}int \hyperlink{class_sensor_info_aa91a3251257f08cdff5de11523bb5bff}{size\+\_\+data\+\_\+fused}\label{class_sensor_info_aa91a3251257f08cdff5de11523bb5bff}
+
+\begin{DoxyCompactList}\small\item\em M\+A\+X sotrage amount of object. It\textquotesingle{}s the sum of obj. from S\+V and R\+A\+D\+A\+R now (2015). \end{DoxyCompactList}\item 
+\hypertarget{class_sensor_info_ad9311546eadd687087567a2d836f5161}{}double \hyperlink{class_sensor_info_ad9311546eadd687087567a2d836f5161}{var\+\_\+sv} \mbox{[}2\mbox{]}\label{class_sensor_info_ad9311546eadd687087567a2d836f5161}
+
+\begin{DoxyCompactList}\small\item\em param. of fusion function of S\+V \end{DoxyCompactList}\item 
+\hypertarget{class_sensor_info_a963dbcca0e0561aa467df67b0366f409}{}double \hyperlink{class_sensor_info_a963dbcca0e0561aa467df67b0366f409}{var\+\_\+radar} \mbox{[}2\mbox{]}\label{class_sensor_info_a963dbcca0e0561aa467df67b0366f409}
+
+\begin{DoxyCompactList}\small\item\em param. of fusion function of R\+A\+D\+A\+R \end{DoxyCompactList}\item 
+\hypertarget{class_sensor_info_aa9131e08fa3152702d373e225cadea0c}{}double \hyperlink{class_sensor_info_aa9131e08fa3152702d373e225cadea0c}{var\+\_\+fused} \mbox{[}2\mbox{]}\label{class_sensor_info_aa9131e08fa3152702d373e225cadea0c}
+
+\begin{DoxyCompactList}\small\item\em param. of fusion function \end{DoxyCompactList}\item 
+\hypertarget{class_sensor_info_a7481e34fff1d337962ed74e8251db482}{}double \hyperlink{class_sensor_info_a7481e34fff1d337962ed74e8251db482}{param\+\_\+p} \mbox{[}4\mbox{]}\label{class_sensor_info_a7481e34fff1d337962ed74e8251db482}
+
+\begin{DoxyCompactList}\small\item\em curve fitting params for fusion function \end{DoxyCompactList}\item 
+\hypertarget{class_sensor_info_ac301f69f003ea6c32bf16166be172d8d}{}double \hyperlink{class_sensor_info_ac301f69f003ea6c32bf16166be172d8d}{param\+\_\+u} \mbox{[}4\mbox{]}\label{class_sensor_info_ac301f69f003ea6c32bf16166be172d8d}
+
+\begin{DoxyCompactList}\small\item\em the same as {\ttfamily param\+\_\+p} \end{DoxyCompactList}\item 
+\hypertarget{class_sensor_info_a0898d5a31aea436fc9590ef871d35dbc}{}std\+::vector$<$ int $>$ \hyperlink{class_sensor_info_a0898d5a31aea436fc9590ef871d35dbc}{cri}\label{class_sensor_info_a0898d5a31aea436fc9590ef871d35dbc}
+
+\begin{DoxyCompactList}\small\item\em Array of closest\+\_\+radar\textquotesingle{}s id. \end{DoxyCompactList}\item 
+\hypertarget{class_sensor_info_a5270ab176bd0c0b33042650729108d2a}{}double \hyperlink{class_sensor_info_a5270ab176bd0c0b33042650729108d2a}{U\+\_\+\+D}\label{class_sensor_info_a5270ab176bd0c0b33042650729108d2a}
+
+\begin{DoxyCompactList}\small\item\em Max distance error (cm) \end{DoxyCompactList}\item 
+\hypertarget{class_sensor_info_ae483e67380ee479e1dee1840644105c9}{}double \hyperlink{class_sensor_info_ae483e67380ee479e1dee1840644105c9}{R\+\_\+sv}\label{class_sensor_info_ae483e67380ee479e1dee1840644105c9}
+
+\begin{DoxyCompactList}\small\item\em Detection radius w/ object\textquotesingle{}s S\+V center (cm) \end{DoxyCompactList}\item 
+\hypertarget{class_sensor_info_a5af9d7c15dae1f54f1fc827b842179dc}{}cv\+::\+Point2d \hyperlink{class_sensor_info_a5af9d7c15dae1f54f1fc827b842179dc}{sv\+\_\+pos}\label{class_sensor_info_a5af9d7c15dae1f54f1fc827b842179dc}
+
+\begin{DoxyCompactList}\small\item\em S\+V\textquotesingle{}s Cartesian position for fusion. \end{DoxyCompactList}\item 
+\hypertarget{class_sensor_info_ab757056695c005f6e0587cd2828206af}{}\hyperlink{struct_sensor_base_1_1_p_c}{Sensor\+Base\+::\+P\+C} \hyperlink{class_sensor_info_ab757056695c005f6e0587cd2828206af}{radar\+\_\+mean}\label{class_sensor_info_ab757056695c005f6e0587cd2828206af}
+
+\begin{DoxyCompactList}\small\item\em R\+A\+D\+A\+R\textquotesingle{}s average position if there\textquotesingle{}s more than one retrieved data while a single S\+V data retrieving. \end{DoxyCompactList}\item 
+\hypertarget{class_sensor_info_ad03bdf102a3198e3d7a1e63ecc458b14}{}cv\+::\+Point \hyperlink{class_sensor_info_ad03bdf102a3198e3d7a1e63ecc458b14}{radar\+\_\+plot\+\_\+pt\+\_\+f}\label{class_sensor_info_ad03bdf102a3198e3d7a1e63ecc458b14}
+
+\begin{DoxyCompactList}\small\item\em R\+A\+D\+A\+R\textquotesingle{}s Cartesian position for fusion. \end{DoxyCompactList}\item 
+\hypertarget{class_sensor_info_a1f6c558bd14ebea1afd4340dd192c2fa}{}cv\+::\+Point2f \hyperlink{class_sensor_info_a1f6c558bd14ebea1afd4340dd192c2fa}{radar\+\_\+vel}\label{class_sensor_info_a1f6c558bd14ebea1afd4340dd192c2fa}
+
+\begin{DoxyCompactList}\small\item\em \mbox{[}unused\mbox{]} R\+A\+D\+A\+R\textquotesingle{}s velocity \end{DoxyCompactList}\item 
+\hypertarget{class_sensor_info_abf45d1d44c8c514ac08436fd3cb49e20}{}std\+::vector$<$ matched\+Result $>$ \hyperlink{class_sensor_info_abf45d1d44c8c514ac08436fd3cb49e20}{matching\+\_\+result}\label{class_sensor_info_abf45d1d44c8c514ac08436fd3cb49e20}
+
+\begin{DoxyCompactList}\small\item\em record the result of object matching \end{DoxyCompactList}\item 
+\hypertarget{class_sensor_info_a40a4baa34f55a59904e324b650a554d9}{}cv\+::\+R\+N\+G \hyperlink{class_sensor_info_a40a4baa34f55a59904e324b650a554d9}{rng}\label{class_sensor_info_a40a4baa34f55a59904e324b650a554d9}
+
+\begin{DoxyCompactList}\small\item\em rng for traj. color \end{DoxyCompactList}\item 
+\hypertarget{class_sensor_info_ae99e7853a9994afa0006104d7dffe52c}{}int \hyperlink{class_sensor_info_ae99e7853a9994afa0006104d7dffe52c}{gui\+\_\+display\+\_\+time}\label{class_sensor_info_ae99e7853a9994afa0006104d7dffe52c}
+
+\begin{DoxyCompactList}\small\item\em current thread runtime \end{DoxyCompactList}\item 
+\hypertarget{class_sensor_info_a9129c44c0a6ee9f0cae8225faad27907}{}int \hyperlink{class_sensor_info_a9129c44c0a6ee9f0cae8225faad27907}{gui\+\_\+display\+\_\+max} = 20\label{class_sensor_info_a9129c44c0a6ee9f0cae8225faad27907}
+
+\begin{DoxyCompactList}\small\item\em threshold for updating gui of pre-\/collision warning \end{DoxyCompactList}\item 
+\hypertarget{class_sensor_info_a0173834b9d6c50ab6bca8c275123ed20}{}int \hyperlink{class_sensor_info_a0173834b9d6c50ab6bca8c275123ed20}{range\+\_\+precision}\label{class_sensor_info_a0173834b9d6c50ab6bca8c275123ed20}
+
+\begin{DoxyCompactList}\small\item\em precision of showing number on the fused topview \end{DoxyCompactList}\item 
+\hypertarget{class_sensor_info_a177c1c97b1505d80645aee801e5cf34c}{}int \hyperlink{class_sensor_info_a177c1c97b1505d80645aee801e5cf34c}{detection\+\_\+range\+\_\+pixel}\label{class_sensor_info_a177c1c97b1505d80645aee801e5cf34c}
+
+\begin{DoxyCompactList}\small\item\em fused topview radius (pixel) \end{DoxyCompactList}\item 
+\hypertarget{class_sensor_info_ae385659398e7d5c3006e5c63fa3830e4}{}float \hyperlink{class_sensor_info_ae385659398e7d5c3006e5c63fa3830e4}{detection\+\_\+range}\label{class_sensor_info_ae385659398e7d5c3006e5c63fa3830e4}
+
+\begin{DoxyCompactList}\small\item\em real detection range radius (cm) \end{DoxyCompactList}\item 
+\hypertarget{class_sensor_info_a5df127ca34d022ea03d4fbc9c143b585}{}float \hyperlink{class_sensor_info_a5df127ca34d022ea03d4fbc9c143b585}{ratio}\label{class_sensor_info_a5df127ca34d022ea03d4fbc9c143b585}
+
+\begin{DoxyCompactList}\small\item\em scaling ratio of real to fused topview (cm -\/$>$ pixel) \end{DoxyCompactList}\item 
+\hypertarget{class_sensor_info_acd4a4956498a8f4ec85b9ad17c0a2f79}{}float \hyperlink{class_sensor_info_acd4a4956498a8f4ec85b9ad17c0a2f79}{max\+\_\+detection\+\_\+range}\label{class_sensor_info_acd4a4956498a8f4ec85b9ad17c0a2f79}
+
+\begin{DoxyCompactList}\small\item\em Max detection range in all sensors (cm) \end{DoxyCompactList}\item 
+\hypertarget{class_sensor_info_ae2f24601b377681e2cddd0c0c4ecb974}{}float \hyperlink{class_sensor_info_ae2f24601b377681e2cddd0c0c4ecb974}{min\+\_\+detection\+\_\+range}\label{class_sensor_info_ae2f24601b377681e2cddd0c0c4ecb974}
+
+\begin{DoxyCompactList}\small\item\em min detection range in all sensors (cm) \end{DoxyCompactList}\item 
+\hypertarget{class_sensor_info_a6219a61c1556e2acb5d9c0a9b32f6b02}{}int \hyperlink{class_sensor_info_a6219a61c1556e2acb5d9c0a9b32f6b02}{thickness}\label{class_sensor_info_a6219a61c1556e2acb5d9c0a9b32f6b02}
+
+\begin{DoxyCompactList}\small\item\em object params on topview \end{DoxyCompactList}\item 
+\hypertarget{class_sensor_info_a45c336a2e44db823f4a320d6ef2b4d52}{}int \hyperlink{class_sensor_info_a45c336a2e44db823f4a320d6ef2b4d52}{font}\label{class_sensor_info_a45c336a2e44db823f4a320d6ef2b4d52}
+
+\begin{DoxyCompactList}\small\item\em fused topview display font \end{DoxyCompactList}\item 
+\hypertarget{class_sensor_info_a2733e9cc3035fd40566808361c5a819f}{}int \hyperlink{class_sensor_info_a2733e9cc3035fd40566808361c5a819f}{font\+\_\+size}\label{class_sensor_info_a2733e9cc3035fd40566808361c5a819f}
+
+\begin{DoxyCompactList}\small\item\em fused topview display font size \end{DoxyCompactList}\item 
+\hypertarget{class_sensor_info_ad58b0cb318df92ad6d13f5797ba63628}{}int \hyperlink{class_sensor_info_ad58b0cb318df92ad6d13f5797ba63628}{font\+\_\+thickness}\label{class_sensor_info_ad58b0cb318df92ad6d13f5797ba63628}
+
+\begin{DoxyCompactList}\small\item\em fused topview display font thickness \end{DoxyCompactList}\item 
+\hypertarget{class_sensor_info_a720be10334cf4d6ebbae55f78410a311}{}\hyperlink{struct_sensor_info_1_1sensor_information}{sensor\+Information} $\ast$ \hyperlink{class_sensor_info_a720be10334cf4d6ebbae55f78410a311}{sensors}\label{class_sensor_info_a720be10334cf4d6ebbae55f78410a311}
+
+\begin{DoxyCompactList}\small\item\em sensors\textquotesingle{} basic information \end{DoxyCompactList}\item 
+\hypertarget{class_sensor_info_ac3340fdef4056a7b024fa2286abe8bca}{}struct \hyperlink{struct_sensor_info_1_1vehicle_info}{Sensor\+Info\+::vehicle\+Info} {\bfseries vehicle}\label{class_sensor_info_ac3340fdef4056a7b024fa2286abe8bca}
+
+\item 
+\hypertarget{class_sensor_info_a59fc17191072e0c3bd1ebe41b4979bd1}{}int \hyperlink{class_sensor_info_a59fc17191072e0c3bd1ebe41b4979bd1}{gap} = 500\label{class_sensor_info_a59fc17191072e0c3bd1ebe41b4979bd1}
+
+\begin{DoxyCompactList}\small\item\em min change value for changing detection range \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+This class deals with all the sensors\textquotesingle{} information and the fused result. 
+
+Sensor\+Infor class
+
+fusion function\+:~\newline
+ sigma(\+S\+V, X) = p1 $\ast$ D + p2~\newline
+ sigma(\+R\+A\+D\+A\+R, X) = u1 $\ast$ exp(u2 $\ast$ D)~\newline
+ sigma(\+S\+V, Z) = u3 $\ast$ exp(u4 $\ast$ D)~\newline
+ sigma(\+R\+A\+D\+A\+R,\+Z) = p3 $\ast$ D + p4 
+
+\subsection{Member Enumeration Documentation}
+\hypertarget{class_sensor_info_a1507edd91570cb8c0d44ccd944c41d4b}{}\subsubsection[{anonymous enum}]{\setlength{\rightskip}{0pt plus 5cm}anonymous enum\hspace{0.3cm}{\ttfamily [private]}}\label{class_sensor_info_a1507edd91570cb8c0d44ccd944c41d4b}
+Coordinate transformation used in \hyperlink{class_sensor_info_ac9705baab1609e71afe5b5599f2ab783}{coordinate\+Transform}\begin{Desc}
+\item[Enumerator]\par
+\begin{description}
+\index{C\+T\+\_\+\+W\+C\+S2\+S\+C\+S@{C\+T\+\_\+\+W\+C\+S2\+S\+C\+S}!Sensor\+Info@{Sensor\+Info}}\index{Sensor\+Info@{Sensor\+Info}!C\+T\+\_\+\+W\+C\+S2\+S\+C\+S@{C\+T\+\_\+\+W\+C\+S2\+S\+C\+S}}\item[{\em 
+\hypertarget{class_sensor_info_a1507edd91570cb8c0d44ccd944c41d4ba305da288a7f76e78e827842b7fb6a1ce}{}C\+T\+\_\+\+W\+C\+S2\+S\+C\+S\label{class_sensor_info_a1507edd91570cb8c0d44ccd944c41d4ba305da288a7f76e78e827842b7fb6a1ce}
+}]from world coordinate sys. to sensor coordinate sys. \index{C\+T\+\_\+\+S\+C\+S2\+W\+C\+S@{C\+T\+\_\+\+S\+C\+S2\+W\+C\+S}!Sensor\+Info@{Sensor\+Info}}\index{Sensor\+Info@{Sensor\+Info}!C\+T\+\_\+\+S\+C\+S2\+W\+C\+S@{C\+T\+\_\+\+S\+C\+S2\+W\+C\+S}}\item[{\em 
+\hypertarget{class_sensor_info_a1507edd91570cb8c0d44ccd944c41d4ba14fc288aa74a572019a88d1596930454}{}C\+T\+\_\+\+S\+C\+S2\+W\+C\+S\label{class_sensor_info_a1507edd91570cb8c0d44ccd944c41d4ba14fc288aa74a572019a88d1596930454}
+}]from world coor. sys. to sensor coor. sys. \end{description}
+\end{Desc}
+
+
+\subsection{Member Function Documentation}
+\hypertarget{class_sensor_info_adf375036103c9b7e3a3bf10b472ca6be}{}\index{Sensor\+Info@{Sensor\+Info}!choose\+Vehicle@{choose\+Vehicle}}
+\index{choose\+Vehicle@{choose\+Vehicle}!Sensor\+Info@{Sensor\+Info}}
+\subsubsection[{choose\+Vehicle}]{\setlength{\rightskip}{0pt plus 5cm}void Sensor\+Info\+::choose\+Vehicle (
+\begin{DoxyParamCaption}
+\item[{int}]{vehicle\+\_\+type}
+\end{DoxyParamCaption}
+)}\label{class_sensor_info_adf375036103c9b7e3a3bf10b472ca6be}
+
+
+choose\+Vehicle to modify topview\textquotesingle{}s setting with different vehicles 
+
+
+\begin{DoxyParams}{Parameters}
+{\em vehicle\+\_\+type} & vehicle, tractor and cart. \\
+\hline
+\end{DoxyParams}
+\hypertarget{class_sensor_info_aec57ab5b262ee80c9c257e7c216e07dc}{}\index{Sensor\+Info@{Sensor\+Info}!connect\+Matched\+Info@{connect\+Matched\+Info}}
+\index{connect\+Matched\+Info@{connect\+Matched\+Info}!Sensor\+Info@{Sensor\+Info}}
+\subsubsection[{connect\+Matched\+Info}]{\setlength{\rightskip}{0pt plus 5cm}void Sensor\+Info\+::connect\+Matched\+Info (
+\begin{DoxyParamCaption}
+\item[{Object\+Tracking\+::object\+Tracking\+Info \&}]{src, }
+\item[{Object\+Tracking\+::object\+Tracking\+Info \&}]{dst}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [private]}}\label{class_sensor_info_aec57ab5b262ee80c9c257e7c216e07dc}
+
+
+connect\+Matched\+Info to hard copy info. from src to dst and then erase src 
+
+
+\begin{DoxyParams}{Parameters}
+{\em src} & \\
+\hline
+{\em dst} & \\
+\hline
+\end{DoxyParams}
+\hypertarget{class_sensor_info_ac9705baab1609e71afe5b5599f2ab783}{}\index{Sensor\+Info@{Sensor\+Info}!coordinate\+Transform@{coordinate\+Transform}}
+\index{coordinate\+Transform@{coordinate\+Transform}!Sensor\+Info@{Sensor\+Info}}
+\subsubsection[{coordinate\+Transform}]{\setlength{\rightskip}{0pt plus 5cm}{\bf Sensor\+Base\+::\+P\+C} Sensor\+Info\+::coordinate\+Transform (
+\begin{DoxyParamCaption}
+\item[{int}]{type, }
+\item[{cv\+::\+Point}]{sensor\+\_\+pos, }
+\item[{{\bf Sensor\+Base\+::\+P\+C}}]{pc\+\_\+in}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [private]}}\label{class_sensor_info_ac9705baab1609e71afe5b5599f2ab783}
+
+
+coordinate\+Transform. The transformation of coordinates system 
+
+
+\begin{DoxyParams}{Parameters}
+{\em int} & type \\
+\hline
+{\em cv\+::\+Point} & sensor\+\_\+pos \\
+\hline
+{\em \hyperlink{struct_sensor_base_1_1_p_c}{Sensor\+Base\+::\+P\+C}} & pc\+\_\+in \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+\hyperlink{struct_sensor_base_1_1_p_c}{Sensor\+Base\+::\+P\+C} pc\+\_\+out 
+\end{DoxyReturn}
+\hypertarget{class_sensor_info_a6b51dff8a9c8f958bd883d882afc6efb}{}\index{Sensor\+Info@{Sensor\+Info}!data\+Process@{data\+Process}}
+\index{data\+Process@{data\+Process}!Sensor\+Info@{Sensor\+Info}}
+\subsubsection[{data\+Process}]{\setlength{\rightskip}{0pt plus 5cm}void Sensor\+Info\+::data\+Process (
+\begin{DoxyParamCaption}
+\item[{bool}]{fg\+\_\+sv, }
+\item[{bool}]{fg\+\_\+radar}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [private]}}\label{class_sensor_info_a6b51dff8a9c8f958bd883d882afc6efb}
+
+
+data\+Process to fused topview and fusion information process 
+
+
+\begin{DoxyParams}{Parameters}
+{\em fg\+\_\+sv} & \\
+\hline
+{\em fg\+\_\+radar} & \\
+\hline
+\end{DoxyParams}
+\hypertarget{class_sensor_info_af10798b424236b1ccb456a5a0b004d38}{}\index{Sensor\+Info@{Sensor\+Info}!draw\+Arrow@{draw\+Arrow}}
+\index{draw\+Arrow@{draw\+Arrow}!Sensor\+Info@{Sensor\+Info}}
+\subsubsection[{draw\+Arrow}]{\setlength{\rightskip}{0pt plus 5cm}void Sensor\+Info\+::draw\+Arrow (
+\begin{DoxyParamCaption}
+\item[{cv\+::\+Mat \&}]{img, }
+\item[{cv\+::\+Point}]{p\+Start, }
+\item[{cv\+::\+Point}]{p\+End, }
+\item[{int}]{len, }
+\item[{int}]{alpha, }
+\item[{cv\+::\+Scalar \&}]{color, }
+\item[{int}]{thickness = {\ttfamily 1}, }
+\item[{int}]{line\+Type = {\ttfamily 8}}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [private]}, {\ttfamily [slot]}}\label{class_sensor_info_af10798b424236b1ccb456a5a0b004d38}
+
+
+draw\+Arrow 
+
+
+\begin{DoxyParams}{Parameters}
+{\em img} & \\
+\hline
+{\em p\+Start} & arrow\textquotesingle{}s bottom \\
+\hline
+{\em p\+End} & arrow\textquotesingle{}s head \\
+\hline
+{\em len} & branch\textquotesingle{}s length \\
+\hline
+{\em alpha} & angle between main and branch \\
+\hline
+{\em color} & \\
+\hline
+{\em thickness} & arrow\textquotesingle{}s thickness \\
+\hline
+{\em line\+Type} & \\
+\hline
+\end{DoxyParams}
+\hypertarget{class_sensor_info_ab35fa7516129114c548fcb12f37605c4}{}\index{Sensor\+Info@{Sensor\+Info}!draw\+Fused\+Top\+View@{draw\+Fused\+Top\+View}}
+\index{draw\+Fused\+Top\+View@{draw\+Fused\+Top\+View}!Sensor\+Info@{Sensor\+Info}}
+\subsubsection[{draw\+Fused\+Top\+View}]{\setlength{\rightskip}{0pt plus 5cm}void Sensor\+Info\+::draw\+Fused\+Top\+View (
+\begin{DoxyParamCaption}
+\item[{bool}]{fg\+\_\+sv, }
+\item[{bool}]{fg\+\_\+radar, }
+\item[{bool}]{fg\+\_\+sv\+\_\+each, }
+\item[{bool}]{fg\+\_\+ot\+\_\+trajectory, }
+\item[{bool}]{fg\+\_\+ot\+\_\+trajectory\+\_\+raw, }
+\item[{bool}]{fg\+\_\+ot\+\_\+trajectory\+\_\+kalman, }
+\item[{bool}]{fg\+\_\+ot\+\_\+kf, }
+\item[{bool}]{fg\+\_\+fused\+\_\+region\+\_\+display\+\_\+only}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [private]}}\label{class_sensor_info_ab35fa7516129114c548fcb12f37605c4}
+
+
+draw\+Fused\+Top\+View 
+
+
+\begin{DoxyParams}{Parameters}
+{\em fg\+\_\+sv} & \\
+\hline
+{\em fg\+\_\+radar} & \\
+\hline
+{\em fg\+\_\+sv\+\_\+each} & \\
+\hline
+{\em fg\+\_\+ot\+\_\+trajectory} & \\
+\hline
+{\em fg\+\_\+ot\+\_\+trajectory\+\_\+raw} & \\
+\hline
+{\em fg\+\_\+ot\+\_\+trajectory\+\_\+kalman} & \\
+\hline
+{\em fg\+\_\+ot\+\_\+kf} & \\
+\hline
+{\em fg\+\_\+fused\+\_\+region\+\_\+display\+\_\+only} & \\
+\hline
+\end{DoxyParams}
+\hypertarget{class_sensor_info_aa8031ea5907d5822d21d964044ac6f11}{}\index{Sensor\+Info@{Sensor\+Info}!initial\+Fused\+Top\+View@{initial\+Fused\+Top\+View}}
+\index{initial\+Fused\+Top\+View@{initial\+Fused\+Top\+View}!Sensor\+Info@{Sensor\+Info}}
+\subsubsection[{initial\+Fused\+Top\+View}]{\setlength{\rightskip}{0pt plus 5cm}void Sensor\+Info\+::initial\+Fused\+Top\+View (
+\begin{DoxyParamCaption}
+\item[{int}]{range\+\_\+pixel}
+\end{DoxyParamCaption}
+)}\label{class_sensor_info_aa8031ea5907d5822d21d964044ac6f11}
+
+
+initial\+Fused\+Top\+View 
+
+
+\begin{DoxyParams}{Parameters}
+{\em range\+\_\+pixel} & radius of fused topview in pixel \\
+\hline
+\end{DoxyParams}
+\hypertarget{class_sensor_info_abc177db051acc8cec5e06261042baa3a}{}\index{Sensor\+Info@{Sensor\+Info}!lrf\+Data\+Exec@{lrf\+Data\+Exec}}
+\index{lrf\+Data\+Exec@{lrf\+Data\+Exec}!Sensor\+Info@{Sensor\+Info}}
+\subsubsection[{lrf\+Data\+Exec}]{\setlength{\rightskip}{0pt plus 5cm}bool Sensor\+Info\+::lrf\+Data\+Exec (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)}\label{class_sensor_info_abc177db051acc8cec5e06261042baa3a}
+
+
+Retrieving data from laser rangefinder. 
+
+\begin{DoxyReturn}{Returns}
+bool receive status (not used. 20150525) 
+\end{DoxyReturn}
+\hypertarget{class_sensor_info_aba48141526605d2b9a39585b1221293d}{}\index{Sensor\+Info@{Sensor\+Info}!radar\+Data\+Exec@{radar\+Data\+Exec}}
+\index{radar\+Data\+Exec@{radar\+Data\+Exec}!Sensor\+Info@{Sensor\+Info}}
+\subsubsection[{radar\+Data\+Exec}]{\setlength{\rightskip}{0pt plus 5cm}int Sensor\+Info\+::radar\+Data\+Exec (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)}\label{class_sensor_info_aba48141526605d2b9a39585b1221293d}
+
+
+Retrieving data from radar. 
+
+\begin{DoxyReturn}{Returns}
+int status 
+\end{DoxyReturn}
+\hypertarget{class_sensor_info_a3ed48f9d9d629f385b26cc490e33950f}{}\index{Sensor\+Info@{Sensor\+Info}!reset\+Fusion@{reset\+Fusion}}
+\index{reset\+Fusion@{reset\+Fusion}!Sensor\+Info@{Sensor\+Info}}
+\subsubsection[{reset\+Fusion}]{\setlength{\rightskip}{0pt plus 5cm}void Sensor\+Info\+::reset\+Fusion (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [private]}}\label{class_sensor_info_a3ed48f9d9d629f385b26cc490e33950f}
+
+
+reset\+Fusion to reset 
+
+
+\begin{DoxyParams}{Parameters}
+{\em data\+\_\+fused} & \\
+\hline
+\end{DoxyParams}
+\hypertarget{class_sensor_info_a9916b2b7cd6af21de4ee6654be72bf6e}{}\index{Sensor\+Info@{Sensor\+Info}!reset\+Matched\+Info@{reset\+Matched\+Info}}
+\index{reset\+Matched\+Info@{reset\+Matched\+Info}!Sensor\+Info@{Sensor\+Info}}
+\subsubsection[{reset\+Matched\+Info}]{\setlength{\rightskip}{0pt plus 5cm}void Sensor\+Info\+::reset\+Matched\+Info (
+\begin{DoxyParamCaption}
+\item[{Object\+Tracking\+::object\+Tracking\+Info \&}]{src}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [private]}}\label{class_sensor_info_a9916b2b7cd6af21de4ee6654be72bf6e}
+
+
+reset\+Matched\+Info 
+
+
+\begin{DoxyParams}{Parameters}
+{\em src} & \\
+\hline
+\end{DoxyParams}
+\hypertarget{class_sensor_info_ad3aceaec34ba17e59bebc8c37679e4d7}{}\index{Sensor\+Info@{Sensor\+Info}!sv\+Data\+Exec@{sv\+Data\+Exec}}
+\index{sv\+Data\+Exec@{sv\+Data\+Exec}!Sensor\+Info@{Sensor\+Info}}
+\subsubsection[{sv\+Data\+Exec}]{\setlength{\rightskip}{0pt plus 5cm}int Sensor\+Info\+::sv\+Data\+Exec (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)}\label{class_sensor_info_ad3aceaec34ba17e59bebc8c37679e4d7}
+
+
+Retrieving data from stereo vision. 
+
+\begin{DoxyReturn}{Returns}
+int status 
+\end{DoxyReturn}
+\hypertarget{class_sensor_info_a84c1404a225b5795af3b8383753daf2a}{}\index{Sensor\+Info@{Sensor\+Info}!update\+Fused\+Data@{update\+Fused\+Data}}
+\index{update\+Fused\+Data@{update\+Fused\+Data}!Sensor\+Info@{Sensor\+Info}}
+\subsubsection[{update\+Fused\+Data}]{\setlength{\rightskip}{0pt plus 5cm}void Sensor\+Info\+::update\+Fused\+Data (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)}\label{class_sensor_info_a84c1404a225b5795af3b8383753daf2a}
+
+
+update\+Fused\+Data Transform data from P\+C to display coordinates 
+
+\begin{DoxyRefDesc}{Bug}
+\item[\hyperlink{bug__bug000001}{Bug}]Rect from S\+V won\textquotesingle{}t change as well? 20150623 \end{DoxyRefDesc}
+
+
+The documentation for this class was generated from the following files\+:\begin{DoxyCompactItemize}
+\item 
+D\+:/\+Qt\+Program/\+Qt5/\+Fusion/sensorinfo.\+h\item 
+D\+:/\+Qt\+Program/\+Qt5/\+Fusion/sensorinfo.\+cpp\end{DoxyCompactItemize}

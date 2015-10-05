@@ -1,0 +1,203 @@
+\hypertarget{classcalibration_form}{}\section{calibration\+Form Class Reference}
+\label{classcalibration_form}\index{calibration\+Form@{calibration\+Form}}
+
+
+The \hyperlink{classcalibration_form}{calibration\+Form} class is a little widget to do the camera calibration.  
+
+
+
+
+{\ttfamily \#include $<$calibrationform.\+h$>$}
+
+Inheritance diagram for calibration\+Form\+:\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[height=2.000000cm]{classcalibration_form}
+\end{center}
+\end{figure}
+\subsection*{Signals}
+\begin{DoxyCompactItemize}
+\item 
+\hypertarget{classcalibration_form_a4b69dd9a448eb4ae87cab5d2cfcf120b}{}void {\bfseries closed} (void)\label{classcalibration_form_a4b69dd9a448eb4ae87cab5d2cfcf120b}
+
+\item 
+\hypertarget{classcalibration_form_a2efdd56cb4d8f8a5174a1c562fd9c279}{}void {\bfseries request\+Image} (char \hyperlink{classcalibration_form_ae670e129fa413d10ac54ce1d0e06bb4b}{C\+C\+D})\label{classcalibration_form_a2efdd56cb4d8f8a5174a1c562fd9c279}
+
+\end{DoxyCompactItemize}
+\subsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\hypertarget{classcalibration_form_a904475e56443f8002f554b2333224bbb}{}{\bfseries calibration\+Form} (Q\+Widget $\ast$parent=0)\label{classcalibration_form_a904475e56443f8002f554b2333224bbb}
+
+\item 
+\hypertarget{classcalibration_form_a70baa4a45e9f1df59e0484918977fef1}{}void {\bfseries reset} ()\label{classcalibration_form_a70baa4a45e9f1df59e0484918977fef1}
+
+\end{DoxyCompactItemize}
+\subsection*{Public Attributes}
+\begin{DoxyCompactItemize}
+\item 
+\hypertarget{classcalibration_form_afe63228c0cb2ad7c6bade4f38528dc33}{}\hyperlink{classcamera__calibration}{camera\+\_\+calibration} $\ast$ {\bfseries cc}\label{classcalibration_form_afe63228c0cb2ad7c6bade4f38528dc33}
+
+\end{DoxyCompactItemize}
+\subsection*{Private Slots}
+\begin{DoxyCompactItemize}
+\item 
+\hypertarget{classcalibration_form_a41bb50ba937dcc523fdef9c5a178728a}{}void {\bfseries on\+\_\+push\+Button\+\_\+3\+\_\+clicked} ()\label{classcalibration_form_a41bb50ba937dcc523fdef9c5a178728a}
+
+\item 
+\hypertarget{classcalibration_form_a16256ba3d98cc18d56f25be0391a371e}{}void {\bfseries on\+\_\+push\+Button\+\_\+calibration\+\_\+clicked} ()\label{classcalibration_form_a16256ba3d98cc18d56f25be0391a371e}
+
+\item 
+\hypertarget{classcalibration_form_aac07475302f18cd24400dbd6039296ff}{}void {\bfseries mouse\+Release\+Event} (Q\+Mouse\+Event $\ast$)\label{classcalibration_form_aac07475302f18cd24400dbd6039296ff}
+
+\item 
+\hypertarget{classcalibration_form_aa86ed00af593676a7c0f172967e330aa}{}void {\bfseries key\+Release\+Event} (Q\+Key\+Event $\ast$event)\label{classcalibration_form_aa86ed00af593676a7c0f172967e330aa}
+
+\item 
+void \hyperlink{classcalibration_form_a9682501d6acfcbbcfc52eaac626a2c10}{save\+Image} (cv\+::\+Mat $\ast$img)
+\begin{DoxyCompactList}\small\item\em save\+Image is related to \hyperlink{}{Main\+Window\+::send\+Image}\end{DoxyCompactList}\item 
+void \hyperlink{classcalibration_form_af82645151b4b3c682996b25ba498581b}{save\+Images} (cv\+::\+Mat $\ast$img\+\_\+\+L, cv\+::\+Mat $\ast$img\+\_\+\+R)
+\begin{DoxyCompactList}\small\item\em save\+Images is related to \hyperlink{}{Main\+Window\+::send\+Images}\end{DoxyCompactList}\item 
+\hypertarget{classcalibration_form_a46bd3268aef5d6d736732546f22f0ea4}{}void {\bfseries on\+\_\+check\+Box\+\_\+\+Save\+Both\+\_\+clicked} (bool checked)\label{classcalibration_form_a46bd3268aef5d6d736732546f22f0ea4}
+
+\item 
+void \hyperlink{classcalibration_form_a1b1f997c7f6d4a592b05e74f53e5b1a8}{get\+Basic\+Info} (int focal\+\_\+length, double base\+\_\+line)
+\begin{DoxyCompactList}\small\item\em get\+Basic\+Info to acquire camera\textquotesingle{}s basic info. (related to \hyperlink{}{Main\+Window\+::send\+Basic\+Info)}\end{DoxyCompactList}\item 
+\hypertarget{classcalibration_form_a1774fe86a4c7d6d93a4cddefa213a895}{}void {\bfseries on\+\_\+push\+Button\+\_\+corner\+\_\+intrinsic\+\_\+clicked} ()\label{classcalibration_form_a1774fe86a4c7d6d93a4cddefa213a895}
+
+\item 
+\hypertarget{classcalibration_form_aebd11d316b6b138ae5685e9047aec962}{}void {\bfseries close\+Event} (Q\+Close\+Event $\ast$)\label{classcalibration_form_aebd11d316b6b138ae5685e9047aec962}
+
+\end{DoxyCompactItemize}
+\subsection*{Private Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\hypertarget{classcalibration_form_aab14476d02bc9543366f4672734c2f7e}{}void {\bfseries load\+Files} (Q\+String folder, std\+::vector$<$ std\+::string $>$ files\mbox{[}$\,$\mbox{]})\label{classcalibration_form_aab14476d02bc9543366f4672734c2f7e}
+
+\item 
+\hypertarget{classcalibration_form_a7c5a1fcb7443d7cf31e60c698c328c2e}{}void {\bfseries next\+Cam} ()\label{classcalibration_form_a7c5a1fcb7443d7cf31e60c698c328c2e}
+
+\item 
+\hypertarget{classcalibration_form_a73fd9e30a9926512d208e421e30c1045}{}void {\bfseries prev\+Cam} ()\label{classcalibration_form_a73fd9e30a9926512d208e421e30c1045}
+
+\end{DoxyCompactItemize}
+\subsection*{Private Attributes}
+\begin{DoxyCompactItemize}
+\item 
+\hypertarget{classcalibration_form_aa6eca629addd8a66ddadc7c23037c120}{}\hyperlink{class_ui_1_1calibration_form}{Ui\+::calibration\+Form} $\ast$ {\bfseries ui}\label{classcalibration_form_aa6eca629addd8a66ddadc7c23037c120}
+
+\item 
+\hypertarget{classcalibration_form_ae670e129fa413d10ac54ce1d0e06bb4b}{}char \hyperlink{classcalibration_form_ae670e129fa413d10ac54ce1d0e06bb4b}{C\+C\+D}\label{classcalibration_form_ae670e129fa413d10ac54ce1d0e06bb4b}
+
+\begin{DoxyCompactList}\small\item\em processing C\+C\+D\+: R, L and B. \end{DoxyCompactList}\item 
+\hypertarget{classcalibration_form_a9945bc13e7ac54f1d72913876db9cc68}{}char {\bfseries C\+C\+D\+\_\+temp}\label{classcalibration_form_a9945bc13e7ac54f1d72913876db9cc68}
+
+\item 
+\hypertarget{classcalibration_form_aabfdd8bde101d1a8bbbc7ee7dfd1c4fd}{}int {\bfseries focal\+\_\+length}\label{classcalibration_form_aabfdd8bde101d1a8bbbc7ee7dfd1c4fd}
+
+\item 
+\hypertarget{classcalibration_form_ae3a28bb4bf40337f17129c9e55ac6599}{}double {\bfseries base\+\_\+line}\label{classcalibration_form_ae3a28bb4bf40337f17129c9e55ac6599}
+
+\item 
+\hypertarget{classcalibration_form_a98cfb541b6ee63e0bbe16559a15a30e5}{}Q\+Dir {\bfseries image\+\_\+save\+\_\+path}\label{classcalibration_form_a98cfb541b6ee63e0bbe16559a15a30e5}
+
+\item 
+\hypertarget{classcalibration_form_a9d6f8bf6a1da0f56bb016f8601b90202}{}Q\+String {\bfseries image\+\_\+save\+\_\+folder}\label{classcalibration_form_a9d6f8bf6a1da0f56bb016f8601b90202}
+
+\item 
+\hypertarget{classcalibration_form_a7a98deafc43136f209674303c25100d4}{}Q\+Date\+Time {\bfseries t\+\_\+now}\label{classcalibration_form_a7a98deafc43136f209674303c25100d4}
+
+\item 
+\hypertarget{classcalibration_form_ae18c36e51f1c1463e7d41d27831574b8}{}Q\+String {\bfseries t\+\_\+now\+\_\+string}\label{classcalibration_form_ae18c36e51f1c1463e7d41d27831574b8}
+
+\item 
+\hypertarget{classcalibration_form_af6078e1bb25e113a7240246578da0022}{}Q\+String {\bfseries file\+\_\+save\+\_\+\+L}\label{classcalibration_form_af6078e1bb25e113a7240246578da0022}
+
+\item 
+\hypertarget{classcalibration_form_ad64208e0e84eb05552e5a84296079335}{}Q\+String {\bfseries file\+\_\+save\+\_\+\+R}\label{classcalibration_form_ad64208e0e84eb05552e5a84296079335}
+
+\item 
+\hypertarget{classcalibration_form_a78e3b5938f7be0721d8e469b70f3d23b}{}const std\+::string {\bfseries image\+\_\+name\+\_\+\+R} = \char`\"{}Right image\char`\"{}\label{classcalibration_form_a78e3b5938f7be0721d8e469b70f3d23b}
+
+\item 
+\hypertarget{classcalibration_form_aaa79b8cc38513f92d244ce1b95556992}{}const std\+::string {\bfseries image\+\_\+name\+\_\+\+L} = \char`\"{}Left image\char`\"{}\label{classcalibration_form_aaa79b8cc38513f92d244ce1b95556992}
+
+\item 
+\hypertarget{classcalibration_form_a31551e795742cf5228321c7647fa8ac6}{}cv\+::\+Mat {\bfseries img\+\_\+s\+\_\+\+L}\label{classcalibration_form_a31551e795742cf5228321c7647fa8ac6}
+
+\item 
+\hypertarget{classcalibration_form_a2ac2a809bf4a5042d5c12595bf8d4734}{}cv\+::\+Mat {\bfseries img\+\_\+s\+\_\+\+R}\label{classcalibration_form_a2ac2a809bf4a5042d5c12595bf8d4734}
+
+\item 
+\hypertarget{classcalibration_form_a259752c35c95e30153abca9e6ea28399}{}Q\+String\+List {\bfseries images\+\_\+\+L}\label{classcalibration_form_a259752c35c95e30153abca9e6ea28399}
+
+\item 
+\hypertarget{classcalibration_form_a749ceac9df13ad56870dfa7afbd907b9}{}Q\+String\+List {\bfseries images\+\_\+\+R}\label{classcalibration_form_a749ceac9df13ad56870dfa7afbd907b9}
+
+\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+The \hyperlink{classcalibration_form}{calibration\+Form} class is a little widget to do the camera calibration. 
+
+\subsection{Member Function Documentation}
+\hypertarget{classcalibration_form_a1b1f997c7f6d4a592b05e74f53e5b1a8}{}\index{calibration\+Form@{calibration\+Form}!get\+Basic\+Info@{get\+Basic\+Info}}
+\index{get\+Basic\+Info@{get\+Basic\+Info}!calibration\+Form@{calibration\+Form}}
+\subsubsection[{get\+Basic\+Info}]{\setlength{\rightskip}{0pt plus 5cm}void calibration\+Form\+::get\+Basic\+Info (
+\begin{DoxyParamCaption}
+\item[{int}]{focal\+\_\+length, }
+\item[{double}]{base\+\_\+line}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [private]}, {\ttfamily [slot]}}\label{classcalibration_form_a1b1f997c7f6d4a592b05e74f53e5b1a8}
+
+
+get\+Basic\+Info to acquire camera\textquotesingle{}s basic info. (related to \hyperlink{}{Main\+Window\+::send\+Basic\+Info)}
+
+
+\begin{DoxyParams}{Parameters}
+{\em focal\+\_\+length} & \\
+\hline
+{\em base\+\_\+line} & \\
+\hline
+\end{DoxyParams}
+\hypertarget{classcalibration_form_a9682501d6acfcbbcfc52eaac626a2c10}{}\index{calibration\+Form@{calibration\+Form}!save\+Image@{save\+Image}}
+\index{save\+Image@{save\+Image}!calibration\+Form@{calibration\+Form}}
+\subsubsection[{save\+Image}]{\setlength{\rightskip}{0pt plus 5cm}void calibration\+Form\+::save\+Image (
+\begin{DoxyParamCaption}
+\item[{cv\+::\+Mat $\ast$}]{img}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [private]}, {\ttfamily [slot]}}\label{classcalibration_form_a9682501d6acfcbbcfc52eaac626a2c10}
+
+
+save\+Image is related to \hyperlink{}{Main\+Window\+::send\+Image}
+
+
+\begin{DoxyParams}{Parameters}
+{\em img} & \\
+\hline
+\end{DoxyParams}
+\hypertarget{classcalibration_form_af82645151b4b3c682996b25ba498581b}{}\index{calibration\+Form@{calibration\+Form}!save\+Images@{save\+Images}}
+\index{save\+Images@{save\+Images}!calibration\+Form@{calibration\+Form}}
+\subsubsection[{save\+Images}]{\setlength{\rightskip}{0pt plus 5cm}void calibration\+Form\+::save\+Images (
+\begin{DoxyParamCaption}
+\item[{cv\+::\+Mat $\ast$}]{img\+\_\+\+L, }
+\item[{cv\+::\+Mat $\ast$}]{img\+\_\+\+R}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [private]}, {\ttfamily [slot]}}\label{classcalibration_form_af82645151b4b3c682996b25ba498581b}
+
+
+save\+Images is related to \hyperlink{}{Main\+Window\+::send\+Images}
+
+
+\begin{DoxyParams}{Parameters}
+{\em img\+\_\+\+L} & \\
+\hline
+{\em img\+\_\+\+R} & \\
+\hline
+\end{DoxyParams}
+
+
+The documentation for this class was generated from the following files\+:\begin{DoxyCompactItemize}
+\item 
+D\+:/\+Qt\+Program/\+Qt5/\+Fusion/calibrationform.\+h\item 
+D\+:/\+Qt\+Program/\+Qt5/\+Fusion/calibrationform.\+cpp\end{DoxyCompactItemize}

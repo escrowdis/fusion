@@ -16,6 +16,9 @@ namespace Ui {
 class calibrationForm;
 }
 
+//!
+//! \brief The calibrationForm class is a little widget to do the camera calibration
+//!
 class calibrationForm : public QWidget
 {
     Q_OBJECT
@@ -37,13 +40,26 @@ private slots:
 
     void keyReleaseEvent(QKeyEvent *event);
 
+    //!
+    //! \brief saveImage is related to \link MainWindow::sendImage
+    //! \param img
+    //!
     void saveImage(cv::Mat *img);
 
+    //!
+    //! \brief saveImages is related to \link MainWindow::sendImages
+    //! \param img_L
+    //! \param img_R
+    //!
     void saveImages(cv::Mat *img_L, cv::Mat *img_R);
 
     void on_checkBox_SaveBoth_clicked(bool checked);
 
-    // folder setting
+    //!
+    //! \brief getBasicInfo to acquire camera's basic info. (related to \link MainWindow::sendBasicInfo)
+    //! \param focal_length
+    //! \param base_line
+    //!
     void getBasicInfo(int focal_length, double base_line);
 
     void on_pushButton_corner_intrinsic_clicked();
@@ -58,7 +74,7 @@ signals:
 private:
     Ui::calibrationForm *ui;
 
-    char CCD;                   // Which CCD is on processing -> R, L
+    char CCD;                   ///< processing CCD: R, L and B.
     char CCD_temp;
     int focal_length;
     double base_line;

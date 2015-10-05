@@ -1,0 +1,133 @@
+\hypertarget{class_sensor_base}{}\section{Sensor\+Base Class Reference}
+\label{class_sensor_base}\index{Sensor\+Base@{Sensor\+Base}}
+Inheritance diagram for Sensor\+Base\+:\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[height=2.000000cm]{class_sensor_base}
+\end{center}
+\end{figure}
+\subsection*{Classes}
+\begin{DoxyCompactItemize}
+\item 
+struct \hyperlink{struct_sensor_base_1_1_p_c}{P\+C}
+\end{DoxyCompactItemize}
+\subsection*{Static Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+static cv\+::\+Point2d \hyperlink{class_sensor_base_a9ea2144c7cda85295ba3f8697354a77c}{polar2\+Cartf} (\hyperlink{struct_sensor_base_1_1_p_c}{P\+C} pc\+\_\+in, int unit\+\_\+in)
+\begin{DoxyCompactList}\small\item\em polar2\+Cartf location from polar coordinate to Cartesian one \end{DoxyCompactList}\item 
+static cv\+::\+Point \hyperlink{class_sensor_base_ab193b852242bb8b85976664518732dfb}{polar2\+Cart} (\hyperlink{struct_sensor_base_1_1_p_c}{P\+C} pc\+\_\+in, int unit\+\_\+in)
+\begin{DoxyCompactList}\small\item\em polar2\+Cart is the same as \hyperlink{class_sensor_base_a9ea2144c7cda85295ba3f8697354a77c}{but diff. in return type }\end{DoxyCompactList}\item 
+\hypertarget{class_sensor_base_afb3be773547689c4bad57a3847db7e88}{}static \hyperlink{struct_sensor_base_1_1_p_c}{Sensor\+Base\+::\+P\+C} {\bfseries cart2\+Polarf} (cv\+::\+Point2f pt\+\_\+in, int unit)\label{class_sensor_base_afb3be773547689c4bad57a3847db7e88}
+
+\item 
+\hypertarget{class_sensor_base_a7a263dfc99be499f8383a64166e6e7f8}{}static \hyperlink{struct_sensor_base_1_1_p_c}{P\+C} {\bfseries cart2\+Polar} (cv\+::\+Point pt\+\_\+in, int unit)\label{class_sensor_base_a7a263dfc99be499f8383a64166e6e7f8}
+
+\item 
+static cv\+::\+Point2f \hyperlink{class_sensor_base_acdc1ebb9c7051050bb887118e354b69f}{vel\+Unit\+Transform} (cv\+::\+Point2f src, int type)
+\begin{DoxyCompactList}\small\item\em vel\+Unit\+Transform to transform velocity unit \end{DoxyCompactList}\item 
+static cv\+::\+Point2f \hyperlink{class_sensor_base_a462a999b17c0217e53fcd7014d271625}{vel\+Estimation} (cv\+::\+Point2f p\+\_\+now, cv\+::\+Point2f p\+\_\+prev, float time\+\_\+proc, int type)
+\begin{DoxyCompactList}\small\item\em vel\+Estimation to estimate object\textquotesingle{}s velocity \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\subsection{Member Function Documentation}
+\hypertarget{class_sensor_base_ab193b852242bb8b85976664518732dfb}{}\index{Sensor\+Base@{Sensor\+Base}!polar2\+Cart@{polar2\+Cart}}
+\index{polar2\+Cart@{polar2\+Cart}!Sensor\+Base@{Sensor\+Base}}
+\subsubsection[{polar2\+Cart}]{\setlength{\rightskip}{0pt plus 5cm}cv\+::\+Point Sensor\+Base\+::polar2\+Cart (
+\begin{DoxyParamCaption}
+\item[{{\bf Sensor\+Base\+::\+P\+C}}]{pc\+\_\+in, }
+\item[{int}]{unit\+\_\+in}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\label{class_sensor_base_ab193b852242bb8b85976664518732dfb}
+
+
+polar2\+Cart is the same as \hyperlink{class_sensor_base_a9ea2144c7cda85295ba3f8697354a77c}{but diff. in return type }
+
+
+\begin{DoxyParams}{Parameters}
+{\em pc\+\_\+in} & \\
+\hline
+{\em unit\+\_\+in} & \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+cv\+::\+Point 
+\end{DoxyReturn}
+\hypertarget{class_sensor_base_a9ea2144c7cda85295ba3f8697354a77c}{}\index{Sensor\+Base@{Sensor\+Base}!polar2\+Cartf@{polar2\+Cartf}}
+\index{polar2\+Cartf@{polar2\+Cartf}!Sensor\+Base@{Sensor\+Base}}
+\subsubsection[{polar2\+Cartf}]{\setlength{\rightskip}{0pt plus 5cm}cv\+::\+Point2d Sensor\+Base\+::polar2\+Cartf (
+\begin{DoxyParamCaption}
+\item[{{\bf Sensor\+Base\+::\+P\+C}}]{pc\+\_\+in, }
+\item[{int}]{unit\+\_\+in}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\label{class_sensor_base_a9ea2144c7cda85295ba3f8697354a77c}
+
+
+polar2\+Cartf location from polar coordinate to Cartesian one 
+
+
+\begin{DoxyParams}{Parameters}
+{\em pc\+\_\+in} & \\
+\hline
+{\em unit\+\_\+in} & \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+cv\+::\+Point2d 
+\end{DoxyReturn}
+\hypertarget{class_sensor_base_a462a999b17c0217e53fcd7014d271625}{}\index{Sensor\+Base@{Sensor\+Base}!vel\+Estimation@{vel\+Estimation}}
+\index{vel\+Estimation@{vel\+Estimation}!Sensor\+Base@{Sensor\+Base}}
+\subsubsection[{vel\+Estimation}]{\setlength{\rightskip}{0pt plus 5cm}cv\+::\+Point2f Sensor\+Base\+::vel\+Estimation (
+\begin{DoxyParamCaption}
+\item[{cv\+::\+Point2f}]{p\+\_\+now, }
+\item[{cv\+::\+Point2f}]{p\+\_\+prev, }
+\item[{float}]{time\+\_\+proc, }
+\item[{int}]{type}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\label{class_sensor_base_a462a999b17c0217e53fcd7014d271625}
+
+
+vel\+Estimation to estimate object\textquotesingle{}s velocity 
+
+
+\begin{DoxyParams}{Parameters}
+{\em p\+\_\+now} & \\
+\hline
+{\em p\+\_\+prev} & \\
+\hline
+{\em time\+\_\+proc} & \\
+\hline
+{\em type} & \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+
+\end{DoxyReturn}
+\hypertarget{class_sensor_base_acdc1ebb9c7051050bb887118e354b69f}{}\index{Sensor\+Base@{Sensor\+Base}!vel\+Unit\+Transform@{vel\+Unit\+Transform}}
+\index{vel\+Unit\+Transform@{vel\+Unit\+Transform}!Sensor\+Base@{Sensor\+Base}}
+\subsubsection[{vel\+Unit\+Transform}]{\setlength{\rightskip}{0pt plus 5cm}cv\+::\+Point2f Sensor\+Base\+::vel\+Unit\+Transform (
+\begin{DoxyParamCaption}
+\item[{cv\+::\+Point2f}]{src, }
+\item[{int}]{type}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [static]}}\label{class_sensor_base_acdc1ebb9c7051050bb887118e354b69f}
+
+
+vel\+Unit\+Transform to transform velocity unit 
+
+
+\begin{DoxyParams}{Parameters}
+{\em src} & velocity \\
+\hline
+{\em type} & like km/hr $<$-\/$>$ m/s \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+
+\end{DoxyReturn}
+
+
+The documentation for this class was generated from the following files\+:\begin{DoxyCompactItemize}
+\item 
+D\+:/\+Qt\+Program/\+Qt5/\+Fusion/sensorbase.\+h\item 
+D\+:/\+Qt\+Program/\+Qt5/\+Fusion/sensorbase.\+cpp\end{DoxyCompactItemize}

@@ -1,0 +1,313 @@
+\hypertarget{class_radar_controller}{}\section{Radar\+Controller Class Reference}
+\label{class_radar_controller}\index{Radar\+Controller@{Radar\+Controller}}
+
+
+The \hyperlink{class_radar_controller}{Radar\+Controller} class.  
+
+
+
+
+{\ttfamily \#include $<$radarcontroller.\+h$>$}
+
+Inheritance diagram for Radar\+Controller\+:\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[height=2.000000cm]{class_radar_controller}
+\end{center}
+\end{figure}
+\subsection*{Classes}
+\begin{DoxyCompactItemize}
+\item 
+struct \hyperlink{struct_radar_controller_1_1_e_s_r___s_t_a_t}{E\+S\+R\+\_\+\+S\+T\+A\+T}
+\item 
+struct \hyperlink{struct_radar_controller_1_1object_tracking_info}{object\+Tracking\+Info}
+\end{DoxyCompactItemize}
+\subsection*{Signals}
+\begin{DoxyCompactItemize}
+\item 
+\hypertarget{class_radar_controller_af732d231a09db2453b425d49fc4ff80e}{}void {\bfseries update\+G\+U\+I} (int detected\+\_\+obj, cv\+::\+Mat $\ast$img, cv\+::\+Mat $\ast$\hyperlink{class_top_view_a693454cfb21851b389634e28bdabe35a}{topview})\label{class_radar_controller_af732d231a09db2453b425d49fc4ff80e}
+
+\item 
+\hypertarget{class_radar_controller_a9fd04ef43fb1300abcb125fc02a44779}{}void {\bfseries data\+End} ()\label{class_radar_controller_a9fd04ef43fb1300abcb125fc02a44779}
+
+\end{DoxyCompactItemize}
+\subsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+bool \hyperlink{class_radar_controller_a0d77375448b211c62fd7de55f1ddd029}{open} ()
+\begin{DoxyCompactList}\small\item\em open the radar w/ C\+A\+N Bus \end{DoxyCompactList}\item 
+bool \hyperlink{class_radar_controller_a09975f3f18fd13a533666800a5ff5b24}{write} ()
+\begin{DoxyCompactList}\small\item\em write msg into the radar \end{DoxyCompactList}\item 
+\hypertarget{class_radar_controller_acff63260ffa92857f1d1e4c44ea3fc4d}{}void \hyperlink{class_radar_controller_acff63260ffa92857f1d1e4c44ea3fc4d}{bus\+On} ()\label{class_radar_controller_acff63260ffa92857f1d1e4c44ea3fc4d}
+
+\begin{DoxyCompactList}\small\item\em bus\+On starts communication interface \end{DoxyCompactList}\item 
+\hypertarget{class_radar_controller_aaa344f45e0ca4cae204ff660e1b5d56f}{}void \hyperlink{class_radar_controller_aaa344f45e0ca4cae204ff660e1b5d56f}{bus\+Off} ()\label{class_radar_controller_aaa344f45e0ca4cae204ff660e1b5d56f}
+
+\begin{DoxyCompactList}\small\item\em bus\+Off closes communication interface \end{DoxyCompactList}\item 
+\hypertarget{class_radar_controller_aad3c48136e50bb70d2b222c480b1ff63}{}void \hyperlink{class_radar_controller_aad3c48136e50bb70d2b222c480b1ff63}{retrieving\+Data} ()\label{class_radar_controller_aad3c48136e50bb70d2b222c480b1ff63}
+
+\begin{DoxyCompactList}\small\item\em retrieving\+Data starts retrieving data \end{DoxyCompactList}\item 
+\hypertarget{class_radar_controller_a022a0e55af4aff4f57c46af3ced689e7}{}int {\bfseries data\+Exec} ()\label{class_radar_controller_a022a0e55af4aff4f57c46af3ced689e7}
+
+\item 
+\hypertarget{class_radar_controller_a4f5826b99e3bc782a2c08666ae93975f}{}int {\bfseries gui\+Update} ()\label{class_radar_controller_a4f5826b99e3bc782a2c08666ae93975f}
+
+\item 
+\hypertarget{class_radar_controller_ab5b5a998babad28a5b95ea542bda2c58}{}bool {\bfseries fused\+Topview} ()\label{class_radar_controller_ab5b5a998babad28a5b95ea542bda2c58}
+
+\item 
+\hypertarget{class_radar_controller_ab29f8d8b1be90335d003b60d18665058}{}bool {\bfseries is\+Opened} ()\label{class_radar_controller_ab29f8d8b1be90335d003b60d18665058}
+
+\item 
+int \hyperlink{class_radar_controller_ae7d9c576fef7e4ead101de05470bca8e}{obj\+Size} ()
+\begin{DoxyCompactList}\small\item\em obj\+Size \end{DoxyCompactList}\item 
+\hypertarget{class_radar_controller_af15a6be956315b8160ed80fa16e08416}{}void {\bfseries update\+Data\+For\+Display} ()\label{class_radar_controller_af15a6be956315b8160ed80fa16e08416}
+
+\end{DoxyCompactItemize}
+\subsection*{Public Attributes}
+\begin{DoxyCompactItemize}
+\item 
+\hypertarget{class_radar_controller_ab393942663adff0c31ede28c791d96e0}{}int {\bfseries time\+\_\+proc}\label{class_radar_controller_ab393942663adff0c31ede28c791d96e0}
+
+\item 
+\hypertarget{class_radar_controller_a9a911db3343eef6f1d90a4cac9118da3}{}int \hyperlink{class_radar_controller_a9a911db3343eef6f1d90a4cac9118da3}{input\+\_\+mode}\label{class_radar_controller_a9a911db3343eef6f1d90a4cac9118da3}
+
+\begin{DoxyCompactList}\small\item\em process time of all exec. \end{DoxyCompactList}\item 
+\hypertarget{class_radar_controller_a7f7b2abe18e175eaf55e3c6defcd0d22}{}Q\+Standard\+Item $\ast$ {\bfseries item}\label{class_radar_controller_a7f7b2abe18e175eaf55e3c6defcd0d22}
+
+\item 
+\hypertarget{class_radar_controller_a4ad550185a11d28e858e35aaef0b3c5b}{}bool \hyperlink{class_radar_controller_a4ad550185a11d28e858e35aaef0b3c5b}{fg\+\_\+topview}\label{class_radar_controller_a4ad550185a11d28e858e35aaef0b3c5b}
+
+\begin{DoxyCompactList}\small\item\em check wether project to topview \end{DoxyCompactList}\item 
+\hypertarget{class_radar_controller_a7fea3e37741df4cd44872e2d79e12e9f}{}int {\bfseries current\+\_\+count}\label{class_radar_controller_a7fea3e37741df4cd44872e2d79e12e9f}
+
+\item 
+\hypertarget{class_radar_controller_a8661918ec38107b526997b5f9e41faf3}{}int {\bfseries update\+\_\+count}\label{class_radar_controller_a8661918ec38107b526997b5f9e41faf3}
+
+\item 
+\hypertarget{class_radar_controller_a995fcdaa4d1637ab4bdf5044cbc135f1}{}\hyperlink{struct_radar_controller_1_1object_tracking_info}{object\+Tracking\+Info} $\ast$ {\bfseries objects\+\_\+display}\label{class_radar_controller_a995fcdaa4d1637ab4bdf5044cbc135f1}
+
+\item 
+\hypertarget{class_radar_controller_a3167e51817e082ef4719ee3096ac924a}{}int {\bfseries detected\+\_\+obj}\label{class_radar_controller_a3167e51817e082ef4719ee3096ac924a}
+
+\item 
+\hypertarget{class_radar_controller_a66f48c02ff32145acfb7152974d2eabe}{}int \hyperlink{class_radar_controller_a66f48c02ff32145acfb7152974d2eabe}{obj\+\_\+status\+\_\+filtered}\label{class_radar_controller_a66f48c02ff32145acfb7152974d2eabe}
+
+\begin{DoxyCompactList}\small\item\em depends on the status (C\+A\+N\+\_\+\+T\+X\+\_\+\+T\+R\+A\+C\+K\+\_\+\+S\+T\+A\+T\+U\+S) \end{DoxyCompactList}\item 
+\hypertarget{class_radar_controller_a55f807e3cc67057ee533b0b62c3e2897}{}cv\+::\+Mat {\bfseries img\+\_\+radar}\label{class_radar_controller_a55f807e3cc67057ee533b0b62c3e2897}
+
+\item 
+\hypertarget{class_radar_controller_a2d1a8c95498afd084483ba8181f7857b}{}cv\+::\+Mat {\bfseries img\+\_\+radar\+\_\+\+B\+G}\label{class_radar_controller_a2d1a8c95498afd084483ba8181f7857b}
+
+\end{DoxyCompactItemize}
+\subsection*{Private Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\hypertarget{class_radar_controller_a33369997a716834141f2706d5b88d0be}{}void {\bfseries create\+L\+U\+T} ()\label{class_radar_controller_a33369997a716834141f2706d5b88d0be}
+
+\item 
+\hypertarget{class_radar_controller_a99bcb7535e79bd1152a46013bd37a82a}{}int {\bfseries corr\+Grid\+Row} (int \hyperlink{class_top_view_a1f2b530e7979db621630dbbf9f5def15}{k})\label{class_radar_controller_a99bcb7535e79bd1152a46013bd37a82a}
+
+\item 
+\hypertarget{class_radar_controller_aaa845fcc3797bf9c4d0668236388decb}{}int {\bfseries corr\+Grid\+Col} (int \hyperlink{class_top_view_a1f2b530e7979db621630dbbf9f5def15}{k})\label{class_radar_controller_aaa845fcc3797bf9c4d0668236388decb}
+
+\item 
+\hypertarget{class_radar_controller_ad93fa3a9ec75d9f3bb9f4ad0a75ae006}{}void {\bfseries reset} ()\label{class_radar_controller_ad93fa3a9ec75d9f3bb9f4ad0a75ae006}
+
+\item 
+\hypertarget{class_radar_controller_af7eaac873ac1f4fc746c0d9cd31d248c}{}bool {\bfseries data\+In} ()\label{class_radar_controller_af7eaac873ac1f4fc746c0d9cd31d248c}
+
+\item 
+\hypertarget{class_radar_controller_a0d6d498d176e09a3ab6078950ff6e275}{}void {\bfseries draw\+Front\+View} ()\label{class_radar_controller_a0d6d498d176e09a3ab6078950ff6e275}
+
+\item 
+\hypertarget{class_radar_controller_aad4969066e1eab064e99d3bbcb8d2497}{}void {\bfseries point\+Display\+Front\+View} ()\label{class_radar_controller_aad4969066e1eab064e99d3bbcb8d2497}
+
+\item 
+\hypertarget{class_radar_controller_aed3a2fd37be354f86dc0be65957a662a}{}void {\bfseries point\+Project\+Top\+View} ()\label{class_radar_controller_aed3a2fd37be354f86dc0be65957a662a}
+
+\end{DoxyCompactItemize}
+\subsection*{Private Attributes}
+\begin{DoxyCompactItemize}
+\item 
+\hypertarget{class_radar_controller_aff699044dcd4672775f58dc4fe2ccf84}{}\hyperlink{struct_radar_controller_1_1object_tracking_info}{object\+Tracking\+Info} $\ast$ {\bfseries objects}\label{class_radar_controller_aff699044dcd4672775f58dc4fe2ccf84}
+
+\item 
+\hypertarget{class_radar_controller_a5731c9a9aa92dca4fb6e7d8945c6fc77}{}int $\ast$ {\bfseries L\+U\+T\+\_\+grid\+\_\+row}\label{class_radar_controller_a5731c9a9aa92dca4fb6e7d8945c6fc77}
+
+\item 
+\hypertarget{class_radar_controller_ae7c1cc7fb686934ee5bf3ad4c0405beb}{}int $\ast$ {\bfseries L\+U\+T\+\_\+grid\+\_\+col}\label{class_radar_controller_ae7c1cc7fb686934ee5bf3ad4c0405beb}
+
+\item 
+\hypertarget{class_radar_controller_a2ac1b27095720c117a4c6313337ad727}{}int {\bfseries col\+\_\+shift\+\_\+\+L\+U\+T}\label{class_radar_controller_a2ac1b27095720c117a4c6313337ad727}
+
+\item 
+\hypertarget{class_radar_controller_a79de524bcd0f368e4aac579f4c6435a5}{}Q\+Time \hyperlink{class_radar_controller_a79de524bcd0f368e4aac579f4c6435a5}{t\+\_\+p}\label{class_radar_controller_a79de524bcd0f368e4aac579f4c6435a5}
+
+\begin{DoxyCompactList}\small\item\em process time of all exec. \end{DoxyCompactList}\item 
+\hypertarget{class_radar_controller_ad65c0769ca317700a173dc3b74d71b66}{}can\+Handle {\bfseries h}\label{class_radar_controller_ad65c0769ca317700a173dc3b74d71b66}
+
+\item 
+\hypertarget{class_radar_controller_aa43cb2f174f975357f10197ae6a697c6}{}can\+Status \hyperlink{class_radar_controller_aa43cb2f174f975357f10197ae6a697c6}{stat}\label{class_radar_controller_aa43cb2f174f975357f10197ae6a697c6}
+
+\begin{DoxyCompactList}\small\item\em current C\+A\+N status \end{DoxyCompactList}\item 
+\hypertarget{class_radar_controller_ac9be6d45d8c0c7599167d2b7a1a0c832}{}Q\+Time \hyperlink{class_radar_controller_ac9be6d45d8c0c7599167d2b7a1a0c832}{t}\label{class_radar_controller_ac9be6d45d8c0c7599167d2b7a1a0c832}
+
+\begin{DoxyCompactList}\small\item\em control gui not to update too fast \end{DoxyCompactList}\item 
+\hypertarget{class_radar_controller_aff4f59e6ef4610ed4ff7aba7f0e1d154}{}int {\bfseries time\+\_\+gap}\label{class_radar_controller_aff4f59e6ef4610ed4ff7aba7f0e1d154}
+
+\item 
+\hypertarget{class_radar_controller_a09b0b1956b5a19f8ff496073a18e5276}{}bool \hyperlink{class_radar_controller_a09b0b1956b5a19f8ff496073a18e5276}{fg\+\_\+read}\label{class_radar_controller_a09b0b1956b5a19f8ff496073a18e5276}
+
+\begin{DoxyCompactList}\small\item\em reading data \end{DoxyCompactList}\item 
+\hypertarget{class_radar_controller_a3dfeff66d6c588a1db7d30a3ed4c79b4}{}bool \hyperlink{class_radar_controller_a3dfeff66d6c588a1db7d30a3ed4c79b4}{fg\+\_\+data\+\_\+in}\label{class_radar_controller_a3dfeff66d6c588a1db7d30a3ed4c79b4}
+
+\begin{DoxyCompactList}\small\item\em data is retrievable \end{DoxyCompactList}\item 
+\hypertarget{class_radar_controller_a01e5d9336215bcd6aea0f041b86433bd}{}bool {\bfseries fg\+\_\+all\+\_\+data\+\_\+in} = false\label{class_radar_controller_a01e5d9336215bcd6aea0f041b86433bd}
+
+\item 
+\hypertarget{class_radar_controller_a3f6b49eb5fbe60f18cb662a082fb61de}{}long \hyperlink{class_radar_controller_a3f6b49eb5fbe60f18cb662a082fb61de}{id}\label{class_radar_controller_a3f6b49eb5fbe60f18cb662a082fb61de}
+
+\begin{DoxyCompactList}\small\item\em C\+A\+N bus id. \end{DoxyCompactList}\item 
+\hypertarget{class_radar_controller_a2d4068e949ca0e4ee1c2a14b9565c299}{}unsigned char \hyperlink{class_radar_controller_a2d4068e949ca0e4ee1c2a14b9565c299}{can\+\_\+data} \mbox{[}8\mbox{]}\label{class_radar_controller_a2d4068e949ca0e4ee1c2a14b9565c299}
+
+\begin{DoxyCompactList}\small\item\em C\+A\+N bus info. \end{DoxyCompactList}\item 
+\hypertarget{class_radar_controller_af173d0ba04e4ad7c5c74d816b532a0ba}{}unsigned int \hyperlink{class_radar_controller_af173d0ba04e4ad7c5c74d816b532a0ba}{dlc}\label{class_radar_controller_af173d0ba04e4ad7c5c74d816b532a0ba}
+
+\begin{DoxyCompactList}\small\item\em data length \end{DoxyCompactList}\item 
+\hypertarget{class_radar_controller_abe6507d861c6ed74ac93cc690e74e625}{}unsigned int {\bfseries flag}\label{class_radar_controller_abe6507d861c6ed74ac93cc690e74e625}
+
+\item 
+\hypertarget{class_radar_controller_a235c86b043b96f8fed1e322d3041e8cd}{}D\+W\+O\+R\+D {\bfseries time}\label{class_radar_controller_a235c86b043b96f8fed1e322d3041e8cd}
+
+\item 
+\hypertarget{class_radar_controller_abd1f97e3345954539ed9f2d64fa2ea8a}{}std\+::bitset$<$ 8 $>$ \hyperlink{class_radar_controller_abd1f97e3345954539ed9f2d64fa2ea8a}{b}\label{class_radar_controller_abd1f97e3345954539ed9f2d64fa2ea8a}
+
+\begin{DoxyCompactList}\small\item\em received data (bitset) \end{DoxyCompactList}\item 
+\hypertarget{class_radar_controller_ac1faf27510539e961f7a6ff465049ea1}{}std\+::string \hyperlink{class_radar_controller_ac1faf27510539e961f7a6ff465049ea1}{bin}\label{class_radar_controller_ac1faf27510539e961f7a6ff465049ea1}
+
+\begin{DoxyCompactList}\small\item\em received data (string) \end{DoxyCompactList}\item 
+\hypertarget{class_radar_controller_ae8d2b8b7295f25282b733817fcdd242c}{}std\+::bitset$<$ 6 $>$ {\bfseries b\+\_\+track\+\_\+lat\+\_\+rate}\label{class_radar_controller_ae8d2b8b7295f25282b733817fcdd242c}
+
+\item 
+\hypertarget{class_radar_controller_a526dfd9a787864f60c4c7d8c9eae078b}{}std\+::bitset$<$ 1 $>$ {\bfseries b\+\_\+track\+\_\+grouping\+\_\+changed}\label{class_radar_controller_a526dfd9a787864f60c4c7d8c9eae078b}
+
+\item 
+\hypertarget{class_radar_controller_addf9cc22f4190ab2bc4a9b8b4d2cead7}{}std\+::bitset$<$ 1 $>$ {\bfseries b\+\_\+track\+\_\+oncoming}\label{class_radar_controller_addf9cc22f4190ab2bc4a9b8b4d2cead7}
+
+\item 
+\hypertarget{class_radar_controller_a7edb023acbee9fb877476cc0120d2e43}{}std\+::bitset$<$ 3 $>$ {\bfseries b\+\_\+track\+\_\+status}\label{class_radar_controller_a7edb023acbee9fb877476cc0120d2e43}
+
+\item 
+\hypertarget{class_radar_controller_a4fc22579cd1e643c38f95b64e22f67b0}{}std\+::bitset$<$ 10 $>$ {\bfseries b\+\_\+track\+\_\+angle}\label{class_radar_controller_a4fc22579cd1e643c38f95b64e22f67b0}
+
+\item 
+\hypertarget{class_radar_controller_a7573f5e2f4a9dbc9c017993945d944b7}{}std\+::bitset$<$ 11 $>$ {\bfseries b\+\_\+track\+\_\+range}\label{class_radar_controller_a7573f5e2f4a9dbc9c017993945d944b7}
+
+\item 
+\hypertarget{class_radar_controller_afd2b9ee7bcca186751ed1275053fce69}{}std\+::bitset$<$ 1 $>$ {\bfseries b\+\_\+track\+\_\+bridge\+\_\+object}\label{class_radar_controller_afd2b9ee7bcca186751ed1275053fce69}
+
+\item 
+\hypertarget{class_radar_controller_abdf055fd6cbf1b8ada540412d9887616}{}std\+::bitset$<$ 1 $>$ {\bfseries b\+\_\+track\+\_\+rolling\+\_\+count}\label{class_radar_controller_abdf055fd6cbf1b8ada540412d9887616}
+
+\item 
+\hypertarget{class_radar_controller_a1d70bd11c6e4b49ac20904bd12f7ebfd}{}std\+::bitset$<$ 4 $>$ {\bfseries b\+\_\+track\+\_\+width}\label{class_radar_controller_a1d70bd11c6e4b49ac20904bd12f7ebfd}
+
+\item 
+\hypertarget{class_radar_controller_aa2882da695492e159ad49dd2b929124b}{}std\+::bitset$<$ 10 $>$ {\bfseries b\+\_\+track\+\_\+range\+\_\+accel}\label{class_radar_controller_aa2882da695492e159ad49dd2b929124b}
+
+\item 
+\hypertarget{class_radar_controller_a821b44fe7e56e95fe6613ed9d6c27501}{}std\+::bitset$<$ 2 $>$ {\bfseries b\+\_\+track\+\_\+med\+\_\+range\+\_\+mode}\label{class_radar_controller_a821b44fe7e56e95fe6613ed9d6c27501}
+
+\item 
+\hypertarget{class_radar_controller_add40eb49a30752a5d7d87760dedf28da}{}std\+::bitset$<$ 14 $>$ {\bfseries b\+\_\+track\+\_\+range\+\_\+rate}\label{class_radar_controller_add40eb49a30752a5d7d87760dedf28da}
+
+\item 
+\hypertarget{class_radar_controller_a41c267488c29d99fc311948d6437acee}{}int \hyperlink{class_radar_controller_a41c267488c29d99fc311948d6437acee}{img\+\_\+rows}\label{class_radar_controller_a41c267488c29d99fc311948d6437acee}
+
+\begin{DoxyCompactList}\small\item\em frontview image size \end{DoxyCompactList}\item 
+\hypertarget{class_radar_controller_afe9a6bda9ec385cb0bc2de0b2ee7a5c3}{}int {\bfseries img\+\_\+cols}\label{class_radar_controller_afe9a6bda9ec385cb0bc2de0b2ee7a5c3}
+
+\item 
+\hypertarget{class_radar_controller_ac6b4e52bad4f002135293fc78e0c576c}{}int {\bfseries short\+\_\+length}\label{class_radar_controller_ac6b4e52bad4f002135293fc78e0c576c}
+
+\item 
+\hypertarget{class_radar_controller_a6d3925b0699a4a41200022843da465a8}{}int {\bfseries long\+\_\+length}\label{class_radar_controller_a6d3925b0699a4a41200022843da465a8}
+
+\item 
+\hypertarget{class_radar_controller_a0ef37a3b9de90f3bf719d686dd5eb6db}{}int {\bfseries short\+\_\+length\+\_\+half}\label{class_radar_controller_a0ef37a3b9de90f3bf719d686dd5eb6db}
+
+\item 
+\hypertarget{class_radar_controller_a4e84d1deda486f38e7d74a11a9992d0a}{}int {\bfseries long\+\_\+length\+\_\+half}\label{class_radar_controller_a4e84d1deda486f38e7d74a11a9992d0a}
+
+\item 
+\hypertarget{class_radar_controller_aeb6f9f8674d251671cb735b05372098a}{}cv\+::\+Point \hyperlink{class_radar_controller_aeb6f9f8674d251671cb735b05372098a}{img\+\_\+center}\label{class_radar_controller_aeb6f9f8674d251671cb735b05372098a}
+
+\begin{DoxyCompactList}\small\item\em object\textquotesingle{}s center \end{DoxyCompactList}\item 
+\hypertarget{class_radar_controller_ad9d8ed1cb7b88a48c5bef62b88458df6}{}cv\+::\+Point \hyperlink{class_radar_controller_ad9d8ed1cb7b88a48c5bef62b88458df6}{obj\+\_\+rect}\label{class_radar_controller_ad9d8ed1cb7b88a48c5bef62b88458df6}
+
+\begin{DoxyCompactList}\small\item\em object\textquotesingle{}s rect size \end{DoxyCompactList}\end{DoxyCompactItemize}
+\subsection*{Static Private Attributes}
+\begin{DoxyCompactItemize}
+\item 
+\hypertarget{class_radar_controller_abf229793e791affe7e7b110afd1d4c87}{}static const long {\bfseries id\+\_\+esr} = 0x4\+F1\label{class_radar_controller_abf229793e791affe7e7b110afd1d4c87}
+
+\item 
+\hypertarget{class_radar_controller_ad60a9e373cd71acdffdf716ec55e84cf}{}static const int {\bfseries dlc\+\_\+esr} = 8\label{class_radar_controller_ad60a9e373cd71acdffdf716ec55e84cf}
+
+\end{DoxyCompactItemize}
+\subsection*{Additional Inherited Members}
+
+
+\subsection{Detailed Description}
+The \hyperlink{class_radar_controller}{Radar\+Controller} class. 
+
+\subsection{Member Function Documentation}
+\hypertarget{class_radar_controller_ae7d9c576fef7e4ead101de05470bca8e}{}\index{Radar\+Controller@{Radar\+Controller}!obj\+Size@{obj\+Size}}
+\index{obj\+Size@{obj\+Size}!Radar\+Controller@{Radar\+Controller}}
+\subsubsection[{obj\+Size}]{\setlength{\rightskip}{0pt plus 5cm}int Radar\+Controller\+::obj\+Size (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [inline]}}\label{class_radar_controller_ae7d9c576fef7e4ead101de05470bca8e}
+
+
+obj\+Size 
+
+\begin{DoxyReturn}{Returns}
+Max. storable object\textquotesingle{}s size 
+\end{DoxyReturn}
+\hypertarget{class_radar_controller_a0d77375448b211c62fd7de55f1ddd029}{}\index{Radar\+Controller@{Radar\+Controller}!open@{open}}
+\index{open@{open}!Radar\+Controller@{Radar\+Controller}}
+\subsubsection[{open}]{\setlength{\rightskip}{0pt plus 5cm}bool Radar\+Controller\+::open (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)}\label{class_radar_controller_a0d77375448b211c62fd7de55f1ddd029}
+
+
+open the radar w/ C\+A\+N Bus 
+
+\begin{DoxyReturn}{Returns}
+
+\end{DoxyReturn}
+\hypertarget{class_radar_controller_a09975f3f18fd13a533666800a5ff5b24}{}\index{Radar\+Controller@{Radar\+Controller}!write@{write}}
+\index{write@{write}!Radar\+Controller@{Radar\+Controller}}
+\subsubsection[{write}]{\setlength{\rightskip}{0pt plus 5cm}bool Radar\+Controller\+::write (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)}\label{class_radar_controller_a09975f3f18fd13a533666800a5ff5b24}
+
+
+write msg into the radar 
+
+\begin{DoxyReturn}{Returns}
+
+\end{DoxyReturn}
+
+
+The documentation for this class was generated from the following files\+:\begin{DoxyCompactItemize}
+\item 
+D\+:/\+Qt\+Program/\+Qt5/\+Fusion/radarcontroller.\+h\item 
+D\+:/\+Qt\+Program/\+Qt5/\+Fusion/radarcontroller.\+cpp\end{DoxyCompactItemize}

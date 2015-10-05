@@ -1,0 +1,566 @@
+\hypertarget{class_main_window}{}\section{Main\+Window Class Reference}
+\label{class_main_window}\index{Main\+Window@{Main\+Window}}
+
+
+The \hyperlink{class_main_window}{Main\+Window} class.  
+
+
+
+
+{\ttfamily \#include $<$mainwindow.\+h$>$}
+
+Inheritance diagram for Main\+Window\+:\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[height=2.000000cm]{class_main_window}
+\end{center}
+\end{figure}
+\subsection*{Signals}
+\begin{DoxyCompactItemize}
+\item 
+\hypertarget{class_main_window_a166aeaf752a430f7468b205c9b514b25}{}void {\bfseries send\+Basic\+Info} (int focal\+\_\+length, double base\+\_\+line)\label{class_main_window_a166aeaf752a430f7468b205c9b514b25}
+
+\item 
+\hypertarget{class_main_window_a0f8dabec720e115a310c35407bef31db}{}void {\bfseries send\+Image} (cv\+::\+Mat $\ast$img)\label{class_main_window_a0f8dabec720e115a310c35407bef31db}
+
+\item 
+\hypertarget{class_main_window_ada48458b0cdedebe20094d9888e955b0}{}void {\bfseries send\+Images} (cv\+::\+Mat $\ast$img\+\_\+\+L, cv\+::\+Mat $\ast$img\+\_\+\+R)\label{class_main_window_ada48458b0cdedebe20094d9888e955b0}
+
+\end{DoxyCompactItemize}
+\subsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\hypertarget{class_main_window_a8b244be8b7b7db1b08de2a2acb9409db}{}{\bfseries Main\+Window} (Q\+Widget $\ast$parent=0)\label{class_main_window_a8b244be8b7b7db1b08de2a2acb9409db}
+
+\end{DoxyCompactItemize}
+\subsection*{Private Slots}
+\begin{DoxyCompactItemize}
+\item 
+\hypertarget{class_main_window_a51927fde27346887663f8b1c8f83f5ab}{}void {\bfseries on\+\_\+push\+Button\+\_\+start\+\_\+all\+\_\+clicked} ()\label{class_main_window_a51927fde27346887663f8b1c8f83f5ab}
+
+\item 
+\hypertarget{class_main_window_a6b690c4d5c729e417ccc16fd730c452c}{}void {\bfseries on\+\_\+push\+Button\+\_\+stop\+\_\+all\+\_\+clicked} ()\label{class_main_window_a6b690c4d5c729e417ccc16fd730c452c}
+
+\item 
+\hypertarget{class_main_window_afbe2ceefce1abb0886094990582b988d}{}void {\bfseries on\+\_\+action\+Shortcut\+\_\+triggered} ()\label{class_main_window_afbe2ceefce1abb0886094990582b988d}
+
+\item 
+\hypertarget{class_main_window_a253e4560fc116df7949f20992ed0b734}{}void {\bfseries on\+\_\+action\+Author\+\_\+triggered} ()\label{class_main_window_a253e4560fc116df7949f20992ed0b734}
+
+\item 
+void \hyperlink{class_main_window_ae81612c12f590a4bc599332e71f52afc}{mouse\+X\+Y} (int x, int y)
+\begin{DoxyCompactList}\small\item\em mouse\+X\+Y is to acuire mouse info. connect w/ the label \end{DoxyCompactList}\item 
+void \hyperlink{class_main_window_ad6984d1fa1808b8406cbc30c5df26415}{wheel\+Event} (Q\+Wheel\+Event $\ast$ev)
+\begin{DoxyCompactList}\small\item\em wheel\+Event is to acuire the wheel event \end{DoxyCompactList}\item 
+\hypertarget{class_main_window_aa6d34cf000b53f621ecbee7bb9b4d5d2}{}void {\bfseries key\+Press\+Event} (Q\+Key\+Event $\ast$ev)\label{class_main_window_aa6d34cf000b53f621ecbee7bb9b4d5d2}
+
+\item 
+\hypertarget{class_main_window_a40746f5a56cdde34925b396fd8d67b89}{}void {\bfseries on\+\_\+push\+Button\+\_\+lrf\+\_\+open\+\_\+clicked} ()\label{class_main_window_a40746f5a56cdde34925b396fd8d67b89}
+
+\item 
+\hypertarget{class_main_window_ac0f5decb67a200a028da33ea7e22323b}{}void {\bfseries lrf\+Display} (double $\ast$lrf\+\_\+data, cv\+::\+Mat $\ast$\hyperlink{class_main_window_a526afc9bb96e26cccbc074ed30c7c386}{display\+\_\+lrf})\label{class_main_window_ac0f5decb67a200a028da33ea7e22323b}
+
+\item 
+\hypertarget{class_main_window_abe620c8361efe98ca34a574c1e3bb23a}{}void {\bfseries on\+\_\+push\+Button\+\_\+lrf\+\_\+request\+\_\+clicked} ()\label{class_main_window_abe620c8361efe98ca34a574c1e3bb23a}
+
+\item 
+\hypertarget{class_main_window_a0eeb2e8245dab36d1555374f38f90b0e}{}void {\bfseries on\+\_\+push\+Button\+\_\+lrf\+\_\+retrieve\+\_\+clicked} ()\label{class_main_window_a0eeb2e8245dab36d1555374f38f90b0e}
+
+\item 
+\hypertarget{class_main_window_a978525da6f1ffd7d028e614cb54a28f8}{}void {\bfseries on\+\_\+push\+Button\+\_\+lrf\+\_\+stop\+\_\+clicked} ()\label{class_main_window_a978525da6f1ffd7d028e614cb54a28f8}
+
+\item 
+\hypertarget{class_main_window_ad69d20e6e49f01f56636ac2f23420120}{}void {\bfseries on\+\_\+push\+Button\+\_\+lrf\+\_\+request\+\_\+\+O\+N\+C\+E\+\_\+clicked} ()\label{class_main_window_ad69d20e6e49f01f56636ac2f23420120}
+
+\item 
+\hypertarget{class_main_window_ad64bbcfe72cae71d26d03ccd11d56787}{}void {\bfseries on\+\_\+push\+Button\+\_\+lrf\+\_\+record\+\_\+data\+\_\+clicked} ()\label{class_main_window_ad64bbcfe72cae71d26d03ccd11d56787}
+
+\item 
+\hypertarget{class_main_window_a22c8c805835969894435ddd7e56db854}{}void {\bfseries on\+\_\+push\+Button\+\_\+lrf\+\_\+record\+\_\+stop\+\_\+clicked} ()\label{class_main_window_a22c8c805835969894435ddd7e56db854}
+
+\item 
+\hypertarget{class_main_window_a32c1032023f0ceebb217ca49ae94783b}{}void {\bfseries on\+\_\+push\+Button\+\_\+lrf\+\_\+read\+\_\+range\+\_\+clicked} ()\label{class_main_window_a32c1032023f0ceebb217ca49ae94783b}
+
+\item 
+\hypertarget{class_main_window_ad9fb96fc74a34efed0f99274c02fc7d9}{}void {\bfseries on\+\_\+push\+Button\+\_\+cam\+\_\+open\+\_\+clicked} ()\label{class_main_window_ad9fb96fc74a34efed0f99274c02fc7d9}
+
+\item 
+\hypertarget{class_main_window_a9dba31f02f55c580aa005163c0ad55bb}{}void {\bfseries on\+\_\+push\+Button\+\_\+cam\+\_\+stop\+\_\+clicked} ()\label{class_main_window_a9dba31f02f55c580aa005163c0ad55bb}
+
+\item 
+\hypertarget{class_main_window_a2c809869d0bfe5017feb9d3af9d04032}{}void {\bfseries on\+\_\+push\+Button\+\_\+cam\+\_\+step\+\_\+clicked} ()\label{class_main_window_a2c809869d0bfe5017feb9d3af9d04032}
+
+\item 
+\hypertarget{class_main_window_a38e6a6d2b814e8547a575729ef91bba1}{}void {\bfseries on\+\_\+push\+Button\+\_\+cam\+\_\+capture\+\_\+clicked} ()\label{class_main_window_a38e6a6d2b814e8547a575729ef91bba1}
+
+\item 
+\hypertarget{class_main_window_a64cc3067de847cd79997c8d5bc2f147c}{}void {\bfseries on\+\_\+check\+Box\+\_\+do\+\_\+calibration\+\_\+clicked} (bool checked)\label{class_main_window_a64cc3067de847cd79997c8d5bc2f147c}
+
+\item 
+\hypertarget{class_main_window_aa447259fa7c91de734ced19ae24368bc}{}void {\bfseries on\+\_\+check\+Box\+\_\+do\+\_\+depth\+\_\+clicked} (bool checked)\label{class_main_window_aa447259fa7c91de734ced19ae24368bc}
+
+\item 
+\hypertarget{class_main_window_ae9bae4b6ce15716892551a698d751128}{}void {\bfseries sv\+Display} (cv\+::\+Mat $\ast$img\+\_\+\+L, cv\+::\+Mat $\ast$img\+\_\+\+R, cv\+::\+Mat $\ast$disp, cv\+::\+Mat $\ast$disp\+\_\+pseudo, cv\+::\+Mat $\ast$topview, cv\+::\+Mat $\ast$img\+\_\+detected, int detected\+\_\+obj, int current\+\_\+frame\+\_\+count)\label{class_main_window_ae9bae4b6ce15716892551a698d751128}
+
+\item 
+\hypertarget{class_main_window_a355975f6b124c66571ce71019ed8340c}{}void {\bfseries close\+Form\+Smp} (void)\label{class_main_window_a355975f6b124c66571ce71019ed8340c}
+
+\item 
+\hypertarget{class_main_window_a4e8c0c6d5d5cefa708138fdadfcffc5a}{}void {\bfseries on\+\_\+radio\+Button\+\_\+\+B\+M\+\_\+clicked} ()\label{class_main_window_a4e8c0c6d5d5cefa708138fdadfcffc5a}
+
+\item 
+\hypertarget{class_main_window_aca90b3e646f2f2175972b86b7f447729}{}void {\bfseries on\+\_\+radio\+Button\+\_\+\+S\+G\+B\+M\+\_\+clicked} ()\label{class_main_window_aca90b3e646f2f2175972b86b7f447729}
+
+\item 
+\hypertarget{class_main_window_ad21b3bf3184684c58f48c50e2818e2d2}{}void {\bfseries on\+\_\+line\+Edit\+\_\+sv\+\_\+focal\+\_\+length\+\_\+return\+Pressed} ()\label{class_main_window_ad21b3bf3184684c58f48c50e2818e2d2}
+
+\item 
+\hypertarget{class_main_window_aa06fa5822c8b49551444306d38eb7581}{}void {\bfseries on\+\_\+check\+Box\+\_\+sv\+\_\+topview\+\_\+clicked} (bool checked)\label{class_main_window_aa06fa5822c8b49551444306d38eb7581}
+
+\item 
+\hypertarget{class_main_window_aa6f408ff31e7af45608a2e8d2e1ff420}{}void {\bfseries on\+\_\+spin\+Box\+\_\+topview\+\_\+r\+\_\+value\+Changed} (int arg1)\label{class_main_window_aa6f408ff31e7af45608a2e8d2e1ff420}
+
+\item 
+\hypertarget{class_main_window_a192351847dee86607cb895e960b73abf}{}void {\bfseries on\+\_\+spin\+Box\+\_\+topview\+\_\+c\+\_\+value\+Changed} (int arg1)\label{class_main_window_a192351847dee86607cb895e960b73abf}
+
+\item 
+\hypertarget{class_main_window_a3231412e9991f9e2983b8dbbf1eb12a0}{}void {\bfseries on\+\_\+push\+Button\+\_\+stereo\+\_\+match\+\_\+param\+\_\+clicked} ()\label{class_main_window_a3231412e9991f9e2983b8dbbf1eb12a0}
+
+\item 
+\hypertarget{class_main_window_a22b957f8849f75f4b8bbc5258395c874}{}void {\bfseries on\+\_\+combo\+Box\+\_\+camera\+\_\+focal\+\_\+length\+\_\+current\+Index\+Changed} (int index)\label{class_main_window_a22b957f8849f75f4b8bbc5258395c874}
+
+\item 
+\hypertarget{class_main_window_a49115ba3b5ec385e73ceeebc8091e909}{}void {\bfseries on\+\_\+line\+Edit\+\_\+base\+\_\+line\+\_\+return\+Pressed} ()\label{class_main_window_a49115ba3b5ec385e73ceeebc8091e909}
+
+\item 
+\hypertarget{class_main_window_a00b2cebc1a81b57870c2c61b53781d77}{}void {\bfseries on\+\_\+check\+Box\+\_\+pseudo\+\_\+color\+\_\+clicked} (bool checked)\label{class_main_window_a00b2cebc1a81b57870c2c61b53781d77}
+
+\item 
+\hypertarget{class_main_window_af81c40636f6d1d6003ab6f7b93040269}{}void {\bfseries on\+\_\+check\+Box\+\_\+topview\+\_\+plot\+\_\+points\+\_\+clicked} (bool checked)\label{class_main_window_af81c40636f6d1d6003ab6f7b93040269}
+
+\item 
+\hypertarget{class_main_window_a0aae20901f69daabe680857a395110e0}{}void {\bfseries on\+\_\+check\+Box\+\_\+sv\+\_\+reproject\+\_\+clicked} (bool checked)\label{class_main_window_a0aae20901f69daabe680857a395110e0}
+
+\item 
+\hypertarget{class_main_window_a2c53b4338460d00fc3697cb8efed06d7}{}void {\bfseries on\+\_\+push\+Button\+\_\+sv\+\_\+record\+\_\+data\+\_\+clicked} ()\label{class_main_window_a2c53b4338460d00fc3697cb8efed06d7}
+
+\item 
+\hypertarget{class_main_window_a687c29593e3b6a93edf08d5d77291968}{}void {\bfseries on\+\_\+push\+Button\+\_\+sv\+\_\+read\+\_\+images\+\_\+clicked} ()\label{class_main_window_a687c29593e3b6a93edf08d5d77291968}
+
+\item 
+\hypertarget{class_main_window_a64d21d3127c3d0a9f67f393cd6e31c1c}{}void {\bfseries on\+\_\+push\+Button\+\_\+sv\+\_\+read\+\_\+disp\+\_\+clicked} ()\label{class_main_window_a64d21d3127c3d0a9f67f393cd6e31c1c}
+
+\item 
+\hypertarget{class_main_window_a7ee33b0bedeec00f1d770c15e3c5fca1}{}void {\bfseries on\+\_\+push\+Button\+\_\+camera\+\_\+calibration\+\_\+clicked} ()\label{class_main_window_a7ee33b0bedeec00f1d770c15e3c5fca1}
+
+\item 
+\hypertarget{class_main_window_a38edb88d43e844aca9d2e762c8706565}{}void {\bfseries close\+Event} (Q\+Close\+Event $\ast$)\label{class_main_window_a38edb88d43e844aca9d2e762c8706565}
+
+\item 
+\hypertarget{class_main_window_a968ecf19dc77ae5349a8939e57d53158}{}void {\bfseries request\+Image} (char C\+C\+D)\label{class_main_window_a968ecf19dc77ae5349a8939e57d53158}
+
+\item 
+\hypertarget{class_main_window_aac73d81c8d0722a100c6869bfc89a860}{}void {\bfseries close\+Form\+Calib} (void)\label{class_main_window_aac73d81c8d0722a100c6869bfc89a860}
+
+\item 
+\hypertarget{class_main_window_ab10389a1cab0e600c8e161a647b4b29d}{}void {\bfseries radar\+Display} (int detected\+\_\+obj, cv\+::\+Mat $\ast$img, cv\+::\+Mat $\ast$topview)\label{class_main_window_ab10389a1cab0e600c8e161a647b4b29d}
+
+\item 
+\hypertarget{class_main_window_ac9ea72cd1b942a15a163cb308e6fb656}{}void {\bfseries on\+\_\+push\+Button\+\_\+radar\+\_\+write\+\_\+clicked} ()\label{class_main_window_ac9ea72cd1b942a15a163cb308e6fb656}
+
+\item 
+\hypertarget{class_main_window_a76a71322a2f8bc6f01f7a707cc73093e}{}void {\bfseries on\+\_\+push\+Button\+\_\+radar\+\_\+bus\+\_\+on\+\_\+clicked} ()\label{class_main_window_a76a71322a2f8bc6f01f7a707cc73093e}
+
+\item 
+\hypertarget{class_main_window_a3a75e1394b03fc2fa74f4f2fbe2f88d9}{}void {\bfseries on\+\_\+push\+Button\+\_\+radar\+\_\+bus\+\_\+off\+\_\+clicked} ()\label{class_main_window_a3a75e1394b03fc2fa74f4f2fbe2f88d9}
+
+\item 
+\hypertarget{class_main_window_a5b0bba61eff7a7257c03c85a42afb70f}{}void {\bfseries on\+\_\+push\+Button\+\_\+radar\+\_\+open\+\_\+clicked} ()\label{class_main_window_a5b0bba61eff7a7257c03c85a42afb70f}
+
+\item 
+\hypertarget{class_main_window_a13a9eb8072e61993c1ee52d1dcf6843c}{}void {\bfseries on\+\_\+check\+Box\+\_\+radar\+\_\+topview\+\_\+clicked} (bool checked)\label{class_main_window_a13a9eb8072e61993c1ee52d1dcf6843c}
+
+\item 
+\hypertarget{class_main_window_ade269ccff5b9b26d487423d31ec19adf}{}void {\bfseries on\+\_\+spin\+Box\+\_\+radar\+\_\+topview\+\_\+r\+\_\+value\+Changed} (int arg1)\label{class_main_window_ade269ccff5b9b26d487423d31ec19adf}
+
+\item 
+\hypertarget{class_main_window_a8f2714912f4335593fcc6a4cd1999dd9}{}void {\bfseries on\+\_\+spin\+Box\+\_\+radar\+\_\+topview\+\_\+c\+\_\+value\+Changed} (int arg1)\label{class_main_window_a8f2714912f4335593fcc6a4cd1999dd9}
+
+\item 
+\hypertarget{class_main_window_a5ae4659c9b00e173fe6214e10c76e925}{}void {\bfseries fused\+Display} (cv\+::\+Mat $\ast$fused\+\_\+topview, cv\+::\+Mat $\ast$img\+\_\+detected\+\_\+display)\label{class_main_window_a5ae4659c9b00e173fe6214e10c76e925}
+
+\item 
+\hypertarget{class_main_window_a5363260e5ea8d86839f8ce9bd8f82cf1}{}void {\bfseries on\+\_\+horizontal\+Slider\+\_\+2\+\_\+slider\+Released} ()\label{class_main_window_a5363260e5ea8d86839f8ce9bd8f82cf1}
+
+\item 
+\hypertarget{class_main_window_aee38d2cc3c3f234bb29c7b586eaaab71}{}void {\bfseries on\+\_\+horizontal\+Slider\+\_\+slider\+Released} ()\label{class_main_window_aee38d2cc3c3f234bb29c7b586eaaab71}
+
+\item 
+\hypertarget{class_main_window_a2c81d9cfcad930466479607522e36eaa}{}void {\bfseries on\+\_\+push\+Button\+\_\+lrf\+\_\+read\+\_\+range\+\_\+2\+\_\+clicked} ()\label{class_main_window_a2c81d9cfcad930466479607522e36eaa}
+
+\item 
+\hypertarget{class_main_window_afac5020a493ff060448673b5ad3920e3}{}void {\bfseries on\+\_\+push\+Button\+\_\+lrf\+\_\+request\+\_\+2\+\_\+clicked} ()\label{class_main_window_afac5020a493ff060448673b5ad3920e3}
+
+\item 
+\hypertarget{class_main_window_a5ec349ab159f70611a7fd64e4cd48fbf}{}void {\bfseries on\+\_\+push\+Button\+\_\+lrf\+\_\+retrieve\+\_\+2\+\_\+clicked} ()\label{class_main_window_a5ec349ab159f70611a7fd64e4cd48fbf}
+
+\item 
+\hypertarget{class_main_window_aade7a81064c1a04e9863d7885474f007}{}void {\bfseries on\+\_\+push\+Button\+\_\+lrf\+\_\+stop\+\_\+2\+\_\+clicked} ()\label{class_main_window_aade7a81064c1a04e9863d7885474f007}
+
+\item 
+\hypertarget{class_main_window_aecbc68b9687bc55197d908f7b0e91a4c}{}void {\bfseries on\+\_\+push\+Button\+\_\+sv\+\_\+record\+\_\+clicked} ()\label{class_main_window_aecbc68b9687bc55197d908f7b0e91a4c}
+
+\item 
+\hypertarget{class_main_window_a5cd6ccb54d1eb823b3941ba911f4f70e}{}void {\bfseries on\+\_\+push\+Button\+\_\+sv\+\_\+load\+\_\+data\+\_\+clicked} ()\label{class_main_window_a5cd6ccb54d1eb823b3941ba911f4f70e}
+
+\item 
+\hypertarget{class_main_window_ad4db82c551e11268855e8537051854d9}{}void {\bfseries video\+Is\+End} ()\label{class_main_window_ad4db82c551e11268855e8537051854d9}
+
+\item 
+\hypertarget{class_main_window_a694e910969f3c9fc52fb2d55e37433d9}{}void {\bfseries data\+Is\+End} ()\label{class_main_window_a694e910969f3c9fc52fb2d55e37433d9}
+
+\item 
+\hypertarget{class_main_window_aacc0ca43d4f93d6fd02db9fa701a0c7a}{}void {\bfseries on\+\_\+push\+Button\+\_\+radar\+\_\+record\+\_\+clicked} ()\label{class_main_window_aacc0ca43d4f93d6fd02db9fa701a0c7a}
+
+\item 
+\hypertarget{class_main_window_ae621318f159e48b46baa39a789d2f6ca}{}void {\bfseries on\+\_\+push\+Button\+\_\+lrf\+\_\+record\+\_\+clicked} ()\label{class_main_window_ae621318f159e48b46baa39a789d2f6ca}
+
+\item 
+\hypertarget{class_main_window_ae283ac8265a9f2dc657538b025816caf}{}void {\bfseries on\+\_\+push\+Button\+\_\+all\+\_\+record\+\_\+clicked} ()\label{class_main_window_ae283ac8265a9f2dc657538b025816caf}
+
+\item 
+\hypertarget{class_main_window_a67d164579f058b7440ca57bc4e239454}{}void {\bfseries on\+\_\+push\+Button\+\_\+radar\+\_\+load\+\_\+data\+\_\+clicked} ()\label{class_main_window_a67d164579f058b7440ca57bc4e239454}
+
+\item 
+\hypertarget{class_main_window_a775485da91e1a7881df26da46e1b9215}{}void {\bfseries on\+\_\+push\+Button\+\_\+lrf\+\_\+load\+\_\+data\+\_\+clicked} ()\label{class_main_window_a775485da91e1a7881df26da46e1b9215}
+
+\item 
+\hypertarget{class_main_window_a7a43507878165a191ab2cb0c5c54e7a4}{}void {\bfseries on\+\_\+push\+Button\+\_\+all\+\_\+load\+\_\+data\+\_\+clicked} ()\label{class_main_window_a7a43507878165a191ab2cb0c5c54e7a4}
+
+\item 
+\hypertarget{class_main_window_ab0fa89bb4e00c1be478235fdda546ea4}{}void {\bfseries on\+\_\+radio\+Button\+\_\+input\+\_\+device\+\_\+clicked} ()\label{class_main_window_ab0fa89bb4e00c1be478235fdda546ea4}
+
+\item 
+\hypertarget{class_main_window_ae1905865fb074ee77e57302045fc1bb5}{}void {\bfseries on\+\_\+radio\+Button\+\_\+input\+\_\+recording\+\_\+clicked} ()\label{class_main_window_ae1905865fb074ee77e57302045fc1bb5}
+
+\item 
+\hypertarget{class_main_window_aa2e7ff24d6dc395ba51fc15028ad83a5}{}void {\bfseries gui\+Display} (int type, bool fg\+\_\+on)\label{class_main_window_aa2e7ff24d6dc395ba51fc15028ad83a5}
+
+\item 
+\hypertarget{class_main_window_aa04baab889182db1e187583997dc22a7}{}void {\bfseries on\+\_\+line\+Edit\+\_\+sv\+\_\+rig\+\_\+height\+\_\+return\+Pressed} ()\label{class_main_window_aa04baab889182db1e187583997dc22a7}
+
+\item 
+\hypertarget{class_main_window_afc577ecbf5b4800cf1a25edc46bfea54}{}void {\bfseries on\+\_\+radio\+Button\+\_\+vehicle\+\_\+cart\+\_\+clicked} ()\label{class_main_window_afc577ecbf5b4800cf1a25edc46bfea54}
+
+\item 
+\hypertarget{class_main_window_a4e48ef0bb1c417e09e0dd42dcf50e4cb}{}void {\bfseries on\+\_\+radio\+Button\+\_\+vehicle\+\_\+car\+\_\+clicked} ()\label{class_main_window_a4e48ef0bb1c417e09e0dd42dcf50e4cb}
+
+\item 
+\hypertarget{class_main_window_a9cb56cb4d8b2988da2c1cd9ae332d41f}{}void {\bfseries on\+\_\+check\+Box\+\_\+sv\+\_\+ground\+\_\+filter\+\_\+clicked} (bool checked)\label{class_main_window_a9cb56cb4d8b2988da2c1cd9ae332d41f}
+
+\item 
+\hypertarget{class_main_window_a2cc0f7e573c1329ce3a2fb515a2a70e0}{}void {\bfseries on\+\_\+push\+Button\+\_\+radar\+\_\+step\+\_\+clicked} ()\label{class_main_window_a2cc0f7e573c1329ce3a2fb515a2a70e0}
+
+\item 
+\hypertarget{class_main_window_aacc4d0f87925961ceb54b385f3b91c20}{}void {\bfseries on\+\_\+check\+Box\+\_\+fusion\+\_\+sv\+\_\+clicked} (bool checked)\label{class_main_window_aacc4d0f87925961ceb54b385f3b91c20}
+
+\item 
+\hypertarget{class_main_window_a7970ffc0361ac98d432d6b1cb7b012a4}{}void {\bfseries on\+\_\+check\+Box\+\_\+fusion\+\_\+radar\+\_\+clicked} (bool checked)\label{class_main_window_a7970ffc0361ac98d432d6b1cb7b012a4}
+
+\item 
+\hypertarget{class_main_window_a685831d7dce73aa998e7968b6f52df47}{}void {\bfseries on\+\_\+spin\+Box\+\_\+lrf\+\_\+scale\+\_\+value\+Changed} (int arg1)\label{class_main_window_a685831d7dce73aa998e7968b6f52df47}
+
+\item 
+\hypertarget{class_main_window_a2b9ba9ede10c1746dcf437149778147f}{}void {\bfseries on\+\_\+check\+Box\+\_\+ca\+\_\+clicked} (bool checked)\label{class_main_window_a2b9ba9ede10c1746dcf437149778147f}
+
+\item 
+\hypertarget{class_main_window_ad0248d5d33ec8ddf310e94f36e28773c}{}void {\bfseries on\+\_\+check\+Box\+\_\+ot\+\_\+clicked} (bool checked)\label{class_main_window_ad0248d5d33ec8ddf310e94f36e28773c}
+
+\item 
+\hypertarget{class_main_window_a6fb1b89e45b56331bafd74d1a823bc09}{}void {\bfseries on\+\_\+check\+Box\+\_\+ca\+\_\+astar\+\_\+clicked} (bool checked)\label{class_main_window_a6fb1b89e45b56331bafd74d1a823bc09}
+
+\item 
+\hypertarget{class_main_window_a0af13b96a48f857bf73d1a96127bef2e}{}void {\bfseries on\+\_\+check\+Box\+\_\+sv\+\_\+matching\+\_\+clicked} (bool checked)\label{class_main_window_a0af13b96a48f857bf73d1a96127bef2e}
+
+\item 
+\hypertarget{class_main_window_a2745acb01ad7238870e780136d2d4ad0}{}void {\bfseries on\+\_\+push\+Button\+\_\+step\+\_\+all\+\_\+clicked} ()\label{class_main_window_a2745acb01ad7238870e780136d2d4ad0}
+
+\item 
+\hypertarget{class_main_window_a4688d303088fdd99b120bda3f47819ad}{}void {\bfseries on\+\_\+check\+Box\+\_\+ot\+\_\+trajectory\+\_\+clicked} (bool checked)\label{class_main_window_a4688d303088fdd99b120bda3f47819ad}
+
+\item 
+\hypertarget{class_main_window_a2c994fd4801bf6c7cbb6f6478efb02ad}{}void {\bfseries on\+\_\+radio\+Button\+\_\+vehicle\+\_\+tractor\+\_\+clicked} ()\label{class_main_window_a2c994fd4801bf6c7cbb6f6478efb02ad}
+
+\end{DoxyCompactItemize}
+\subsection*{Private Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+void \hyperlink{class_main_window_a3f28d61db0c30b00f7d6ee480522b03c}{report\+Error} (Q\+String part, Q\+String level, Q\+String content)
+\begin{DoxyCompactList}\small\item\em report\+Error will show error msg on the gui \end{DoxyCompactList}\item 
+\hypertarget{class_main_window_afa3e33327f098de80a36bb4fef886877}{}void \hyperlink{class_main_window_afa3e33327f098de80a36bb4fef886877}{report} (Q\+String)\label{class_main_window_afa3e33327f098de80a36bb4fef886877}
+
+\begin{DoxyCompactList}\small\item\em report the info. on the gui \end{DoxyCompactList}\item 
+\hypertarget{class_main_window_a44c01e2ff3bc7e4079333bf85b38d540}{}bool \hyperlink{class_main_window_a44c01e2ff3bc7e4079333bf85b38d540}{cwd\+Is\+Project\+Folder} ()\label{class_main_window_a44c01e2ff3bc7e4079333bf85b38d540}
+
+\begin{DoxyCompactList}\small\item\em find the project folder for loading files \end{DoxyCompactList}\item 
+\hypertarget{class_main_window_a3b45393cefaf7bdbf1755bdb1ac285b8}{}void \hyperlink{class_main_window_a3b45393cefaf7bdbf1755bdb1ac285b8}{param\+Read} ()\label{class_main_window_a3b45393cefaf7bdbf1755bdb1ac285b8}
+
+\begin{DoxyCompactList}\small\item\em read params from basic\+\_\+param.\+yml \end{DoxyCompactList}\item 
+\hypertarget{class_main_window_a554791dd2e36116f20e3d47939f965f7}{}void \hyperlink{class_main_window_a554791dd2e36116f20e3d47939f965f7}{param\+Write} ()\label{class_main_window_a554791dd2e36116f20e3d47939f965f7}
+
+\begin{DoxyCompactList}\small\item\em write params from basic\+\_\+param.\+yml \end{DoxyCompactList}\item 
+\hypertarget{class_main_window_a8f1c453150234c63a58fe764a87aa388}{}void \hyperlink{class_main_window_a8f1c453150234c63a58fe764a87aa388}{param\+Update} ()\label{class_main_window_a8f1c453150234c63a58fe764a87aa388}
+
+\begin{DoxyCompactList}\small\item\em update params if changed in the basic\+\_\+param.\+yml \end{DoxyCompactList}\item 
+\hypertarget{class_main_window_ab1ac23ed93488b126a11739c637a85ef}{}void \hyperlink{class_main_window_ab1ac23ed93488b126a11739c637a85ef}{read\+From\+Txt} (Q\+String file\+\_\+name, cv\+::\+Mat $\ast$output)\label{class_main_window_ab1ac23ed93488b126a11739c637a85ef}
+
+\begin{DoxyCompactList}\small\item\em read image data from text \end{DoxyCompactList}\item 
+\hypertarget{class_main_window_a4efa6f79ede7fbadc06f39adaa37830b}{}bool \hyperlink{class_main_window_a4efa6f79ede7fbadc06f39adaa37830b}{radar\+Data\+In} ()\label{class_main_window_a4efa6f79ede7fbadc06f39adaa37830b}
+
+\begin{DoxyCompactList}\small\item\em start retrieve radar data \end{DoxyCompactList}\item 
+\hypertarget{class_main_window_a76f1215df56775aa51065ee9559739ed}{}void \hyperlink{class_main_window_a76f1215df56775aa51065ee9559739ed}{radar\+Display\+Top\+View\+B\+G} ()\label{class_main_window_a76f1215df56775aa51065ee9559739ed}
+
+\begin{DoxyCompactList}\small\item\em radar\textquotesingle{}s topview background \end{DoxyCompactList}\item 
+\hypertarget{class_main_window_a1168419c7374e67813a4f845254953a5}{}bool \hyperlink{class_main_window_a1168419c7374e67813a4f845254953a5}{sv\+Data\+In} ()\label{class_main_window_a1168419c7374e67813a4f845254953a5}
+
+\begin{DoxyCompactList}\small\item\em start retrieve S\+V data \end{DoxyCompactList}\item 
+\hypertarget{class_main_window_a6d180da4257184902cf05a0062139549}{}void \hyperlink{class_main_window_a6d180da4257184902cf05a0062139549}{cam\+Open} ()\label{class_main_window_a6d180da4257184902cf05a0062139549}
+
+\begin{DoxyCompactList}\small\item\em open the cam. \end{DoxyCompactList}\item 
+\hypertarget{class_main_window_a486d011964d6f1db7ef4c0d08d6d7b31}{}void \hyperlink{class_main_window_a486d011964d6f1db7ef4c0d08d6d7b31}{sv\+Display\+Top\+View\+B\+G} ()\label{class_main_window_a486d011964d6f1db7ef4c0d08d6d7b31}
+
+\begin{DoxyCompactList}\small\item\em S\+V\textquotesingle{}s topview background. \end{DoxyCompactList}\item 
+\hypertarget{class_main_window_ae6e464cbcf6808011c9d40d201ae6136}{}void \hyperlink{class_main_window_ae6e464cbcf6808011c9d40d201ae6136}{retrieve\+Match\+Param} ()\label{class_main_window_ae6e464cbcf6808011c9d40d201ae6136}
+
+\begin{DoxyCompactList}\small\item\em loaded param put into classes\textquotesingle{} param \end{DoxyCompactList}\item 
+\hypertarget{class_main_window_a3aae1023a511a15f4f707ef477bc84fb}{}void {\bfseries initial\+Fused\+Top\+View} ()\label{class_main_window_a3aae1023a511a15f4f707ef477bc84fb}
+
+\item 
+\hypertarget{class_main_window_a12a03f3ea3ce88179f78d304ffab5584}{}void {\bfseries update\+Fused\+Top\+View} ()\label{class_main_window_a12a03f3ea3ce88179f78d304ffab5584}
+
+\item 
+\hypertarget{class_main_window_a4151b0d3136facc84e2f55ff430419e2}{}void {\bfseries data\+Fused} ()\label{class_main_window_a4151b0d3136facc84e2f55ff430419e2}
+
+\item 
+\hypertarget{class_main_window_aecf566d956d8fea6b13c6b5c11915868}{}void \hyperlink{class_main_window_aecf566d956d8fea6b13c6b5c11915868}{exec} ()\label{class_main_window_aecf566d956d8fea6b13c6b5c11915868}
+
+\begin{DoxyCompactList}\small\item\em multi-\/thread start function \end{DoxyCompactList}\item 
+\hypertarget{class_main_window_a0fda7a616a88212e10774379903dcceb}{}void \hyperlink{class_main_window_a0fda7a616a88212e10774379903dcceb}{thread\+Check} ()\label{class_main_window_a0fda7a616a88212e10774379903dcceb}
+
+\begin{DoxyCompactList}\small\item\em check if the multi-\/thread function is running or not \end{DoxyCompactList}\item 
+\hypertarget{class_main_window_ad92470e70ec18f6cfe996b37f01f2c23}{}void \hyperlink{class_main_window_ad92470e70ec18f6cfe996b37f01f2c23}{thread\+Processing} ()\label{class_main_window_ad92470e70ec18f6cfe996b37f01f2c23}
+
+\begin{DoxyCompactList}\small\item\em multi-\/thread process function \end{DoxyCompactList}\item 
+\hypertarget{class_main_window_af1ac5827308c73b8a256be6e788f4d3a}{}void {\bfseries release\+Author} ()\label{class_main_window_af1ac5827308c73b8a256be6e788f4d3a}
+
+\item 
+\hypertarget{class_main_window_a62626384fc43ecfc5c402f94fc23413d}{}void \hyperlink{class_main_window_a62626384fc43ecfc5c402f94fc23413d}{input\+Type} (int type)\label{class_main_window_a62626384fc43ecfc5c402f94fc23413d}
+
+\begin{DoxyCompactList}\small\item\em data input type. {\ttfamily I\+N\+P\+U\+T\+\_\+\+T\+Y\+P\+E\+::\+D\+E\+V\+I\+C\+E} and {\ttfamily I\+N\+P\+U\+T\+\_\+\+T\+Y\+P\+E\+::\+R\+E\+C\+O\+R\+D\+I\+N\+G} \end{DoxyCompactList}\item 
+\hypertarget{class_main_window_a14991b988c3717937ed294a45b62690f}{}void \hyperlink{class_main_window_a14991b988c3717937ed294a45b62690f}{load\+Data} (int record\+\_\+type)\label{class_main_window_a14991b988c3717937ed294a45b62690f}
+
+\begin{DoxyCompactList}\small\item\em source to load data. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\subsection*{Private Attributes}
+\begin{DoxyCompactItemize}
+\item 
+\hypertarget{class_main_window_a35466a70ed47252a0191168126a352a5}{}\hyperlink{class_ui_1_1_main_window}{Ui\+::\+Main\+Window} $\ast$ {\bfseries ui}\label{class_main_window_a35466a70ed47252a0191168126a352a5}
+
+\item 
+\hypertarget{class_main_window_a1e59edde139fb1ef98970a3eaa941798}{}Q\+Label $\ast$ {\bfseries label\+\_\+file\+\_\+loaded}\label{class_main_window_a1e59edde139fb1ef98970a3eaa941798}
+
+\item 
+\hypertarget{class_main_window_aa32aaafb8f786e050b2f1a63d767c2b4}{}bool \hyperlink{class_main_window_aa32aaafb8f786e050b2f1a63d767c2b4}{fg\+\_\+param\+\_\+loaded}\label{class_main_window_aa32aaafb8f786e050b2f1a63d767c2b4}
+
+\begin{DoxyCompactList}\small\item\em check wether the paramerters are loaded \end{DoxyCompactList}\item 
+\hypertarget{class_main_window_af5d69a604ce89f0c07d61fdd0e722a9f}{}\hyperlink{structstereo__vision_1_1cam_param}{stereo\+\_\+vision\+::cam\+Param} $\ast$ \hyperlink{class_main_window_af5d69a604ce89f0c07d61fdd0e722a9f}{fin\+\_\+cam\+\_\+param}\label{class_main_window_af5d69a604ce89f0c07d61fdd0e722a9f}
+
+\begin{DoxyCompactList}\small\item\em load camera params from basic\+\_\+param.\+yml \end{DoxyCompactList}\item 
+\hypertarget{class_main_window_a76bb18e37b30f50bc13b2b98240d1af8}{}\hyperlink{structstereo__vision_1_1match_param_s_g_b_m}{stereo\+\_\+vision\+::match\+Param\+S\+G\+B\+M} $\ast$ \hyperlink{class_main_window_a76bb18e37b30f50bc13b2b98240d1af8}{fin\+\_\+\+S\+G\+B\+M}\label{class_main_window_a76bb18e37b30f50bc13b2b98240d1af8}
+
+\begin{DoxyCompactList}\small\item\em load S\+G\+B\+M param \end{DoxyCompactList}\item 
+\hypertarget{class_main_window_afe536255cd3b0a3e11bfbaf600816697}{}\hyperlink{structstereo__vision_1_1match_param_b_m}{stereo\+\_\+vision\+::match\+Param\+B\+M} $\ast$ \hyperlink{class_main_window_afe536255cd3b0a3e11bfbaf600816697}{fin\+\_\+\+B\+M}\label{class_main_window_afe536255cd3b0a3e11bfbaf600816697}
+
+\begin{DoxyCompactList}\small\item\em load B\+M param \end{DoxyCompactList}\item 
+\hypertarget{class_main_window_a6d7907a5414098e72cc8e03aebbb4425}{}int \hyperlink{class_main_window_a6d7907a5414098e72cc8e03aebbb4425}{fin\+\_\+lrf\+\_\+port}\label{class_main_window_a6d7907a5414098e72cc8e03aebbb4425}
+
+\begin{DoxyCompactList}\small\item\em load laser rangefinder\textquotesingle{}s port \end{DoxyCompactList}\item 
+\hypertarget{class_main_window_a568b86711ea8bf4069f5687135fe49ff}{}int \hyperlink{class_main_window_a568b86711ea8bf4069f5687135fe49ff}{fin\+\_\+lrf\+\_\+baud\+\_\+rate}\label{class_main_window_a568b86711ea8bf4069f5687135fe49ff}
+
+\begin{DoxyCompactList}\small\item\em load laser rangefinder\textquotesingle{}s baudrate \end{DoxyCompactList}\item 
+\hypertarget{class_main_window_a70b1d396d0e92b39157a4a147cbf4268}{}int \hyperlink{class_main_window_a70b1d396d0e92b39157a4a147cbf4268}{fin\+\_\+lrf\+\_\+scale}\label{class_main_window_a70b1d396d0e92b39157a4a147cbf4268}
+
+\begin{DoxyCompactList}\small\item\em load laser rangefinder\textquotesingle{}s display scale \end{DoxyCompactList}\item 
+\hypertarget{class_main_window_a50025d38389706abe7b0271214997099}{}int \hyperlink{class_main_window_a50025d38389706abe7b0271214997099}{fin\+\_\+lrf\+\_\+res}\label{class_main_window_a50025d38389706abe7b0271214997099}
+
+\begin{DoxyCompactList}\small\item\em load laser rangefinder\textquotesingle{}s resolution \end{DoxyCompactList}\item 
+\hypertarget{class_main_window_ab7f9a898af8582365e26c448bb788b0b}{}bool \hyperlink{class_main_window_ab7f9a898af8582365e26c448bb788b0b}{fg\+\_\+retrieving}\label{class_main_window_ab7f9a898af8582365e26c448bb788b0b}
+
+\begin{DoxyCompactList}\small\item\em operating status of radar \end{DoxyCompactList}\item 
+\hypertarget{class_main_window_a06bc8c3c6a08eafe409ee2bafe0ffbd6}{}Q\+Standard\+Item\+Model $\ast$ {\bfseries model\+\_\+radar}\label{class_main_window_a06bc8c3c6a08eafe409ee2bafe0ffbd6}
+
+\item 
+\hypertarget{class_main_window_aa898201d6efa2132f8bbec5b0cb2a54b}{}bool \hyperlink{class_main_window_aa898201d6efa2132f8bbec5b0cb2a54b}{fg\+\_\+capturing}\label{class_main_window_aa898201d6efa2132f8bbec5b0cb2a54b}
+
+\begin{DoxyCompactList}\small\item\em operating status of S\+V \end{DoxyCompactList}\item 
+\hypertarget{class_main_window_af7d1fe5d2623ace2d8c2918374297618}{}\hyperlink{classstereo_match_param_form}{stereo\+Match\+Param\+Form} $\ast$ \hyperlink{class_main_window_af7d1fe5d2623ace2d8c2918374297618}{form\+\_\+smp}\label{class_main_window_af7d1fe5d2623ace2d8c2918374297618}
+
+\begin{DoxyCompactList}\small\item\em S\+V\textquotesingle{}s param adjustment interface. \end{DoxyCompactList}\item 
+\hypertarget{class_main_window_a05652b564abf3a6635f91bde9ade409b}{}bool \hyperlink{class_main_window_a05652b564abf3a6635f91bde9ade409b}{fg\+\_\+form\+\_\+smp\+\_\+alloc}\label{class_main_window_a05652b564abf3a6635f91bde9ade409b}
+
+\begin{DoxyCompactList}\small\item\em check if the interface is constructed or not \end{DoxyCompactList}\item 
+\hypertarget{class_main_window_a0bcdd69d3175e040c086b3e5e6821f67}{}bool \hyperlink{class_main_window_a0bcdd69d3175e040c086b3e5e6821f67}{fg\+\_\+acquiring}\label{class_main_window_a0bcdd69d3175e040c086b3e5e6821f67}
+
+\begin{DoxyCompactList}\small\item\em operating status of lrf \end{DoxyCompactList}\item 
+\hypertarget{class_main_window_a783bea3455245d7409bf47171e792643}{}bool \hyperlink{class_main_window_a783bea3455245d7409bf47171e792643}{fg\+\_\+buffering}\label{class_main_window_a783bea3455245d7409bf47171e792643}
+
+\begin{DoxyCompactList}\small\item\em operating status of lrf\textquotesingle{}s buffer \end{DoxyCompactList}\item 
+\hypertarget{class_main_window_acdad68b9a5c7b52047cf68f3e6263f90}{}bool \hyperlink{class_main_window_acdad68b9a5c7b52047cf68f3e6263f90}{fg\+\_\+lrf\+\_\+record}\label{class_main_window_acdad68b9a5c7b52047cf68f3e6263f90}
+
+\begin{DoxyCompactList}\small\item\em bool of recording data \end{DoxyCompactList}\item 
+\hypertarget{class_main_window_a57a88f831eed7afa81064d274c01549a}{}bool \hyperlink{class_main_window_a57a88f831eed7afa81064d274c01549a}{fg\+\_\+lrf\+\_\+record\+\_\+quit}\label{class_main_window_a57a88f831eed7afa81064d274c01549a}
+
+\begin{DoxyCompactList}\small\item\em bool of stop recording data \end{DoxyCompactList}\item 
+\hypertarget{class_main_window_adc556dc0a909538236b0ba4126336eb5}{}F\+I\+L\+E $\ast$ {\bfseries fp1}\label{class_main_window_adc556dc0a909538236b0ba4126336eb5}
+
+\item 
+\hypertarget{class_main_window_a526afc9bb96e26cccbc074ed30c7c386}{}cv\+::\+Mat \hyperlink{class_main_window_a526afc9bb96e26cccbc074ed30c7c386}{display\+\_\+lrf}\label{class_main_window_a526afc9bb96e26cccbc074ed30c7c386}
+
+\begin{DoxyCompactList}\small\item\em lrf data displaying gui \end{DoxyCompactList}\item 
+\hypertarget{class_main_window_a18fafd7d6c2d9b83a686156421bb54b5}{}std\+::vector$<$ double $>$ {\bfseries lrf\+\_\+temp}\label{class_main_window_a18fafd7d6c2d9b83a686156421bb54b5}
+
+\item 
+\hypertarget{class_main_window_ae02456cfb685af6293c97d67df860d64}{}std\+::vector$<$ std\+::vector$<$ double $>$ $>$ {\bfseries display\+\_\+lrf\+\_\+3\+D}\label{class_main_window_ae02456cfb685af6293c97d67df860d64}
+
+\item 
+\hypertarget{class_main_window_a752245011087dd3e391e62da45445ccb}{}\hyperlink{class_sensor_info}{Sensor\+Info} $\ast$ {\bfseries si}\label{class_main_window_a752245011087dd3e391e62da45445ccb}
+
+\item 
+\hypertarget{class_main_window_a6feb706359359c4b6be5f6eed6aa57a8}{}Q\+Future$<$ int $>$ \hyperlink{class_main_window_a6feb706359359c4b6be5f6eed6aa57a8}{f\+\_\+sv}\label{class_main_window_a6feb706359359c4b6be5f6eed6aa57a8}
+
+\begin{DoxyCompactList}\small\item\em thread\textquotesingle{}s control of S\+V \end{DoxyCompactList}\item 
+\hypertarget{class_main_window_aa51de053f63711b5abb4c71f25122aa0}{}Q\+Future$<$ bool $>$ \hyperlink{class_main_window_aa51de053f63711b5abb4c71f25122aa0}{f\+\_\+lrf}\label{class_main_window_aa51de053f63711b5abb4c71f25122aa0}
+
+\begin{DoxyCompactList}\small\item\em thread\textquotesingle{}s control of lrf \end{DoxyCompactList}\item 
+\hypertarget{class_main_window_a90b19bfc8a7681f9f5f549eee837b0b5}{}Q\+Future$<$ void $>$ \hyperlink{class_main_window_a90b19bfc8a7681f9f5f549eee837b0b5}{f\+\_\+lrf\+\_\+buf}\label{class_main_window_a90b19bfc8a7681f9f5f549eee837b0b5}
+
+\begin{DoxyCompactList}\small\item\em thread\textquotesingle{}s control of lrf buffer \end{DoxyCompactList}\item 
+\hypertarget{class_main_window_a0627e9f778d4f159d8ee49a2689cbaba}{}Q\+Future$<$ int $>$ \hyperlink{class_main_window_a0627e9f778d4f159d8ee49a2689cbaba}{f\+\_\+radar}\label{class_main_window_a0627e9f778d4f159d8ee49a2689cbaba}
+
+\begin{DoxyCompactList}\small\item\em thread\textquotesingle{}s control of R\+A\+D\+A\+R \end{DoxyCompactList}\item 
+\hypertarget{class_main_window_aed35e6d253505e11dc9f9e9752a182a3}{}Q\+Future$<$ void $>$ \hyperlink{class_main_window_aed35e6d253505e11dc9f9e9752a182a3}{f\+\_\+fused}\label{class_main_window_aed35e6d253505e11dc9f9e9752a182a3}
+
+\begin{DoxyCompactList}\small\item\em thread\textquotesingle{}s control of fusion \end{DoxyCompactList}\item 
+\hypertarget{class_main_window_a36d7cf762bc7575ed6c6e3169e5f7a64}{}int \hyperlink{class_main_window_a36d7cf762bc7575ed6c6e3169e5f7a64}{f\+\_\+sv\+\_\+status}\label{class_main_window_a36d7cf762bc7575ed6c6e3169e5f7a64}
+
+\begin{DoxyCompactList}\small\item\em thread\textquotesingle{}s result of S\+V \end{DoxyCompactList}\item 
+\hypertarget{class_main_window_a3724b9a7963fa667a366823194e41a43}{}bool \hyperlink{class_main_window_a3724b9a7963fa667a366823194e41a43}{f\+\_\+lrf\+\_\+status} = false\label{class_main_window_a3724b9a7963fa667a366823194e41a43}
+
+\begin{DoxyCompactList}\small\item\em thread\textquotesingle{}s result of lrf \end{DoxyCompactList}\item 
+\hypertarget{class_main_window_ae777ce7e4b31247a1d35c251d458f3c3}{}int \hyperlink{class_main_window_ae777ce7e4b31247a1d35c251d458f3c3}{f\+\_\+radar\+\_\+status} = false\label{class_main_window_ae777ce7e4b31247a1d35c251d458f3c3}
+
+\begin{DoxyCompactList}\small\item\em thread\textquotesingle{}s result of R\+A\+D\+A\+R \end{DoxyCompactList}\item 
+\hypertarget{class_main_window_ae807b3bfce87e184f1951c2b7874755c}{}\hyperlink{classcalibration_form}{calibration\+Form} $\ast$ \hyperlink{class_main_window_ae807b3bfce87e184f1951c2b7874755c}{form\+\_\+calib}\label{class_main_window_ae807b3bfce87e184f1951c2b7874755c}
+
+\begin{DoxyCompactList}\small\item\em S\+V\textquotesingle{}s camera calibration interface. \end{DoxyCompactList}\item 
+\hypertarget{class_main_window_a1e66a6f5c73e43fedc1a9974807357a9}{}bool \hyperlink{class_main_window_a1e66a6f5c73e43fedc1a9974807357a9}{fg\+\_\+form\+\_\+calib\+\_\+alloc}\label{class_main_window_a1e66a6f5c73e43fedc1a9974807357a9}
+
+\begin{DoxyCompactList}\small\item\em check if the interface is constructed or not \end{DoxyCompactList}\item 
+\hypertarget{class_main_window_ac3c1675b721a495c17b935049134f936}{}Q\+String \hyperlink{class_main_window_ac3c1675b721a495c17b935049134f936}{mouse\+\_\+info}\label{class_main_window_ac3c1675b721a495c17b935049134f936}
+
+\begin{DoxyCompactList}\small\item\em store the info. at cursor\textquotesingle{}s location in S\+V \end{DoxyCompactList}\item 
+\hypertarget{class_main_window_ac27903cbd0c42ab055ae5b9a2dea3fbe}{}int {\bfseries dis\+\_\+xx}\label{class_main_window_ac27903cbd0c42ab055ae5b9a2dea3fbe}
+
+\item 
+\hypertarget{class_main_window_aa332ae26c7db5cdc0e5ddc7b64685914}{}int \hyperlink{class_main_window_aa332ae26c7db5cdc0e5ddc7b64685914}{dis\+\_\+yy}\label{class_main_window_aa332ae26c7db5cdc0e5ddc7b64685914}
+
+\begin{DoxyCompactList}\small\item\em the display img. is 320$\ast$240 but the original img. is 640$\ast$480, so it needs to time 2 to return the real value. \end{DoxyCompactList}\item 
+\hypertarget{class_main_window_ae17245ee58e27a07102cd08de74997a9}{}float {\bfseries dis\+\_\+disp}\label{class_main_window_ae17245ee58e27a07102cd08de74997a9}
+
+\item 
+\hypertarget{class_main_window_acd192384d8510cd3bb439a0b3ecd9395}{}cv\+::\+Point3i {\bfseries dis\+\_\+pos3\+D}\label{class_main_window_acd192384d8510cd3bb439a0b3ecd9395}
+
+\item 
+\hypertarget{class_main_window_a884603ea8ca5378e26024f3b953bb112}{}Q\+Dialog $\ast$ {\bfseries dev\+Form}\label{class_main_window_a884603ea8ca5378e26024f3b953bb112}
+
+\item 
+\hypertarget{class_main_window_a5aaada9c773e29bec2a8e37c341760cd}{}Q\+Label $\ast$ {\bfseries icon}\label{class_main_window_a5aaada9c773e29bec2a8e37c341760cd}
+
+\item 
+\hypertarget{class_main_window_a97d9df9749efe3d6f432a586f5dc8b38}{}Q\+Label $\ast$ {\bfseries text}\label{class_main_window_a97d9df9749efe3d6f432a586f5dc8b38}
+
+\item 
+\hypertarget{class_main_window_ae8619e628eef24b8b265dfef442b53ad}{}bool {\bfseries fg\+\_\+author}\label{class_main_window_ae8619e628eef24b8b265dfef442b53ad}
+
+\item 
+\hypertarget{class_main_window_a42ff5984e8e5c461cc1497a6ab2cd418}{}int \hyperlink{class_main_window_a42ff5984e8e5c461cc1497a6ab2cd418}{sv\+\_\+frame\+\_\+count}\label{class_main_window_a42ff5984e8e5c461cc1497a6ab2cd418}
+
+\begin{DoxyCompactList}\small\item\em video\textquotesingle{}s total frame \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+The \hyperlink{class_main_window}{Main\+Window} class. 
+
+\subsection{Member Function Documentation}
+\hypertarget{class_main_window_ae81612c12f590a4bc599332e71f52afc}{}\index{Main\+Window@{Main\+Window}!mouse\+X\+Y@{mouse\+X\+Y}}
+\index{mouse\+X\+Y@{mouse\+X\+Y}!Main\+Window@{Main\+Window}}
+\subsubsection[{mouse\+X\+Y}]{\setlength{\rightskip}{0pt plus 5cm}void Main\+Window\+::mouse\+X\+Y (
+\begin{DoxyParamCaption}
+\item[{int}]{x, }
+\item[{int}]{y}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [private]}, {\ttfamily [slot]}}\label{class_main_window_ae81612c12f590a4bc599332e71f52afc}
+
+
+mouse\+X\+Y is to acuire mouse info. connect w/ the label 
+
+
+\begin{DoxyParams}{Parameters}
+{\em x} & \\
+\hline
+{\em y} & \\
+\hline
+\end{DoxyParams}
+\hypertarget{class_main_window_a3f28d61db0c30b00f7d6ee480522b03c}{}\index{Main\+Window@{Main\+Window}!report\+Error@{report\+Error}}
+\index{report\+Error@{report\+Error}!Main\+Window@{Main\+Window}}
+\subsubsection[{report\+Error}]{\setlength{\rightskip}{0pt plus 5cm}void Main\+Window\+::report\+Error (
+\begin{DoxyParamCaption}
+\item[{Q\+String}]{part, }
+\item[{Q\+String}]{level, }
+\item[{Q\+String}]{content}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [private]}}\label{class_main_window_a3f28d61db0c30b00f7d6ee480522b03c}
+
+
+report\+Error will show error msg on the gui 
+
+
+\begin{DoxyParams}{Parameters}
+{\em part} & caused error class \\
+\hline
+{\em level} & error or warning \\
+\hline
+{\em content} & what\textquotesingle{}s the error msg \\
+\hline
+\end{DoxyParams}
+\hypertarget{class_main_window_ad6984d1fa1808b8406cbc30c5df26415}{}\index{Main\+Window@{Main\+Window}!wheel\+Event@{wheel\+Event}}
+\index{wheel\+Event@{wheel\+Event}!Main\+Window@{Main\+Window}}
+\subsubsection[{wheel\+Event}]{\setlength{\rightskip}{0pt plus 5cm}void Main\+Window\+::wheel\+Event (
+\begin{DoxyParamCaption}
+\item[{Q\+Wheel\+Event $\ast$}]{ev}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [private]}, {\ttfamily [slot]}}\label{class_main_window_ad6984d1fa1808b8406cbc30c5df26415}
+
+
+wheel\+Event is to acuire the wheel event 
+
+
+\begin{DoxyParams}{Parameters}
+{\em ev} & \\
+\hline
+\end{DoxyParams}
+
+
+The documentation for this class was generated from the following files\+:\begin{DoxyCompactItemize}
+\item 
+D\+:/\+Qt\+Program/\+Qt5/\+Fusion/mainwindow.\+h\item 
+D\+:/\+Qt\+Program/\+Qt5/\+Fusion/mainwindow.\+cpp\end{DoxyCompactItemize}

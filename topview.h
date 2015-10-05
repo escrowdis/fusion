@@ -25,17 +25,17 @@ public:
 
     void changeParams(float view_angle, int chord_length);
 
-    cv::Point pointT(cv::Point src);    // transformed point from grid map to topview for display
+    cv::Point pointT(cv::Point src);    ///< transformed point from grid map to topview for display
 
-    int min_distance;                   // (cm)
+    int min_distance;                   ///< (cm)
 
-    int max_distance;                   // (cm)
+    int max_distance;                   ///< (cm)
 
-    float view_angle;                   // the view angle (degree)
+    float view_angle;                   ///< the view angle (degree)
 
-    float c;                            // ratio of image to grid_map (the number of adjacent image columns grouped into a polar slice)
+    float c;                            ///< ratio of image to grid_map (the number of adjacent image columns grouped into a polar slice)
 
-    cv::Mat topview;                    // topview on label
+    cv::Mat topview;                    ///< topview on label
 
     cv::Mat topview_BG;
 
@@ -61,9 +61,9 @@ protected:
     int img_row;
 
     // ratio for transforming from grid map to topview
-    float ratio_row;                    // ratio of display_row to max_distance
+    float ratio_row;                    ///< ratio of display_row to max_distance
 
-    float ratio_col;                    // ratio of display_col to chord_length
+    float ratio_col;                    ///< ratio of display_col to chord_length
 
     // topview size
     int display_row;
@@ -73,11 +73,11 @@ protected:
     struct blobNode
     {
         // GRIDMAP -----------
-        int pts_num;                    // pixels in the cell
+        int pts_num;                    ///< pixels in the cell
 
-        int obj_label;                  // object label number
+        int obj_label;                  ///< object label number
 
-        int avg_Z;                      // average depth of this cell
+        int avg_Z;                      ///< average depth of this cell
 
         int avg_X;
 
@@ -92,23 +92,22 @@ protected:
         }
     };
 
-    blobNode** grid_map;                // Storing pixels' information into cells
+    blobNode** grid_map;                ///< Storing pixels' information into cells
 
-    cv::Point** img_grid;               // topview background cell points
+    cv::Point** img_grid;               ///< topview background cell points
 
-    float k;                            // length of interval
+    float k;                            ///< length of interval
 
-    int chord_length;                   // the chord length of stereo vision
+    int chord_length;                   ///< the chord length of stereo vision
 
-    int chord_length_min;               // the chord length at min_distance
+    int chord_length_min;               ///< the chord length at min_distance
 
-    int thresh_free_space;              // check whether the cell is satisfied as an object.
-                                        // Each cell containing more than this value is consider as an object.
+    int thresh_free_space;              ///< check whether the cell is satisfied as an object.\n Each cell containing more than this value is consider as an object.
 
 private:
     void releaseTopView();
 
-    bool fg_topview;                // whether topview is initialized
+    bool fg_topview;                    ///< whether topview is initialized
 
     // psuedo-color table
     void pseudoColorTable();

@@ -37,10 +37,10 @@ public:
     // Polar Coordinates System
     struct PC
     {
-        double angle;                   // orientation degree (degree).
-                                        // Forward is set as zero and counting clockwisely.
+        double angle;                   ///< orientation degree (degree).
+                                        ///< Forward is set as zero and counting clockwisely.
 
-        double range;                   // (cm)
+        double range;                   ///< (cm)
 
         PC(double range = 0.0, double angle = 0.0) {
             this->angle = angle;
@@ -49,13 +49,38 @@ public:
     };
 
     // Conversion between polar and Cartesian
+    //!
+    //! \brief polar2Cartf location from polar coordinate to Cartesian one
+    //! \param pc_in
+    //! \param unit_in
+    //! \return cv::Point2d
+    //!
     static cv::Point2d polar2Cartf(PC pc_in, int unit_in);
+    //!
+    //! \brief polar2Cart is the same as \link polar2Cartf but diff. in return type
+    //! \param pc_in
+    //! \param unit_in
+    //! \return cv::Point
+    //!
     static cv::Point polar2Cart(PC pc_in, int unit_in);
     static SensorBase::PC cart2Polarf(cv::Point2f pt_in, int unit);
     static PC cart2Polar(cv::Point pt_in, int unit);
+    //!
+    //! \brief velUnitTransform to transform velocity unit
+    //! \param src velocity
+    //! \param type like km/hr <-> m/s
+    //! \return
+    //!
     static cv::Point2f velUnitTransform(cv::Point2f src, int type);
+    //!
+    //! \brief velEstimation to estimate object's velocity
+    //! \param p_now
+    //! \param p_prev
+    //! \param time_proc
+    //! \param type
+    //! \return
+    //!
     static cv::Point2f velEstimation(cv::Point2f p_now, cv::Point2f p_prev, float time_proc, int type);
-
 };
 
 #endif // SENSORBASE_H

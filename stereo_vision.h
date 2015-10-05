@@ -75,18 +75,35 @@ public:
 
     ~stereo_vision();
 
-    int match_mode;
+    int match_mode;                         ///< stereo matching mode
 
-    std::vector <int> match_param;
+    std::vector <int> match_param;          ///< stereo matching params
 
+    //!
+    //! \brief open the cam.
+    //! \param device_index_L
+    //! \param device_index_R
+    //! \return
+    //!
     bool open(int device_index_L, int device_index_R);
 
-    // check if cam is opened or not
+    //!
+    //! \brief isOpened is to check if cam is opened or not
+    //! \return
+    //!
     bool isOpened() {return fg_cam_opened;}
 
-    // close cam
+    //!
+    //! \brief close cam.
+    //!
     void close();
 
+    //!
+    //! \brief loadRemapFile for camera calibration. The folder of calibration files should be placed under project's folder
+    //! \param cam_focal_length
+    //! \param base_line
+    //! \return
+    //!
     bool loadRemapFile(int cam_focal_length, double base_line);
 
     int dataExec();
@@ -115,20 +132,22 @@ public:
 
     // status
     int input_mode;
-    bool fg_calib;                      // check whether the calibration button is checked
-    bool fg_stereoMatch;                // check whether do the correspondence matching
-    bool fg_pseudo;                     // chekc wether pesudo the disparity image
-    bool fg_topview;                    // check wether project to topview
-    bool fg_reproject;                  // check wether re-project detected objects to image
-    bool fg_tracking;                   // it's true when object tracking is activated
-    bool fg_topview_plot_points;        // check wethere to plot each points on the topview
+    bool fg_calib;                      ///< check whether the calibration button is checked
+    bool fg_stereoMatch;                ///< check whether do the correspondence matching
+    bool fg_pseudo;                     ///< chekc wether pesudo the disparity image
+    bool fg_topview;                    ///< check wether project to topview
+    bool fg_reproject;                  ///< check wether re-project detected objects to image
+    bool fg_tracking;                   ///< it's true when object tracking is activated
+    bool fg_topview_plot_points;        ///< check wethere to plot each points on the topview
 
     // disparity image
     cv::Mat disp_raw;
     cv::Mat disp;
     cv::Mat disp_pseudo;
 
-    // depth estimatiom
+    //!
+    //! \brief The camParam struct for depth estimatiom
+    //!
     struct camParam
     {
         int port_L;
@@ -141,7 +160,9 @@ public:
     };
     camParam* cam_param;
 
-    // data - stereo vision ========
+    //!
+    //! \brief The StereoData struct
+    //!
     struct StereoData
     {
         // IMAGE -------------
@@ -152,10 +173,10 @@ public:
         int Y;
         int Z;
 
-        bool ground_cand;               // recognized as ground by v-disparity algorithm
+        bool ground_cand;               ///< recognized as ground by v-disparity algorithm
 
         // GRIDMAP -----------
-        std::pair<int, int> grid_id;    // located cell in topview
+        std::pair<int, int> grid_id;    ///< located cell in topview
 
         StereoData() {
             disp = -1;

@@ -47,7 +47,6 @@ namespace Ui {
 class MainWindow;
 }
 
-
 namespace INPUT_TYPE {
 enum {
     DEVICE,
@@ -55,6 +54,9 @@ enum {
 };
 }
 
+//!
+//! \brief The MainWindow class
+//!
 class MainWindow : public QMainWindow
 {
     Q_OBJECT
@@ -68,76 +70,82 @@ private:
 
     QLabel *label_file_loaded;
 
+    //!
+    //! \brief reportError will show error msg on the gui
+    //! \param part caused error class
+    //! \param level error or warning
+    //! \param content what's the error msg
+    //!
     void reportError(QString part, QString level, QString content);
 
+    //!
+    //! \brief report the info. on the gui
+    //!
     void report(QString);
 
-    bool cwdIsProjectFolder();               // find the project folder for loading files
+    bool cwdIsProjectFolder();                  ///< find the project folder for loading files
 
     // Read params ============
-    bool fg_param_loaded;               // check wether the paramerters are loaded
+    bool fg_param_loaded;                       ///< check wether the paramerters are loaded
 
     // file in & out
-    stereo_vision::camParam* fin_cam_param;
-    stereo_vision::matchParamSGBM* fin_SGBM;
-    stereo_vision::matchParamBM* fin_BM;
-    int fin_lrf_port, fin_lrf_baud_rate, fin_lrf_scale, fin_lrf_res;
+    stereo_vision::camParam* fin_cam_param;     ///< load camera params from basic_param.yml
+    stereo_vision::matchParamSGBM* fin_SGBM;    ///< load SGBM param
+    stereo_vision::matchParamBM* fin_BM;        ///< load BM param
+    int fin_lrf_port;                           ///< load laser rangefinder's port
+    int fin_lrf_baud_rate;                      ///< load laser rangefinder's baudrate
+    int fin_lrf_scale;                          ///< load laser rangefinder's display scale
+    int fin_lrf_res;                            ///< load laser rangefinder's resolution
 
-    void paramRead();                   // read params from basic_param.yml
+    void paramRead();                           ///< read params from basic_param.yml
 
-    void paramWrite();
+    void paramWrite();                          ///< write params from basic_param.yml
 
-    void paramUpdate();
+    void paramUpdate();                         ///< update params if changed in the basic_param.yml
 
-    void readFromTxt(QString file_name, cv::Mat *output);   // read image data from text
+    void readFromTxt(QString file_name, cv::Mat *output);   ///< read image data from text
     // ======================== End
 
     // Radar ESR ==============
-    bool fg_retrieving;
+    bool fg_retrieving;                         ///< operating status of radar
 
     // tableView used
     QStandardItemModel* model_radar;
 
-    bool radarDataIn();
+    bool radarDataIn();                         ///< start retrieve radar data
 
-    void radarDisplayTopViewBG();
+    void radarDisplayTopViewBG();               ///< radar's topview background
     // ======================== End
 
     // Stereo vision ==========
-    bool fg_capturing;
+    bool fg_capturing;                          ///< operating status of SV
 
-    bool svWarning();
+    bool svDataIn();                            ///< start retrieve SV data
 
-    bool svDataIn();
+    void camOpen();                             ///< open the cam.
 
-    void camOpen();
-
-    void svDisplayTopViewBG();
+    void svDisplayTopViewBG();                  ///< SV's topview background
     // ======================== End
 
     // Stereo vision param ====
-    stereoMatchParamForm *form_smp;
+    stereoMatchParamForm *form_smp;             ///< SV's param adjustment interface
 
-    bool fg_form_smp_alloc;
+    bool fg_form_smp_alloc;                     ///< check if the interface is constructed or not
 
-    void retrieveMatchParam();
+    void retrieveMatchParam();                  ///< loaded param put into classes' param
     // ======================== End
 
     // Laser range finder =====
-    bool fg_acquiring;
+    bool fg_acquiring;                          ///< operating status of lrf
 
-    bool fg_buffering;
+    bool fg_buffering;                          ///< operating status of lrf's buffer
 
-    bool fg_lrf_record;
-    bool fg_lrf_record_quit;
+    bool fg_lrf_record;                         ///< bool of recording data
+    bool fg_lrf_record_quit;                    ///< bool of stop recording data
 
     FILE* fp1;
 
-    void lrfClearData();
-
-    bool lrfReadData();
-
-    cv::Mat display_lrf;
+    cv::Mat display_lrf;                        ///< lrf data displaying gui
 
     std::vector<double> lrf_temp;
     std::vector<std::vector<double> > display_lrf_3D;
@@ -155,32 +163,32 @@ private:
 
     // Thread control =========
 //    bool fg_running;
-    QFuture<int> f_sv;
-    QFuture<bool> f_lrf;
-    QFuture<void> f_lrf_buf;
-    QFuture<int> f_radar;
-    QFuture<void> f_fused;
-    int f_sv_status;
-    bool f_lrf_status = false;
-    int f_radar_status = false;
+    QFuture<int> f_sv;                          ///< thread's control of SV
+    QFuture<bool> f_lrf;                        ///< thread's control of lrf
+    QFuture<void> f_lrf_buf;                    ///< thread's control of lrf buffer
+    QFuture<int> f_radar;                       ///< thread's control of RADAR
+    QFuture<void> f_fused;                      ///< thread's control of fusion
+    int f_sv_status;                            ///< thread's result of SV
+    bool f_lrf_status = false;                  ///< thread's result of lrf
+    int f_radar_status = false;                 ///< thread's result of RADAR
 //    QFutureWatcher<void> fw_sv;
 //    QFutureWatcher<void> fw_lrf;
 //    QFutureWatcher<void> fw_lrf_buf;
 
-    void exec();
-    void threadCheck();
-    void threadProcessing();
+    void exec();                                ///< multi-thread start function
+    void threadCheck();                         ///< check if the multi-thread function is running or not
+    void threadProcessing();                    ///< multi-thread process function
     // ======================== End
 
     // Camera calibration =====
-    calibrationForm *form_calib;
-    bool fg_form_calib_alloc;
+    calibrationForm *form_calib;                ///< SV's camera calibration interface
+    bool fg_form_calib_alloc;                   ///< check if the interface is constructed or not
     // ======================== End
 
     // Mouse control ==========
-    QString mouse_info;
+    QString mouse_info;                         ///< store the info. at cursor's location in SV
 
-    int dis_xx, dis_yy;
+    int dis_xx, dis_yy;                         ///< the display img. is 320*240 but the original img. is 640*480, so it needs to time 2 to return the real value.
     float dis_disp;
     cv::Point3i dis_pos3D;
     // ======================== End
@@ -196,11 +204,11 @@ private:
     // ======================== End
 
     // Recording ==============
-    void inputType(int type);
+    void inputType(int type);               ///< data input type. \p INPUT_TYPE::DEVICE and \p INPUT_TYPE::RECORDING
 
-    void loadData(int record_type);
+    void loadData(int record_type);         ///< source to load data.
 
-    int sv_frame_count;
+    int sv_frame_count;                     ///< video's total frame
     // Recording ============== End
 
 signals:
@@ -223,8 +231,17 @@ private slots:
     void on_actionAuthor_triggered();
 
     // Mouse control ==========
+    //!
+    //! \brief mouseXY is to acuire mouse info. connect w/ the label
+    //! \param x
+    //! \param y
+    //!
     void mouseXY(int x, int y);
 
+    //!
+    //! \brief wheelEvent is to acuire the wheel event
+    //! \param ev
+    //!
     void wheelEvent(QWheelEvent *ev);
 
     void keyPressEvent(QKeyEvent *ev);
@@ -376,8 +393,6 @@ private slots:
     void on_checkBox_ca_clicked(bool checked);
     void on_checkBox_ot_clicked(bool checked);
     void on_checkBox_ca_astar_clicked(bool checked);
-    void on_horizontalSlider_ana_range_filter_min_valueChanged(int value);
-    void on_horizontalSlider_ana_range_filter_max_valueChanged(int value);
     void on_checkBox_sv_matching_clicked(bool checked);
     void on_pushButton_step_all_clicked();
     void on_checkBox_ot_trajectory_clicked(bool checked);

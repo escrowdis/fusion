@@ -1,0 +1,320 @@
+\hypertarget{classlrf__controller}{}\section{lrf\+\_\+controller Class Reference}
+\label{classlrf__controller}\index{lrf\+\_\+controller@{lrf\+\_\+controller}}
+
+
+The \hyperlink{classlrf__controller}{lrf\+\_\+controller} class is Laser Range Finder Controller.  
+
+
+
+
+{\ttfamily \#include $<$lrf\+\_\+controller.\+h$>$}
+
+Inheritance diagram for lrf\+\_\+controller\+:\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[height=2.000000cm]{classlrf__controller}
+\end{center}
+\end{figure}
+\subsection*{Signals}
+\begin{DoxyCompactItemize}
+\item 
+\hypertarget{classlrf__controller_ae812bd6df2878aca8f1a07fac416992f}{}void {\bfseries update\+G\+U\+I} (double $\ast$data, cv\+::\+Mat $\ast$display\+\_\+lrf)\label{classlrf__controller_ae812bd6df2878aca8f1a07fac416992f}
+
+\end{DoxyCompactItemize}
+\subsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+bool \hyperlink{classlrf__controller_a1e0539314437996eb9b832f24385eb16}{open} (Q\+String com\+Port\+In, int baud\+Rate\+In)
+\begin{DoxyCompactList}\small\item\em open the serial port connection between P\+C and device \end{DoxyCompactList}\item 
+bool \hyperlink{classlrf__controller_a0f807cf3d603af8445dd0db51bceae88}{is\+Open} ()
+\begin{DoxyCompactList}\small\item\em is\+Open check if the port is connected \end{DoxyCompactList}\item 
+\hypertarget{classlrf__controller_a57bc0e14a2b92e15b45461567346a940}{}void \hyperlink{classlrf__controller_a57bc0e14a2b92e15b45461567346a940}{reset} ()\label{classlrf__controller_a57bc0e14a2b92e15b45461567346a940}
+
+\begin{DoxyCompactList}\small\item\em reset lrf data \end{DoxyCompactList}\item 
+\hypertarget{classlrf__controller_af39dce59c5c192b3e2df5a05d5cd03c5}{}bool {\bfseries data\+Exec} ()\label{classlrf__controller_af39dce59c5c192b3e2df5a05d5cd03c5}
+
+\item 
+\hypertarget{classlrf__controller_a2540d58a92fd9a26b303336c2ddf2b45}{}bool {\bfseries gui\+Update} ()\label{classlrf__controller_a2540d58a92fd9a26b303336c2ddf2b45}
+
+\item 
+\hypertarget{classlrf__controller_adfa7a15f52e0153b88e3b81964189e2f}{}void \hyperlink{classlrf__controller_adfa7a15f52e0153b88e3b81964189e2f}{push\+To\+Buf} ()\label{classlrf__controller_adfa7a15f52e0153b88e3b81964189e2f}
+
+\begin{DoxyCompactList}\small\item\em push\+To\+Buf put acquired info. from device into the \hyperlink{}{buf.}\end{DoxyCompactList}\item 
+void \hyperlink{classlrf__controller_a6e01e4ca0763479b6a6b3f37cdef9f46}{request\+Data} (int \hyperlink{classlrf__controller_a805afcd6b3ca2c2b44c4f21b96e33e4c}{mode})
+\begin{DoxyCompactList}\small\item\em request\+Data by sending request msg \end{DoxyCompactList}\item 
+\hypertarget{classlrf__controller_ad57fba9a6e702535460181a270978843}{}void {\bfseries stop\+Retrieve} ()\label{classlrf__controller_ad57fba9a6e702535460181a270978843}
+
+\item 
+bool \hyperlink{classlrf__controller_a7ffb8af0a1f027853b30769eced05c00}{retrieve\+Data} (double $\ast$data)
+\begin{DoxyCompactList}\small\item\em retrieve\+Data starts to retrieve the info. from device \end{DoxyCompactList}\item 
+\hypertarget{classlrf__controller_af2b8f2aa951973ee7717e55315cd27e3}{}bool {\bfseries close} ()\label{classlrf__controller_af2b8f2aa951973ee7717e55315cd27e3}
+
+\item 
+bool \hyperlink{classlrf__controller_a864a9f00f905ed2f24d2dc8b12566e4a}{buf\+Enough\+Set} ()
+\begin{DoxyCompactList}\small\item\em buf\+Enough\+Set check if the info. in \hyperlink{classlrf__controller_a5b3e6126b5bf7eddf5b6fa1c1a555cae}{is more than a set for one process }\end{DoxyCompactList}\item 
+bool \hyperlink{classlrf__controller_a677dd52d83706b5b4a1a2eae9298c4c7}{buf\+Not\+Full} ()
+\begin{DoxyCompactList}\small\item\em buf\+Not\+Full the same as \hyperlink{classlrf__controller_a864a9f00f905ed2f24d2dc8b12566e4a}{buf\+Enough\+Set}\end{DoxyCompactList}\end{DoxyCompactItemize}
+\subsection*{Public Attributes}
+\begin{DoxyCompactItemize}
+\item 
+\hypertarget{classlrf__controller_a2de6652ffca4cc196643c9ea0eac2976}{}int {\bfseries time\+\_\+proc}\label{classlrf__controller_a2de6652ffca4cc196643c9ea0eac2976}
+
+\item 
+\hypertarget{classlrf__controller_a6d68e5f28c796dcbb4dbcd8b1e8001a5}{}int {\bfseries time\+\_\+proc\+\_\+buf}\label{classlrf__controller_a6d68e5f28c796dcbb4dbcd8b1e8001a5}
+
+\item 
+\hypertarget{classlrf__controller_a3e5c7769688db71fd38fe46759b85788}{}int {\bfseries scale\+\_\+ratio} = 2\label{classlrf__controller_a3e5c7769688db71fd38fe46759b85788}
+
+\item 
+\hypertarget{classlrf__controller_a525f7428c1314ee5b4ecb57688687aea}{}double $\ast$ {\bfseries lrf\+\_\+data}\label{classlrf__controller_a525f7428c1314ee5b4ecb57688687aea}
+
+\item 
+\hypertarget{classlrf__controller_a39858b3a3c07ab8d16d32e70e6ceeb80}{}cv\+::\+Mat {\bfseries display\+\_\+lrf}\label{classlrf__controller_a39858b3a3c07ab8d16d32e70e6ceeb80}
+
+\item 
+\hypertarget{classlrf__controller_a493827ca15f31cf435fd72d065e0b9b2}{}cv\+::\+Mat {\bfseries display\+\_\+lrf\+\_\+\+B\+G}\label{classlrf__controller_a493827ca15f31cf435fd72d065e0b9b2}
+
+\end{DoxyCompactItemize}
+\subsection*{Private Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+bool \hyperlink{classlrf__controller_a29dcf87fb3936610c10872feb316e787}{send\+Msg} (int \hyperlink{classlrf__controller_a805afcd6b3ca2c2b44c4f21b96e33e4c}{mode})
+\begin{DoxyCompactList}\small\item\em send\+Msg to call for the data \end{DoxyCompactList}\item 
+\hypertarget{classlrf__controller_aa1221e1b1a79e2246315697ba9bfd85e}{}void \hyperlink{classlrf__controller_aa1221e1b1a79e2246315697ba9bfd85e}{set\+Mode} ()\label{classlrf__controller_aa1221e1b1a79e2246315697ba9bfd85e}
+
+\begin{DoxyCompactList}\small\item\em set\+Mode to choose the mode of retrieving data \end{DoxyCompactList}\item 
+bool \hyperlink{classlrf__controller_adc6a847d94992ebd902b757215990a89}{check\+A\+C\+K} (Q\+Byte\+Array \&data, const uchar $\ast$msg\+\_\+ack)
+\begin{DoxyCompactList}\small\item\em check\+A\+C\+K \mbox{[}unused\mbox{]} to check the msg \end{DoxyCompactList}\item 
+bool \hyperlink{classlrf__controller_acd409f6265a4744a6d462fb903f9ecc8}{check\+Header} (Q\+Byte\+Array \&data, int header\+\_\+type)
+\begin{DoxyCompactList}\small\item\em check\+Header to check the msg\textquotesingle{}s header \end{DoxyCompactList}\item 
+\hypertarget{classlrf__controller_a1fa9747007d6d262a1caa676c75f4022}{}ushort {\bfseries do\+C\+R\+C} (const Q\+Byte\+Array \&data)\label{classlrf__controller_a1fa9747007d6d262a1caa676c75f4022}
+
+\end{DoxyCompactItemize}
+\subsection*{Private Attributes}
+\begin{DoxyCompactItemize}
+\item 
+\hypertarget{classlrf__controller_aa6492c79da222d2be63d04fafdf1803e}{}Q\+Serial\+Port $\ast$ {\bfseries serial}\label{classlrf__controller_aa6492c79da222d2be63d04fafdf1803e}
+
+\item 
+\hypertarget{classlrf__controller_a3ebac4db6b1fa224a38b146d39b4424f}{}unsigned char {\bfseries data\+\_\+raw} \mbox{[}L\+E\+N\+G\+T\+H\+\_\+\+R\+A\+W\+\_\+\+D\+A\+T\+A\+\_\+\+O\+N\+C\+E-\/L\+E\+N\+G\+T\+H\+\_\+\+H\+E\+A\+D\+E\+R\+\_\+\+O\+N\+C\+E\mbox{]}\label{classlrf__controller_a3ebac4db6b1fa224a38b146d39b4424f}
+
+\item 
+\hypertarget{classlrf__controller_ac3c479a9fa19940bd623b1ae3e2b88e8}{}Q\+Serial\+Port\+::\+Baud\+Rate {\bfseries baud\+Rate}\label{classlrf__controller_ac3c479a9fa19940bd623b1ae3e2b88e8}
+
+\item 
+\hypertarget{classlrf__controller_a805afcd6b3ca2c2b44c4f21b96e33e4c}{}int \hyperlink{classlrf__controller_a805afcd6b3ca2c2b44c4f21b96e33e4c}{mode}\label{classlrf__controller_a805afcd6b3ca2c2b44c4f21b96e33e4c}
+
+\begin{DoxyCompactList}\small\item\em current process mode \end{DoxyCompactList}\item 
+\hypertarget{classlrf__controller_a9180a22868cb0c7054af1c1abed6ec7b}{}Q\+Time {\bfseries t\+\_\+p}\label{classlrf__controller_a9180a22868cb0c7054af1c1abed6ec7b}
+
+\item 
+\hypertarget{classlrf__controller_a9fc493fe1842d5570496df7ebdccdd55}{}Q\+Time \hyperlink{classlrf__controller_a9fc493fe1842d5570496df7ebdccdd55}{t\+\_\+p\+\_\+buf}\label{classlrf__controller_a9fc493fe1842d5570496df7ebdccdd55}
+
+\begin{DoxyCompactList}\small\item\em process time of all exec. \end{DoxyCompactList}\item 
+\hypertarget{classlrf__controller_ad293d9d17eba64d16d367eb416e2251b}{}Q\+Time \hyperlink{classlrf__controller_ad293d9d17eba64d16d367eb416e2251b}{t}\label{classlrf__controller_ad293d9d17eba64d16d367eb416e2251b}
+
+\begin{DoxyCompactList}\small\item\em control gui not to update too fast \end{DoxyCompactList}\item 
+\hypertarget{classlrf__controller_a018b0f8a2aa7e1c39c0f52d7140187b1}{}int {\bfseries time\+\_\+gap}\label{classlrf__controller_a018b0f8a2aa7e1c39c0f52d7140187b1}
+
+\item 
+\hypertarget{classlrf__controller_a5b3e6126b5bf7eddf5b6fa1c1a555cae}{}Q\+Byte\+Array $\ast$ \hyperlink{classlrf__controller_a5b3e6126b5bf7eddf5b6fa1c1a555cae}{buf}\label{classlrf__controller_a5b3e6126b5bf7eddf5b6fa1c1a555cae}
+
+\begin{DoxyCompactList}\small\item\em buffer \end{DoxyCompactList}\item 
+\hypertarget{classlrf__controller_ad46f5c4400a4e614a4600da16499af9b}{}int \hyperlink{classlrf__controller_ad46f5c4400a4e614a4600da16499af9b}{dataset\+\_\+size}\label{classlrf__controller_ad46f5c4400a4e614a4600da16499af9b}
+
+\begin{DoxyCompactList}\small\item\em input data size \end{DoxyCompactList}\item 
+\hypertarget{classlrf__controller_accef3d18f336db79abaf98765c44b3de}{}int \hyperlink{classlrf__controller_accef3d18f336db79abaf98765c44b3de}{header\+\_\+size}\label{classlrf__controller_accef3d18f336db79abaf98765c44b3de}
+
+\begin{DoxyCompactList}\small\item\em input header size \end{DoxyCompactList}\item 
+\hypertarget{classlrf__controller_aac4a934c921fc5f412367c95799db90d}{}qint64 \hyperlink{classlrf__controller_aac4a934c921fc5f412367c95799db90d}{num\+\_\+serial}\label{classlrf__controller_aac4a934c921fc5f412367c95799db90d}
+
+\begin{DoxyCompactList}\small\item\em current info. in the buf \end{DoxyCompactList}\item 
+\hypertarget{classlrf__controller_a1caa754bfe92e4b5695d57a07faf9b50}{}qint64 \hyperlink{classlrf__controller_a1caa754bfe92e4b5695d57a07faf9b50}{num\+\_\+lack}\label{classlrf__controller_a1caa754bfe92e4b5695d57a07faf9b50}
+
+\begin{DoxyCompactList}\small\item\em lack how many number to construct one complete data \end{DoxyCompactList}\item 
+\hypertarget{classlrf__controller_ade46827d5b722e12f5c930bac0f14578}{}qint64 \hyperlink{classlrf__controller_ade46827d5b722e12f5c930bac0f14578}{num\+\_\+input}\label{classlrf__controller_ade46827d5b722e12f5c930bac0f14578}
+
+\begin{DoxyCompactList}\small\item\em info. amount in the buf \end{DoxyCompactList}\item 
+\hypertarget{classlrf__controller_a4656d6056dd73f094a33fecfb820503a}{}Q\+Byte\+Array \hyperlink{classlrf__controller_a4656d6056dd73f094a33fecfb820503a}{data\+Set}\label{classlrf__controller_a4656d6056dd73f094a33fecfb820503a}
+
+\begin{DoxyCompactList}\small\item\em cropped a complete data for use \end{DoxyCompactList}\item 
+\hypertarget{classlrf__controller_ab2c456ff3c20ee7664698faf29882e5e}{}bool \hyperlink{classlrf__controller_ab2c456ff3c20ee7664698faf29882e5e}{fg\+\_\+header}\label{classlrf__controller_ab2c456ff3c20ee7664698faf29882e5e}
+
+\begin{DoxyCompactList}\small\item\em check header \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+The \hyperlink{classlrf__controller}{lrf\+\_\+controller} class is Laser Range Finder Controller. 
+
+\subsection{Member Function Documentation}
+\hypertarget{classlrf__controller_a864a9f00f905ed2f24d2dc8b12566e4a}{}\index{lrf\+\_\+controller@{lrf\+\_\+controller}!buf\+Enough\+Set@{buf\+Enough\+Set}}
+\index{buf\+Enough\+Set@{buf\+Enough\+Set}!lrf\+\_\+controller@{lrf\+\_\+controller}}
+\subsubsection[{buf\+Enough\+Set}]{\setlength{\rightskip}{0pt plus 5cm}bool lrf\+\_\+controller\+::buf\+Enough\+Set (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [inline]}}\label{classlrf__controller_a864a9f00f905ed2f24d2dc8b12566e4a}
+
+
+buf\+Enough\+Set check if the info. in \hyperlink{classlrf__controller_a5b3e6126b5bf7eddf5b6fa1c1a555cae}{is more than a set for one process }
+
+\begin{DoxyReturn}{Returns}
+
+\end{DoxyReturn}
+\hypertarget{classlrf__controller_a677dd52d83706b5b4a1a2eae9298c4c7}{}\index{lrf\+\_\+controller@{lrf\+\_\+controller}!buf\+Not\+Full@{buf\+Not\+Full}}
+\index{buf\+Not\+Full@{buf\+Not\+Full}!lrf\+\_\+controller@{lrf\+\_\+controller}}
+\subsubsection[{buf\+Not\+Full}]{\setlength{\rightskip}{0pt plus 5cm}bool lrf\+\_\+controller\+::buf\+Not\+Full (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [inline]}}\label{classlrf__controller_a677dd52d83706b5b4a1a2eae9298c4c7}
+
+
+buf\+Not\+Full the same as \hyperlink{classlrf__controller_a864a9f00f905ed2f24d2dc8b12566e4a}{buf\+Enough\+Set}
+
+\begin{DoxyReturn}{Returns}
+
+\end{DoxyReturn}
+\hypertarget{classlrf__controller_adc6a847d94992ebd902b757215990a89}{}\index{lrf\+\_\+controller@{lrf\+\_\+controller}!check\+A\+C\+K@{check\+A\+C\+K}}
+\index{check\+A\+C\+K@{check\+A\+C\+K}!lrf\+\_\+controller@{lrf\+\_\+controller}}
+\subsubsection[{check\+A\+C\+K}]{\setlength{\rightskip}{0pt plus 5cm}bool lrf\+\_\+controller\+::check\+A\+C\+K (
+\begin{DoxyParamCaption}
+\item[{Q\+Byte\+Array \&}]{data, }
+\item[{const uchar $\ast$}]{msg\+\_\+ack}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [private]}}\label{classlrf__controller_adc6a847d94992ebd902b757215990a89}
+
+
+check\+A\+C\+K \mbox{[}unused\mbox{]} to check the msg 
+
+
+\begin{DoxyParams}{Parameters}
+{\em data} & \\
+\hline
+{\em msg\+\_\+ack} & \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+
+\end{DoxyReturn}
+\hypertarget{classlrf__controller_acd409f6265a4744a6d462fb903f9ecc8}{}\index{lrf\+\_\+controller@{lrf\+\_\+controller}!check\+Header@{check\+Header}}
+\index{check\+Header@{check\+Header}!lrf\+\_\+controller@{lrf\+\_\+controller}}
+\subsubsection[{check\+Header}]{\setlength{\rightskip}{0pt plus 5cm}bool lrf\+\_\+controller\+::check\+Header (
+\begin{DoxyParamCaption}
+\item[{Q\+Byte\+Array \&}]{data, }
+\item[{int}]{header\+\_\+type}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [private]}}\label{classlrf__controller_acd409f6265a4744a6d462fb903f9ecc8}
+
+
+check\+Header to check the msg\textquotesingle{}s header 
+
+
+\begin{DoxyParams}{Parameters}
+{\em data} & \\
+\hline
+{\em header\+\_\+type} & \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+
+\end{DoxyReturn}
+\hypertarget{classlrf__controller_a0f807cf3d603af8445dd0db51bceae88}{}\index{lrf\+\_\+controller@{lrf\+\_\+controller}!is\+Open@{is\+Open}}
+\index{is\+Open@{is\+Open}!lrf\+\_\+controller@{lrf\+\_\+controller}}
+\subsubsection[{is\+Open}]{\setlength{\rightskip}{0pt plus 5cm}bool lrf\+\_\+controller\+::is\+Open (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [inline]}}\label{classlrf__controller_a0f807cf3d603af8445dd0db51bceae88}
+
+
+is\+Open check if the port is connected 
+
+\begin{DoxyReturn}{Returns}
+
+\end{DoxyReturn}
+\hypertarget{classlrf__controller_a1e0539314437996eb9b832f24385eb16}{}\index{lrf\+\_\+controller@{lrf\+\_\+controller}!open@{open}}
+\index{open@{open}!lrf\+\_\+controller@{lrf\+\_\+controller}}
+\subsubsection[{open}]{\setlength{\rightskip}{0pt plus 5cm}bool lrf\+\_\+controller\+::open (
+\begin{DoxyParamCaption}
+\item[{Q\+String}]{com\+Port\+In, }
+\item[{int}]{baud\+Rate\+In}
+\end{DoxyParamCaption}
+)}\label{classlrf__controller_a1e0539314437996eb9b832f24385eb16}
+
+
+open the serial port connection between P\+C and device 
+
+
+\begin{DoxyParams}{Parameters}
+{\em com\+Port\+In} & port number \\
+\hline
+{\em baud\+Rate\+In} & communication baud rate \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+
+\end{DoxyReturn}
+\hypertarget{classlrf__controller_a6e01e4ca0763479b6a6b3f37cdef9f46}{}\index{lrf\+\_\+controller@{lrf\+\_\+controller}!request\+Data@{request\+Data}}
+\index{request\+Data@{request\+Data}!lrf\+\_\+controller@{lrf\+\_\+controller}}
+\subsubsection[{request\+Data}]{\setlength{\rightskip}{0pt plus 5cm}void lrf\+\_\+controller\+::request\+Data (
+\begin{DoxyParamCaption}
+\item[{int}]{mode}
+\end{DoxyParamCaption}
+)}\label{classlrf__controller_a6e01e4ca0763479b6a6b3f37cdef9f46}
+
+
+request\+Data by sending request msg 
+
+
+\begin{DoxyParams}{Parameters}
+{\em mode} & once and continuous~\newline
+once mode\+: header\+\_\+data pop up~\newline
+continuous mode\+: A\+C\+K first and come up w/ header data w/o first uchar 0x06~\newline
+S\+O, header in O\+N\+C\+E and C\+O\+N\+T\+I is 7 and 8 respectively. \\
+\hline
+\end{DoxyParams}
+\hypertarget{classlrf__controller_a7ffb8af0a1f027853b30769eced05c00}{}\index{lrf\+\_\+controller@{lrf\+\_\+controller}!retrieve\+Data@{retrieve\+Data}}
+\index{retrieve\+Data@{retrieve\+Data}!lrf\+\_\+controller@{lrf\+\_\+controller}}
+\subsubsection[{retrieve\+Data}]{\setlength{\rightskip}{0pt plus 5cm}bool lrf\+\_\+controller\+::retrieve\+Data (
+\begin{DoxyParamCaption}
+\item[{double $\ast$}]{data}
+\end{DoxyParamCaption}
+)}\label{classlrf__controller_a7ffb8af0a1f027853b30769eced05c00}
+
+
+retrieve\+Data starts to retrieve the info. from device 
+
+
+\begin{DoxyParams}{Parameters}
+{\em data} & the storage of device\textquotesingle{}s info. \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+
+\end{DoxyReturn}
+\hypertarget{classlrf__controller_a29dcf87fb3936610c10872feb316e787}{}\index{lrf\+\_\+controller@{lrf\+\_\+controller}!send\+Msg@{send\+Msg}}
+\index{send\+Msg@{send\+Msg}!lrf\+\_\+controller@{lrf\+\_\+controller}}
+\subsubsection[{send\+Msg}]{\setlength{\rightskip}{0pt plus 5cm}bool lrf\+\_\+controller\+::send\+Msg (
+\begin{DoxyParamCaption}
+\item[{int}]{mode}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [private]}}\label{classlrf__controller_a29dcf87fb3936610c10872feb316e787}
+
+
+send\+Msg to call for the data 
+
+
+\begin{DoxyParams}{Parameters}
+{\em mode} & \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+
+\end{DoxyReturn}
+
+
+The documentation for this class was generated from the following files\+:\begin{DoxyCompactItemize}
+\item 
+D\+:/\+Qt\+Program/\+Qt5/\+Fusion/lrf\+\_\+controller.\+h\item 
+D\+:/\+Qt\+Program/\+Qt5/\+Fusion/lrf\+\_\+controller.\+cpp\end{DoxyCompactItemize}

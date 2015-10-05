@@ -1856,17 +1856,6 @@ void MainWindow::on_checkBox_ca_astar_clicked(bool checked)
 
 }
 
-void MainWindow::on_horizontalSlider_ana_range_filter_min_valueChanged(int value)
-{
-    si->range_filter_min = value;
-}
-
-void MainWindow::on_horizontalSlider_ana_range_filter_max_valueChanged(int value)
-{
-    si->range_filter_max = value;
-}
-
-
 void MainWindow::on_pushButton_step_all_clicked()
 {
     if (!svDataIn() || !radarDataIn())

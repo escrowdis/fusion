@@ -12,7 +12,6 @@ SensorInfo::SensorInfo()
     lrf = new lrf_controller();
     size_data_fused = sv->objSize() + rc->objSize();
     data_fused = new ObjectTracking::objectTrackingInfo[size_data_fused];
-    data_fused_tmp = new ObjectTracking::objectTrackingInfo[size_data_fused];
 #ifdef debug_info_object_matching_fusion_img
     data_fused_prev = new ObjectTracking::objectTrackingInfo[size_data_fused];
 #endif
@@ -67,7 +66,6 @@ SensorInfo::~SensorInfo()
     delete rc;
     delete lrf;
     delete[] data_fused;
-    delete[] data_fused_tmp;
 #ifdef debug_info_object_matching_fusion_img
     delete[] data_fused_prev;
 #endif
@@ -199,7 +197,7 @@ void SensorInfo::updateFusedData()
         if (ot_fused->ti[i].track_status == TRACK_STATUS::NO_TARGET) continue;
         for (int j = 0; j < ot_fused->ti[i].info.size(); j++) {
             ot_fused->ti[i].info[j].plot_pt_f = point2FusedTopView(ot_fused->ti[i].info[j].pc);
-            //**// rect won't change as wellr? 20150623
+            //**// rect won't change as well? 20150623
         }
     }
     lock_ot_fused.unlock();

@@ -1,0 +1,143 @@
+\hypertarget{class_top_view}{}\section{Top\+View Class Reference}
+\label{class_top_view}\index{Top\+View@{Top\+View}}
+Inheritance diagram for Top\+View\+:\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[height=2.000000cm]{class_top_view}
+\end{center}
+\end{figure}
+\subsection*{Classes}
+\begin{DoxyCompactItemize}
+\item 
+struct \hyperlink{struct_top_view_1_1blob_node}{blob\+Node}
+\end{DoxyCompactItemize}
+\subsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\hypertarget{class_top_view_a7bf56ae4f4ee2cf40dafd6a82707a281}{}{\bfseries Top\+View} (int \hyperlink{class_top_view_a0be83119f0e81bbfd89f75b6d271eb2b}{thresh\+\_\+free\+\_\+space}, int \hyperlink{class_top_view_a56c819ab3208d77a4b6f9dff80339524}{min\+\_\+distance}, int \hyperlink{class_top_view_a4d6987318631da634e6121bc563d5bfb}{max\+\_\+distance}, float \hyperlink{class_top_view_a1ad1a34440fcfb86672427e97b03870b}{view\+\_\+angle}, int \hyperlink{class_top_view_a7b492b7926c48542bdad6610a602eadc}{chord\+\_\+length}, int display\+\_\+row, int display\+\_\+col, int grid\+\_\+row, int grid\+\_\+col)\label{class_top_view_a7bf56ae4f4ee2cf40dafd6a82707a281}
+
+\item 
+\hypertarget{class_top_view_a565c1500b449240cd16bf9bdbb7ea96e}{}void {\bfseries initial\+Top\+View} ()\label{class_top_view_a565c1500b449240cd16bf9bdbb7ea96e}
+
+\item 
+\hypertarget{class_top_view_a3a88db97144313b0f8c42fb07dc20468}{}void {\bfseries draw\+Top\+View\+Lines} (int rows\+\_\+interval, int cols\+\_\+interval, bool fg\+\_\+tag)\label{class_top_view_a3a88db97144313b0f8c42fb07dc20468}
+
+\item 
+\hypertarget{class_top_view_ab3c9e49395d1ce23367c8668164549c1}{}bool {\bfseries is\+Initialized\+Top\+View} ()\label{class_top_view_ab3c9e49395d1ce23367c8668164549c1}
+
+\item 
+\hypertarget{class_top_view_aa9ec86935067642bced8bc202e5a3b7c}{}virtual void {\bfseries point\+Project\+Top\+View} ()\label{class_top_view_aa9ec86935067642bced8bc202e5a3b7c}
+
+\item 
+\hypertarget{class_top_view_ace2839bba9b0a4602a841a5794ab249c}{}void {\bfseries change\+Params} (float \hyperlink{class_top_view_a1ad1a34440fcfb86672427e97b03870b}{view\+\_\+angle}, int \hyperlink{class_top_view_a7b492b7926c48542bdad6610a602eadc}{chord\+\_\+length})\label{class_top_view_ace2839bba9b0a4602a841a5794ab249c}
+
+\item 
+\hypertarget{class_top_view_a4d1f8c93ed36cabd27c8e7d51c29c62d}{}cv\+::\+Point \hyperlink{class_top_view_a4d1f8c93ed36cabd27c8e7d51c29c62d}{point\+T} (cv\+::\+Point src)\label{class_top_view_a4d1f8c93ed36cabd27c8e7d51c29c62d}
+
+\begin{DoxyCompactList}\small\item\em transformed point from grid map to topview for display \end{DoxyCompactList}\end{DoxyCompactItemize}
+\subsection*{Public Attributes}
+\begin{DoxyCompactItemize}
+\item 
+\hypertarget{class_top_view_a56c819ab3208d77a4b6f9dff80339524}{}int \hyperlink{class_top_view_a56c819ab3208d77a4b6f9dff80339524}{min\+\_\+distance}\label{class_top_view_a56c819ab3208d77a4b6f9dff80339524}
+
+\begin{DoxyCompactList}\small\item\em (cm) \end{DoxyCompactList}\item 
+\hypertarget{class_top_view_a4d6987318631da634e6121bc563d5bfb}{}int \hyperlink{class_top_view_a4d6987318631da634e6121bc563d5bfb}{max\+\_\+distance}\label{class_top_view_a4d6987318631da634e6121bc563d5bfb}
+
+\begin{DoxyCompactList}\small\item\em (cm) \end{DoxyCompactList}\item 
+\hypertarget{class_top_view_a1ad1a34440fcfb86672427e97b03870b}{}float \hyperlink{class_top_view_a1ad1a34440fcfb86672427e97b03870b}{view\+\_\+angle}\label{class_top_view_a1ad1a34440fcfb86672427e97b03870b}
+
+\begin{DoxyCompactList}\small\item\em the view angle (degree) \end{DoxyCompactList}\item 
+\hypertarget{class_top_view_ab5e6ef291472c707f5f4f51cd7d582a7}{}float \hyperlink{class_top_view_ab5e6ef291472c707f5f4f51cd7d582a7}{c}\label{class_top_view_ab5e6ef291472c707f5f4f51cd7d582a7}
+
+\begin{DoxyCompactList}\small\item\em ratio of image to grid\+\_\+map (the number of adjacent image columns grouped into a polar slice) \end{DoxyCompactList}\item 
+\hypertarget{class_top_view_a693454cfb21851b389634e28bdabe35a}{}cv\+::\+Mat \hyperlink{class_top_view_a693454cfb21851b389634e28bdabe35a}{topview}\label{class_top_view_a693454cfb21851b389634e28bdabe35a}
+
+\begin{DoxyCompactList}\small\item\em topview on label \end{DoxyCompactList}\item 
+\hypertarget{class_top_view_ab069be29953bc5f8e29d0799b44b6e43}{}cv\+::\+Mat {\bfseries topview\+\_\+\+B\+G}\label{class_top_view_ab069be29953bc5f8e29d0799b44b6e43}
+
+\item 
+\hypertarget{class_top_view_a6a41c281c60a67bdceca7a33abe805a5}{}Q\+Image $\ast$ {\bfseries color\+\_\+table}\label{class_top_view_a6a41c281c60a67bdceca7a33abe805a5}
+
+\item 
+\hypertarget{class_top_view_a08bac944fb14eb668817d322a1956f3b}{}cv\+::\+Scalar {\bfseries color\+\_\+\+B\+G}\label{class_top_view_a08bac944fb14eb668817d322a1956f3b}
+
+\item 
+\hypertarget{class_top_view_ac0094dc43998e987ff269e93263f6983}{}cv\+::\+Scalar {\bfseries color\+\_\+tag}\label{class_top_view_ac0094dc43998e987ff269e93263f6983}
+
+\item 
+\hypertarget{class_top_view_a1eac41f96e88d30801e1b813ac97a111}{}cv\+::\+Scalar {\bfseries color\+\_\+line}\label{class_top_view_a1eac41f96e88d30801e1b813ac97a111}
+
+\end{DoxyCompactItemize}
+\subsection*{Protected Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\hypertarget{class_top_view_a13003b4bba4ddbf745ee7b9611e70cdb}{}void {\bfseries reset\+Top\+View} ()\label{class_top_view_a13003b4bba4ddbf745ee7b9611e70cdb}
+
+\end{DoxyCompactItemize}
+\subsection*{Protected Attributes}
+\begin{DoxyCompactItemize}
+\item 
+\hypertarget{class_top_view_a4aa887937748785f2b1f80039397e0e4}{}int {\bfseries thick\+\_\+polygon}\label{class_top_view_a4aa887937748785f2b1f80039397e0e4}
+
+\item 
+\hypertarget{class_top_view_ad62ba0fd78ab35b854a4ee101904d449}{}int {\bfseries img\+\_\+col}\label{class_top_view_ad62ba0fd78ab35b854a4ee101904d449}
+
+\item 
+\hypertarget{class_top_view_a39648976b29089f0d8b95504e5a35d06}{}int {\bfseries img\+\_\+col\+\_\+half}\label{class_top_view_a39648976b29089f0d8b95504e5a35d06}
+
+\item 
+\hypertarget{class_top_view_a4e9b5eaf65fdb222fac5d2aa40940611}{}int {\bfseries img\+\_\+row}\label{class_top_view_a4e9b5eaf65fdb222fac5d2aa40940611}
+
+\item 
+\hypertarget{class_top_view_a97556995e814b8072cde301fe4443384}{}float \hyperlink{class_top_view_a97556995e814b8072cde301fe4443384}{ratio\+\_\+row}\label{class_top_view_a97556995e814b8072cde301fe4443384}
+
+\begin{DoxyCompactList}\small\item\em ratio of display\+\_\+row to max\+\_\+distance \end{DoxyCompactList}\item 
+\hypertarget{class_top_view_a13a5f7ab64db7898b53055e4ac65d266}{}float \hyperlink{class_top_view_a13a5f7ab64db7898b53055e4ac65d266}{ratio\+\_\+col}\label{class_top_view_a13a5f7ab64db7898b53055e4ac65d266}
+
+\begin{DoxyCompactList}\small\item\em ratio of display\+\_\+col to chord\+\_\+length \end{DoxyCompactList}\item 
+\hypertarget{class_top_view_a21a67bc4d0af8dd26996c6fb007aa3b4}{}int {\bfseries display\+\_\+row}\label{class_top_view_a21a67bc4d0af8dd26996c6fb007aa3b4}
+
+\item 
+\hypertarget{class_top_view_a18630cd4f3e2d76e8c5ddc687b54d098}{}int {\bfseries display\+\_\+col}\label{class_top_view_a18630cd4f3e2d76e8c5ddc687b54d098}
+
+\item 
+\hypertarget{class_top_view_a54a832929e3763160213c25f0a543128}{}\hyperlink{struct_top_view_1_1blob_node}{blob\+Node} $\ast$$\ast$ \hyperlink{class_top_view_a54a832929e3763160213c25f0a543128}{grid\+\_\+map}\label{class_top_view_a54a832929e3763160213c25f0a543128}
+
+\begin{DoxyCompactList}\small\item\em Storing pixels\textquotesingle{} information into cells. \end{DoxyCompactList}\item 
+\hypertarget{class_top_view_a72de1afcef91e63df47886fc162da3f6}{}cv\+::\+Point $\ast$$\ast$ \hyperlink{class_top_view_a72de1afcef91e63df47886fc162da3f6}{img\+\_\+grid}\label{class_top_view_a72de1afcef91e63df47886fc162da3f6}
+
+\begin{DoxyCompactList}\small\item\em topview background cell points \end{DoxyCompactList}\item 
+\hypertarget{class_top_view_a1f2b530e7979db621630dbbf9f5def15}{}float \hyperlink{class_top_view_a1f2b530e7979db621630dbbf9f5def15}{k}\label{class_top_view_a1f2b530e7979db621630dbbf9f5def15}
+
+\begin{DoxyCompactList}\small\item\em length of interval \end{DoxyCompactList}\item 
+\hypertarget{class_top_view_a7b492b7926c48542bdad6610a602eadc}{}int \hyperlink{class_top_view_a7b492b7926c48542bdad6610a602eadc}{chord\+\_\+length}\label{class_top_view_a7b492b7926c48542bdad6610a602eadc}
+
+\begin{DoxyCompactList}\small\item\em the chord length of stereo vision \end{DoxyCompactList}\item 
+\hypertarget{class_top_view_ab5a42f3e0ca928ea973c052c538ba354}{}int \hyperlink{class_top_view_ab5a42f3e0ca928ea973c052c538ba354}{chord\+\_\+length\+\_\+min}\label{class_top_view_ab5a42f3e0ca928ea973c052c538ba354}
+
+\begin{DoxyCompactList}\small\item\em the chord length at min\+\_\+distance \end{DoxyCompactList}\item 
+\hypertarget{class_top_view_a0be83119f0e81bbfd89f75b6d271eb2b}{}int \hyperlink{class_top_view_a0be83119f0e81bbfd89f75b6d271eb2b}{thresh\+\_\+free\+\_\+space}\label{class_top_view_a0be83119f0e81bbfd89f75b6d271eb2b}
+
+\begin{DoxyCompactList}\small\item\em check whether the cell is satisfied as an object.~\newline
+ Each cell containing more than this value is consider as an object. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\subsection*{Private Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\hypertarget{class_top_view_a56698a690e0107a9c5fc7bb7740b47fe}{}void {\bfseries release\+Top\+View} ()\label{class_top_view_a56698a690e0107a9c5fc7bb7740b47fe}
+
+\item 
+\hypertarget{class_top_view_a63a2c70756e7f4fd5f86000091a1c51b}{}void {\bfseries pseudo\+Color\+Table} ()\label{class_top_view_a63a2c70756e7f4fd5f86000091a1c51b}
+
+\end{DoxyCompactItemize}
+\subsection*{Private Attributes}
+\begin{DoxyCompactItemize}
+\item 
+\hypertarget{class_top_view_ad38788eb0cf2dc43399a4f7d85d62c52}{}bool \hyperlink{class_top_view_ad38788eb0cf2dc43399a4f7d85d62c52}{fg\+\_\+topview}\label{class_top_view_ad38788eb0cf2dc43399a4f7d85d62c52}
+
+\begin{DoxyCompactList}\small\item\em whether topview is initialized \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+The documentation for this class was generated from the following files\+:\begin{DoxyCompactItemize}
+\item 
+D\+:/\+Qt\+Program/\+Qt5/\+Fusion/topview.\+h\item 
+D\+:/\+Qt\+Program/\+Qt5/\+Fusion/topview.\+cpp\end{DoxyCompactItemize}

@@ -1,0 +1,500 @@
+\hypertarget{classstereo__vision}{}\section{stereo\+\_\+vision Class Reference}
+\label{classstereo__vision}\index{stereo\+\_\+vision@{stereo\+\_\+vision}}
+Inheritance diagram for stereo\+\_\+vision\+:\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[height=2.000000cm]{classstereo__vision}
+\end{center}
+\end{figure}
+\subsection*{Classes}
+\begin{DoxyCompactItemize}
+\item 
+struct \hyperlink{structstereo__vision_1_1cam_param}{cam\+Param}
+\begin{DoxyCompactList}\small\item\em The \hyperlink{structstereo__vision_1_1cam_param}{cam\+Param} struct for depth estimatiom. \end{DoxyCompactList}\item 
+struct \hyperlink{structstereo__vision_1_1match_param_b_m}{match\+Param\+B\+M}
+\item 
+struct \hyperlink{structstereo__vision_1_1match_param_s_g_b_m}{match\+Param\+S\+G\+B\+M}
+\item 
+struct \hyperlink{structstereo__vision_1_1object_info}{object\+Info}
+\item 
+struct \hyperlink{structstereo__vision_1_1_stereo_data}{Stereo\+Data}
+\begin{DoxyCompactList}\small\item\em The \hyperlink{structstereo__vision_1_1_stereo_data}{Stereo\+Data} struct. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\subsection*{Signals}
+\begin{DoxyCompactItemize}
+\item 
+\hypertarget{classstereo__vision_afaa54843be42d382939a9b95df97a378}{}void {\bfseries update\+G\+U\+I} (cv\+::\+Mat $\ast$img\+\_\+\+L, cv\+::\+Mat $\ast$img\+\_\+\+R, cv\+::\+Mat $\ast$disp, cv\+::\+Mat $\ast$disp\+\_\+pseudo, cv\+::\+Mat $\ast$\hyperlink{class_top_view_a693454cfb21851b389634e28bdabe35a}{topview}, cv\+::\+Mat $\ast$img\+\_\+detected, int detected\+\_\+obj, int current\+\_\+frame\+\_\+count)\label{classstereo__vision_afaa54843be42d382939a9b95df97a378}
+
+\item 
+\hypertarget{classstereo__vision_aedbf17999d975ce6142527ffa9a32e24}{}void {\bfseries update\+Form} (int mode, std\+::vector$<$ int $>$ params)\label{classstereo__vision_aedbf17999d975ce6142527ffa9a32e24}
+
+\item 
+\hypertarget{classstereo__vision_a474c8ffdfea16eaac64e120bd6101b61}{}void {\bfseries video\+End} ()\label{classstereo__vision_a474c8ffdfea16eaac64e120bd6101b61}
+
+\end{DoxyCompactItemize}
+\subsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+bool \hyperlink{classstereo__vision_a5f10ebe6877fa06685259e7a14146857}{open} (int device\+\_\+index\+\_\+\+L, int device\+\_\+index\+\_\+\+R)
+\begin{DoxyCompactList}\small\item\em open the cam. \end{DoxyCompactList}\item 
+bool \hyperlink{classstereo__vision_a42d70e087c25b7b91d989b0f182f7efe}{is\+Opened} ()
+\begin{DoxyCompactList}\small\item\em is\+Opened is to check if cam is opened or not \end{DoxyCompactList}\item 
+\hypertarget{classstereo__vision_aa6323301b9c2a27f2bb01204dbca05f7}{}void \hyperlink{classstereo__vision_aa6323301b9c2a27f2bb01204dbca05f7}{close} ()\label{classstereo__vision_aa6323301b9c2a27f2bb01204dbca05f7}
+
+\begin{DoxyCompactList}\small\item\em close cam. \end{DoxyCompactList}\item 
+bool \hyperlink{classstereo__vision_a4d98bb5b8d89b9e085e21e3f687ab65c}{load\+Remap\+File} (int cam\+\_\+focal\+\_\+length, double base\+\_\+line)
+\begin{DoxyCompactList}\small\item\em load\+Remap\+File for camera calibration. The folder of calibration files should be placed under project\textquotesingle{}s folder \end{DoxyCompactList}\item 
+\hypertarget{classstereo__vision_af824225e48b0db6e7b2e97c36e947cd8}{}int {\bfseries data\+Exec} ()\label{classstereo__vision_af824225e48b0db6e7b2e97c36e947cd8}
+
+\item 
+\hypertarget{classstereo__vision_aac6e3f56cebb6c9db27e1f1ce96cf002}{}int {\bfseries obj\+Size} ()\label{classstereo__vision_aac6e3f56cebb6c9db27e1f1ce96cf002}
+
+\item 
+\hypertarget{classstereo__vision_a7b9aacf6f82eb8d38836bd1ad0a88873}{}int {\bfseries gui\+Update} ()\label{classstereo__vision_a7b9aacf6f82eb8d38836bd1ad0a88873}
+
+\item 
+\hypertarget{classstereo__vision_aa5823b967f14aa5fe353f0f7c983bbb7}{}bool {\bfseries fused\+Topview} ()\label{classstereo__vision_aa5823b967f14aa5fe353f0f7c983bbb7}
+
+\item 
+\hypertarget{classstereo__vision_a35f0b49b1839f2c05ee1c4bf381f7a2a}{}void {\bfseries Hough\+Line} ()\label{classstereo__vision_a35f0b49b1839f2c05ee1c4bf381f7a2a}
+
+\item 
+\hypertarget{classstereo__vision_a836c0c934401f062619d5d27ff763400}{}void {\bfseries get\+Mouse\+Cursor\+Info} (int y, int x, float \&disp, cv\+::\+Point3i \&pos3\+D)\label{classstereo__vision_a836c0c934401f062619d5d27ff763400}
+
+\item 
+\hypertarget{classstereo__vision_a77a08312396f01ff9e96b80db9636a83}{}void {\bfseries set\+Ground\+Filter} (bool fg\+\_\+enable)\label{classstereo__vision_a77a08312396f01ff9e96b80db9636a83}
+
+\item 
+\hypertarget{classstereo__vision_a57546410422adbce47c7e0db2f78261b}{}bool {\bfseries mode\+Changed} (int cur\+\_\+mode)\label{classstereo__vision_a57546410422adbce47c7e0db2f78261b}
+
+\item 
+\hypertarget{classstereo__vision_aa75b4dad19544a401f59aa527dd54697}{}void {\bfseries mode\+Change} (int cur\+\_\+mode, bool fg\+\_\+form\+\_\+smp\+\_\+update)\label{classstereo__vision_aa75b4dad19544a401f59aa527dd54697}
+
+\item 
+\hypertarget{classstereo__vision_a8ec3ea771d16660c9cd28ad6a451e2f8}{}void {\bfseries update\+Params\+Smp} ()\label{classstereo__vision_a8ec3ea771d16660c9cd28ad6a451e2f8}
+
+\end{DoxyCompactItemize}
+\subsection*{Public Attributes}
+\begin{DoxyCompactItemize}
+\item 
+\hypertarget{classstereo__vision_aa158a1bbe77e1a54958572daf0a4ae52}{}int \hyperlink{classstereo__vision_aa158a1bbe77e1a54958572daf0a4ae52}{match\+\_\+mode}\label{classstereo__vision_aa158a1bbe77e1a54958572daf0a4ae52}
+
+\begin{DoxyCompactList}\small\item\em stereo matching mode \end{DoxyCompactList}\item 
+\hypertarget{classstereo__vision_aac7f078a0eeff8e85540641628911a46}{}std\+::vector$<$ int $>$ \hyperlink{classstereo__vision_aac7f078a0eeff8e85540641628911a46}{match\+\_\+param}\label{classstereo__vision_aac7f078a0eeff8e85540641628911a46}
+
+\begin{DoxyCompactList}\small\item\em stereo matching params \end{DoxyCompactList}\item 
+\hypertarget{classstereo__vision_a43efac70e2402b96dc47994dab82eef5}{}int {\bfseries time\+\_\+proc}\label{classstereo__vision_a43efac70e2402b96dc47994dab82eef5}
+
+\item 
+\hypertarget{classstereo__vision_a6d6580405e25800cc97bf10cd2be6ca7}{}cv\+::\+Mat {\bfseries img\+\_\+\+L}\label{classstereo__vision_a6d6580405e25800cc97bf10cd2be6ca7}
+
+\item 
+\hypertarget{classstereo__vision_abbbb2e0ea2ea99867db15bc9f4e7b735}{}cv\+::\+Mat {\bfseries img\+\_\+\+R}\label{classstereo__vision_abbbb2e0ea2ea99867db15bc9f4e7b735}
+
+\item 
+\hypertarget{classstereo__vision_a208e506dc490cce114a66060515a31f3}{}cv\+::\+Mat {\bfseries img\+\_\+r\+\_\+\+L}\label{classstereo__vision_a208e506dc490cce114a66060515a31f3}
+
+\item 
+\hypertarget{classstereo__vision_aba439f3d27de41b4c199158479a88c27}{}cv\+::\+Mat {\bfseries img\+\_\+r\+\_\+\+R}\label{classstereo__vision_aba439f3d27de41b4c199158479a88c27}
+
+\item 
+\hypertarget{classstereo__vision_ae600652d57c3918068298f50d5862b1f}{}cv\+::\+Mat {\bfseries img\+\_\+detected}\label{classstereo__vision_ae600652d57c3918068298f50d5862b1f}
+
+\item 
+\hypertarget{classstereo__vision_a4b4f5cedee0992e723f184d5ca0ef9cf}{}cv\+::\+Mat {\bfseries img\+\_\+detected\+\_\+display}\label{classstereo__vision_a4b4f5cedee0992e723f184d5ca0ef9cf}
+
+\item 
+\hypertarget{classstereo__vision_aa224d5b51573aab0080fe501ec13595f}{}int {\bfseries input\+\_\+mode}\label{classstereo__vision_aa224d5b51573aab0080fe501ec13595f}
+
+\item 
+\hypertarget{classstereo__vision_a43d90438c1816a2d8ea75bf70fa66ad9}{}bool \hyperlink{classstereo__vision_a43d90438c1816a2d8ea75bf70fa66ad9}{fg\+\_\+calib}\label{classstereo__vision_a43d90438c1816a2d8ea75bf70fa66ad9}
+
+\begin{DoxyCompactList}\small\item\em check whether the calibration button is checked \end{DoxyCompactList}\item 
+\hypertarget{classstereo__vision_aa4cd54587f4089a1780ee3b3e622720f}{}bool \hyperlink{classstereo__vision_aa4cd54587f4089a1780ee3b3e622720f}{fg\+\_\+stereo\+Match}\label{classstereo__vision_aa4cd54587f4089a1780ee3b3e622720f}
+
+\begin{DoxyCompactList}\small\item\em check whether do the correspondence matching \end{DoxyCompactList}\item 
+\hypertarget{classstereo__vision_a9046c0d1af87b98a5848070199a980ba}{}bool \hyperlink{classstereo__vision_a9046c0d1af87b98a5848070199a980ba}{fg\+\_\+pseudo}\label{classstereo__vision_a9046c0d1af87b98a5848070199a980ba}
+
+\begin{DoxyCompactList}\small\item\em chekc wether pesudo the disparity image \end{DoxyCompactList}\item 
+\hypertarget{classstereo__vision_a46c04908475380f5901a0a7a08f5643c}{}bool \hyperlink{classstereo__vision_a46c04908475380f5901a0a7a08f5643c}{fg\+\_\+topview}\label{classstereo__vision_a46c04908475380f5901a0a7a08f5643c}
+
+\begin{DoxyCompactList}\small\item\em check wether project to topview \end{DoxyCompactList}\item 
+\hypertarget{classstereo__vision_ab1be52b3eb3c5629d81655fbc5dab14d}{}bool \hyperlink{classstereo__vision_ab1be52b3eb3c5629d81655fbc5dab14d}{fg\+\_\+reproject}\label{classstereo__vision_ab1be52b3eb3c5629d81655fbc5dab14d}
+
+\begin{DoxyCompactList}\small\item\em check wether re-\/project detected objects to image \end{DoxyCompactList}\item 
+\hypertarget{classstereo__vision_aa887dac1c609d96131aba8c2c386b8b4}{}bool \hyperlink{classstereo__vision_aa887dac1c609d96131aba8c2c386b8b4}{fg\+\_\+tracking}\label{classstereo__vision_aa887dac1c609d96131aba8c2c386b8b4}
+
+\begin{DoxyCompactList}\small\item\em it\textquotesingle{}s true when object tracking is activated \end{DoxyCompactList}\item 
+\hypertarget{classstereo__vision_af3c1db66e4aee9b6cb699ad83208017e}{}bool \hyperlink{classstereo__vision_af3c1db66e4aee9b6cb699ad83208017e}{fg\+\_\+topview\+\_\+plot\+\_\+points}\label{classstereo__vision_af3c1db66e4aee9b6cb699ad83208017e}
+
+\begin{DoxyCompactList}\small\item\em check wethere to plot each points on the topview \end{DoxyCompactList}\item 
+\hypertarget{classstereo__vision_a208843ce79040143215a89c09441fac6}{}cv\+::\+Mat {\bfseries disp\+\_\+raw}\label{classstereo__vision_a208843ce79040143215a89c09441fac6}
+
+\item 
+\hypertarget{classstereo__vision_aff10e9a2deaad5be0fe0f5282a40d89d}{}cv\+::\+Mat {\bfseries disp}\label{classstereo__vision_aff10e9a2deaad5be0fe0f5282a40d89d}
+
+\item 
+\hypertarget{classstereo__vision_a9bc79f927c68742c44ed169dd0ac7c0c}{}cv\+::\+Mat {\bfseries disp\+\_\+pseudo}\label{classstereo__vision_a9bc79f927c68742c44ed169dd0ac7c0c}
+
+\item 
+\hypertarget{classstereo__vision_a116de235ec3af6a1fbf32e53553e7fff}{}\hyperlink{structstereo__vision_1_1cam_param}{cam\+Param} $\ast$ {\bfseries cam\+\_\+param}\label{classstereo__vision_a116de235ec3af6a1fbf32e53553e7fff}
+
+\item 
+\hypertarget{classstereo__vision_abe67917e4552e10eec02cf1df85548bd}{}\hyperlink{structstereo__vision_1_1_stereo_data}{Stereo\+Data} $\ast$$\ast$ {\bfseries data}\label{classstereo__vision_abe67917e4552e10eec02cf1df85548bd}
+
+\item 
+\hypertarget{classstereo__vision_aa62f831945967b161fdf8c2c08edf98e}{}\hyperlink{structstereo__vision_1_1match_param_s_g_b_m}{match\+Param\+S\+G\+B\+M} $\ast$ {\bfseries param\+\_\+sgbm}\label{classstereo__vision_aa62f831945967b161fdf8c2c08edf98e}
+
+\item 
+\hypertarget{classstereo__vision_a4d6e2801a81407b8cbcb9e82a8217d39}{}\hyperlink{structstereo__vision_1_1match_param_b_m}{match\+Param\+B\+M} $\ast$ {\bfseries param\+\_\+bm}\label{classstereo__vision_a4d6e2801a81407b8cbcb9e82a8217d39}
+
+\item 
+\hypertarget{classstereo__vision_a22a8e8ee420a6a7e3d602cc363e83f25}{}int {\bfseries thick\+\_\+obj\+\_\+rect}\label{classstereo__vision_a22a8e8ee420a6a7e3d602cc363e83f25}
+
+\item 
+\hypertarget{classstereo__vision_a6ef6db60b0aa3e917192bb1ec2e5f464}{}int {\bfseries radius\+\_\+obj\+\_\+point}\label{classstereo__vision_a6ef6db60b0aa3e917192bb1ec2e5f464}
+
+\item 
+\hypertarget{classstereo__vision_a119f4b3f00d991d11608ec8a75c7434c}{}\hyperlink{structstereo__vision_1_1object_info}{object\+Info} $\ast$ {\bfseries objects\+\_\+display}\label{classstereo__vision_a119f4b3f00d991d11608ec8a75c7434c}
+
+\end{DoxyCompactItemize}
+\subsection*{Private Slots}
+\begin{DoxyCompactItemize}
+\item 
+\hypertarget{classstereo__vision_aa0319c83d83972c5e2946471248e75c7}{}void {\bfseries change\+\_\+bm\+\_\+pre\+\_\+filter\+\_\+size} (int value)\label{classstereo__vision_aa0319c83d83972c5e2946471248e75c7}
+
+\item 
+\hypertarget{classstereo__vision_a88c796355054746b0c710f854a131a76}{}void {\bfseries change\+\_\+bm\+\_\+pre\+\_\+filter\+\_\+cap} (int value)\label{classstereo__vision_a88c796355054746b0c710f854a131a76}
+
+\item 
+\hypertarget{classstereo__vision_a8121a10f1e88f8927e95216b4cac24f5}{}void {\bfseries change\+\_\+bm\+\_\+sad\+\_\+window\+\_\+size} (int value)\label{classstereo__vision_a8121a10f1e88f8927e95216b4cac24f5}
+
+\item 
+\hypertarget{classstereo__vision_a67bc5743196841e228c689dbb24836fc}{}void {\bfseries change\+\_\+bm\+\_\+min\+\_\+disp} (int value)\label{classstereo__vision_a67bc5743196841e228c689dbb24836fc}
+
+\item 
+\hypertarget{classstereo__vision_a383e31f5004624e7b733614d795560a8}{}void {\bfseries change\+\_\+bm\+\_\+num\+\_\+of\+\_\+disp} (int value)\label{classstereo__vision_a383e31f5004624e7b733614d795560a8}
+
+\item 
+\hypertarget{classstereo__vision_aa46cd94d569e6b081232df19b218e48f}{}void {\bfseries change\+\_\+bm\+\_\+texture\+\_\+thresh} (int value)\label{classstereo__vision_aa46cd94d569e6b081232df19b218e48f}
+
+\item 
+\hypertarget{classstereo__vision_ab8d73fb75b7b288c893a5d67fa88723c}{}void {\bfseries change\+\_\+bm\+\_\+uniqueness\+\_\+ratio} (int value)\label{classstereo__vision_ab8d73fb75b7b288c893a5d67fa88723c}
+
+\item 
+\hypertarget{classstereo__vision_a26a1e11b0500bb2aff38c8fe38d0bbcb}{}void {\bfseries change\+\_\+bm\+\_\+speckle\+\_\+window\+\_\+size} (int value)\label{classstereo__vision_a26a1e11b0500bb2aff38c8fe38d0bbcb}
+
+\item 
+\hypertarget{classstereo__vision_ad6fc54a9e01b8890f55a9f74a2fca828}{}void {\bfseries change\+\_\+bm\+\_\+speckle\+\_\+range} (int value)\label{classstereo__vision_ad6fc54a9e01b8890f55a9f74a2fca828}
+
+\item 
+\hypertarget{classstereo__vision_a09335560bab92800a363ff9331eff0b2}{}void {\bfseries change\+\_\+sgbm\+\_\+pre\+\_\+filter\+\_\+cap} (int value)\label{classstereo__vision_a09335560bab92800a363ff9331eff0b2}
+
+\item 
+\hypertarget{classstereo__vision_ab46602e71890356be13aaaad67839161}{}void {\bfseries change\+\_\+sgbm\+\_\+sad\+\_\+window\+\_\+size} (int value)\label{classstereo__vision_ab46602e71890356be13aaaad67839161}
+
+\item 
+\hypertarget{classstereo__vision_a0e045f3e764dc05a7996eafcaf8aebc6}{}void {\bfseries change\+\_\+sgbm\+\_\+min\+\_\+disp} (int value)\label{classstereo__vision_a0e045f3e764dc05a7996eafcaf8aebc6}
+
+\item 
+\hypertarget{classstereo__vision_aefbefa16ef9ddeb42ae10133993df641}{}void {\bfseries change\+\_\+sgbm\+\_\+num\+\_\+of\+\_\+disp} (int value)\label{classstereo__vision_aefbefa16ef9ddeb42ae10133993df641}
+
+\item 
+\hypertarget{classstereo__vision_adef75037844513259388033ab8e19e8d}{}void {\bfseries change\+\_\+sgbm\+\_\+uniqueness\+\_\+ratio} (int value)\label{classstereo__vision_adef75037844513259388033ab8e19e8d}
+
+\item 
+\hypertarget{classstereo__vision_a504e03ec97c53c7d90a10541351c8d52}{}void {\bfseries change\+\_\+sgbm\+\_\+speckle\+\_\+window\+\_\+size} (int value)\label{classstereo__vision_a504e03ec97c53c7d90a10541351c8d52}
+
+\item 
+\hypertarget{classstereo__vision_aa8fc24479b5dd2252de370f9bfd35823}{}void {\bfseries change\+\_\+sgbm\+\_\+speckle\+\_\+range} (int value)\label{classstereo__vision_aa8fc24479b5dd2252de370f9bfd35823}
+
+\end{DoxyCompactItemize}
+\subsection*{Private Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\hypertarget{classstereo__vision_af59672af6aac7231b711998a881a6207}{}void {\bfseries create\+L\+U\+T} ()\label{classstereo__vision_af59672af6aac7231b711998a881a6207}
+
+\item 
+\hypertarget{classstereo__vision_a9ba04ac316db4e0eafc80916309374d4}{}int {\bfseries corr\+Grid\+Row} (int \hyperlink{class_top_view_a1f2b530e7979db621630dbbf9f5def15}{k})\label{classstereo__vision_a9ba04ac316db4e0eafc80916309374d4}
+
+\item 
+\hypertarget{classstereo__vision_a1921e6d848a96c9989a0a86b4ef9fd82}{}int {\bfseries corr\+Grid\+Col} (int \hyperlink{class_top_view_a1f2b530e7979db621630dbbf9f5def15}{k})\label{classstereo__vision_a1921e6d848a96c9989a0a86b4ef9fd82}
+
+\item 
+\hypertarget{classstereo__vision_ad8a2dff52e5b5dc21eab2203dbb17d3a}{}void {\bfseries reset\+Open} (int device\+\_\+index\+\_\+\+L, int device\+\_\+index\+\_\+\+R)\label{classstereo__vision_ad8a2dff52e5b5dc21eab2203dbb17d3a}
+
+\item 
+\hypertarget{classstereo__vision_a107d39b128afb19544c842bb960dfcc1}{}bool {\bfseries cam\+Capture} ()\label{classstereo__vision_a107d39b128afb19544c842bb960dfcc1}
+
+\item 
+\hypertarget{classstereo__vision_a85ad1d14a5813f89e5b2ba48a4951cc1}{}bool {\bfseries data\+In} ()\label{classstereo__vision_a85ad1d14a5813f89e5b2ba48a4951cc1}
+
+\item 
+\hypertarget{classstereo__vision_a438714bfc63e25fa55509422d10909a4}{}bool {\bfseries rectify\+Image} ()\label{classstereo__vision_a438714bfc63e25fa55509422d10909a4}
+
+\item 
+\hypertarget{classstereo__vision_aac941ae2043d7e1034d002033e6cf3d0}{}void {\bfseries depth\+Calculation} ()\label{classstereo__vision_aac941ae2043d7e1034d002033e6cf3d0}
+
+\item 
+\hypertarget{classstereo__vision_aa8e6fc4e5d1a8447baa53a64ba4d2a9f}{}bool {\bfseries v\+Disp\+Calculation} ()\label{classstereo__vision_aa8e6fc4e5d1a8447baa53a64ba4d2a9f}
+
+\item 
+\hypertarget{classstereo__vision_a45dc1b4c26fa70b641ad31f4b307f0c8}{}float {\bfseries point2\+Line} (cv\+::\+Point pt, cv\+::\+Point line\+\_\+1, cv\+::\+Point line\+\_\+2)\label{classstereo__vision_a45dc1b4c26fa70b641ad31f4b307f0c8}
+
+\item 
+\hypertarget{classstereo__vision_a74c36c45aa91e35150ceb51c3ddf0c03}{}void {\bfseries stereo\+Match} ()\label{classstereo__vision_a74c36c45aa91e35150ceb51c3ddf0c03}
+
+\item 
+\hypertarget{classstereo__vision_aa809afbb9b4bcf9430a12d3fe2bf0a83}{}void {\bfseries update\+Form\+Params} ()\label{classstereo__vision_aa809afbb9b4bcf9430a12d3fe2bf0a83}
+
+\item 
+\hypertarget{classstereo__vision_acb993e7cbfb1a1745fcc3cc4b7ad4aaa}{}void {\bfseries update\+Data\+For\+Display} ()\label{classstereo__vision_acb993e7cbfb1a1745fcc3cc4b7ad4aaa}
+
+\item 
+\hypertarget{classstereo__vision_a6928cbfd7d4ee3834d3ef9b4f2fe4588}{}void {\bfseries reset\+Blob} ()\label{classstereo__vision_a6928cbfd7d4ee3834d3ef9b4f2fe4588}
+
+\item 
+\hypertarget{classstereo__vision_ac9520d8ca3fe11aba04a5d11a65ee0df}{}void {\bfseries blob} (int thresh\+\_\+pts\+\_\+num)\label{classstereo__vision_ac9520d8ca3fe11aba04a5d11a65ee0df}
+
+\item 
+\hypertarget{classstereo__vision_ab8b62349e5049fe2d61e3de5a2d5477c}{}void {\bfseries reset\+Matched\+Info} (\hyperlink{structstereo__vision_1_1object_info}{object\+Info} \&src)\label{classstereo__vision_ab8b62349e5049fe2d61e3de5a2d5477c}
+
+\item 
+\hypertarget{classstereo__vision_a541abf632d62e399866cd7d265673063}{}void {\bfseries connect\+Matched\+Info} (\hyperlink{structstereo__vision_1_1object_info}{object\+Info} \&src, \hyperlink{structstereo__vision_1_1object_info}{object\+Info} \&dst)\label{classstereo__vision_a541abf632d62e399866cd7d265673063}
+
+\item 
+\hypertarget{classstereo__vision_a99a62cb0c6c16f46d420b5f4d0379a48}{}void {\bfseries match\+Param\+Initialize} (int cur\+\_\+mode)\label{classstereo__vision_a99a62cb0c6c16f46d420b5f4d0379a48}
+
+\item 
+\hypertarget{classstereo__vision_aa3fd13ec1a7eec08eb964e5339d653f6}{}void {\bfseries point\+Project\+Top\+View} ()\label{classstereo__vision_aa3fd13ec1a7eec08eb964e5339d653f6}
+
+\item 
+\hypertarget{classstereo__vision_a265f15ae20bfad32d0b3091c29d54021}{}void {\bfseries point\+Project\+Image} ()\label{classstereo__vision_a265f15ae20bfad32d0b3091c29d54021}
+
+\end{DoxyCompactItemize}
+\subsection*{Private Attributes}
+\begin{DoxyCompactItemize}
+\item 
+\hypertarget{classstereo__vision_ac22d7d1d46c44012d977fc6a7a4b294b}{}int $\ast$ {\bfseries L\+U\+T\+\_\+grid\+\_\+row}\label{classstereo__vision_ac22d7d1d46c44012d977fc6a7a4b294b}
+
+\item 
+\hypertarget{classstereo__vision_a533641d0d10bb6958b20c0779e44bac3}{}int $\ast$ {\bfseries L\+U\+T\+\_\+grid\+\_\+col}\label{classstereo__vision_a533641d0d10bb6958b20c0779e44bac3}
+
+\item 
+\hypertarget{classstereo__vision_a436f56ee5dafff4cd4a1c0d1d9295389}{}int $\ast$ {\bfseries L\+U\+T\+\_\+depth}\label{classstereo__vision_a436f56ee5dafff4cd4a1c0d1d9295389}
+
+\item 
+\hypertarget{classstereo__vision_ae49394206441102638ca0b3cd573a7ff}{}int $\ast$ {\bfseries L\+U\+T\+\_\+img\+\_\+col}\label{classstereo__vision_ae49394206441102638ca0b3cd573a7ff}
+
+\item 
+\hypertarget{classstereo__vision_a44fc71a48835c0e82473405226959758}{}Q\+Time {\bfseries t\+\_\+p}\label{classstereo__vision_a44fc71a48835c0e82473405226959758}
+
+\item 
+\hypertarget{classstereo__vision_a0327c8570c58bb5e263284a6b07826b7}{}bool {\bfseries fg\+\_\+cam\+\_\+\+L}\label{classstereo__vision_a0327c8570c58bb5e263284a6b07826b7}
+
+\item 
+\hypertarget{classstereo__vision_a849dd6a5a5c90a89e60237709f681db0}{}bool {\bfseries fg\+\_\+cam\+\_\+\+R}\label{classstereo__vision_a849dd6a5a5c90a89e60237709f681db0}
+
+\item 
+\hypertarget{classstereo__vision_acc86e620bc551a4c464204185b9ba688}{}bool {\bfseries fg\+\_\+cam\+\_\+opened}\label{classstereo__vision_acc86e620bc551a4c464204185b9ba688}
+
+\item 
+\hypertarget{classstereo__vision_abe770e5693436ece0f050c46639aced2}{}bool {\bfseries fg\+\_\+calib\+\_\+loaded}\label{classstereo__vision_abe770e5693436ece0f050c46639aced2}
+
+\item 
+\hypertarget{classstereo__vision_ae0c3398306a273523a736b912fe17669}{}Q\+Time {\bfseries t}\label{classstereo__vision_ae0c3398306a273523a736b912fe17669}
+
+\item 
+\hypertarget{classstereo__vision_a5ad6c9bb31ff5e99c6dee350c8b294d0}{}int {\bfseries time\+\_\+gap}\label{classstereo__vision_a5ad6c9bb31ff5e99c6dee350c8b294d0}
+
+\item 
+\hypertarget{classstereo__vision_aa6a17817d8ec47b9b62e8c5122254d1b}{}int {\bfseries device\+\_\+index\+\_\+\+L}\label{classstereo__vision_aa6a17817d8ec47b9b62e8c5122254d1b}
+
+\item 
+\hypertarget{classstereo__vision_a5ae8c08b9a449d612e5d7ce9a10005e0}{}int {\bfseries device\+\_\+index\+\_\+\+R}\label{classstereo__vision_a5ae8c08b9a449d612e5d7ce9a10005e0}
+
+\item 
+\hypertarget{classstereo__vision_a22e41793b6720792bd992d31ff1bf4d0}{}cv\+::\+Video\+Capture {\bfseries cam\+\_\+\+L}\label{classstereo__vision_a22e41793b6720792bd992d31ff1bf4d0}
+
+\item 
+\hypertarget{classstereo__vision_a567e69673b327e4c778069cc289e4ed8}{}cv\+::\+Video\+Capture {\bfseries cam\+\_\+\+R}\label{classstereo__vision_a567e69673b327e4c778069cc289e4ed8}
+
+\item 
+\hypertarget{classstereo__vision_ad4560f29f1d3b52e1cb284123e9afb7a}{}cv\+::\+Mat {\bfseries cap\+\_\+\+L}\label{classstereo__vision_ad4560f29f1d3b52e1cb284123e9afb7a}
+
+\item 
+\hypertarget{classstereo__vision_ab9a196d52aac1f1b7840b25fe5c59f6b}{}cv\+::\+Mat {\bfseries cap\+\_\+\+R}\label{classstereo__vision_ab9a196d52aac1f1b7840b25fe5c59f6b}
+
+\item 
+\hypertarget{classstereo__vision_acebe9a3bf44da123652d784446142288}{}Q\+Dir {\bfseries remap\+\_\+path}\label{classstereo__vision_acebe9a3bf44da123652d784446142288}
+
+\item 
+\hypertarget{classstereo__vision_a4568f181500db97d44dfbb9c1275c23b}{}Q\+String {\bfseries remap\+\_\+folder}\label{classstereo__vision_a4568f181500db97d44dfbb9c1275c23b}
+
+\item 
+\hypertarget{classstereo__vision_a0c645f23171054cb8b97110d5086d02b}{}Q\+String {\bfseries remap\+\_\+file}\label{classstereo__vision_a0c645f23171054cb8b97110d5086d02b}
+
+\item 
+\hypertarget{classstereo__vision_a0d5323c5ba071c0e3a6fb8e8cb70c4f8}{}cv\+::\+Mat {\bfseries rmap\+Lx}\label{classstereo__vision_a0d5323c5ba071c0e3a6fb8e8cb70c4f8}
+
+\item 
+\hypertarget{classstereo__vision_ab148fbd46aad800d51f38e0ea6c88b0c}{}cv\+::\+Mat {\bfseries rmap\+Ly}\label{classstereo__vision_ab148fbd46aad800d51f38e0ea6c88b0c}
+
+\item 
+\hypertarget{classstereo__vision_a9d544e26683b6df416d13c15cda4e86e}{}cv\+::\+Mat {\bfseries rmap\+Rx}\label{classstereo__vision_a9d544e26683b6df416d13c15cda4e86e}
+
+\item 
+\hypertarget{classstereo__vision_a815c5a01f2352328642ece249e581c70}{}cv\+::\+Mat {\bfseries rmap\+Ry}\label{classstereo__vision_a815c5a01f2352328642ece249e581c70}
+
+\item 
+\hypertarget{classstereo__vision_acbb4008c31a3fa4e00598b4c34433c95}{}cv\+::\+Rect {\bfseries calib\+R\+O\+I} \mbox{[}2\mbox{]}\label{classstereo__vision_acbb4008c31a3fa4e00598b4c34433c95}
+
+\item 
+\hypertarget{classstereo__vision_ab64d35e2fd18e3db6a198a556a264d89}{}cv\+::\+Ptr$<$ cv\+::\+Stereo\+S\+G\+B\+M $>$ {\bfseries sgbm}\label{classstereo__vision_ab64d35e2fd18e3db6a198a556a264d89}
+
+\item 
+\hypertarget{classstereo__vision_af6ab96352f2db952e9d453f6206eecba}{}cv\+::\+Ptr$<$ cv\+::\+Stereo\+B\+M $>$ {\bfseries bm}\label{classstereo__vision_af6ab96352f2db952e9d453f6206eecba}
+
+\item 
+\hypertarget{classstereo__vision_ad01965e56dd61dffb297d766ec45a00c}{}int {\bfseries cn}\label{classstereo__vision_ad01965e56dd61dffb297d766ec45a00c}
+
+\item 
+\hypertarget{classstereo__vision_ad50feb2fb1ac107ec61cba14f1f211be}{}cv\+::\+Mat {\bfseries img\+\_\+match\+\_\+\+L}\label{classstereo__vision_ad50feb2fb1ac107ec61cba14f1f211be}
+
+\item 
+\hypertarget{classstereo__vision_aa68a9b9eb2a44afd446d77c04e32400d}{}cv\+::\+Mat {\bfseries img\+\_\+match\+\_\+\+R}\label{classstereo__vision_aa68a9b9eb2a44afd446d77c04e32400d}
+
+\item 
+\hypertarget{classstereo__vision_a783032355f08f98513645fdbf37bc76b}{}int {\bfseries obj\+\_\+nums}\label{classstereo__vision_a783032355f08f98513645fdbf37bc76b}
+
+\item 
+\hypertarget{classstereo__vision_ad13625d9a57b2ab1201859a15ae7a1d4}{}\hyperlink{structstereo__vision_1_1object_info}{object\+Info} $\ast$ {\bfseries objects}\label{classstereo__vision_ad13625d9a57b2ab1201859a15ae7a1d4}
+
+\item 
+\hypertarget{classstereo__vision_a88866738f710fa7f1c160113fd97f7ea}{}int {\bfseries detected\+\_\+obj}\label{classstereo__vision_a88866738f710fa7f1c160113fd97f7ea}
+
+\item 
+\hypertarget{classstereo__vision_a6f4b09547d0a4b0d46c229378b1012d5}{}\hyperlink{structstereo__vision_1_1object_info}{object\+Info} {\bfseries obj\+\_\+temp}\label{classstereo__vision_a6f4b09547d0a4b0d46c229378b1012d5}
+
+\item 
+\hypertarget{classstereo__vision_a124bffa45f264820eee7825de3f4eab4}{}int {\bfseries thresh\+\_\+ground\+\_\+cand}\label{classstereo__vision_a124bffa45f264820eee7825de3f4eab4}
+
+\item 
+\hypertarget{classstereo__vision_ab7d89707e6e5f29e42e93af3afe38247}{}float {\bfseries ground\+\_\+mean\+\_\+guess}\label{classstereo__vision_ab7d89707e6e5f29e42e93af3afe38247}
+
+\item 
+\hypertarget{classstereo__vision_a8c521a7a88202b9415f4f618d7e742c2}{}bool {\bfseries fg\+\_\+ground\+\_\+filter}\label{classstereo__vision_a8c521a7a88202b9415f4f618d7e742c2}
+
+\item 
+\hypertarget{classstereo__vision_af54c2344e37afb042efb20ca0e1fddb1}{}bool {\bfseries fg\+\_\+v\+Disp}\label{classstereo__vision_af54c2344e37afb042efb20ca0e1fddb1}
+
+\item 
+\hypertarget{classstereo__vision_a9f04ffbae5362d509b1e3d4b1ab58600}{}double {\bfseries angle\+\_\+min}\label{classstereo__vision_a9f04ffbae5362d509b1e3d4b1ab58600}
+
+\item 
+\hypertarget{classstereo__vision_a4d6622be3a7ccd00379d6a9af3891eec}{}double {\bfseries angle\+\_\+max}\label{classstereo__vision_a4d6622be3a7ccd00379d6a9af3891eec}
+
+\item 
+\hypertarget{classstereo__vision_a53da08e1e23e839b2b6d1c2ab0ed6018}{}float {\bfseries thresh\+\_\+rho\+\_\+min}\label{classstereo__vision_a53da08e1e23e839b2b6d1c2ab0ed6018}
+
+\item 
+\hypertarget{classstereo__vision_af14a8db25f5d53e9e4e2b3ffaceec2fd}{}float {\bfseries thresh\+\_\+ground\+\_\+y\+\_\+max}\label{classstereo__vision_af14a8db25f5d53e9e4e2b3ffaceec2fd}
+
+\item 
+\hypertarget{classstereo__vision_a378c5c38f91af6f92b338e563b15631b}{}float {\bfseries thresh\+\_\+dist}\label{classstereo__vision_a378c5c38f91af6f92b338e563b15631b}
+
+\item 
+\hypertarget{classstereo__vision_a6f58586dded0f2e9658a741400043ba3}{}float {\bfseries weight\+\_\+now}\label{classstereo__vision_a6f58586dded0f2e9658a741400043ba3}
+
+\item 
+\hypertarget{classstereo__vision_a3911a0a28a821f478afb76f2b22c0183}{}float {\bfseries weight\+\_\+prev}\label{classstereo__vision_a3911a0a28a821f478afb76f2b22c0183}
+
+\item 
+\hypertarget{classstereo__vision_ae8e557c8dd6934d110c020fde6559b57}{}std\+::vector$<$ cv\+::\+Vec2f $>$ {\bfseries lines}\label{classstereo__vision_ae8e557c8dd6934d110c020fde6559b57}
+
+\item 
+\hypertarget{classstereo__vision_a28ce31b7e25d89b2722c1b3a59638a5b}{}std\+::vector$<$ int $>$ {\bfseries lines\+\_\+fitted\+\_\+pt}\label{classstereo__vision_a28ce31b7e25d89b2722c1b3a59638a5b}
+
+\item 
+\hypertarget{classstereo__vision_a4c8c4d4ded884967455a4191da99b3ab}{}cv\+::\+Vec2f {\bfseries fitted\+\_\+line}\label{classstereo__vision_a4c8c4d4ded884967455a4191da99b3ab}
+
+\item 
+\hypertarget{classstereo__vision_aca6fe3ca55cc9d96d1ce0d865528aca8}{}cv\+::\+Mat {\bfseries v\+\_\+disp}\label{classstereo__vision_aca6fe3ca55cc9d96d1ce0d865528aca8}
+
+\item 
+\hypertarget{classstereo__vision_aeefaec8a3326aa2dfc460032ee5a1aa7}{}cv\+::\+Mat {\bfseries v\+\_\+disp\+\_\+norm}\label{classstereo__vision_aeefaec8a3326aa2dfc460032ee5a1aa7}
+
+\item 
+\hypertarget{classstereo__vision_a2cb73a0711a7d2a456b5b9183df49b05}{}cv\+::\+Mat {\bfseries v\+\_\+disp\+\_\+display}\label{classstereo__vision_a2cb73a0711a7d2a456b5b9183df49b05}
+
+\item 
+\hypertarget{classstereo__vision_a2b9620ac49c42868cae704f319cf9eea}{}cv\+::\+Mat {\bfseries v\+\_\+disp\+\_\+bi}\label{classstereo__vision_a2b9620ac49c42868cae704f319cf9eea}
+
+\end{DoxyCompactItemize}
+\subsection*{Additional Inherited Members}
+
+
+\subsection{Member Function Documentation}
+\hypertarget{classstereo__vision_a42d70e087c25b7b91d989b0f182f7efe}{}\index{stereo\+\_\+vision@{stereo\+\_\+vision}!is\+Opened@{is\+Opened}}
+\index{is\+Opened@{is\+Opened}!stereo\+\_\+vision@{stereo\+\_\+vision}}
+\subsubsection[{is\+Opened}]{\setlength{\rightskip}{0pt plus 5cm}bool stereo\+\_\+vision\+::is\+Opened (
+\begin{DoxyParamCaption}
+{}
+\end{DoxyParamCaption}
+)\hspace{0.3cm}{\ttfamily [inline]}}\label{classstereo__vision_a42d70e087c25b7b91d989b0f182f7efe}
+
+
+is\+Opened is to check if cam is opened or not 
+
+\begin{DoxyReturn}{Returns}
+
+\end{DoxyReturn}
+\hypertarget{classstereo__vision_a4d98bb5b8d89b9e085e21e3f687ab65c}{}\index{stereo\+\_\+vision@{stereo\+\_\+vision}!load\+Remap\+File@{load\+Remap\+File}}
+\index{load\+Remap\+File@{load\+Remap\+File}!stereo\+\_\+vision@{stereo\+\_\+vision}}
+\subsubsection[{load\+Remap\+File}]{\setlength{\rightskip}{0pt plus 5cm}bool stereo\+\_\+vision\+::load\+Remap\+File (
+\begin{DoxyParamCaption}
+\item[{int}]{cam\+\_\+focal\+\_\+length, }
+\item[{double}]{base\+\_\+line}
+\end{DoxyParamCaption}
+)}\label{classstereo__vision_a4d98bb5b8d89b9e085e21e3f687ab65c}
+
+
+load\+Remap\+File for camera calibration. The folder of calibration files should be placed under project\textquotesingle{}s folder 
+
+
+\begin{DoxyParams}{Parameters}
+{\em cam\+\_\+focal\+\_\+length} & \\
+\hline
+{\em base\+\_\+line} & \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+
+\end{DoxyReturn}
+\hypertarget{classstereo__vision_a5f10ebe6877fa06685259e7a14146857}{}\index{stereo\+\_\+vision@{stereo\+\_\+vision}!open@{open}}
+\index{open@{open}!stereo\+\_\+vision@{stereo\+\_\+vision}}
+\subsubsection[{open}]{\setlength{\rightskip}{0pt plus 5cm}bool stereo\+\_\+vision\+::open (
+\begin{DoxyParamCaption}
+\item[{int}]{device\+\_\+index\+\_\+\+L, }
+\item[{int}]{device\+\_\+index\+\_\+\+R}
+\end{DoxyParamCaption}
+)}\label{classstereo__vision_a5f10ebe6877fa06685259e7a14146857}
+
+
+open the cam. 
+
+
+\begin{DoxyParams}{Parameters}
+{\em device\+\_\+index\+\_\+\+L} & \\
+\hline
+{\em device\+\_\+index\+\_\+\+R} & \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+
+\end{DoxyReturn}
+
+
+The documentation for this class was generated from the following files\+:\begin{DoxyCompactItemize}
+\item 
+D\+:/\+Qt\+Program/\+Qt5/\+Fusion/stereo\+\_\+vision.\+h\item 
+D\+:/\+Qt\+Program/\+Qt5/\+Fusion/stereo\+\_\+vision.\+cpp\end{DoxyCompactItemize}

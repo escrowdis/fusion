@@ -1,0 +1,62 @@
+\hypertarget{classcamera__calibration}{}\section{camera\+\_\+calibration Class Reference}
+\label{classcamera__calibration}\index{camera\+\_\+calibration@{camera\+\_\+calibration}}
+\subsection*{Signals}
+\begin{DoxyCompactItemize}
+\item 
+\hypertarget{classcamera__calibration_afdb838ba266a33ab8793fa473dfd5de4}{}void {\bfseries save\+Image} ()\label{classcamera__calibration_afdb838ba266a33ab8793fa473dfd5de4}
+
+\end{DoxyCompactItemize}
+\subsection*{Public Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\hypertarget{classcamera__calibration_ae4efd033cabb573f7b29c06cd232c418}{}void {\bfseries Camera\+Calibration} (bool Show\+Pts, cv\+::\+Size Size\+Pattern, cv\+::\+Size2f Size\+Grid, std\+::vector$<$ std\+::string $>$ files)\label{classcamera__calibration_ae4efd033cabb573f7b29c06cd232c418}
+
+\item 
+\hypertarget{classcamera__calibration_a6a368ee81537f2affa81827a58bcca39}{}void {\bfseries Find\+Get\+Corner\+Pts} (bool Show\+Pts, std\+::vector$<$ std\+::string $>$ files)\label{classcamera__calibration_a6a368ee81537f2affa81827a58bcca39}
+
+\item 
+\hypertarget{classcamera__calibration_a465e652496ec382d61115205b52df4f2}{}void {\bfseries Save\+Intrinsic} (std\+::string \&folder, std\+::string \&filename)\label{classcamera__calibration_a465e652496ec382d61115205b52df4f2}
+
+\item 
+\hypertarget{classcamera__calibration_a23d697bb6dff6e69818067a3de785a49}{}void {\bfseries Display\+Undistorted\+Img} (bool Show\+Pts)\label{classcamera__calibration_a23d697bb6dff6e69818067a3de785a49}
+
+\end{DoxyCompactItemize}
+\subsection*{Private Member Functions}
+\begin{DoxyCompactItemize}
+\item 
+\hypertarget{classcamera__calibration_a461d87ecc98b610c880b6828ab56c345}{}void {\bfseries Load\+File} (std\+::vector$<$ std\+::string $>$ files)\label{classcamera__calibration_a461d87ecc98b610c880b6828ab56c345}
+
+\item 
+\hypertarget{classcamera__calibration_a5ba41d27411f27fd27d55f390eaf4318}{}void {\bfseries Get\+Suppose\+Pts} ()\label{classcamera__calibration_a5ba41d27411f27fd27d55f390eaf4318}
+
+\end{DoxyCompactItemize}
+\subsection*{Private Attributes}
+\begin{DoxyCompactItemize}
+\item 
+\hypertarget{classcamera__calibration_a85ae9430f0fc83701195274ecfeabedd}{}std\+::vector$<$ cv\+::\+Mat $>$ {\bfseries img\+Src}\label{classcamera__calibration_a85ae9430f0fc83701195274ecfeabedd}
+
+\item 
+\hypertarget{classcamera__calibration_af721b99676dffbd6b76337094abb0364}{}std\+::vector$<$ std\+::vector$<$ cv\+::\+Point3f $>$ $>$ {\bfseries suppose\+Pts}\label{classcamera__calibration_af721b99676dffbd6b76337094abb0364}
+
+\item 
+\hypertarget{classcamera__calibration_a861094e4bf699de1bc8e5fb02c6b1e48}{}std\+::vector$<$ std\+::vector$<$ cv\+::\+Point2f $>$ $>$ {\bfseries Pattern\+Pts}\label{classcamera__calibration_a861094e4bf699de1bc8e5fb02c6b1e48}
+
+\item 
+\hypertarget{classcamera__calibration_acfe849351fc596d3b7abc05f732d7138}{}cv\+::\+Size \hyperlink{classcamera__calibration_acfe849351fc596d3b7abc05f732d7138}{pattern\+Size}\label{classcamera__calibration_acfe849351fc596d3b7abc05f732d7138}
+
+\begin{DoxyCompactList}\small\item\em Number of corner. \end{DoxyCompactList}\item 
+\hypertarget{classcamera__calibration_a93d04e4b624695a6d537efc541dfa901}{}cv\+::\+Size2f \hyperlink{classcamera__calibration_a93d04e4b624695a6d537efc541dfa901}{grid\+Size}\label{classcamera__calibration_a93d04e4b624695a6d537efc541dfa901}
+
+\begin{DoxyCompactList}\small\item\em Size of grid. \end{DoxyCompactList}\item 
+\hypertarget{classcamera__calibration_a977e20ebb834c981fe850c0e1bcb7c2e}{}cv\+::\+Mat {\bfseries intrinsic\+Mat}\label{classcamera__calibration_a977e20ebb834c981fe850c0e1bcb7c2e}
+
+\item 
+\hypertarget{classcamera__calibration_a9761b3623fc1ad8ca2adf0c65f4a4674}{}cv\+::\+Mat \hyperlink{classcamera__calibration_a9761b3623fc1ad8ca2adf0c65f4a4674}{distortion\+Mat}\label{classcamera__calibration_a9761b3623fc1ad8ca2adf0c65f4a4674}
+
+\begin{DoxyCompactList}\small\item\em Output parameter. \end{DoxyCompactList}\end{DoxyCompactItemize}
+
+
+The documentation for this class was generated from the following files\+:\begin{DoxyCompactItemize}
+\item 
+D\+:/\+Qt\+Program/\+Qt5/\+Fusion/camera\+\_\+calibration.\+h\item 
+D\+:/\+Qt\+Program/\+Qt5/\+Fusion/camera\+\_\+calibration.\+cpp\end{DoxyCompactItemize}
